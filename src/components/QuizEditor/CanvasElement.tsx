@@ -24,7 +24,7 @@ export interface CanvasElementProps {
   onUpdate: (id: string, updates: any) => void;
   onDelete: (id: string) => void;
   selectedDevice: DeviceType;
-  containerRef?: React.RefObject<HTMLDivElement | null>;
+  containerRef?: React.RefObject<HTMLDivElement>;
   onAddElement?: (element: any) => void;
   elements?: any[];
   readOnly?: boolean;

@@ -1,8 +1,6 @@
 import React, { useRef, useState, useCallback } from 'react';
 import type { Module, BlocTexte, BlocImage, BlocVideo, BlocBouton, BlocCarte, BlocLogo, BlocPiedDePage } from '@/types/modularEditor';
 import type { DeviceType } from '@/utils/deviceDimensions';
-import { STANDARD_DEVICE_DIMENSIONS, getDeviceScale } from '@/utils/deviceDimensions';
-import VideoModule from '@/components/shared/modules/VideoModule';
 
 interface QuizModuleRendererProps {
   modules: Module[];
@@ -36,22 +34,8 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
   inheritedTextColor,
   onModuleUpdate
 }) => {
-  console.log('🎯 [QuizModuleRenderer] Rendering modules:', {
-    count: modules.length,
-    previewMode,
-    device,
-    modules: modules.map(m => ({ id: m.id, type: m.type }))
-  });
-  
   const isMobileDevice = device === 'mobile';
-  
-  // Calcul du deviceScale : 65% de la taille desktop pour mobile
-  const scale = getDeviceScale('desktop', device);
-  const deviceScale = Math.min(scale.x, scale.y);
-  
-  console.log(`📱 [QuizModuleRenderer] Device: ${device}, Scale: ${deviceScale.toFixed(3)} (${device === 'mobile' ? '65% desktop' : '100%'})`);
-  console.log(`📌 [QuizModuleRenderer] Modules seront ${device === 'mobile' ? '65%' : '100%'} de la taille desktop`);
-  
+  const deviceScale = isMobileDevice ? 0.8 : 1;
   const [editingModuleId, setEditingModuleId] = useState<string | null>(null);
   const textRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
@@ -76,19 +60,13 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
 
   const handleTextBlur = useCallback((moduleId: string) => {
     setEditingModuleId(null);
-    // Sauvegarder le contenu final au blur
-    const ref = textRefs.current[moduleId];
-    if (ref && onModuleUpdate) {
-      const content = ref.textContent || '';
+  }, []);
+
+  const handleTextInput = useCallback((moduleId: string, content: string) => {
+    if (onModuleUpdate) {
       onModuleUpdate(moduleId, { body: content });
     }
   }, [onModuleUpdate]);
-
-  const handleTextInput = useCallback((moduleId: string, e: React.FormEvent<HTMLDivElement>) => {
-    // Ne pas mettre à jour pendant l'édition pour éviter de réinitialiser le curseur
-    // La mise à jour se fera au blur
-    e.stopPropagation();
-  }, []);
 
   const handleTextKeyDown = useCallback((e: React.KeyboardEvent, moduleId: string) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -101,15 +79,7 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
     e.stopPropagation();
   }, []);
 
-  // Helper pour scaler les valeurs numériques (espacements, padding, etc.)
-  const scaleValue = useCallback((value: number | undefined, defaultValue: number = 0): number => {
-    if (value === undefined) return defaultValue;
-    return Math.round(value * deviceScale);
-  }, [deviceScale]);
-
   const renderModule = (m: Module) => {
-    console.log('🔍 [QuizRenderer] renderModule called for:', { id: m.id, type: m.type });
-    
     const commonStyle: React.CSSProperties = {
       background: m.backgroundColor,
       textAlign: m.align || 'left'
@@ -119,9 +89,7 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
     if (m.type === 'BlocTexte') {
       const textModule = m as BlocTexte;
       const baseBodyFontSize = textModule.bodyFontSize;
-      // En mobile, garder la taille de police normale (conteneur 430px = iPhone 14 Pro Max)
-      const fontSizeMultiplier = deviceScale;
-      const scaledBodyFontSize = baseBodyFontSize ? Math.max(8, Math.round(baseBodyFontSize * fontSizeMultiplier)) : undefined;
+      const scaledBodyFontSize = baseBodyFontSize ? Math.max(8, Math.round(baseBodyFontSize * deviceScale)) : undefined;
       
       // Séparer les styles de conteneur et de texte
       const customCSS = textModule.customCSS || {};
@@ -181,8 +149,8 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
           key={m.id} 
           style={{ 
             ...commonStyle, 
-            paddingTop: scaleValue((textModule as any).spacingTop, 0), 
-            paddingBottom: scaleValue((textModule as any).spacingBottom, 0) 
+            paddingTop: (textModule as any).spacingTop ?? 0, 
+            paddingBottom: (textModule as any).spacingBottom ?? 0 
           }}
           onClick={() => !previewMode && onModuleClick?.(m.id)}
         >
@@ -192,11 +160,10 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
                 <div style={{ display: 'inline-block', ...containerStyles, ...rotationStyle }}>
                   {isEditing ? (
                     <div
-                      key={`editing-${m.id}`}
                       ref={(el) => { textRefs.current[m.id] = el; }}
                       contentEditable
                       suppressContentEditableWarning
-                      onInput={(e) => handleTextInput(m.id, e)}
+                      onInput={(e) => handleTextInput(m.id, e.currentTarget.textContent || '')}
                       onBlur={() => handleTextBlur(m.id)}
                       onKeyDown={(e) => handleTextKeyDown(e, m.id)}
                       className="outline-none bg-transparent border-none whitespace-pre-wrap break-words select-text cursor-text"
@@ -231,11 +198,10 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
               ) : (
                 isEditing ? (
                   <div
-                    key={`editing-${m.id}`}
                     ref={(el) => { textRefs.current[m.id] = el; }}
                     contentEditable
                     suppressContentEditableWarning
-                    onInput={(e) => handleTextInput(m.id, e)}
+                    onInput={(e) => handleTextInput(m.id, e.currentTarget.textContent || '')}
                     onBlur={() => handleTextBlur(m.id)}
                     onKeyDown={(e) => handleTextKeyDown(e, m.id)}
                     className="outline-none bg-transparent border-none whitespace-pre-wrap break-words select-text cursor-text"
@@ -308,8 +274,8 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
                 alignItems: 'center',
                 justifyContent: 'center',
                 height: containerHeight,
-                paddingTop: scaleValue((imageModule as any).spacingTop, 0),
-                paddingBottom: scaleValue((imageModule as any).spacingBottom, 0)
+                paddingTop: (imageModule as any).spacingTop ?? 0,
+                paddingBottom: (imageModule as any).spacingBottom ?? 0
               }}
             >
               <img
@@ -331,42 +297,40 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
     // BlocVideo
     if (m.type === 'BlocVideo') {
       const videoModule = m as BlocVideo;
-      console.log('🎬 [QuizRenderer] Rendering BlocVideo with VideoModule:', {
-        id: m.id,
-        previewMode,
-        module: videoModule
-      });
-      return (
-        <div key={m.id} style={commonStyle}>
-          <VideoModule
-            module={videoModule}
-            onClick={() => !previewMode && onModuleClick?.(m.id)}
-            isSelected={selectedModuleId === m.id}
-          />
-        </div>
-      );
-    }
+      const align = videoModule.align || 'center';
+      const justifyContent = align === 'left' ? 'flex-start' : align === 'right' ? 'flex-end' : 'center';
+      const borderRadius = videoModule.borderRadius ?? 0;
 
-    // BlocEspace / BlocSeparateur (Spacer)
-    if ((m as any).type === 'BlocEspace' || (m as any).type === 'BlocSeparateur') {
-      const space = m as any;
-      const baseHeight =
-        typeof space.height === 'number' ? space.height :
-        typeof space.spaceHeight === 'number' ? space.spaceHeight :
-        typeof space.minHeight === 'number' ? space.minHeight : 40;
-      // SOLUTION RADICALE: Ignorer les spacings en preview
-      const height = baseHeight;
       return (
-        <div
-          key={m.id}
-          style={{
-            ...commonStyle,
-            paddingTop: previewMode ? 0 : scaleValue((space as any).spacingTop, 0),
-            paddingBottom: previewMode ? 0 : scaleValue((space as any).spacingBottom, 0)
-          }}
+        <div 
+          key={m.id} 
+          style={{ ...commonStyle }}
           onClick={() => !previewMode && onModuleClick?.(m.id)}
         >
-          <div style={{ width: '100%', height }} />
+          <div style={{ display: 'flex', justifyContent, width: '100%' }}>
+            <div
+              style={{
+                width: '100%',
+                maxWidth: (((videoModule as any).width ?? 560) * deviceScale),
+                borderRadius,
+                overflow: 'hidden',
+                background: 'transparent',
+                display: 'block',
+                paddingTop: (videoModule as any).spacingTop ?? 0,
+                paddingBottom: (videoModule as any).spacingBottom ?? 0
+              }}
+            >
+              <div className="relative" style={{ paddingTop: '56.25%' }}>
+                <iframe
+                  src={(videoModule as any).src || ''}
+                  title={(videoModule as any).title || 'Video'}
+                  className="absolute inset-0 w-full h-full"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              </div>
+            </div>
+          </div>
         </div>
       );
     }
@@ -401,8 +365,8 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
               border: `${(buttonModule as any).borderWidth ?? 0}px solid ${(buttonModule as any).borderColor || '#000000'}`,
               width: 'min(280px, 100%)',
               display: 'inline-flex',
-              marginTop: scaleValue((buttonModule as any).spacingTop, 0),
-              marginBottom: scaleValue((buttonModule as any).spacingBottom, 0),
+              marginTop: (buttonModule as any).spacingTop ?? 0,
+              marginBottom: (buttonModule as any).spacingBottom ?? 0,
               boxShadow: (buttonModule as any).boxShadow || '0 4px 12px rgba(0, 0, 0, 0.15)'
             }}
           >
@@ -425,10 +389,10 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
         border: carteModule.cardBorderWidth 
           ? `${carteModule.cardBorderWidth}px solid ${carteModule.cardBorderColor || '#e5e7eb'}`
           : '1px solid #e5e7eb',
-        padding: `${scaleValue(carteModule.padding, 24)}px`,
+        padding: `${carteModule.padding ?? 24}px`,
         boxShadow: carteModule.boxShadow || '0 4px 6px rgba(0, 0, 0, 0.1)',
         width: '100%',
-        maxWidth: maxWidth * deviceScale
+        maxWidth: maxWidth
       };
 
       return (
@@ -436,8 +400,8 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
           key={m.id} 
           style={{ 
             ...commonStyle,
-            paddingTop: scaleValue((carteModule as any).spacingTop, 0),
-            paddingBottom: scaleValue((carteModule as any).spacingBottom, 0)
+            paddingTop: (carteModule as any).spacingTop ?? 0,
+            paddingBottom: (carteModule as any).spacingBottom ?? 0
           }}
           onClick={() => !previewMode && onModuleClick?.(m.id)}
         >
@@ -530,11 +494,11 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
     // BlocLogo
     if (m.type === 'BlocLogo') {
       const logoModule = m as BlocLogo;
-      const bandHeight = scaleValue(logoModule.bandHeight, 60);
+      const bandHeight = logoModule.bandHeight ?? 60;
       const bandColor = logoModule.bandColor ?? '#ffffff';
-      const bandPadding = scaleValue(logoModule.bandPadding, 16);
-      const logoWidth = scaleValue(logoModule.logoWidth, 120);
-      const logoHeight = scaleValue(logoModule.logoHeight, 120);
+      const bandPadding = logoModule.bandPadding ?? 16;
+      const logoWidth = logoModule.logoWidth ?? 120;
+      const logoHeight = logoModule.logoHeight ?? 120;
       const align = logoModule.align || 'center';
       const justifyContent = align === 'left' ? 'flex-start' : align === 'right' ? 'flex-end' : 'center';
 
@@ -549,18 +513,11 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
             alignItems: 'center',
             justifyContent,
             padding: `${bandPadding}px`,
-            paddingTop: scaleValue((logoModule as any).spacingTop, 0),
-            paddingBottom: scaleValue((logoModule as any).spacingBottom, 0),
-            position: 'relative',
-            cursor: previewMode ? 'default' : 'pointer'
+            paddingTop: (logoModule as any).spacingTop ?? 0,
+            paddingBottom: (logoModule as any).spacingBottom ?? 0,
+            position: 'relative'
           }}
-          onClick={() => {
-            console.log('🎯 [QuizModuleRenderer] Logo onClick triggered!', { previewMode, moduleId: m.id });
-            if (!previewMode) {
-              console.log('✅ [QuizModuleRenderer] Calling onModuleClick for logo');
-              onModuleClick?.(m.id);
-            }
-          }}
+          onClick={() => !previewMode && onModuleClick?.(m.id)}
         >
           {logoModule.logoUrl ? (
             <img
@@ -594,12 +551,12 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
     // BlocPiedDePage
     if (m.type === 'BlocPiedDePage') {
       const footerModule = m as BlocPiedDePage;
-      const baseBandHeight = scaleValue(footerModule.bandHeight, 60);
-      const bandHeight = baseBandHeight;
+      const baseBandHeight = footerModule.bandHeight ?? 60;
+      const bandHeight = isMobileDevice ? baseBandHeight * 0.9 : baseBandHeight;
       const bandColor = footerModule.bandColor ?? '#ffffff';
-      const bandPadding = scaleValue(footerModule.bandPadding, 24);
-      const logoWidth = scaleValue(footerModule.logoWidth, 120);
-      const logoHeight = scaleValue(footerModule.logoHeight, 120);
+      const bandPadding = footerModule.bandPadding ?? 24;
+      const logoWidth = footerModule.logoWidth ?? 120;
+      const logoHeight = footerModule.logoHeight ?? 120;
       const align = footerModule.align || 'center';
       const justifyContent = align === 'left' ? 'flex-start' : align === 'right' ? 'flex-end' : 'center';
       
@@ -633,11 +590,11 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
             flexDirection: 'column',
             alignItems: align === 'left' ? 'flex-start' : align === 'right' ? 'flex-end' : 'center',
             justifyContent: 'center',
-            paddingTop: scaleValue((footerModule as any).spacingTop, bandPadding),
-            paddingBottom: scaleValue((footerModule as any).spacingBottom, bandPadding),
-            paddingLeft: scaleValue(64, 64),
-            paddingRight: scaleValue(64, 64),
-            gap: scaleValue(16, 16),
+            paddingTop: (footerModule as any).spacingTop ?? bandPadding,
+            paddingBottom: (footerModule as any).spacingBottom ?? bandPadding,
+            paddingLeft: '64px',
+            paddingRight: '64px',
+            gap: '16px',
             cursor: previewMode ? 'default' : 'pointer'
           }}
           onClick={(e) => {
@@ -666,7 +623,7 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
                 color: textColor,
                 fontSize: `${fontSize}px`,
                 textAlign: align,
-                lineHeight: 1.2
+                lineHeight: 1.5
               }}
             >
               {footerText}

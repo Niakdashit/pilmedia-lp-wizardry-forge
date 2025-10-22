@@ -1,7 +1,7 @@
+
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Database } from '@/integrations/supabase/types';
-import { participationSchema, viewParamsSchema } from '@/lib/validation';
 
 type DatabaseParticipation = Database['public']['Tables']['participations']['Row'];
 
@@ -28,29 +28,21 @@ export const useParticipations = () => {
     setError(null);
     
     try {
-      // Validate input data
-      const validation = participationSchema.safeParse({
+      // Get IP address and user agent from browser
+      const userAgent = navigator.userAgent;
+      const ip_address = '127.0.0.1'; // In real app, this would come from server
+
+      const participationData = {
         campaign_id: participation.campaign_id,
         user_email: participation.user_email,
         form_data: participation.form_data,
         game_result: participation.game_result,
         is_winner: participation.is_winner || false,
-        utm_source: participation.utm_source,
-        utm_medium: participation.utm_medium,
-        utm_campaign: participation.utm_campaign,
-      });
-      
-      if (!validation.success) {
-        throw new Error(`Validation failed: ${validation.error.message}`);
-      }
-
-      const userAgent = navigator.userAgent;
-      const ip_address = '127.0.0.1';
-
-      const participationData = {
-        ...validation.data,
         ip_address,
         user_agent: userAgent,
+        utm_source: participation.utm_source,
+        utm_medium: participation.utm_medium,
+        utm_campaign: participation.utm_campaign
       };
 
       const { error } = await supabase
@@ -125,31 +117,24 @@ export const useParticipations = () => {
     referrer?: string;
   }): Promise<void> => {
     try {
-      // Validate UTM parameters
-      const validatedParams = viewParamsSchema.safeParse(utmParams || {});
-      
-      if (!validatedParams.success) {
-        console.warn('Invalid UTM parameters:', validatedParams.error);
-        return;
-      }
-
       const userAgent = navigator.userAgent;
-      const ip_address = '127.0.0.1';
+      const ip_address = '127.0.0.1'; // In real app, this would come from server
 
       const viewData = {
         campaign_id: campaignId,
         ip_address,
         user_agent: userAgent,
-        referrer: validatedParams.data.referrer || document.referrer || '',
-        utm_source: validatedParams.data.utm_source,
-        utm_medium: validatedParams.data.utm_medium,
-        utm_campaign: validatedParams.data.utm_campaign
+        referrer: utmParams?.referrer || document.referrer,
+        utm_source: utmParams?.utm_source,
+        utm_medium: utmParams?.utm_medium,
+        utm_campaign: utmParams?.utm_campaign
       };
 
       await supabase
         .from('campaign_views')
         .insert(viewData);
     } catch (err) {
+      // Silently fail for analytics
       console.warn('Failed to track campaign view:', err);
     }
   };

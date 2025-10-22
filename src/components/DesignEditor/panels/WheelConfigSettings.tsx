@@ -48,117 +48,6 @@ const WheelConfigSettings: React.FC<WheelConfigSettingsProps> = ({
   const setCampaign = useEditorStore((s) => s.setCampaign as any);
   const initialisedRef = useRef(false);
 
-  // Lire showBulbs directement depuis la campagne (source de vérité)
-  const actualShowBulbs = useMemo(() => {
-    const value = (campaign?.design?.wheelConfig as any)?.showBulbs;
-    const result = value ?? false; // Par défaut: false
-    console.log('💡 [WheelConfigSettings] actualShowBulbs:', { value, result });
-    return result;
-  }, [campaign?.design?.wheelConfig]);
-
-  // Initialiser showBulbs à false par défaut si non défini
-  useEffect(() => {
-    if (!initialisedRef.current && campaign) {
-      const currentShowBulbs = (campaign?.design?.wheelConfig as any)?.showBulbs;
-      
-      // Si showBulbs n'est pas défini, on le force à false
-      if (currentShowBulbs === undefined) {
-        console.log('🔧 [WheelConfigSettings] Initializing showBulbs to false');
-        setCampaign((prev: any) => {
-          if (!prev) return prev;
-          return {
-            ...prev,
-            design: {
-              ...prev.design,
-              wheelConfig: {
-                ...prev.design?.wheelConfig,
-                showBulbs: false
-              }
-            },
-            _lastUpdate: Date.now()
-          };
-        });
-      }
-      
-      initialisedRef.current = true;
-    }
-  }, [campaign, setCampaign]);
-
-  // Wrapper functions with logging - callbacks handle the actual updates
-  const handleBorderStyleChange = useCallback((style: string) => {
-    console.log('🎨 [WheelConfigSettings] Border style changed:', style);
-    onBorderStyleChange(style);
-  }, [onBorderStyleChange]);
-
-  const handleBorderColorChange = useCallback((color: string) => {
-    console.log('🎨 [WheelConfigSettings] Border color changed:', color);
-    onBorderColorChange(color);
-  }, [onBorderColorChange]);
-
-  const handleBorderWidthChange = useCallback((width: number) => {
-    console.log('🎨 [WheelConfigSettings] Border width changed:', width);
-    onBorderWidthChange(width);
-  }, [onBorderWidthChange]);
-
-  const handleScaleChange = useCallback((scale: number) => {
-    console.log('🎨 [WheelConfigSettings] Scale changed:', scale);
-    onScaleChange(scale);
-  }, [onScaleChange]);
-
-  const handleShowBulbsChange = useCallback((show: boolean) => {
-    console.log('🎨 [WheelConfigSettings] Show bulbs changed:', show);
-    
-    // Mise à jour directe de la campagne
-    setCampaign((prev: any) => {
-      if (!prev) return prev;
-      
-      const updated = {
-        ...prev,
-        design: {
-          ...prev.design,
-          wheelConfig: {
-            ...prev.design?.wheelConfig,
-            showBulbs: show
-          }
-        },
-        _lastUpdate: Date.now()
-      };
-      
-      console.log('✅ [WheelConfigSettings] Campaign updated with showBulbs:', show);
-      return updated;
-    });
-    
-    // Appeler aussi le callback pour la compatibilité
-    onShowBulbsChange?.(show);
-  }, [onShowBulbsChange, setCampaign]);
-
-  const handlePositionChange = useCallback((position: 'left' | 'right' | 'center') => {
-    console.log('🎨 [WheelConfigSettings] Position changed:', position);
-    
-    // Mise à jour directe de la campagne
-    setCampaign((prev: any) => {
-      if (!prev) return prev;
-      
-      const updated = {
-        ...prev,
-        design: {
-          ...prev.design,
-          wheelConfig: {
-            ...prev.design?.wheelConfig,
-            position
-          }
-        },
-        _lastUpdate: Date.now()
-      };
-      
-      console.log('✅ [WheelConfigSettings] Campaign updated with position:', position);
-      return updated;
-    });
-    
-    // Appeler aussi le callback pour la compatibilité
-    onPositionChange?.(position);
-  }, [onPositionChange, setCampaign]);
-
   const rawSegments = useMemo(() => {
     const candidate = campaign?.gameConfig?.wheel?.segments || campaign?.config?.roulette?.segments || [];
     return Array.isArray(candidate) ? [...candidate] : [];
@@ -271,7 +160,7 @@ const WheelConfigSettings: React.FC<WheelConfigSettingsProps> = ({
             max={3}
             step={0.1}
             value={wheelScale}
-            onChange={(e) => handleScaleChange(parseFloat(e.target.value))}
+            onChange={(e) => onScaleChange(parseFloat(e.target.value))}
             className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
           />
           <div className="flex justify-between text-xs text-[hsl(var(--sidebar-text-secondary))] mt-1">
@@ -324,13 +213,13 @@ const WheelConfigSettings: React.FC<WheelConfigSettingsProps> = ({
             <input
               type="color"
               value={wheelBorderColor}
-              onChange={(e) => handleBorderColorChange(e.target.value)}
+              onChange={(e) => onBorderColorChange(e.target.value)}
               className="w-12 h-10 rounded border border-[hsl(var(--sidebar-border))] cursor-pointer"
             />
             <input
               type="text"
               value={wheelBorderColor}
-              onChange={(e) => handleBorderColorChange(e.target.value)}
+              onChange={(e) => onBorderColorChange(e.target.value)}
               placeholder="#841b60"
               className="flex-1 px-3 py-2 border border-[hsl(var(--sidebar-border))] rounded-md bg-[hsl(var(--sidebar-bg))] focus:outline-none focus:ring-2 focus:ring-[hsl(var(--sidebar-active))]"
             />
@@ -347,7 +236,7 @@ const WheelConfigSettings: React.FC<WheelConfigSettingsProps> = ({
             max={32}
             step={2}
             value={wheelBorderWidth}
-            onChange={(e) => handleBorderWidthChange(parseInt(e.target.value, 10))}
+            onChange={(e) => onBorderWidthChange(parseInt(e.target.value, 10))}
             className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
           />
           <div className="flex justify-between text-xs text-[hsl(var(--sidebar-text-secondary))] mt-1">
@@ -362,55 +251,40 @@ const WheelConfigSettings: React.FC<WheelConfigSettingsProps> = ({
           </label>
           <BorderStyleSelector
             currentStyle={wheelBorderStyle}
-            onStyleChange={handleBorderStyleChange}
+            onStyleChange={onBorderStyleChange}
           />
         </div>
 
-        <div>
-          <label className="block text-sm font-semibold mb-3">
-            Position de la roue {selectedDevice !== 'desktop' && '(Desktop uniquement)'}
-          </label>
-          <div className="inline-flex rounded-md overflow-hidden border border-[hsl(var(--sidebar-border))]">
-            <button
-              type="button"
-              onClick={() => {
-                console.log('🖱️ [WheelConfigSettings] Position button clicked: left');
-                handlePositionChange('left');
-              }}
-              disabled={selectedDevice !== 'desktop'}
-              className={`px-3 py-2 text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${wheelPosition === 'left' ? 'bg-[hsl(var(--sidebar-active))] text-white' : 'bg-[hsl(var(--sidebar-surface))] text-[hsl(var(--sidebar-text-primary))] hover:bg-[hsl(var(--sidebar-hover))]'}`}
-            >
-              Gauche
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                console.log('🖱️ [WheelConfigSettings] Position button clicked: center');
-                handlePositionChange('center');
-              }}
-              disabled={selectedDevice !== 'desktop'}
-              className={`px-3 py-2 text-sm transition-colors border-l border-r border-[hsl(var(--sidebar-border))] disabled:opacity-50 disabled:cursor-not-allowed ${wheelPosition === 'center' ? 'bg-[hsl(var(--sidebar-active))] text-white' : 'bg-[hsl(var(--sidebar-surface))] text-[hsl(var(--sidebar-text-primary))] hover:bg-[hsl(var(--sidebar-hover))]'}`}
-            >
-              Centre
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                console.log('🖱️ [WheelConfigSettings] Position button clicked: right');
-                handlePositionChange('right');
-              }}
-              disabled={selectedDevice !== 'desktop'}
-              className={`px-3 py-2 text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${wheelPosition === 'right' ? 'bg-[hsl(var(--sidebar-active))] text-white' : 'bg-[hsl(var(--sidebar-surface))] text-[hsl(var(--sidebar-text-primary))] hover:bg-[hsl(var(--sidebar-hover))]'}`}
-            >
-              Droite
-            </button>
+        {selectedDevice === 'desktop' && (
+          <div>
+            <label className="block text-sm font-semibold mb-3">
+              Position de la roue
+            </label>
+            <div className="inline-flex rounded-md overflow-hidden border border-[hsl(var(--sidebar-border))]">
+              <button
+                type="button"
+                onClick={() => onPositionChange?.('left')}
+                className={`px-3 py-2 text-sm transition-colors ${wheelPosition === 'left' ? 'bg-[hsl(var(--sidebar-active))] text-white' : 'bg-[hsl(var(--sidebar-surface))] text-[hsl(var(--sidebar-text-primary))] hover:bg-[hsl(var(--sidebar-hover))]'}`}
+              >
+                Gauche
+              </button>
+              <button
+                type="button"
+                onClick={() => onPositionChange?.('center')}
+                className={`px-3 py-2 text-sm transition-colors border-l border-r border-[hsl(var(--sidebar-border))] ${wheelPosition === 'center' ? 'bg-[hsl(var(--sidebar-active))] text-white' : 'bg-[hsl(var(--sidebar-surface))] text-[hsl(var(--sidebar-text-primary))] hover:bg-[hsl(var(--sidebar-hover))]'}`}
+              >
+                Centre
+              </button>
+              <button
+                type="button"
+                onClick={() => onPositionChange?.('right')}
+                className={`px-3 py-2 text-sm transition-colors ${wheelPosition === 'right' ? 'bg-[hsl(var(--sidebar-active))] text-white' : 'bg-[hsl(var(--sidebar-surface))] text-[hsl(var(--sidebar-text-primary))] hover:bg-[hsl(var(--sidebar-hover))]'}`}
+              >
+                Droite
+              </button>
+            </div>
           </div>
-          {selectedDevice !== 'desktop' && (
-            <p className="text-xs text-[hsl(var(--sidebar-text-secondary))] mt-2">
-              Le positionnement de la roue n'est disponible qu'en mode desktop.
-            </p>
-          )}
-        </div>
+        )}
 
         {onShowBulbsChange && (
           <div className="flex items-center justify-between">
@@ -420,12 +294,12 @@ const WheelConfigSettings: React.FC<WheelConfigSettingsProps> = ({
             </div>
             <button
               type="button"
-              onClick={() => handleShowBulbsChange(!actualShowBulbs)}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${actualShowBulbs ? 'bg-[hsl(var(--sidebar-active))]' : 'bg-gray-300'}`}
-              aria-pressed={actualShowBulbs}
+              onClick={() => onShowBulbsChange(!wheelShowBulbs)}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${wheelShowBulbs ? 'bg-[hsl(var(--sidebar-active))]' : 'bg-gray-300'}`}
+              aria-pressed={wheelShowBulbs}
             >
               <span
-                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${actualShowBulbs ? 'translate-x-6' : 'translate-x-1'}`}
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${wheelShowBulbs ? 'translate-x-6' : 'translate-x-1'}`}
               />
             </button>
           </div>

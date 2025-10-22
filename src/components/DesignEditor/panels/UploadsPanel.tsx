@@ -1,24 +1,13 @@
 import React, { useRef } from 'react';
-import { Upload, Image, Video, Music, FileText, Monitor, Tablet, Smartphone } from 'lucide-react';
-import type { DeviceType } from '../../../utils/deviceDimensions';
+import { Upload, Image, Video, Music, FileText } from 'lucide-react';
 
 interface UploadsPanelProps {
   onAddElement: (element: any) => void;
-  selectedDevice?: DeviceType;
 }
 
-const UploadsPanel: React.FC<UploadsPanelProps> = ({ onAddElement, selectedDevice = 'desktop' }) => {
+const UploadsPanel: React.FC<UploadsPanelProps> = ({ onAddElement }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [dragOver, setDragOver] = React.useState(false);
-  const [selectedDevices, setSelectedDevices] = React.useState<DeviceType[]>([selectedDevice]);
-
-  // 🔄 Synchroniser avec l'appareil sélectionné dans l'éditeur
-  React.useEffect(() => {
-    // Mettre à jour uniquement si l'appareil actuel n'est pas déjà dans la sélection
-    if (!selectedDevices.includes(selectedDevice)) {
-      setSelectedDevices([selectedDevice]);
-    }
-  }, [selectedDevice]);
 
   const uploadTypes = [
     { type: 'image', icon: Image, label: 'Images', accept: 'image/*' },
@@ -55,7 +44,7 @@ const UploadsPanel: React.FC<UploadsPanelProps> = ({ onAddElement, selectedDevic
           const width = img.width * ratio;
           const height = img.height * ratio;
           
-          const newElement = {
+          onAddElement({
             id: `upload-${Date.now()}`,
             type: elementType,
             x: 100,
@@ -64,20 +53,12 @@ const UploadsPanel: React.FC<UploadsPanelProps> = ({ onAddElement, selectedDevic
             alt: file.name,
             width,
             height,
-            zIndex: 10,
-            // 📱 Ajouter la visibilité par appareil
-            visibleDevices: selectedDevices.length > 0 ? [...selectedDevices] : undefined
-          };
-          console.log('📱 Upload image avec visibilité:', {
-            selectedDevices,
-            visibleDevices: newElement.visibleDevices,
-            currentDevice: selectedDevice
+            zIndex: 10
           });
-          onAddElement(newElement);
         };
         img.src = url;
       } else {
-        const newElement = {
+        onAddElement({
           id: `upload-${Date.now()}`,
           type: elementType,
           x: 100,
@@ -86,16 +67,8 @@ const UploadsPanel: React.FC<UploadsPanelProps> = ({ onAddElement, selectedDevic
           alt: file.name,
           width: 200,
           height: 150,
-          zIndex: 10,
-          // 📱 Ajouter la visibilité par appareil
-          visibleDevices: selectedDevices.length > 0 ? [...selectedDevices] : undefined
-        };
-        console.log('📱 Upload media avec visibilité:', {
-          selectedDevices,
-          visibleDevices: newElement.visibleDevices,
-          currentDevice: selectedDevice
+          zIndex: 10
         });
-        onAddElement(newElement);
       }
     });
   };
@@ -126,61 +99,8 @@ const UploadsPanel: React.FC<UploadsPanelProps> = ({ onAddElement, selectedDevic
     fileInputRef.current?.click();
   };
 
-  const toggleDevice = (device: DeviceType) => {
-    setSelectedDevices(prev => {
-      if (prev.includes(device)) {
-        // Ne pas permettre de tout désélectionner
-        if (prev.length === 1) return prev;
-        return prev.filter(d => d !== device);
-      }
-      return [...prev, device];
-    });
-  };
-
   return (
     <div className="p-4 space-y-6">
-      {/* Sélecteur d'appareils */}
-      <div>
-        <h3 className="font-semibold text-sm text-gray-700 mb-3">📱 VISIBLE SUR</h3>
-        <div className="grid grid-cols-3 gap-2">
-          <button
-            onClick={() => toggleDevice('desktop')}
-            className={`p-3 border rounded-lg transition-all ${
-              selectedDevices.includes('desktop')
-                ? 'border-purple-600 bg-purple-50 text-purple-700'
-                : 'border-gray-200 hover:border-purple-300 text-gray-600'
-            }`}
-          >
-            <Monitor className="w-5 h-5 mx-auto mb-1" />
-            <div className="text-xs font-medium">Desktop</div>
-          </button>
-          <button
-            onClick={() => toggleDevice('tablet')}
-            className={`p-3 border rounded-lg transition-all ${
-              selectedDevices.includes('tablet')
-                ? 'border-purple-600 bg-purple-50 text-purple-700'
-                : 'border-gray-200 hover:border-purple-300 text-gray-600'
-            }`}
-          >
-            <Tablet className="w-5 h-5 mx-auto mb-1" />
-            <div className="text-xs font-medium">Tablette</div>
-          </button>
-          <button
-            onClick={() => toggleDevice('mobile')}
-            className={`p-3 border rounded-lg transition-all ${
-              selectedDevices.includes('mobile')
-                ? 'border-purple-600 bg-purple-50 text-purple-700'
-                : 'border-gray-200 hover:border-purple-300 text-gray-600'
-            }`}
-          >
-            <Smartphone className="w-5 h-5 mx-auto mb-1" />
-            <div className="text-xs font-medium">Mobile</div>
-          </button>
-        </div>
-        <p className="text-xs text-gray-500 mt-2">
-          L'image sera visible uniquement sur les appareils sélectionnés
-        </p>
-      </div>
       <input
         ref={fileInputRef}
         type="file"

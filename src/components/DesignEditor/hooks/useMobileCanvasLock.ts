@@ -2,7 +2,7 @@ import { useEffect, useCallback, useRef } from 'react';
 import { isRealMobile } from '../../../utils/isRealMobile';
 
 interface UseMobileCanvasLockOptions {
-  canvasRef: React.RefObject<HTMLDivElement | null>;
+  canvasRef: React.RefObject<HTMLDivElement>;
   selectedElement?: any;
   isMobile: boolean;
   isTablet: boolean;

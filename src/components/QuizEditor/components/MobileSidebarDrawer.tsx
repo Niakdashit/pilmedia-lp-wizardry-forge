@@ -1,9 +1,7 @@
-'use client';
-
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useMobileOptimization } from '../hooks/useMobileOptimization';
-import { useLocation } from '@/lib/router-adapter';
+import { useLocation } from 'react-router-dom';
 import {
   Plus,
   Palette,

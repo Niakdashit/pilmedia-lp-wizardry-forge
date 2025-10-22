@@ -1,6 +1,5 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import type { BlocBouton } from '@/types/modularEditor';
-import { useButtonStore } from '@/stores/buttonStore';
 
 interface ButtonModulePanelProps {
   module: BlocBouton;
@@ -9,8 +8,6 @@ interface ButtonModulePanelProps {
 }
 
 const ButtonModulePanel: React.FC<ButtonModulePanelProps> = ({ module, onUpdate, onBack }) => {
-  const { updateButtonStyle } = useButtonStore();
-  
   const radius = typeof module.borderRadius === 'number' ? module.borderRadius : 200;
   const label = module.label || 'Participer';
   const bg = module.background || '#ad0071';
@@ -25,20 +22,6 @@ const ButtonModulePanel: React.FC<ButtonModulePanelProps> = ({ module, onUpdate,
   const borderWidth = typeof module.borderWidth === 'number' ? module.borderWidth : 0;
   const borderColor = module.borderColor || '#000000';
   const isLaunchButton = (label || '').trim().toLowerCase() === 'participer';
-
-  // Synchroniser les modifications du bouton de lancement vers le store global
-  useEffect(() => {
-    if (isLaunchButton) {
-      updateButtonStyle({
-        bgColor: bg,
-        textColor: txt,
-        borderColor: borderColor,
-        borderRadius: radius,
-        borderWidth: borderWidth,
-        width: width === 'full' ? '100%' : width === 'half' ? '50%' : width === 'twoThirds' ? '66.67%' : '33.33%'
-      });
-    }
-  }, [isLaunchButton, bg, txt, borderColor, radius, borderWidth, width, updateButtonStyle]);
 
   return (
     <div className="h-full overflow-y-auto pb-12">

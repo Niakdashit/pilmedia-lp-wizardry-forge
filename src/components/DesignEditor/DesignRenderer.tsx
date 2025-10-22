@@ -1,7 +1,6 @@
 import React, { useRef, useState, useCallback } from 'react';
 import type { DesignModule, DesignBlocTexte, DesignBlocImage, DesignBlocVideo, DesignBlocBouton, DesignBlocCarte, DesignBlocLogo, DesignBlocPiedDePage } from '@/types/designEditorModular';
 import type { DeviceType } from '@/utils/deviceDimensions';
-import { getDeviceScale } from '@/utils/deviceDimensions';
 
 interface DesignModuleRendererProps {
   modules: DesignModule[];
@@ -24,7 +23,7 @@ interface DesignModuleRendererProps {
  * 
  * Cloné depuis DesignModuleRenderer pour le DesignEditor
  */
-export const DesignModuleRenderer: React.FC<DesignModuleRendererProps & { onModuleDelete?: (id: string) => void } > = ({
+export const DesignModuleRenderer: React.FC<DesignModuleRendererProps> = ({
   modules,
   previewMode = false,
   device = 'desktop',
@@ -33,22 +32,10 @@ export const DesignModuleRenderer: React.FC<DesignModuleRendererProps & { onModu
   className = '',
   onButtonClick,
   inheritedTextColor,
-  onModuleUpdate,
-  onModuleDelete
+  onModuleUpdate
 }) => {
-  // Calcul du deviceScale : 65% de la taille desktop pour mobile
-  const scale = getDeviceScale('desktop', device);
-  const deviceScale = Math.min(scale.x, scale.y);
-  
-  // Log détaillé
-  console.log(`📱 [DesignRenderer] Device: ${device}, Scale: ${deviceScale.toFixed(3)} (${device === 'mobile' ? '65% desktop' : '100%'})`, {
-    device,
-    scale,
-    deviceScale,
-    previewMode,
-    modulesCount: modules.length
-  });
-  
+  const isMobileDevice = device === 'mobile';
+  const deviceScale = isMobileDevice ? 0.8 : 1;
   const [editingModuleId, setEditingModuleId] = useState<string | null>(null);
   const textRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
@@ -91,12 +78,6 @@ export const DesignModuleRenderer: React.FC<DesignModuleRendererProps & { onModu
     }
     e.stopPropagation();
   }, []);
-
-  // Helper pour scaler les valeurs numériques (espacements, padding, etc.)
-  const scaleValue = useCallback((value: number | undefined, defaultValue: number = 0): number => {
-    if (value === undefined) return defaultValue;
-    return Math.round(value * deviceScale);
-  }, [deviceScale]);
 
   const renderModule = (m: DesignModule) => {
     const commonStyle: React.CSSProperties = {
@@ -168,8 +149,8 @@ export const DesignModuleRenderer: React.FC<DesignModuleRendererProps & { onModu
           key={m.id} 
           style={{ 
             ...commonStyle, 
-            paddingTop: scaleValue((textModule as any).spacingTop, 0), 
-            paddingBottom: scaleValue((textModule as any).spacingBottom, 0) 
+            paddingTop: (textModule as any).spacingTop ?? 0, 
+            paddingBottom: (textModule as any).spacingBottom ?? 0 
           }}
           onClick={() => !previewMode && onModuleClick?.(m.id)}
         >
@@ -293,8 +274,8 @@ export const DesignModuleRenderer: React.FC<DesignModuleRendererProps & { onModu
                 alignItems: 'center',
                 justifyContent: 'center',
                 height: containerHeight,
-                paddingTop: scaleValue((imageModule as any).spacingTop, 0),
-                paddingBottom: scaleValue((imageModule as any).spacingBottom, 0)
+                paddingTop: (imageModule as any).spacingTop ?? 0,
+                paddingBottom: (imageModule as any).spacingBottom ?? 0
               }}
             >
               <img
@@ -319,21 +300,6 @@ export const DesignModuleRenderer: React.FC<DesignModuleRendererProps & { onModu
       const align = videoModule.align || 'center';
       const justifyContent = align === 'left' ? 'flex-start' : align === 'right' ? 'flex-end' : 'center';
       const borderRadius = videoModule.borderRadius ?? 0;
-      const borderWidth = (videoModule as any).borderWidth ?? 0;
-      const borderColor = (videoModule as any).borderColor ?? '#000000';
-      const src = (videoModule as any).src || '';
-      
-      // Convertir les URLs YouTube/Vimeo en URLs embed
-      const convertToEmbedUrl = (url: string): string => {
-        if (!url) return '';
-        const youtubeMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]+)/);
-        if (youtubeMatch) return `https://www.youtube.com/embed/${youtubeMatch[1]}`;
-        const vimeoMatch = url.match(/vimeo\.com\/(\d+)/);
-        if (vimeoMatch) return `https://player.vimeo.com/video/${vimeoMatch[1]}`;
-        return url;
-      };
-      
-      const embedUrl = convertToEmbedUrl(src);
 
       return (
         <div 
@@ -341,85 +307,31 @@ export const DesignModuleRenderer: React.FC<DesignModuleRendererProps & { onModu
           style={{ ...commonStyle }}
           onClick={() => !previewMode && onModuleClick?.(m.id)}
         >
-          <div 
-            style={{ 
-              display: 'flex', 
-              justifyContent, 
-              width: '100%',
-              paddingTop: scaleValue((videoModule as any).spacingTop, 16),
-              paddingBottom: scaleValue((videoModule as any).spacingBottom, 16)
-            }}
-          >
+          <div style={{ display: 'flex', justifyContent, width: '100%' }}>
             <div
               style={{
                 width: '100%',
                 maxWidth: (((videoModule as any).width ?? 560) * deviceScale),
                 borderRadius,
                 overflow: 'hidden',
-                background: '#000000',
-                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-                border: borderWidth > 0 ? `${borderWidth}px solid ${borderColor}` : 'none'
+                background: 'transparent',
+                display: 'block',
+                paddingTop: (videoModule as any).spacingTop ?? 0,
+                paddingBottom: (videoModule as any).spacingBottom ?? 0
               }}
             >
-              {embedUrl ? (
-                <div className="relative" style={{ paddingTop: '56.25%', background: '#1a1a1a' }}>
-                  <iframe
-                    src={embedUrl}
-                    title={(videoModule as any).title || 'Video'}
-                    className="absolute inset-0 w-full h-full border-0"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                    style={{ display: 'block' }}
-                  />
-                </div>
-              ) : (
-                <div 
-                  className="relative flex items-center justify-center bg-gray-800 text-white"
-                  style={{ paddingTop: '56.25%', minHeight: 200 }}
-                >
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="text-center p-4">
-                      <p className="text-sm opacity-75">Aucune vidéo configurée</p>
-                    </div>
-                  </div>
-                </div>
-              )}
+              <div className="relative" style={{ paddingTop: '56.25%' }}>
+                <iframe
+                  src={(videoModule as any).src || ''}
+                  title={(videoModule as any).title || 'Video'}
+                  className="absolute inset-0 w-full h-full"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              </div>
             </div>
           </div>
         </div>
-      );
-    }
-
-    // BlocSeparateur / BlocEspace (Spacer)
-    if ((m as any).type === 'BlocEspace' || (m as any).type === 'BlocSeparateur') {
-      const space = m as any;
-      const baseHeight =
-        typeof space.height === 'number' ? space.height :
-        typeof space.spaceHeight === 'number' ? space.spaceHeight :
-        typeof space.minHeight === 'number' ? space.minHeight : 40;
-      
-      // SOLUTION RADICALE: En mode preview, ignorer complètement les spacingTop/Bottom
-      // pour garantir un rendu WYSIWYG parfait sans aucun décalage
-      const height = baseHeight;
-      const layoutWidth = space.layoutWidth || 'content';
-      const maxW = layoutWidth === 'full' ? '100%' : '1200px';
-
-      return (
-        <div
-          key={m.id}
-          style={{
-            ...commonStyle,
-            width: '100%',
-            maxWidth: maxW,
-            margin: '0 auto',
-            height: `${height}px`,
-            // IMPORTANT: Pas de padding en mode preview pour éviter tout décalage
-            paddingTop: previewMode ? 0 : (space.spacingTop ?? 0),
-            paddingBottom: previewMode ? 0 : (space.spacingBottom ?? 0),
-            cursor: previewMode ? 'default' : 'pointer'
-          }}
-          onClick={() => !previewMode && onModuleClick?.(m.id)}
-        />
       );
     }
 
@@ -453,8 +365,8 @@ export const DesignModuleRenderer: React.FC<DesignModuleRendererProps & { onModu
               border: `${(buttonModule as any).borderWidth ?? 0}px solid ${(buttonModule as any).borderColor || '#000000'}`,
               width: 'min(280px, 100%)',
               display: 'inline-flex',
-              marginTop: scaleValue((buttonModule as any).spacingTop, 0),
-              marginBottom: scaleValue((buttonModule as any).spacingBottom, 0),
+              marginTop: (buttonModule as any).spacingTop ?? 0,
+              marginBottom: (buttonModule as any).spacingBottom ?? 0,
               boxShadow: (buttonModule as any).boxShadow || '0 4px 12px rgba(0, 0, 0, 0.15)'
             }}
           >
@@ -477,10 +389,10 @@ export const DesignModuleRenderer: React.FC<DesignModuleRendererProps & { onModu
         border: carteModule.cardBorderWidth 
           ? `${carteModule.cardBorderWidth}px solid ${carteModule.cardBorderColor || '#e5e7eb'}`
           : '1px solid #e5e7eb',
-        padding: `${scaleValue(carteModule.padding, 24)}px`,
+        padding: `${carteModule.padding ?? 24}px`,
         boxShadow: carteModule.boxShadow || '0 4px 6px rgba(0, 0, 0, 0.1)',
         width: '100%',
-        maxWidth: maxWidth * deviceScale
+        maxWidth: maxWidth
       };
 
       return (
@@ -488,8 +400,8 @@ export const DesignModuleRenderer: React.FC<DesignModuleRendererProps & { onModu
           key={m.id} 
           style={{ 
             ...commonStyle,
-            paddingTop: scaleValue((carteModule as any).spacingTop, 0),
-            paddingBottom: scaleValue((carteModule as any).spacingBottom, 0)
+            paddingTop: (carteModule as any).spacingTop ?? 0,
+            paddingBottom: (carteModule as any).spacingBottom ?? 0
           }}
           onClick={() => !previewMode && onModuleClick?.(m.id)}
         >
@@ -582,11 +494,11 @@ export const DesignModuleRenderer: React.FC<DesignModuleRendererProps & { onModu
     // BlocLogo
     if (m.type === 'BlocLogo') {
       const logoModule = m as DesignBlocLogo;
-      const bandHeight = scaleValue(logoModule.bandHeight, 60);
+      const bandHeight = logoModule.bandHeight ?? 60;
       const bandColor = logoModule.bandColor ?? '#ffffff';
-      const bandPadding = scaleValue(logoModule.bandPadding, 16);
-      const logoWidth = scaleValue(logoModule.logoWidth, 120);
-      const logoHeight = scaleValue(logoModule.logoHeight, 120);
+      const bandPadding = logoModule.bandPadding ?? 16;
+      const logoWidth = logoModule.logoWidth ?? 120;
+      const logoHeight = logoModule.logoHeight ?? 120;
       const align = logoModule.align || 'center';
       const justifyContent = align === 'left' ? 'flex-start' : align === 'right' ? 'flex-end' : 'center';
 
@@ -601,23 +513,12 @@ export const DesignModuleRenderer: React.FC<DesignModuleRendererProps & { onModu
             alignItems: 'center',
             justifyContent,
             padding: `${bandPadding}px`,
-            paddingTop: scaleValue((logoModule as any).spacingTop, 0),
-            paddingBottom: scaleValue((logoModule as any).spacingBottom, 0),
+            paddingTop: (logoModule as any).spacingTop ?? 0,
+            paddingBottom: (logoModule as any).spacingBottom ?? 0,
             position: 'relative'
           }}
           onClick={() => !previewMode && onModuleClick?.(m.id)}
         >
-          {!previewMode && (
-            <button
-              type="button"
-              onClick={(e) => { e.stopPropagation(); onModuleDelete?.(m.id); }}
-              style={{ position: 'absolute', right: 8, top: 8, zIndex: 10 }}
-              className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-white/40 bg-white text-gray-700 shadow-sm shadow-black/5"
-              title="Supprimer le bloc Logo"
-            >
-              🗑️
-            </button>
-          )}
           {logoModule.logoUrl ? (
             <img
               src={logoModule.logoUrl}
@@ -650,12 +551,12 @@ export const DesignModuleRenderer: React.FC<DesignModuleRendererProps & { onModu
     // BlocPiedDePage
     if (m.type === 'BlocPiedDePage') {
       const footerModule = m as DesignBlocPiedDePage;
-      const baseBandHeight = scaleValue(footerModule.bandHeight, 60);
-      const bandHeight = baseBandHeight;
+      const baseBandHeight = footerModule.bandHeight ?? 60;
+      const bandHeight = isMobileDevice ? baseBandHeight * 0.9 : baseBandHeight;
       const bandColor = footerModule.bandColor ?? '#ffffff';
-      const bandPadding = scaleValue(footerModule.bandPadding, 24);
-      const logoWidth = scaleValue(footerModule.logoWidth, 120);
-      const logoHeight = scaleValue(footerModule.logoHeight, 120);
+      const bandPadding = footerModule.bandPadding ?? 24;
+      const logoWidth = footerModule.logoWidth ?? 120;
+      const logoHeight = footerModule.logoHeight ?? 120;
       const align = footerModule.align || 'center';
       const justifyContent = align === 'left' ? 'flex-start' : align === 'right' ? 'flex-end' : 'center';
       
@@ -664,10 +565,10 @@ export const DesignModuleRenderer: React.FC<DesignModuleRendererProps & { onModu
       const footerLinks = footerModule.footerLinks ?? [];
       const textColor = footerModule.textColor ?? '#000000';
       const linkColor = footerModule.linkColor ?? '#841b60';
-      const fontSize = scaleValue(footerModule.fontSize, 14);
+      const fontSize = footerModule.fontSize ?? 14;
       const separator = footerModule.separator ?? '|';
       const socialLinks = footerModule.socialLinks ?? [];
-      const socialIconSize = scaleValue(footerModule.socialIconSize, 24);
+      const socialIconSize = footerModule.socialIconSize ?? 24;
       const socialIconColor = footerModule.socialIconColor ?? '#000000';
 
       const hasContent = footerModule.logoUrl || footerText || footerLinks.length > 0 || socialLinks.length > 0;
@@ -689,11 +590,11 @@ export const DesignModuleRenderer: React.FC<DesignModuleRendererProps & { onModu
             flexDirection: 'column',
             alignItems: align === 'left' ? 'flex-start' : align === 'right' ? 'flex-end' : 'center',
             justifyContent: 'center',
-            paddingTop: scaleValue((footerModule as any).spacingTop, bandPadding),
-            paddingBottom: scaleValue((footerModule as any).spacingBottom, bandPadding),
-            paddingLeft: scaleValue(64, 64),
-            paddingRight: scaleValue(64, 64),
-            gap: scaleValue(16, 16),
+            paddingTop: (footerModule as any).spacingTop ?? bandPadding,
+            paddingBottom: (footerModule as any).spacingBottom ?? bandPadding,
+            paddingLeft: '64px',
+            paddingRight: '64px',
+            gap: '16px',
             cursor: previewMode ? 'default' : 'pointer'
           }}
           onClick={(e) => {
@@ -702,17 +603,6 @@ export const DesignModuleRenderer: React.FC<DesignModuleRendererProps & { onModu
             }
           }}
         >
-          {!previewMode && (
-            <button
-              type="button"
-              onClick={(e) => { e.stopPropagation(); onModuleDelete?.(m.id); }}
-              style={{ position: 'absolute', right: 8, top: 8, zIndex: 10 }}
-              className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-white/40 bg-white text-gray-700 shadow-sm shadow-black/5"
-              title="Supprimer le bloc Pied de page"
-            >
-              🗑️
-            </button>
-          )}
           {/* Logo */}
           {footerModule.logoUrl && (
             <img

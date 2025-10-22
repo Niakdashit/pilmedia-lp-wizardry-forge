@@ -7,11 +7,9 @@ interface ModalProps {
   children: React.ReactNode;
   onClose: () => void;
   width?: string;
-  maxHeight?: string; // Nouvelle prop pour contrôler la hauteur max
-  usePortal?: boolean; // Si false, reste dans le flux normal (pour conteneurs contraints)
 }
 
-const Modal: React.FC<ModalProps> = ({ title, children, onClose, width = 'max-w-md', maxHeight, usePortal = true }) => {
+const Modal: React.FC<ModalProps> = ({ title, children, onClose, width = 'max-w-md' }) => {
   useEffect(() => {
     // Aide au debug en cas de soucis d'affichage
     // eslint-disable-next-line no-console
@@ -26,12 +24,12 @@ const Modal: React.FC<ModalProps> = ({ title, children, onClose, width = 'max-w-
     <div 
       className="bg-black/40 p-4"
       style={{ 
-        position: usePortal ? 'fixed' : 'absolute', 
+        position: 'fixed', 
         top: 0, 
         left: 0, 
         right: 0, 
         bottom: 0,
-        zIndex: usePortal ? 2147483647 : 50, // Z-index adapté selon le mode
+        zIndex: 2147483647, // super élevé pour passer devant tout
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -57,21 +55,13 @@ const Modal: React.FC<ModalProps> = ({ title, children, onClose, width = 'max-w-
           </div>
         )}
         {/* Contenu */}
-        <div 
-          className="px-6 pb-6 pt-2 overflow-y-auto"
-          style={{
-            maxHeight: maxHeight || '70vh' // Hauteur adaptative (70% de la hauteur de l'écran par défaut)
-          }}
-        >
-          {children}
-        </div>
+        <div className="px-6 pb-6 pt-2 max-h-96 overflow-y-auto">{children}</div>
       </div>
     </div>
   );
 
-  // Utiliser createPortal pour rendre le modal directement dans le body (si usePortal=true)
-  // Sinon, rendre dans le flux normal pour les conteneurs contraints
-  return usePortal ? createPortal(modalContent, document.body) : modalContent;
+  // Utiliser createPortal pour rendre le modal directement dans le body
+  return createPortal(modalContent, document.body);
 };
 
 export default Modal;

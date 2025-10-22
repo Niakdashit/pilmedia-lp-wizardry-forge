@@ -203,21 +203,12 @@ export const useUniversalResponsive = (baseDevice: DeviceType = 'desktop') => {
     };
   }, [needsAdaptation]);
 
-  const forceRecalculateScaling = useMemo(() => {
-    return (elements: ResponsiveElement[]): ResponsiveElementWithConfig[] => {
-      // Force recalcul du scaling pour tous les éléments
-      // Utile pour migrer les modules existants vers le nouveau système de scaling (-48.2% mobile)
-      return applyAutoResponsive(elements);
-    };
-  }, [applyAutoResponsive]);
-
   return {
     calculateResponsiveProperties,
     applyAutoResponsive,
     getPropertiesForDevice,
     needsAdaptation,
     getAdaptationSuggestions,
-    forceRecalculateScaling,
     DEVICE_DIMENSIONS: { 
       desktop: getDeviceDimensions('desktop'),
       tablet: getDeviceDimensions('tablet'),

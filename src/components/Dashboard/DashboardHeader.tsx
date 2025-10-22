@@ -1,13 +1,10 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { Link } from 'react-router-dom';
 import { FolderOpen, Layers } from 'lucide-react';
 import PillButton from '../shared/PillButton';
-import EditorModeModal from './EditorModeModal';
  
 import { GameType } from './types';
 const DashboardHeader: React.FC = () => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedEditorType, setSelectedEditorType] = useState<GameType['type'] | null>(null);
-
   const gameTypes: GameType[] = [{
     type: 'wheel',
     label: 'Roue'
@@ -24,11 +21,6 @@ const DashboardHeader: React.FC = () => {
     type: 'form',
     label: 'Formulaire'
   }];
-
-  const handleGameTypeClick = (type: GameType['type']) => {
-    setSelectedEditorType(type);
-    setIsModalOpen(true);
-  };
   return <div className="relative w-full mt-2 pb-4 px-6 select-text sm:px-8 lg:px-10 z-10 overflow-hidden">
       {/* Fond glassmorphique pastel bleu, identique à PageHeader */}
       <div className="relative max-w-7xl mx-auto rounded-b-3xl overflow-hidden">
@@ -85,15 +77,18 @@ const DashboardHeader: React.FC = () => {
                   jackpot: '/gamification/shortcuts/jackpot.svg',
                   form: '/gamification/shortcuts/form.svg'
                 };
-                return <button 
-                  key={game.type} 
-                  onClick={() => handleGameTypeClick(game.type)}
-                  className="flex flex-col items-center group cursor-pointer opacity-0 animate-fade-in" 
-                  style={{
-                    animationDelay: `${index * 0.1}s`,
-                    animationFillMode: 'forwards'
-                  }}
-                >
+                const getRoute = (type: string) => {
+                  if (type === 'quiz') return '/quiz-editor';
+                  if (type === 'wheel') return '/design-editor';
+                  if (type === 'scratch') return '/scratch-editor';
+                  if (type === 'jackpot') return '/jackpot-editor';
+                  if (type === 'form') return '/form-editor';
+                  return `/quick-campaign?type=${type}`;
+                };
+                return <Link key={game.type} to={getRoute(game.type)} className="flex flex-col items-center group cursor-pointer opacity-0 animate-fade-in" style={{
+                  animationDelay: `${index * 0.1}s`,
+                  animationFillMode: 'forwards'
+                }}>
                       <div className="w-[3.5625rem] h-[3.5625rem] bg-transparent rounded-full overflow-hidden shadow-xl shadow-purple-500/15 flex items-center justify-center group-hover:shadow-2xl group-hover:shadow-purple-500/25 transform group-hover:scale-110 transition-all duration-300">
                         <img
                           src={iconByType[game.type]}
@@ -106,7 +101,7 @@ const DashboardHeader: React.FC = () => {
                       <span className="mt-2 text-xs font-medium text-gray-700 group-hover:text-[#841b60] transition-colors text-center drop-shadow-sm">
                         {game.label}
                       </span>
-                    </button>;
+                    </Link>;
               })}
               </div>
 
@@ -124,16 +119,20 @@ const DashboardHeader: React.FC = () => {
                     jackpot: '/gamification/shortcuts/jackpot.svg',
                     form: '/gamification/shortcuts/form.svg'
                   };
+                  const getRoute = (type: string) => {
+                    console.log('🎯 [DashboardHeader] Game type:', type);
+                    if (type === 'quiz') return '/quiz-editor';
+                    if (type === 'wheel') return '/design-editor';
+                    if (type === 'scratch') return '/scratch-editor';
+                    if (type === 'jackpot') return '/jackpot-editor';
+                    if (type === 'form') return '/form-editor';
+                    return `/quick-campaign?type=${type}`;
+                  };
                   
-                  return <button 
-                    key={game.type} 
-                    onClick={() => handleGameTypeClick(game.type)}
-                    className="flex flex-col items-center group cursor-pointer opacity-0 animate-fade-in flex-shrink-0" 
-                    style={{
-                      animationDelay: `${index * 0.1}s`,
-                      animationFillMode: 'forwards'
-                    }}
-                  >
+                  return <Link key={game.type} to={getRoute(game.type)} className="flex flex-col items-center group cursor-pointer opacity-0 animate-fade-in flex-shrink-0" style={{
+                    animationDelay: `${index * 0.1}s`,
+                    animationFillMode: 'forwards'
+                  }}>
                         <div className="w-[3.5625rem] h-[3.5625rem] bg-transparent rounded-full overflow-hidden shadow-xl shadow-purple-500/15 flex items-center justify-center group-hover:shadow-2xl group-hover:shadow-purple-500/25 transform group-hover:scale-110 transition-all duration-300">
                           <img
                             src={iconByType[game.type]}
@@ -146,7 +145,7 @@ const DashboardHeader: React.FC = () => {
                         <span className="mt-2 text-xs font-medium text-gray-700 group-hover:text-[#841b60] transition-colors text-center drop-shadow-sm">
                           {game.label}
                         </span>
-                      </button>
+                      </Link>
                   })}
                 </div>
               </div>
@@ -193,18 +192,6 @@ const DashboardHeader: React.FC = () => {
           display: none;
         }
       `}</style>
-
-      {/* Modale de choix de mode */}
-      {selectedEditorType && (
-        <EditorModeModal
-          isOpen={isModalOpen}
-          onClose={() => {
-            setIsModalOpen(false);
-            setSelectedEditorType(null);
-          }}
-          editorType={selectedEditorType as 'wheel' | 'quiz' | 'scratch' | 'jackpot' | 'form' | 'dice' | 'memory' | 'puzzle'}
-        />
-      )}
     </div>;
 };
 export default DashboardHeader;

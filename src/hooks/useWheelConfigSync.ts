@@ -1,6 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
 import { WheelConfigService } from '../services/WheelConfigService';
-import { useEditorStore } from '../stores/editorStore';
 
 interface UseWheelConfigSyncProps {
   campaign: any;
@@ -18,13 +17,6 @@ export const useWheelConfigSync = ({
   onCampaignChange
 }: UseWheelConfigSyncProps) => {
   const [wheelModalConfig, setWheelModalConfig] = useState<any>({});
-  
-  // Read from global store to catch updates from WheelConfigSettings
-  // IMPORTANT: Select the entire campaign object to trigger on any nested changes
-  const storeCampaign = useEditorStore((s) => s.campaign as any);
-  
-  // Also explicitly select _lastUpdate to ensure reactivity
-  const storeLastUpdate = useEditorStore((s) => (s.campaign as any)?._lastUpdate);
 
   // Handler unifié pour les mises à jour
   const updateWheelConfig = useCallback(
@@ -35,55 +27,20 @@ export const useWheelConfigSync = ({
     [onCampaignChange]
   );
 
-  // Synchroniser avec les changements de campagne (priorité au store global)
+  // Synchroniser avec les changements de campagne
   useEffect(() => {
-    // Prefer store campaign over props campaign for wheel config
-    const activeCampaign = storeCampaign || campaign;
-    
-    if (activeCampaign?.design?.wheelConfig) {
-      const newConfig = {
-        wheelBorderStyle: activeCampaign.design.wheelBorderStyle || activeCampaign.design.wheelConfig.borderStyle,
-        wheelBorderColor: activeCampaign.design.wheelConfig.borderColor,
-        wheelBorderWidth: activeCampaign.design.wheelConfig.borderWidth,
-        wheelScale: activeCampaign.design.wheelConfig.scale !== undefined ? activeCampaign.design.wheelConfig.scale : 2.4,
-        // NE PAS synchroniser wheelShowBulbs ici - elle est gérée directement dans StandardizedWheel
-        // wheelShowBulbs: activeCampaign.design.wheelConfig.showBulbs,
-        // NE PAS synchroniser wheelPosition ici - elle est gérée directement dans StandardizedWheel
-        // wheelPosition: (activeCampaign.design.wheelConfig as any)?.position !== undefined 
-        //   ? (activeCampaign.design.wheelConfig as any)?.position 
-        //   : 'center',
-      };
-      
-      console.log('🔄 [useWheelConfigSync] Syncing wheel config:', {
-        source: storeCampaign ? 'store' : 'props',
-        newConfig,
-        _lastUpdate: activeCampaign._lastUpdate,
-        storeLastUpdate
-      });
-      
-      // Only update if values actually changed to avoid overwriting user input
-      setWheelModalConfig((prev: any) => {
-        const hasChanges = 
-          prev.wheelBorderStyle !== newConfig.wheelBorderStyle ||
-          prev.wheelBorderColor !== newConfig.wheelBorderColor ||
-          prev.wheelBorderWidth !== newConfig.wheelBorderWidth ||
-          prev.wheelScale !== newConfig.wheelScale;
-        // wheelShowBulbs et wheelPosition ne sont plus synchronisés ici
-        
-        if (hasChanges) {
-          console.log('🔄 [useWheelConfigSync] Config changed, updating:', { prev, newConfig });
-          return newConfig;
-        }
-        
-        return prev;
+    if (campaign?.design?.wheelConfig) {
+      setWheelModalConfig({
+        wheelBorderStyle: campaign.design.wheelBorderStyle,
+        wheelBorderColor: campaign.design.wheelConfig.borderColor,
+        wheelBorderWidth: campaign.design.wheelConfig.borderWidth,
+        wheelScale: campaign.design.wheelConfig.scale,
+        wheelShowBulbs: campaign.design.wheelConfig.showBulbs,
+        wheelPosition: (campaign.design.wheelConfig as any)?.position,
+
       });
     }
-  }, [
-    storeCampaign,
-    storeLastUpdate, // Explicitly track _lastUpdate changes
-    campaign?.design?.wheelConfig, 
-    campaign?.design?.wheelBorderStyle
-  ]);
+  }, [campaign?.design?.wheelConfig, campaign?.design?.wheelBorderStyle]);
 
   // Configuration canonique mise à jour
   const getCanonicalConfig = useCallback((options: { device?: string; shouldCropWheel?: boolean } = {}) => 

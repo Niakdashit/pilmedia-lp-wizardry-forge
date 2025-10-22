@@ -1,5 +1,5 @@
 import React from 'react';
-import { Square, Circle, Type, Image as ImageIcon, MousePointer, LayoutGrid, FileText, Instagram, Facebook, Twitter, Linkedin, ChevronDown, Search, Share2 } from 'lucide-react';
+import { Square, Circle, Type, Image as ImageIcon, MousePointerSquare, LayoutGrid, FileText, Instagram, Facebook, Twitter, Linkedin, ChevronDown, Search, Share2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 interface ElementItem {
@@ -124,7 +124,7 @@ const shapeElements: ElementItem[] = [
   {
     id: 'line-horizontal',
     name: 'Ligne horizontale',
-    icon: MousePointer, // Remplacement de ArrowLeftRight
+    icon: MousePointerSquare, // Remplacement de ArrowLeftRight
     type: 'shape',
     category: 'shapes',
     defaultProps: {
@@ -138,7 +138,7 @@ const shapeElements: ElementItem[] = [
   {
     id: 'line-vertical',
     name: 'Ligne verticale',
-    icon: MousePointer, // Remplacement de ArrowUpDown
+    icon: MousePointerSquare, // Remplacement de ArrowUpDown
     type: 'shape',
     category: 'shapes',
     defaultProps: {
@@ -218,7 +218,7 @@ const interactiveElements: ElementItem[] = [
   {
     id: 'button',
     name: 'Bouton',
-    icon: MousePointer,
+    icon: MousePointerSquare,
     type: 'button',
     category: 'interactive',
     defaultProps: {
@@ -289,7 +289,7 @@ const categoryIcons = {
   media: ImageIcon,
   shapes: Square,
   social: Share2,
-  interactive: MousePointer,
+  interactive: MousePointerSquare,
 };
 
 const categoryLabels = {

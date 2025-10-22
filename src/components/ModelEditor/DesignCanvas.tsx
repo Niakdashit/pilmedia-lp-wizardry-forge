@@ -86,8 +86,6 @@ export interface DesignCanvasProps {
   containerClassName?: string;
   // When true, display a hover form overlay on the right side (30% width)
   showFormOverlay?: boolean;
-  // Preview mode flag to disable rounded corners
-  isPreviewMode?: boolean;
 }
 
 const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({ 
@@ -177,18 +175,6 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
       ? Math.max(0.1, Math.min(1, zoom))
       : 1
   );
-
-  // Synchroniser le zoom depuis la prop externe (ZoomSlider)
-  useEffect(() => {
-    // Synchroniser depuis le prop uniquement s'il est valide
-    if (typeof zoom === 'number' && !Number.isNaN(zoom)) {
-      const clamped = Math.max(0.1, Math.min(1, zoom));
-      // Éviter les mises à jour inutiles
-      if (Math.abs(clamped - localZoom) > 0.0001) {
-        setLocalZoom(clamped);
-      }
-    }
-  }, [zoom, localZoom]);
 
   const [showAnimationPopup, setShowAnimationPopup] = useState(false);
   const [selectedAnimation, setSelectedAnimation] = useState<any>(null);
@@ -1717,10 +1703,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
         onJackpotPanelChange={onJackpotPanelChange}
       >
         {/* Canvas Toolbar - Show for text and shape elements */}
-        {(() => {
-          // ModelEditor n'a qu'un seul écran, donc toujours afficher si élément sélectionné
-          const shouldShow = (!readOnly) && selectedElementData && (selectedElementData.type === 'text' || selectedElementData.type === 'shape') && selectedDevice !== 'mobile';
-          return shouldShow ? (
+        {(!readOnly) && selectedElementData && (selectedElementData.type === 'text' || selectedElementData.type === 'shape') && selectedDevice !== 'mobile' && (
           <div className="z-10 absolute top-4 left-1/2 transform -translate-x-1/2">
             <CanvasToolbar 
               selectedElement={{
@@ -1736,8 +1719,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
               canvasRef={activeCanvasRef as React.RefObject<HTMLDivElement>}
             />
           </div>
-          ) : null;
-        })()}
+        )}
         
         <div 
           ref={containerRef} 
@@ -1781,7 +1763,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
           >
             <div 
               ref={activeCanvasRef}
-              className={`relative bg-transparent overflow-hidden group ${!readOnly ? 'rounded-3xl' : ''}`} 
+              className="relative bg-transparent rounded-3xl overflow-hidden group" 
               style={{
                 width: `${effectiveCanvasSize.width}px`,
                 height: `${effectiveCanvasSize.height}px`,

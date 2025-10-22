@@ -137,7 +137,16 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
     wheelConfigSize: wheelConfig.size,
     scale: wheelConfig.scale
   });
-
+  
+  // Zone cliquable: proxy pour déclencher le bouton interne de SmartWheel
+  const wheelAreaRef = React.useRef<HTMLDivElement>(null);
+  const handleWheelAreaClick = () => {
+    if (disabled) return;
+    const btn = wheelAreaRef.current?.querySelector('button');
+    if (btn instanceof HTMLButtonElement && !btn.disabled) {
+      btn.click();
+    }
+  };
   // Resolve spin props from props -> wheelModalConfig -> campaign -> defaults
   const resolvedSpinMode: 'random' | 'instant_winner' | 'probability' =
     spinMode ||
@@ -184,7 +193,7 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
         className="w-full h-full transition-transform duration-700 ease-out"
         style={{ transform: lifted ? 'translateY(-25%)' : 'translateY(0%)' }}
       >
-        <div className={cropping.containerClass}>
+        <div className={cropping.containerClass} style={cropping.styles as React.CSSProperties}>
           <div className={cropping.wheelClass}>
             <SmartWheel
               key={(() => {

@@ -3,7 +3,7 @@ import type { DeviceType } from '../../../utils/deviceDimensions';
 
 interface TouchOptimizationConfig {
   selectedDevice: DeviceType;
-  containerRef?: React.RefObject<HTMLElement | null>;
+  containerRef?: React.RefObject<HTMLElement>;
 }
 
 interface TouchCalibration {

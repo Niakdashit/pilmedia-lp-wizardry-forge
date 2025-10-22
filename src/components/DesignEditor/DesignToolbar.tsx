@@ -1,8 +1,6 @@
-'use client';
-
 import React from 'react';
-import { useNavigate } from '@/lib/router-adapter';
-import { Monitor, Smartphone, Save, Eye, X, Undo, Redo, Layers, RefreshCw } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Monitor, Smartphone, Save, Eye, X, Undo, Redo, Layers } from 'lucide-react';
 
 interface DesignToolbarProps {
   selectedDevice: 'desktop' | 'tablet' | 'mobile';
@@ -25,8 +23,6 @@ interface DesignToolbarProps {
   showSaveCloseButtons?: boolean;
   // Navigation directe vers l'écran Paramétrage (même chemin que "Sauvegarder et continuer")
   onNavigateToSettings?: () => void;
-  // Callback pour recalculer le scaling mobile des modules existants
-  onRecalculateMobileScaling?: () => void;
 }
 
 const DesignToolbar: React.FC<DesignToolbarProps> = React.memo(({
@@ -43,8 +39,7 @@ const DesignToolbar: React.FC<DesignToolbarProps> = React.memo(({
   mode = 'campaign',
   onSave,
   showSaveCloseButtons = true,
-  onNavigateToSettings,
-  onRecalculateMobileScaling
+  onNavigateToSettings
 }) => {
   const navigate = useNavigate();
   const saveDesktopLabel = mode === 'template' ? 'Enregistrer template' : 'Sauvegarder et continuer';
@@ -79,15 +74,6 @@ const DesignToolbar: React.FC<DesignToolbarProps> = React.memo(({
           >
             <Redo className="w-4 h-4" />
           </button>
-          {onRecalculateMobileScaling && (
-            <button 
-              onClick={onRecalculateMobileScaling}
-              className="p-1.5 rounded-lg transition-all duration-200 hover:bg-[hsl(var(--sidebar-hover))] text-[hsl(var(--sidebar-icon))] hover:text-[hsl(var(--sidebar-icon-active))] ml-2 border-l border-gray-200 pl-3"
-              title="Recalculer le scaling mobile (-48.2%)"
-            >
-              <RefreshCw className="w-4 h-4" />
-            </button>
-          )}
         </div>
       </div>
 

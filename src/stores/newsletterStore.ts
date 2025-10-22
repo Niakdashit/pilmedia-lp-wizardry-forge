@@ -12,8 +12,6 @@ interface NewsletterState {
   addModule: (mod: NewsletterModule) => void;
   removeModule: (id: string) => void;
   updateModule: (id: string, updates: Partial<NewsletterModule>) => void;
-  setFromGeneratedHTML?: (html: string) => void;
-  loadGeneratedAsModules?: (html: string) => void;
 }
 
 export const useNewsletterStore = create<NewsletterState>((set) => ({
@@ -26,10 +24,4 @@ export const useNewsletterStore = create<NewsletterState>((set) => ({
     set((state) => ({
       modules: state.modules.map((m) => (m.id === id ? { ...m, ...updates } : m)),
     })),
-  setFromGeneratedHTML: (html) => {
-    console.log('setFromGeneratedHTML not implemented', html);
-  },
-  loadGeneratedAsModules: (html) => {
-    console.log('loadGeneratedAsModules not implemented', html);
-  },
 }));

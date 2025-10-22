@@ -1,15 +1,12 @@
-'use client';
-
 import React, { useState, useMemo, useEffect, useRef, useCallback, lazy } from 'react';
-// Align routing with QuizEditor via router adapter
-import { useLocation, useNavigate } from '@/lib/router-adapter';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Save, X } from 'lucide-react';
 const HybridSidebar = lazy(() => import('./HybridSidebar'));
 const DesignToolbar = lazy(() => import('./DesignToolbar'));
-import PreviewRenderer from '@/components/preview/PreviewRenderer';
-// import GradientBand from '../shared/GradientBand';
-import type { ModularPage, ScreenId, BlocBouton, Module } from '@/types/modularEditor';
-import { createEmptyModularPage } from '@/types/modularEditor';
+const FunnelUnlockedGame = lazy(() => import('@/components/funnels/FunnelUnlockedGame'));
+const FunnelQuizParticipate = lazy(() => import('@/components/funnels/FunnelQuizParticipate'));
+import type { DesignModularPage, DesignScreenId, DesignModule } from '@/types/designEditorModular';
+import { createEmptyDesignModularPage } from '@/types/designEditorModular';
 
 import ZoomSlider from './components/ZoomSlider';
 const DesignCanvas = lazy(() => import('./DesignCanvas'));
@@ -18,9 +15,9 @@ import { useKeyboardShortcuts } from '../ModernEditor/hooks/useKeyboardShortcuts
 import { useUndoRedo, useUndoRedoShortcuts } from '../../hooks/useUndoRedo';
 import { useWheelConfigSync } from '../../hooks/useWheelConfigSync';
 import { useGroupManager } from '../../hooks/useGroupManager';
+import { getDeviceDimensions } from '../../utils/deviceDimensions';
 import { getEditorDeviceOverride } from '@/utils/deviceOverrides';
-import { recalculateAllElements } from '../../utils/recalculateAllModules';
-import { useEditorPreviewSync } from '@/hooks/useEditorPreviewSync';
+import { useEditorPreviewSync } from '../../hooks/useEditorPreviewSync';
 
 
 import { useCampaigns } from '@/hooks/useCampaigns';
@@ -36,14 +33,6 @@ interface DesignEditorLayoutProps {
 
 const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaign', hiddenTabs }) => {
   const navigate = useNavigate();
-  const location = useLocation();
-  
-  // Détection du mode Article via URL (?mode=article)
-  const searchParams = new URLSearchParams(location.search);
-  const editorMode = searchParams.get('mode') === 'article' ? 'article' : 'fullscreen';
-  
-  console.log('🎨 [DesignEditorLayout] Editor Mode:', editorMode);
-  
   // Détection automatique de l'appareil basée sur l'user-agent pour éviter le basculement lors du redimensionnement de fenêtre
   const detectDevice = (): 'desktop' | 'tablet' | 'mobile' => {
     const override = getEditorDeviceOverride();
@@ -61,24 +50,20 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
   const [windowSize, setWindowSize] = useState({ width: 0, height: 0 });
   const isWindowMobile = windowSize.height > windowSize.width && windowSize.width < 768;
 
-  // Zoom par défaut selon l'appareil avec persistance (aligné avec QuizEditor)
+  // Zoom par défaut selon l'appareil
   const getDefaultZoom = (device: 'desktop' | 'tablet' | 'mobile'): number => {
-    try {
-      const saved = localStorage.getItem(`editor-zoom-${device}`);
-      if (saved) {
-        const v = parseFloat(saved);
-        if (!Number.isNaN(v) && v >= 0.1 && v <= 1) return v;
-      }
-    } catch {}
-    // Uniformisation : même zoom que le mode preview pour tous les appareils
-    // Cela garantit que l'écran a exactement la même taille en édition et en preview
+    if (device === 'mobile' && typeof window !== 'undefined') {
+      const { width, height } = getDeviceDimensions('mobile');
+      const scale = Math.min(window.innerWidth / width, window.innerHeight / height);
+      return Math.min(scale, 1);
+    }
     switch (device) {
       case 'desktop':
-        return 0.7;
+        return 0.7; // 70%
       case 'tablet':
-        return 0.55;
+        return 0.55; // 55%
       case 'mobile':
-        return 1.0; // 100% - Identique au mode preview pour une taille uniforme
+        return 0.45; // 45% pour une meilleure visibilité sur mobile
       default:
         return 0.7;
     }
@@ -108,74 +93,106 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
 
   // États principaux
   const [canvasElements, setCanvasElements] = useState<any[]>([]);
-  
-  // Background par écran - chaque écran a son propre background
-  const defaultBackground = mode === 'template'
-    ? { type: 'color' as const, value: '#4ECDC4' }
-    : { type: 'color' as const, value: 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)' };
-  
-  const [screenBackgrounds, setScreenBackgrounds] = useState<Record<'screen1' | 'screen2' | 'screen3', { type: 'color' | 'image'; value: string }>>({
-    screen1: defaultBackground,
-    screen2: defaultBackground,
-    screen3: defaultBackground
-  });
-  
-  // Background global (fallback pour compatibilité)
-  const [canvasBackground, setCanvasBackground] = useState<{ type: 'color' | 'image'; value: string }>(defaultBackground);
-  
+  const [canvasBackground, setCanvasBackground] = useState<{ type: 'color' | 'image'; value: string }>(() => (
+    mode === 'template'
+      ? { type: 'color', value: '#4ECDC4' }
+      : { type: 'color', value: 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)' }
+  ));
   const [canvasZoom, setCanvasZoom] = useState(getDefaultZoom(selectedDevice));
 
-  // État pour tracker la position de scroll (quel écran est visible)
-  const [currentScreen, setCurrentScreen] = useState<'screen1' | 'screen2' | 'screen3'>('screen1');
-  
-  // Modular editor JSON state
-  const [modularPage, setModularPage] = useState<ModularPage>(createEmptyModularPage());
-  
-  // Debug: Log screen1 modules
-  React.useEffect(() => {
-    console.log('🎯 [DesignEditorLayout] Screen1 modules:', modularPage.screens.screen1?.length || 0, modularPage.screens.screen1);
-  }, [modularPage.screens.screen1]);
-  
-  // Scroll vers le haut au chargement pour afficher l'écran 1
-  React.useEffect(() => {
-    const scrollArea = document.querySelector('.canvas-scroll-area');
-    if (scrollArea) {
-      console.log('📜 [DesignEditorLayout] Scrolling to top to show screen1');
-      scrollArea.scrollTop = 0;
-    }
-  }, []); // Seulement au montage
-  
+  // Multi-screen system states
+  const [currentScreen, setCurrentScreen] = useState<DesignScreenId>('screen1');
+  const [modularPage, setModularPage] = useState<DesignModularPage>(createEmptyDesignModularPage());
+  // Module selection for configuration panels
   const [selectedModuleId, setSelectedModuleId] = useState<string | null>(null);
-  const lastModuleSelectionRef = useRef<string | null>(null);
-  
-  const selectedModule: Module | null = useMemo(() => {
-    if (!selectedModuleId) return null;
-    const allModules = (Object.values(modularPage.screens) as Module[][]).flat();
-    return allModules.find((module) => module.id === selectedModuleId) || null;
-  }, [selectedModuleId, modularPage.screens]);
-  
-  // Sauvegarder le zoom à chaque changement pour persistance entre modes
+  const [selectedModule, setSelectedModule] = useState<DesignModule | null>(null);
+
+  // Auto-assign screenId to elements without one
   useEffect(() => {
-    try {
-      localStorage.setItem(`editor-zoom-${selectedDevice}`, String(canvasZoom));
-    } catch {}
-  }, [canvasZoom, selectedDevice]);
+    if (!canvasElements.length) return;
+    const hasMissingScreen = canvasElements.some((element: any) => !element?.screenId);
+    if (!hasMissingScreen) return;
+
+    setCanvasElements((prev: any[]) => {
+      let mutated = false;
+      const updated = prev.map((element: any) => {
+        if (element?.screenId) return element;
+
+        mutated = true;
+        const role = typeof element?.role === 'string' ? element.role.toLowerCase() : '';
+        if (role.includes('exit-message')) {
+          return { ...element, screenId: 'screen3' as const };
+        }
+        if (
+          role.includes('form') ||
+          role.includes('contact') ||
+          role.includes('lead') ||
+          role.includes('info') ||
+          role.includes('screen2')
+        ) {
+          return { ...element, screenId: 'screen2' as const };
+        }
+        return { ...element, screenId: 'screen1' as const };
+      });
+
+      return mutated ? updated : prev;
+    });
+  }, [canvasElements]);
+
+  // Detect scroll position to determine current screen
+  useEffect(() => {
+    const canvasScrollArea = document.querySelector('.canvas-scroll-area') as HTMLElement | null;
+    if (!canvasScrollArea) return;
+
+    const anchors = Array.from(canvasScrollArea.querySelectorAll('[data-screen-anchor]')) as HTMLElement[];
+    if (anchors.length === 0) return;
+
+    const computeNearestScreen = () => {
+      const areaRect = canvasScrollArea.getBoundingClientRect();
+      const areaCenter = areaRect.top + areaRect.height / 2;
+
+      let closestId: DesignScreenId = 'screen1';
+      let closestDistance = Infinity;
+
+      anchors.forEach((anchor) => {
+        const screenId = (anchor.dataset.screenAnchor as DesignScreenId | undefined) ?? 'screen1';
+        const rect = anchor.getBoundingClientRect();
+        const anchorCenter = rect.top + rect.height / 2;
+        const distance = Math.abs(anchorCenter - areaCenter);
+
+        if (distance < closestDistance) {
+          closestDistance = distance;
+          closestId = screenId;
+        }
+      });
+
+      setCurrentScreen((prev: DesignScreenId) => (prev === closestId ? prev : closestId));
+    };
+
+    requestAnimationFrame(computeNearestScreen);
+
+    const handleScroll = () => {
+      requestAnimationFrame(computeNearestScreen);
+    };
+
+    const handleResize = () => {
+      requestAnimationFrame(computeNearestScreen);
+    };
+
+    canvasScrollArea.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      canvasScrollArea.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
 
   // Synchronise l'état de l'appareil réel et sélectionné après le montage (corrige les différences entre Lovable et Safari)
   useEffect(() => {
     const device = detectDevice();
     setActualDevice(device);
     setSelectedDevice(device);
-    
-    // Nettoyer les anciennes valeurs de zoom mobile pour forcer le nouveau zoom à 100%
-    try {
-      const savedMobileZoom = localStorage.getItem('editor-zoom-mobile');
-      if (savedMobileZoom && parseFloat(savedMobileZoom) < 1.0) {
-        console.log('🧹 Nettoyage ancien zoom mobile:', savedMobileZoom, '→ 1.0');
-        localStorage.removeItem('editor-zoom-mobile');
-      }
-    } catch {}
-    
     setCanvasZoom(getDefaultZoom(device));
   }, []);
 
@@ -190,45 +207,53 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
     return () => window.removeEventListener('resize', updateWindowSize);
   }, []);
 
-  // Note: Le zoom mobile est maintenant fixe à 100% pour correspondre au mode preview
-  // L'ancien code qui ajustait automatiquement le zoom lors du redimensionnement a été supprimé
-
-  // 🔄 MIGRATION AUTOMATIQUE : Recalcule le scaling mobile (-48.2%) pour les modules existants
-  const [hasRecalculated, setHasRecalculated] = useState(false);
+  // Écouter l'événement de sélection de module depuis le canvas
   useEffect(() => {
-    // Recalculer les éléments canvas (si présents)
-    if (canvasElements.length > 0 && !hasRecalculated) {
-      console.log('🔄 [Migration Canvas] Recalcul automatique du scaling mobile pour', canvasElements.length, 'éléments...');
-      const recalculated = recalculateAllElements(canvasElements, 'desktop');
-      setCanvasElements(recalculated);
-      setHasRecalculated(true);
-      console.log('✅ [Migration Canvas] Scaling recalculé avec succès !');
-    }
+    const handleModuleSelected = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      const module = customEvent.detail?.module;
+      if (module) {
+        console.log('🎯 Module sélectionné depuis le canvas:', module);
+        console.log('🎯 Type du module:', module.type);
+        setSelectedModuleId(module.id);
+        setSelectedModule(module);
+        // Si c'est un BlocTexte, ouvrir l'onglet Design (background) pour éditer le texte
+        // Sinon, ouvrir l'onglet Elements pour les autres modules
+        if (module.type === 'BlocTexte') {
+          console.log('✅ BlocTexte détecté - Ouverture onglet Design');
+          // Forcer l'ouverture du panneau Design
+          setShowDesignInSidebar(true);
+          setShowEffectsInSidebar(false);
+          setShowAnimationsInSidebar(false);
+          setShowPositionInSidebar(false);
+          // Ouvrir l'onglet background
+          setTimeout(() => {
+            sidebarRef.current?.setActiveTab('background');
+          }, 0);
+        } else {
+          console.log('✅ Autre module détecté - Ouverture onglet Elements');
+          sidebarRef.current?.setActiveTab('elements');
+        }
+      }
+    };
 
-    // Recalculer les modules modulaires (modularPage)
-    const allModules = (Object.values(modularPage.screens) as Module[][]).flat();
-    if (allModules.length > 0 && !hasRecalculated) {
-      console.log('🔄 [Migration Modules] Recalcul automatique du scaling mobile pour', allModules.length, 'modules...');
-      const recalculatedModules = recalculateAllElements(allModules as any[], 'desktop');
-      
-      // Reconstruire modularPage avec les modules recalculés
-      const nextScreens: ModularPage['screens'] = { ...modularPage.screens };
-      let moduleIndex = 0;
-      
-      (Object.keys(nextScreens) as ScreenId[]).forEach((screenId) => {
-        const screenModules = nextScreens[screenId] || [];
-        nextScreens[screenId] = screenModules.map(() => {
-          const recalculated = recalculatedModules[moduleIndex];
-          moduleIndex++;
-          return recalculated as Module;
-        });
-      });
-      
-      setModularPage({ screens: nextScreens, _updatedAt: Date.now() });
-      setHasRecalculated(true);
-      console.log('✅ [Migration Modules] Scaling recalculé avec succès !');
+    // Écouter les deux types d'événements pour compatibilité
+    window.addEventListener('modularModuleSelected', handleModuleSelected);
+    window.addEventListener('designModularModuleSelected', handleModuleSelected);
+    return () => {
+      window.removeEventListener('modularModuleSelected', handleModuleSelected);
+      window.removeEventListener('designModularModuleSelected', handleModuleSelected);
+    };
+  }, []);
+
+  // Ajuste automatiquement le zoom lors du redimensionnement sur mobile
+  useEffect(() => {
+    if (actualDevice === 'mobile') {
+      const updateZoom = () => setCanvasZoom(getDefaultZoom('mobile'));
+      window.addEventListener('resize', updateZoom);
+      return () => window.removeEventListener('resize', updateZoom);
     }
-  }, [canvasElements.length, modularPage.screens, hasRecalculated]);
+  }, [actualDevice]);
   
   // Référence pour le canvas
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -238,8 +263,6 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
   const [showAnimationsInSidebar, setShowAnimationsInSidebar] = useState(false);
   const [showPositionInSidebar, setShowPositionInSidebar] = useState(false);
   const [showDesignInSidebar, setShowDesignInSidebar] = useState(false);
-  // État pour l'onglet actif dans HybridSidebar
-  const [activeTab, setActiveTab] = useState<string | null>('background');
   // Référence pour contrôler l'onglet actif dans HybridSidebar
   const sidebarRef = useRef<{ setActiveTab: (tab: string) => void }>(null); // Nouvelle référence pour suivre la demande d'ouverture
   // Context de couleur demandé depuis la toolbar ('fill' | 'border' | 'text')
@@ -254,456 +277,9 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
     }
   });
 
-  // Hook de synchronisation preview
-  const { syncBackground } = useEditorPreviewSync();
-
-  // (handler defined later in file; see existing implementation around background history)
-
-  // Détecter la position de scroll pour changer l'écran courant
-  useEffect(() => {
-    const canvasScrollArea = document.querySelector('.canvas-scroll-area') as HTMLElement | null;
-    if (!canvasScrollArea) return;
-
-    const anchors = Array.from(canvasScrollArea.querySelectorAll('[data-screen-anchor]')) as HTMLElement[];
-    if (anchors.length === 0) return;
-
-    // Utiliser IntersectionObserver pour une détection plus précise
-    const observerOptions = {
-      root: canvasScrollArea,
-      rootMargin: '-40% 0px -40% 0px', // Zone centrale pour détecter l'écran principal
-      threshold: [0, 0.25, 0.5, 0.75, 1]
-    };
-
-    const visibilityMap = new Map<string, number>();
-
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        const screenId = (entry.target as HTMLElement).dataset.screenAnchor as 'screen1' | 'screen2' | 'screen3';
-        if (screenId) {
-          visibilityMap.set(screenId, entry.intersectionRatio);
-        }
-      });
-
-      // Trouver l'écran avec le ratio d'intersection le plus élevé
-      let maxRatio = 0;
-      let mostVisibleScreen: 'screen1' | 'screen2' | 'screen3' = 'screen1';
-      
-      visibilityMap.forEach((ratio, screenId) => {
-        if (ratio > maxRatio) {
-          maxRatio = ratio;
-          mostVisibleScreen = screenId as 'screen1' | 'screen2' | 'screen3';
-        }
-      });
-
-      if (maxRatio > 0.1) { // Seuil minimum pour éviter les changements trop sensibles
-        setCurrentScreen((prev) => (prev === mostVisibleScreen ? prev : mostVisibleScreen));
-      }
-    }, observerOptions);
-
-    anchors.forEach((anchor) => observer.observe(anchor));
-
-    return () => {
-      observer.disconnect();
-    };
-  }, []);
-
-  // Initialize modular page from campaignConfig if present
-  useEffect(() => {
-    const mp = (campaignConfig as any)?.design?.designModules as ModularPage | undefined;
-    if (mp && mp.screens) {
-      setModularPage(mp);
-    }
-  }, [campaignConfig]);
-
-  // Migration pour mettre à jour la taille par défaut de la roue
-  useEffect(() => {
-    if (campaignConfig?.design?.wheelConfig && campaignConfig.design.wheelConfig.scale !== 2.4) {
-      setCampaignConfig((prev: any) => {
-        if (!prev) return prev;
-        const updated = {
-          ...prev,
-          design: {
-            ...prev.design,
-            wheelConfig: {
-              ...prev.design.wheelConfig,
-              scale: 2.4
-            }
-          }
-        };
-        return updated;
-      });
-    }
-    // Migration localStorage
-    try {
-      const keys = Object.keys(localStorage);
-      keys.forEach(key => {
-        if (key.includes('wheel') && key.includes('scale')) {
-          const value = localStorage.getItem(key);
-          if (value && parseFloat(value) !== 2.4) {
-            localStorage.setItem(key, '2.4');
-          }
-        }
-      });
-    } catch {}
-  }, [campaignConfig?.design?.wheelConfig?.scale]);
-
-  // Initialize modular page from campaignConfig if present
-  useEffect(() => {
-    const mp = (campaignConfig as any)?.design?.designModules as ModularPage | undefined;
-    if (mp && mp.screens) {
-      setModularPage(mp);
-    }
-  }, [campaignConfig]);
-
-  // Helper to persist modularPage into campaignConfig (and mark modified)
-  const persistModular = useCallback((next: ModularPage) => {
-    setModularPage(next);
-    setCampaignConfig((prev: any) => {
-      const updated = {
-        ...(prev || {}),
-        design: {
-          ...(prev?.design || {}),
-          designModules: { ...next, _updatedAt: Date.now() }
-        }
-      };
-      return updated;
-    });
-    try { setIsModified(true); } catch {}
-  }, [setIsModified]);
-
-  // Helper functions for button management
-  const screenHasCardButton = useCallback((modules: Module[]): boolean => {
-    return modules.some((m) => {
-      if (m.type === 'BlocCarte' && Array.isArray((m as any).children)) {
-        return (m as any).children.some((child: Module) => child?.type === 'BlocBouton');
-      }
-      return false;
-    });
-  }, []);
-
-  // const editorHasCardButton = useCallback(() => {
-  //   return (Object.values(modularPage.screens) as Module[][]).some((modules) => screenHasCardButton(modules));
-  // }, [modularPage.screens, screenHasCardButton]);
-
-  const getDefaultButtonLabel = useCallback((screen: ScreenId): string => {
-    return screen === 'screen3' ? 'Rejouer' : 'Participer';
-  }, []);
-
-  // Assurer la présence d'un bouton "Participer" sur l'écran 1 en mode édition
-  React.useEffect(() => {
-    // Ne s'exécute que lorsque l'écran 1 est affiché pour éviter des insertions inutiles
-    if (currentScreen !== 'screen1') return;
-
-    const screen1Modules = Array.isArray(modularPage.screens.screen1)
-      ? modularPage.screens.screen1
-      : [];
-
-    const hasStandaloneParticiper = screen1Modules.some(
-      (m) => m.type === 'BlocBouton' && typeof (m as any).label === 'string'
-    );
-    const hasCardButton = screenHasCardButton(screen1Modules);
-
-    if (hasStandaloneParticiper || hasCardButton) return; // déjà présent
-
-    const participerButton: BlocBouton = {
-      id: `bloc-bouton-participer-${Date.now()}`,
-      type: 'BlocBouton',
-      label: getDefaultButtonLabel('screen1'),
-      href: '#',
-      background: '#000000',
-      textColor: '#ffffff',
-      borderRadius: 9999,
-      borderWidth: 0,
-      borderColor: '#000000',
-      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-      uppercase: false,
-      bold: false,
-      spacingTop: 0,
-      spacingBottom: 0
-    };
-
-    const nextScreens: ModularPage['screens'] = { ...modularPage.screens };
-    nextScreens.screen1 = [...screen1Modules, participerButton];
-    persistModular({ screens: nextScreens, _updatedAt: Date.now() });
-  }, [currentScreen, modularPage.screens, persistModular, screenHasCardButton, getDefaultButtonLabel]);
-
-  // Bouton "Rejouer" sur l'écran 3 désactivé (retiré par demande utilisateur)
-  // React.useEffect(() => {
-  //   if (currentScreen !== 'screen3') return;
-  //   const screen3Modules = Array.isArray(modularPage.screens.screen3)
-  //     ? modularPage.screens.screen3
-  //     : [];
-  //   const hasStandaloneReplay = screen3Modules.some(
-  //     (m) => m.type === 'BlocBouton' && typeof (m as any).label === 'string'
-  //   );
-  //   const hasCardReplay = screenHasCardButton(screen3Modules);
-  //   if (hasStandaloneReplay || hasCardReplay) return;
-  //   const replayButton: BlocBouton = {
-  //     id: `bloc-bouton-replay-${Date.now()}`,
-  //     type: 'BlocBouton',
-  //     label: getDefaultButtonLabel('screen3'),
-  //     href: '#',
-  //     background: '#000000',
-  //     textColor: '#ffffff',
-  //     borderRadius: 9999,
-  //     borderWidth: 0,
-  //     borderColor: '#000000',
-  //     boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-  //     uppercase: false,
-  //     bold: false,
-  //     spacingTop: 0,
-  //     spacingBottom: 0
-  //   };
-  //   const nextScreens: ModularPage['screens'] = { ...modularPage.screens };
-  //   nextScreens.screen3 = [...screen3Modules, replayButton];
-  //   persistModular({ screens: nextScreens, _updatedAt: Date.now() });
-  // }, [currentScreen, modularPage.screens, persistModular, screenHasCardButton, getDefaultButtonLabel]);
-
-  // Module management functions (cloned from QuizEditor)
-  const handleAddModule = useCallback((screen: ScreenId, module: Module) => {
-    // Gestion spéciale pour les logos (synchronisés sur tous les écrans)
-    if (module.type === 'BlocLogo') {
-      const logoId = module.id || `BlocLogo-${Date.now()}`;
-      const cloneLogo = (base: typeof module): Module => ({
-        ...(base as Module),
-        id: logoId
-      });
-
-      const nextScreens: ModularPage['screens'] = { ...modularPage.screens };
-      (Object.keys(nextScreens) as ScreenId[]).forEach((screenId) => {
-        const withoutLogo = (nextScreens[screenId] || []).filter((m) => m.type !== 'BlocLogo');
-        nextScreens[screenId] = [cloneLogo(module), ...withoutLogo];
-      });
-
-      persistModular({ screens: nextScreens, _updatedAt: Date.now() });
-      return;
-    }
-
-    // Gestion spéciale pour les pieds de page (synchronisés sur tous les écrans)
-    if (module.type === 'BlocPiedDePage') {
-      const footerId = module.id || `BlocPiedDePage-${Date.now()}`;
-      const cloneFooter = (base: typeof module): Module => {
-        if (base.type !== 'BlocPiedDePage') return { ...base } as Module;
-        const footer = base;
-        return {
-          ...footer,
-          id: footerId,
-          footerLinks: Array.isArray(footer.footerLinks)
-            ? footer.footerLinks.map((link) => ({ ...link }))
-            : footer.footerLinks,
-          socialLinks: Array.isArray(footer.socialLinks)
-            ? footer.socialLinks.map((link) => ({ ...link }))
-            : footer.socialLinks
-        } as Module;
-      };
-
-      const nextScreens: ModularPage['screens'] = { ...modularPage.screens };
-      (Object.keys(nextScreens) as ScreenId[]).forEach((screenId) => {
-        const withoutFooter = (nextScreens[screenId] || []).filter((m) => m.type !== 'BlocPiedDePage');
-        nextScreens[screenId] = [...withoutFooter, cloneFooter(module)];
-      });
-
-      persistModular({ screens: nextScreens, _updatedAt: Date.now() });
-      return;
-    }
-
-    let prevScreenModules = modularPage.screens[screen] || [];
-
-    // Si on ajoute une carte avec un bouton, supprimer les boutons standalone
-    if (module.type === 'BlocCarte' && Array.isArray((module as any).children)) {
-      const cardHasButton = (module as any).children.some((child: Module) => child?.type === 'BlocBouton');
-      if (cardHasButton) {
-        prevScreenModules = prevScreenModules.filter((m) => m.type !== 'BlocBouton');
-        (module as any).children = (module as any).children.map((child: Module) => {
-          if (child?.type === 'BlocBouton') {
-            return {
-              ...child,
-              label: child?.label || getDefaultButtonLabel(screen)
-            } as Module;
-          }
-          return child;
-        });
-      }
-    }
-
-    // Gestion spéciale pour le bouton "Participer" (doit rester en fin de tableau)
-    const isParticiperButton = module.type === 'BlocBouton' && (module.label || '').trim().toLowerCase() === 'participer';
-
-    let updatedModules: Module[];
-    if (isParticiperButton) {
-      // Participer est supposé unique et restera en fin de tableau
-      updatedModules = [...prevScreenModules, module];
-    } else {
-      const participateIndex = prevScreenModules.findIndex((m) => m.type === 'BlocBouton' && (m as BlocBouton).label?.trim().toLowerCase() === 'participer');
-      if (participateIndex >= 0) {
-        // Insérer le nouveau module avant le bouton Participer
-        updatedModules = [
-          module,
-          ...prevScreenModules.slice(0, participateIndex),
-          prevScreenModules[participateIndex],
-          ...prevScreenModules.slice(participateIndex + 1)
-        ];
-      } else {
-        // Pas de bouton Participer, ajouter normalement au début
-        updatedModules = [module, ...prevScreenModules];
-      }
-    }
-
-    const next: ModularPage = {
-      screens: {
-        ...modularPage.screens,
-        [screen]: updatedModules
-      },
-      _updatedAt: Date.now()
-    };
-
-    persistModular(next);
-  }, [modularPage, persistModular, getDefaultButtonLabel, screenHasCardButton]);
-
-  const handleUpdateModule = useCallback((id: string, patch: Partial<Module>) => {
-    console.log('🔄 [DesignEditorLayout] handleUpdateModule called:', { id, patch });
-    const nextScreens: ModularPage['screens'] = { ...modularPage.screens };
-    (Object.keys(nextScreens) as ScreenId[]).forEach((s) => {
-      nextScreens[s] = (nextScreens[s] || []).map((m) => (m.id === id ? { ...m, ...patch } as Module : m));
-    });
-    console.log('✅ [DesignEditorLayout] Module updated, persisting:', nextScreens);
-    persistModular({ screens: nextScreens, _updatedAt: Date.now() });
-  }, [modularPage, persistModular]);
-
-  const handleDeleteModule = useCallback((id: string) => {
-    const nextScreens: ModularPage['screens'] = { ...modularPage.screens };
-    (Object.keys(nextScreens) as ScreenId[]).forEach((s) => {
-      nextScreens[s] = (nextScreens[s] || []).filter((m) => m.id !== id);
-    });
-    persistModular({ screens: nextScreens, _updatedAt: Date.now() });
-  }, [modularPage, persistModular]);
-
-  const handleMoveModule = useCallback((id: string, direction: 'up' | 'down') => {
-    const nextScreens: ModularPage['screens'] = { ...modularPage.screens };
-    (Object.keys(nextScreens) as ScreenId[]).forEach((s) => {
-      const arr = [...(nextScreens[s] || [])];
-      const idx = arr.findIndex((m) => m.id === id);
-      if (idx >= 0) {
-        const swapWith = direction === 'up' ? idx - 1 : idx + 1;
-        if (swapWith >= 0 && swapWith < arr.length) {
-          [arr[idx], arr[swapWith]] = [arr[swapWith], arr[idx]];
-          nextScreens[s] = arr;
-        }
-      }
-    });
-    persistModular({ screens: nextScreens, _updatedAt: Date.now() });
-  }, [modularPage, persistModular]);
-
-  const handleDuplicateModule = useCallback((id: string) => {
-    const nextScreens: ModularPage['screens'] = { ...modularPage.screens };
-    (Object.keys(nextScreens) as ScreenId[]).forEach((s) => {
-      const arr = [...(nextScreens[s] || [])];
-      const idx = arr.findIndex((m) => m.id === id);
-      if (idx >= 0) {
-        const original = arr[idx];
-        const duplicate = {
-          ...original,
-          id: `${original.type}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
-        };
-        arr.splice(idx + 1, 0, duplicate);
-        nextScreens[s] = arr;
-      }
-    });
-    persistModular({ screens: nextScreens, _updatedAt: Date.now() });
-  }, [modularPage, persistModular]);
-
-  const scrollToScreen = useCallback((screen: ScreenId): boolean => {
-    const canvasScrollArea = document.querySelector('.canvas-scroll-area') as HTMLElement | null;
-    if (!canvasScrollArea) return false;
-    const anchor = canvasScrollArea.querySelector(`[data-screen-anchor="${screen}"]`) as HTMLElement | null;
-    if (!anchor) return false;
-
-    const anchorTop = anchor.offsetTop;
-    const centerOffset = Math.max(0, (canvasScrollArea.clientHeight - anchor.clientHeight) / 2);
-    const target = anchorTop - centerOffset;
-    const maxScroll = canvasScrollArea.scrollHeight - canvasScrollArea.clientHeight;
-    const clamped = Math.min(Math.max(target, 0), Math.max(maxScroll, 0));
-
-    canvasScrollArea.scrollTo({ top: clamped, behavior: 'smooth' });
-    return true;
-  }, []);
-
   // État pour l'élément sélectionné
   const [selectedElement, setSelectedElement] = useState<any>(null);
   const [selectedElements, setSelectedElements] = useState<any[]>([]);
-  
-  // Détecter quand selectedElement contient un moduleId et mettre à jour selectedModuleId + ouvrir le panneau
-  useEffect(() => {
-    const role = (selectedElement as any)?.role;
-    const moduleId = (selectedElement as any)?.moduleId as string | undefined;
-    const isModularRole =
-      role === 'module-button' ||
-      role === 'module-image' ||
-      role === 'module-video' ||
-      role === 'module-social' ||
-      role === 'module-html' ||
-      role === 'module-carte' ||
-      role === 'module-logo' ||
-      role === 'module-footer' ||
-      role === 'module-text';
-
-    console.log('🔍 [DesignEditor] selectedElement changed:', {
-      role,
-      moduleId,
-      isModularRole,
-      selectedElement,
-      currentSelectedModuleId: selectedModuleId
-    });
-
-    if (!moduleId || !isModularRole) {
-      if (selectedModuleId !== null) {
-        console.log('❌ [DesignEditor] Clearing selectedModuleId');
-        setSelectedModuleId(null);
-      }
-      return;
-    }
-
-    const isNewSelection = selectedModuleId !== moduleId;
-    
-    if (isNewSelection) {
-      console.log('✅ [DesignEditor] Setting selectedModuleId to:', moduleId);
-      lastModuleSelectionRef.current = moduleId;
-      setSelectedModuleId(moduleId);
-      
-      // Trouver le module pour vérifier son type
-      const allModules = (Object.values(modularPage.screens) as Module[][]).flat();
-      const module = allModules.find((m) => m.id === moduleId);
-      
-      // Si c'est un BlocTexte, ouvrir l'onglet Design (background) pour éditer le texte
-      // Sinon, ouvrir l'onglet Elements pour les autres modules
-      if (module?.type === 'BlocTexte') {
-        console.log('📝 [DesignEditor] Opening Background tab for BlocTexte');
-        // Ne changer l'onglet que si on n'est pas déjà sur background
-        if (activeTab !== 'background') {
-          setActiveTab('background');
-          if (sidebarRef.current) {
-            sidebarRef.current.setActiveTab('background');
-          }
-        }
-        setShowDesignInSidebar(true);
-      } else {
-        console.log('📂 [DesignEditor] Opening Elements tab for module');
-        // Ne changer l'onglet que si on n'est pas déjà sur elements
-        if (activeTab !== 'elements') {
-          setActiveTab('elements');
-          if (sidebarRef.current) {
-            sidebarRef.current.setActiveTab('elements');
-          }
-        }
-        setShowDesignInSidebar(false);
-      }
-      
-      // Fermer les autres panneaux
-      setShowEffectsInSidebar(false);
-      setShowAnimationsInSidebar(false);
-      setShowPositionInSidebar(false);
-    }
-  }, [selectedElement, selectedModuleId, activeTab, modularPage.screens]);
   
   // Fonction pour sélectionner tous les éléments (textes, images, etc.)
   const handleSelectAll = useCallback(() => {
@@ -717,7 +293,7 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
       setSelectedElement(null); // Désélectionner l'élément unique
       console.log('🎯 Selected all canvas elements:', {
         total: selectableElements.length,
-        types: selectableElements.reduce((acc, el) => {
+        types: selectableElements.reduce((acc: Record<string, number>, el: any) => {
           acc[el.type] = (acc[el.type] || 0) + 1;
           return acc;
         }, {} as Record<string, number>)
@@ -753,88 +329,8 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
     } catch {}
   }, [previewButtonSide]);
 
-  // Activer la saisie directe sur double-clic pour tous les curseurs (input[type="range"]) de l'éditeur
-  useEffect(() => {
-    const handleDblClick = (e: MouseEvent) => {
-      const target = e.target as HTMLElement | null;
-      if (!target) return;
-
-      // Rechercher l'input range le plus proche (utile si on double-clique sur le track personnalisé)
-      const range = target.closest('input[type="range"]') as HTMLInputElement | null;
-      if (!range) return;
-
-      // Empêcher les comportements par défaut, puis demander une saisie
-      e.preventDefault();
-
-      const min = Number(range.min || '0');
-      const max = Number(range.max || '100');
-      const step = Number(range.step || '1');
-      const current = range.value || String((min + max) / 2);
-
-      const suffixFromAria = /%/.test(range.getAttribute('aria-label') || '') ? '%' : '';
-      const suffix = range.dataset.suffix || suffixFromAria;
-
-      const label = `Entrer une valeur (${min} - ${max})${suffix ? ' ' + suffix : ''}`;
-      const raw = window.prompt(label, current);
-      if (raw == null) return; // annulé
-
-      // Supporter virgule décimale et espaces
-      const normalized = raw.replace(/\s+/g, '').replace(',', '.');
-      let val = Number(normalized);
-      if (Number.isNaN(val)) return;
-
-      // Clamp min/max
-      val = Math.min(max, Math.max(min, val));
-
-      // Respecter le pas si applicable
-      if (!Number.isNaN(step) && step > 0) {
-        val = Math.round(val / step) * step;
-      }
-
-      // Appliquer la valeur et émettre les événements React
-      range.value = String(val);
-      range.dispatchEvent(new Event('input', { bubbles: true }));
-      range.dispatchEvent(new Event('change', { bubbles: true }));
-    };
-
-    // Utiliser la capture pour attraper le double-clic même sur des éléments enfants stylisés
-    document.addEventListener('dblclick', handleDblClick, true);
-    return () => document.removeEventListener('dblclick', handleDblClick, true);
-  }, []);
-
-  // Assurer que tous les éléments ont un screenId
-  useEffect(() => {
-    if (!canvasElements.length) return;
-    const hasMissingScreen = canvasElements.some((element) => !element?.screenId);
-    if (!hasMissingScreen) return;
-
-    setCanvasElements((prev) => {
-      let mutated = false;
-      const updated = prev.map((element) => {
-        if (element?.screenId) return element;
-
-        mutated = true;
-        const role = typeof element?.role === 'string' ? element.role.toLowerCase() : '';
-        if (role.includes('exit-message')) {
-          return { ...element, screenId: 'screen3' as const };
-        }
-        if (
-          role.includes('form') ||
-          role.includes('contact') ||
-          role.includes('lead') ||
-          role.includes('info') ||
-          role.includes('screen2')
-        ) {
-          return { ...element, screenId: 'screen2' as const };
-        }
-        return { ...element, screenId: 'screen1' as const };
-      });
-
-      return mutated ? updated : prev;
-    });
-  }, [canvasElements]);
-
   // Chargement d'un modèle transmis via navigation state
+  const location = useLocation();
   useEffect(() => {
     const state = (location as any)?.state as any;
     const template = state?.templateCampaign;
@@ -875,7 +371,7 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
         ? 'screen2'
         : currentScreen === 'screen3' ? 'screen3' : 'screen1');
     const enrichedElement = element?.screenId ? element : { ...element, screenId: resolvedScreenId };
-    setCanvasElements(prev => {
+    setCanvasElements((prev: any[]) => {
       const newArr = [...prev, enrichedElement];
       setTimeout(() => {
         addToHistory({
@@ -890,193 +386,19 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
   };
 
   // Ajoute à l'historique lors du changement de background (granulaire)
-  const handleBackgroundChange = (bg: any, options?: { screenId?: 'screen1' | 'screen2' | 'screen3'; applyToAllScreens?: boolean; device?: 'desktop' | 'tablet' | 'mobile' }) => {
-    console.log('🎨 [DesignEditor] handleBackgroundChange:', { bg, options });
+  const handleBackgroundChange = (bg: any) => {
+    setCanvasBackground(bg);
     
-    if (options?.applyToAllScreens) {
-      // Appliquer à tous les écrans
-      console.log('✅ Applying background to ALL screens');
-      setScreenBackgrounds({
-        screen1: bg,
-        screen2: bg,
-        screen3: bg
-      });
-      setCanvasBackground(bg); // Fallback global
-    } else if (options?.screenId && options?.device) {
-      // 📱 Appliquer uniquement à l'écran ET appareil spécifiés
-      console.log(`✅ Applying background to ${options.screenId} on ${options.device} ONLY`);
-      setScreenBackgrounds(prev => {
-        const screenKey = options.screenId!;
-        const deviceKey = options.device!;
-        const currentScreenBg = prev[screenKey];
-        
-        // Structure: { type, value, devices: { desktop: {...}, mobile: {...}, tablet: {...} } }
-        const newScreenBg = {
-          ...currentScreenBg,
-          devices: {
-            ...(currentScreenBg?.devices || {}),
-            [deviceKey]: bg
-          }
-        };
-        
-        console.log('📱 Updated screen background with device-specific data:', {
-          screenKey,
-          deviceKey,
-          newScreenBg
-        });
-        
-        return {
-          ...prev,
-          [screenKey]: newScreenBg
-        };
-      });
-    } else if (options?.screenId) {
-      // Appliquer uniquement à l'écran spécifié (tous devices)
-      console.log(`✅ Applying background to ${options.screenId} ONLY`);
-      setScreenBackgrounds(prev => ({
-        ...prev,
-        [options.screenId!]: bg
-      }));
-      // Ne pas modifier canvasBackground global
-    } else {
-      // Pas d'options : comportement par défaut (appliquer globalement)
-      console.log('⚠️ No options provided, applying globally (fallback)');
-      setScreenBackgrounds({
-        screen1: bg,
-        screen2: bg,
-        screen3: bg
-      });
-      setCanvasBackground(bg);
-    }
-
-    // 🔗 Mode Article: refléter toute image de background vers la bannière de l'article pour feedback immédiat
-    try {
-      if (editorMode === 'article' && bg?.type === 'image' && typeof bg?.value === 'string') {
-        // Mettre à jour le store Zustand
-        setCampaign((prev: any) => {
-          const base = prev || {};
-          const baseArticle = base.articleConfig || {};
-          const baseBanner = baseArticle.banner || {};
-          return {
-            ...base,
-            articleConfig: {
-              ...baseArticle,
-              banner: {
-                ...baseBanner,
-                imageUrl: bg.value
-              }
-            }
-          };
-        });
-        // Mettre à jour aussi le state local pour que campaignData le reflète immédiatement
-        setCampaignConfig((prev: any) => {
-          const base = prev || {};
-          const baseArticle = base.articleConfig || {};
-          const baseBanner = baseArticle.banner || {};
-          return {
-            ...base,
-            articleConfig: {
-              ...baseArticle,
-              banner: {
-                ...baseBanner,
-                imageUrl: bg.value
-              }
-            }
-          };
-        });
-        try { setIsModified(true); } catch {}
-      }
-    } catch {}
+    // Synchroniser immédiatement avec le preview
+    syncBackground(bg, selectedDevice);
     
     setTimeout(() => {
       addToHistory({
         campaignConfig: { ...campaignConfig },
         canvasElements: JSON.parse(JSON.stringify(canvasElements)),
-        canvasBackground: { ...bg },
-        screenBackgrounds: { ...screenBackgrounds }
+        canvasBackground: { ...bg }
       }, 'background_update');
     }, 0);
-
-    // Auto-theme wheel based on solid background color
-    try {
-      if (bg?.type === 'color' && typeof bg.value === 'string') {
-        const base = bg.value as string;
-
-        const toRgb = (color: string): { r: number; g: number; b: number } | null => {
-          if (!color) return null;
-          const hex = color.trim();
-          const rgbMatch = hex.match(/^rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)$/i);
-          if (rgbMatch) {
-            return { r: +rgbMatch[1], g: +rgbMatch[2], b: +rgbMatch[3] };
-          }
-          const h = hex.replace('#', '');
-          if (h.length === 3) {
-            const r = parseInt(h[0] + h[0], 16);
-            const g = parseInt(h[1] + h[1], 16);
-            const b = parseInt(h[2] + h[2], 16);
-            return { r, g, b };
-          }
-          if (h.length === 6) {
-            const r = parseInt(h.slice(0, 2), 16);
-            const g = parseInt(h.slice(2, 4), 16);
-            const b = parseInt(h.slice(4, 6), 16);
-            return { r, g, b };
-          }
-          return null;
-        };
-        const toHex = (rgb: { r: number; g: number; b: number }): string => {
-          const c = (n: number) => n.toString(16).padStart(2, '0');
-          return `#${c(Math.max(0, Math.min(255, Math.round(rgb.r))))}${c(Math.max(0, Math.min(255, Math.round(rgb.g))))}${c(Math.max(0, Math.min(255, Math.round(rgb.b))))}`.toUpperCase();
-        };
-        const luminance = (rgb: { r: number; g: number; b: number }) => {
-          const a = [rgb.r, rgb.g, rgb.b].map((v) => {
-            v /= 255;
-            return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
-          });
-          return 0.2126 * a[0] + 0.7152 * a[1] + 0.0722 * a[2];
-        };
-        const darken = (rgb: { r: number; g: number; b: number }, pct: number) => ({
-          r: rgb.r * (1 - pct),
-          g: rgb.g * (1 - pct),
-          b: rgb.b * (1 - pct)
-        });
-        const lighten = (rgb: { r: number; g: number; b: number }, pct: number) => ({
-          r: rgb.r + (255 - rgb.r) * pct,
-          g: rgb.g + (255 - rgb.g) * pct,
-          b: rgb.b + (255 - rgb.b) * pct
-        });
-        const baseRgb = toRgb(base);
-        if (baseRgb) {
-          const primaryRgb = luminance(baseRgb) > 0.6 ? darken(baseRgb, 0.35) : lighten(baseRgb, 0.35);
-          const primaryHex = toHex(primaryRgb);
-
-          setCampaignConfig((prev: any) => {
-            const next = {
-              ...(prev || {}),
-              design: {
-                ...(prev?.design || {}),
-                // expose brand colors for forms + other UIs
-                customColors: {
-                  ...(prev?.design?.customColors || {}),
-                  primary: primaryHex,
-                  secondary: '#ffffff',
-                  _updatedAt: Date.now()
-                },
-                // Update wheel border color if using classic style
-                wheelConfig: {
-                  ...(prev?.design?.wheelConfig || {}),
-                  borderColor: primaryHex,
-                  _updatedAt: Date.now()
-                }
-              }
-            };
-            return next;
-          });
-        }
-      }
-    } catch (e) {
-      console.warn('Auto-theme from background color failed:', e);
-    }
   };
 
   // Ajoute à l'historique lors du changement de config (granulaire)
@@ -1089,6 +411,50 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
         canvasBackground: { ...canvasBackground }
       }, 'config_update');
     }, 0);
+  };
+
+  // Handler pour mettre à jour un module
+  const handleModuleUpdate = (moduleId: string, updates: Partial<DesignModule>) => {
+    console.log('🔧 [DesignEditorLayout] handleModuleUpdate appelé:', {
+      moduleId,
+      updates,
+      timestamp: new Date().toISOString()
+    });
+    
+    setModularPage((prev: DesignModularPage) => {
+      const updatedPage = { ...prev, screens: { ...prev.screens } };
+      let moduleFound = false;
+      
+      // Parcourir tous les écrans pour trouver et mettre à jour le module
+      (['screen1', 'screen2', 'screen3'] as DesignScreenId[]).forEach(screenId => {
+        const screenModules = [...updatedPage.screens[screenId]];
+        const moduleIndex = screenModules.findIndex((m: DesignModule) => m.id === moduleId);
+        if (moduleIndex !== -1) {
+          moduleFound = true;
+          const oldModule = screenModules[moduleIndex];
+          screenModules[moduleIndex] = { ...screenModules[moduleIndex], ...updates } as DesignModule;
+          updatedPage.screens[screenId] = screenModules;
+          
+          console.log('✅ [DesignEditorLayout] Module mis à jour:', {
+            screenId,
+            moduleIndex,
+            oldModule: { id: oldModule.id, type: oldModule.type, fontFamily: (oldModule as any).fontFamily },
+            newModule: { id: screenModules[moduleIndex].id, type: screenModules[moduleIndex].type, fontFamily: (screenModules[moduleIndex] as any).fontFamily }
+          });
+          
+          // Mettre à jour aussi le module sélectionné
+          if (selectedModuleId === moduleId) {
+            setSelectedModule(screenModules[moduleIndex]);
+          }
+        }
+      });
+      
+      if (!moduleFound) {
+        console.warn('⚠️ [DesignEditorLayout] Module non trouvé:', moduleId);
+      }
+      
+      return updatedPage;
+    });
   };
 
   // Ajoute à l'historique à chaque modification d'élément (granulaire)
@@ -1121,8 +487,8 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
           : {})
       };
 
-      setCanvasElements(prev => {
-        const newArr = prev.map(el =>
+      setCanvasElements((prev: any[]) => {
+        const newArr = prev.map((el: any) =>
           el.id === selectedElement.id ? updatedElement : el
         );
         setTimeout(() => {
@@ -1137,6 +503,12 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
       setSelectedElement(updatedElement);
     }
   };
+
+  // Hook de synchronisation robuste entre édition et preview
+  const {
+    syncBackground,
+    syncModules
+  } = useEditorPreviewSync();
 
   // Utilisation du hook de synchronisation unifié
   const {
@@ -1219,8 +591,8 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
   const handleElementDelete = useCallback((elementId?: string) => {
     const targetElementId = elementId || selectedElement?.id;
     if (targetElementId) {
-      setCanvasElements(prev => {
-        const newElements = prev.filter(el => el.id !== targetElementId);
+      setCanvasElements((prev: any[]) => {
+        const newElements = prev.filter((el: any) => el.id !== targetElementId);
         setTimeout(() => {
           addToHistory({
             campaignConfig: { ...campaignConfig },
@@ -1252,8 +624,8 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
       
       // Puis le supprimer
       const elementId = selectedElement.id;
-      setCanvasElements(prev => {
-        const newElements = prev.filter(el => el.id !== elementId);
+      setCanvasElements((prev: any[]) => {
+        const newElements = prev.filter((el: any) => el.id !== elementId);
         setTimeout(() => {
           addToHistory({
             campaignConfig: { ...campaignConfig },
@@ -1301,6 +673,188 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
       console.log('🔄 Duplicated element:', newElement.id);
     }
   }, [selectedElement, handleAddElement]);
+
+  // Modular page management functions
+  const persistModular = useCallback((next: DesignModularPage) => {
+    setModularPage(next);
+    
+    // Synchroniser immédiatement avec le preview
+    syncModules(next);
+    
+    setCampaignConfig((prev: any) => {
+      const updated = {
+        ...(prev || {}),
+        design: {
+          ...(prev?.design || {}),
+          designModules: { ...next, _updatedAt: Date.now() }
+        }
+      };
+      return updated;
+    });
+    try { setIsModified(true); } catch {}
+  }, [setIsModified, syncModules]);
+
+  const scrollToScreen = useCallback((screen: DesignScreenId): boolean => {
+    const canvasScrollArea = document.querySelector('.canvas-scroll-area') as HTMLElement | null;
+    if (!canvasScrollArea) return false;
+    const anchor = canvasScrollArea.querySelector(`[data-screen-anchor="${screen}"]`) as HTMLElement | null;
+    if (!anchor) return false;
+
+    const anchorTop = anchor.offsetTop;
+    const centerOffset = Math.max(0, (canvasScrollArea.clientHeight - anchor.clientHeight) / 2);
+    const target = anchorTop - centerOffset;
+    const maxScroll = canvasScrollArea.scrollHeight - canvasScrollArea.clientHeight;
+    const clamped = Math.min(Math.max(target, 0), Math.max(maxScroll, 0));
+
+    canvasScrollArea.scrollTo({ top: clamped, behavior: 'smooth' });
+    return true;
+  }, []);
+
+  const handleAddModule = useCallback((screen: DesignScreenId, module: DesignModule) => {
+    setModularPage((prev) => {
+      const prevScreenModules = prev.screens[screen] || [];
+      const updatedModules: DesignModule[] = [module, ...prevScreenModules];
+
+      const next: DesignModularPage = {
+        screens: {
+          ...prev.screens,
+          [screen]: updatedModules
+        },
+        _updatedAt: Date.now()
+      };
+
+      persistModular(next);
+      return next;
+    });
+  }, [persistModular]);
+
+  const handleDeleteModule = useCallback((id: string) => {
+    const nextScreens: DesignModularPage['screens'] = { ...modularPage.screens };
+    (Object.keys(nextScreens) as DesignScreenId[]).forEach((s) => {
+      nextScreens[s] = (nextScreens[s] || []).filter((m) => m.id !== id);
+    });
+    
+    // Vérifier s'il reste au moins un bouton après suppression
+    const hasButton = (Object.values(nextScreens) as DesignModule[][]).some((modules) =>
+      modules?.some((m) => m.type === 'BlocBouton')
+    );
+    
+    // Si plus aucun bouton, en créer un par défaut sur screen1
+    if (!hasButton) {
+      const defaultButton: DesignModule = {
+        id: `BlocBouton-${Date.now()}`,
+        type: 'BlocBouton',
+        label: 'Participer',
+        href: '#',
+        align: 'center',
+        borderRadius: 9999,
+        background: '#000000',
+        textColor: '#ffffff',
+        padding: '14px 28px',
+        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+        uppercase: false,
+        bold: false
+      } as DesignModule;
+      nextScreens.screen1 = [...(nextScreens.screen1 || []), defaultButton];
+    }
+    
+    persistModular({ screens: nextScreens, _updatedAt: Date.now() });
+  }, [modularPage, persistModular]);
+
+  const handleMoveModule = useCallback((id: string, direction: 'up' | 'down') => {
+    const nextScreens: DesignModularPage['screens'] = { ...modularPage.screens };
+    (Object.keys(nextScreens) as DesignScreenId[]).forEach((s) => {
+      const arr = [...(nextScreens[s] || [])];
+      const idx = arr.findIndex((m) => m.id === id);
+      if (idx >= 0) {
+        const swapWith = direction === 'up' ? idx - 1 : idx + 1;
+        if (swapWith >= 0 && swapWith < arr.length) {
+          const tmp = arr[swapWith];
+          arr[swapWith] = arr[idx];
+          arr[idx] = tmp;
+        }
+        nextScreens[s] = arr;
+      }
+    });
+    persistModular({ screens: nextScreens, _updatedAt: Date.now() });
+  }, [modularPage, persistModular]);
+
+  const handleDuplicateModule = useCallback((id: string) => {
+    type ModuleWithMeta = DesignModule & { moduleId?: string; label?: string };
+
+    const nextScreens: Record<DesignScreenId, DesignModule[]> = { ...modularPage.screens };
+    let moduleToDuplicate: ModuleWithMeta | null = null;
+    let foundScreenId: DesignScreenId | null = null;
+    let originalIndex = -1;
+
+    for (const screenId of Object.keys(nextScreens) as DesignScreenId[]) {
+      const modules = nextScreens[screenId] ?? [];
+      const index = modules.findIndex((m) => m.id === id);
+      if (index >= 0) {
+        moduleToDuplicate = modules[index] as ModuleWithMeta;
+        foundScreenId = screenId;
+        originalIndex = index;
+        break;
+      }
+    }
+
+    if (!moduleToDuplicate || !foundScreenId || originalIndex < 0) {
+      console.warn(`⚠️ Impossible de trouver le module à dupliquer (ID: ${id})`);
+      return;
+    }
+
+    const newId = `module-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+    const duplicatedModule: ModuleWithMeta = {
+      ...moduleToDuplicate,
+      id: newId
+    };
+
+    if (typeof moduleToDuplicate.label === 'string' && moduleToDuplicate.label.trim().length > 0) {
+      duplicatedModule.label = `${moduleToDuplicate.label} (copie)`;
+    }
+
+    const currentModules = nextScreens[foundScreenId] ?? [];
+    const updatedModules = [...currentModules];
+    updatedModules.splice(originalIndex + 1, 0, duplicatedModule);
+    nextScreens[foundScreenId] = updatedModules;
+
+    persistModular({ screens: nextScreens, _updatedAt: Date.now() });
+
+    console.log(`✅ Module dupliqué avec succès (${id} → ${duplicatedModule.id})`);
+  }, [modularPage.screens, persistModular]);
+  
+  // Assurer qu'un bouton "Participer" existe toujours sur l'écran 1
+  const ensuredButtonRef = useRef(false);
+  useEffect(() => {
+    if (ensuredButtonRef.current) return;
+    
+    const hasButton = (Object.values(modularPage.screens) as DesignModule[][]).some((modules) =>
+      modules?.some((m) => m.type === 'BlocBouton')
+    );
+    
+    if (!hasButton) {
+      const defaultButton: DesignModule = {
+        id: `BlocBouton-${Date.now()}`,
+        type: 'BlocBouton',
+        label: 'Participer',
+        href: '#',
+        align: 'center',
+        borderRadius: 9999,
+        background: '#000000',
+        textColor: '#ffffff',
+        padding: '14px 28px',
+        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+        uppercase: false,
+        bold: false
+      } as DesignModule;
+      
+      const nextScreens: DesignModularPage['screens'] = { ...modularPage.screens };
+      nextScreens.screen1 = [...(nextScreens.screen1 || []), defaultButton];
+      persistModular({ screens: nextScreens, _updatedAt: Date.now() });
+    }
+    
+    ensuredButtonRef.current = true;
+  }, [modularPage.screens, persistModular]);
   
   // Synchronisation avec le store
   useEffect(() => {
@@ -1313,15 +867,23 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
     const descriptionElement = canvasElements.find(el => el.type === 'text' && el.role === 'description');
     const buttonElement = canvasElements.find(el => el.type === 'text' && el.role === 'button');
     
-    const customTexts = canvasElements.filter(el => 
+    const customTexts = canvasElements.filter((el: any) => 
       el.type === 'text' && !['title', 'description', 'button'].includes(el.role)
     );
-    const customImages = canvasElements.filter(el => el.type === 'image');
+    const customImages = canvasElements.filter((el: any) => el.type === 'image');
+    
+    // Inclure les modules dans les éléments pour l'aperçu
+    const allModules = Object.values(modularPage.screens).flat();
+    console.log('📦 [DesignEditorLayout] Modules trouvés pour preview:', {
+      modulesCount: allModules.length,
+      modules: allModules.map((m: any) => ({ id: m.id, type: m.type, label: m.label })),
+      modularPage: modularPage
+    });
 
     const currentWheelConfig = {
       borderStyle: wheelModalConfig?.wheelBorderStyle || campaignConfig?.wheelConfig?.borderStyle || campaignConfig?.design?.wheelBorderStyle || 'classic',
       borderColor: wheelModalConfig?.wheelBorderColor || campaignConfig?.wheelConfig?.borderColor || campaignConfig?.design?.wheelConfig?.borderColor || '#841b60',
-      scale: wheelModalConfig?.wheelScale !== undefined ? wheelModalConfig.wheelScale : (campaignConfig?.wheelConfig?.scale !== undefined ? campaignConfig.wheelConfig.scale : (campaignConfig?.design?.wheelConfig?.scale || 2.4))
+      scale: wheelModalConfig?.wheelScale !== undefined ? wheelModalConfig.wheelScale : (campaignConfig?.wheelConfig?.scale !== undefined ? campaignConfig.wheelConfig.scale : (campaignConfig?.design?.wheelConfig?.scale || 1))
     };
 
     console.log('🔄 CampaignData wheel config sync:', {
@@ -1386,7 +948,6 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
       type: 'wheel',
       design: {
         background: canvasBackground,
-        screenBackgrounds: screenBackgrounds, // Backgrounds par écran pour le preview
         customTexts: customTexts,
         customImages: customImages,
         extractedColors: extractedColors,
@@ -1397,7 +958,14 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
         },
         wheelConfig: currentWheelConfig,
         wheelBorderStyle: currentWheelConfig.borderStyle,
-        designModules: modularPage
+        designModules: {
+          ...modularPage,
+          _updatedAt: modularPage?._updatedAt ?? Date.now()
+        }
+      },
+      modularPage: {
+        ...modularPage,
+        _updatedAt: modularPage?._updatedAt ?? Date.now()
       },
       gameConfig: {
         wheel: {
@@ -1428,23 +996,19 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
             { id: 'nom', label: 'Nom', type: 'text', required: true },
             { id: 'email', label: 'Email', type: 'email', required: true }
           ],
-      // Article config pour le mode Article
-      articleConfig: (campaignState as any)?.articleConfig || campaignConfig?.articleConfig,
-      // Garder la configuration canvas pour compatibilité
+      // Garder la configuration canvas pour compatibilité - INCLURE LES MODULES
       canvasConfig: {
-        elements: canvasElements,
+        elements: [...canvasElements, ...Object.values(modularPage.screens).flat()],
         background: canvasBackground,
-        screenBackgrounds: screenBackgrounds, // Backgrounds par écran
         device: selectedDevice
       }
     };
-  }, [canvasElements, canvasBackground, screenBackgrounds, campaignConfig, extractedColors, selectedDevice, wheelModalConfig, campaignState, modularPage]);
+  }, [canvasElements, canvasBackground, campaignConfig, extractedColors, selectedDevice, wheelModalConfig, campaignState, modularPage]);
 
   // Synchronisation avec le store (éviter les boucles d'updates)
   const lastTransformedSigRef = useRef<string>('');
   useEffect(() => {
-    // Ne pas synchroniser en mode preview pour éviter les boucles infinies
-    if (!campaignData || showFunnel) return;
+    if (!campaignData) return;
 
     const transformedCampaign = {
       ...campaignData,
@@ -1515,6 +1079,13 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
               ...(transformedCampaign as any)?.config?.roulette,
               segments: mergedSegments
             }
+          },
+          // Préserver modularPage pour la synchronisation avec le preview
+          modularPage: (transformedCampaign as any).modularPage || prev.modularPage,
+          // Préserver design.designModules si présent
+          design: {
+            ...(transformedCampaign as any).design,
+            designModules: (transformedCampaign as any).modularPage || prev.design?.designModules
           }
         } as any;
       });
@@ -1524,7 +1095,7 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
         console.debug('[DesignEditorLayout] Skipping setCampaign: no material change');
       }
     }
-  }, [campaignData, setCampaign, showFunnel]);
+  }, [campaignData, setCampaign]);
 
   // Actions optimisées
   const handleSave = async () => {
@@ -1543,24 +1114,6 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
   };
 
   const handlePreview = () => {
-    // Logique intelligente pour l'aperçu :
-    // - Sur desktop physique + mode desktop → Fullscreen preview en mode PC
-    // - Sur desktop physique + mode mobile → Fullscreen avec fond #2c2c35 et canvas mobile centré
-    // - Sur mobile/tablet physique → Toujours fullscreen avec le mode actuel
-    
-    // Si on est sur desktop physique et en mode desktop, on force le preview en mode desktop
-    if (actualDevice === 'desktop' && selectedDevice === 'desktop' && !showFunnel) {
-      console.log('💻 [Preview] Desktop → Desktop preview: forcing desktop mode');
-      // On s'assure que le preview s'affiche en mode desktop
-      setPreviewDevice('desktop');
-    }
-    
-    // Si on est en mode mobile, on affiche toujours le fullscreen avec canvas mobile centré
-    if (selectedDevice === 'mobile' && !showFunnel) {
-      console.log('📱 [Preview] Mobile view: showing fullscreen with centered mobile canvas');
-    }
-    
-    // Tous les cas : toggle fullscreen preview
     setShowFunnel(!showFunnel);
   };
 
@@ -1843,16 +1396,25 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
       }
     },
     onAlignTextLeft: () => {
+      if (!selectedElement) {
+        return;
+      }
       if (selectedElement?.type === 'text') {
         handleElementUpdate({ textAlign: 'left' });
       }
     },
     onAlignTextCenter: () => {
+      if (!selectedElement) {
+        return;
+      }
       if (selectedElement?.type === 'text') {
         handleElementUpdate({ textAlign: 'center' });
       }
     },
     onAlignTextRight: () => {
+      if (!selectedElement) {
+        return;
+      }
       if (selectedElement?.type === 'text') {
         handleElementUpdate({ textAlign: 'right' });
       }
@@ -1875,16 +1437,19 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
     <div
       className="min-h-screen w-full"
       style={{
-        backgroundImage: showFunnel ? 'none' : 
+        backgroundImage:
           'radial-gradient(130% 130% at 12% 20%, rgba(235, 155, 100, 0.8) 0%, rgba(235, 155, 100, 0) 55%), radial-gradient(120% 120% at 78% 18%, rgba(128, 82, 180, 0.85) 0%, rgba(128, 82, 180, 0) 60%), radial-gradient(150% 150% at 55% 82%, rgba(68, 52, 128, 0.75) 0%, rgba(68, 52, 128, 0) 65%), linear-gradient(90deg, #E07A3A 0%, #9A5CA9 50%, #3D2E72 100%)',
-        backgroundBlendMode: showFunnel ? 'normal' : 'screen, screen, lighten, normal',
-        backgroundColor: showFunnel ? 'transparent' : '#3D2E72',
-        padding: showFunnel ? '0' : (isWindowMobile ? '9px' : '0 9px 9px 9px'),
+        backgroundBlendMode: 'screen, screen, lighten, normal',
+        backgroundColor: '#3D2E72',
+        padding: showFunnel ? '0' : '0 9px 9px 9px',
         boxSizing: 'border-box'
       }}
     >
-    <MobileStableEditor className={showFunnel ? "h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden" : (isWindowMobile ? "h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden pb-[6px] rounded-tl-[28px] rounded-tr-[28px] rounded-br-[28px] transform -translate-y-[0.4vh]" : "h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden pt-[1.25cm] pb-[6px] rounded-tl-[28px] rounded-tr-[28px] rounded-br-[28px] transform -translate-y-[0.4vh]")}>
-
+    <MobileStableEditor
+      className={showFunnel
+        ? 'h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden'
+        : 'h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden pt-[1.25cm] pb-[6px] rounded-tl-[28px] rounded-tr-[28px] rounded-br-[28px] transform -translate-y-[0.4vh]'}
+    >
       {/* Top Toolbar - Hidden only in preview mode */}
       {!showFunnel && (
         <>
@@ -1906,22 +1471,17 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
           />
 
           {/* Bouton d'aide des raccourcis clavier */}
-          <div className="absolute top-4 right-4 z-10">
+          <div className="absolute top-2 right-2 z-10">
             <KeyboardShortcutsHelp shortcuts={shortcuts} />
           </div>
         </>
       )}
       
       {/* Main Content */}
-      <div className="flex-1 flex overflow-hidden relative">
+      <div className="flex-1 flex overflow-hidden relative rounded-br-[28px]">
         {showFunnel ? (
           /* Funnel Preview Mode */
-          <div 
-            className="group fixed inset-0 z-40 w-full h-[100dvh] min-h-[100dvh] overflow-hidden flex items-center justify-center"
-            style={{
-              backgroundColor: (selectedDevice === 'mobile' && actualDevice !== 'mobile') ? '#2c2c35' : 'transparent'
-            }}
-          >
+          <div className="group fixed inset-0 z-40 w-full h-[100dvh] min-h-[100dvh] overflow-hidden bg-transparent flex">
             {/* Floating Edit Mode Button */}
             <button
               onClick={() => setShowFunnel(false)}
@@ -1929,33 +1489,20 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
             >
               Mode édition
             </button>
-            {(selectedDevice === 'mobile' && actualDevice !== 'mobile') ? (
-              /* Mobile Preview sur Desktop: Canvas centré avec fond #2c2c35 - Dimensions identiques au mode édition */
-              <div className="flex items-center justify-center w-full h-full">
-                <div 
-                  className="relative overflow-hidden rounded-[32px] shadow-2xl"
-                  style={{
-                    width: '430px',
-                    height: '932px',
-                    maxHeight: '90vh'
-                  }}
-                >
-                  <PreviewRenderer
-                    campaign={campaignData}
-                    previewMode="mobile"
-                    wheelModalConfig={wheelModalConfig}
-                    constrainedHeight={true}
-                  />
-                </div>
-              </div>
-            ) : (
-              /* Desktop/Tablet Preview OU Mobile physique: Fullscreen sans cadre */
-              <PreviewRenderer
-                campaign={campaignData}
-                previewMode={actualDevice === 'desktop' && selectedDevice === 'desktop' ? 'desktop' : selectedDevice}
-                wheelModalConfig={wheelModalConfig}
-              />
-            )}
+            <div className="w-full h-full pointer-events-auto">
+              {campaignData?.type === 'quiz' ? (
+                <FunnelQuizParticipate
+                  campaign={campaignData as any}
+                  previewMode={selectedDevice}
+                />
+              ) : (
+                <FunnelUnlockedGame
+                  campaign={campaignData}
+                  previewMode={selectedDevice}
+                  wheelModalConfig={wheelModalConfig}
+                />
+              )}
+            </div>
           </div>
         ) : (
           /* Design Editor Mode */
@@ -1963,15 +1510,7 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
             {/* Hybrid Sidebar - Design & Technical (always vertical, with drawer from bottom) */}
             <HybridSidebar
                 ref={sidebarRef}
-                currentScreen={currentScreen}
-                onScreenChange={(screen) => {
-                  const scrolled = scrollToScreen(screen);
-                  if (scrolled) {
-                    setCurrentScreen(screen);
-                  }
-                }}
                 onAddElement={handleAddElement}
-                onAddModule={handleAddModule}
                 onBackgroundChange={handleBackgroundChange}
                 onExtractedColorsChange={handleExtractedColorsChange}
                 currentBackground={canvasBackground}
@@ -1996,15 +1535,10 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
                     setShowDesignInSidebar(false);
                   }
                 }}
-                activeTab={activeTab}
-                onActiveTabChange={setActiveTab}
                 canvasRef={canvasRef}
                 selectedElements={selectedElements}
                 onSelectedElementsChange={setSelectedElements}
                 onAddToHistory={addToHistory}
-                // Modules de l'écran actuel pour le panneau de calques
-                modules={modularPage.screens[currentScreen] || []}
-                onModuleDelete={handleDeleteModule}
                 wheelBorderStyle={wheelModalConfig?.wheelBorderStyle || campaignConfig?.design?.wheelConfig?.borderStyle}
                 wheelBorderColor={wheelModalConfig?.wheelBorderColor || campaignConfig?.design?.wheelConfig?.borderColor}
                 wheelBorderWidth={campaignConfig?.design?.wheelConfig?.borderWidth}
@@ -2032,52 +1566,35 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
                 onWheelShowBulbsChange={setShowBulbs}
                 onWheelPositionChange={setWheelPosition}
                 selectedDevice={selectedDevice}
-                forceFullTabs={editorMode === 'article'}
                 hiddenTabs={effectiveHiddenTabs}
                 colorEditingContext={designColorContext}
                 className={isWindowMobile ? "vertical-sidebar-drawer" : ""}
+                // Multi-screen system props
+                currentScreen={currentScreen}
+                onAddModule={handleAddModule}
                 // Module selection props
                 selectedModuleId={selectedModuleId}
                 selectedModule={selectedModule}
+                onModuleUpdate={handleModuleUpdate}
                 onSelectedModuleChange={setSelectedModuleId}
-                onModuleUpdate={handleUpdateModule}
               />
-            {/* Main Canvas Area - Multi-Screen Layout */}
-            <div 
-              className="canvas-scroll-area flex-1 overflow-y-auto overflow-x-hidden bg-[#f5f5f5]"
-              style={{ borderBottomLeftRadius: '0 !important' }}
-              onMouseDown={(e) => {
-                // Only left button
-                if (e.button !== 0) return;
-                const target = e.target as HTMLElement | null;
-                if (!target) return;
-                // Ignore clicks inside any canvas root
-                const isInsideCanvas = target.closest('[data-canvas-root="true"]');
-                if (isInsideCanvas) return;
-                // Ignore UI controls to avoid disrupting interactions
-                const interactive = target.closest('button, [role="button"], input, textarea, select, [contenteditable="true"]');
-                if (interactive) return;
-                // Clear selection when clicking light gray background/empty area
-                setSelectedElement(null);
-                setSelectedElements([]);
-              }}
-            >
+            {/* Canvas Scrollable Area with 3 screens */}
+            <div className="flex-1 canvas-scroll-area relative z-20 rounded-br-[28px] rounded-bl-none" style={{ borderBottomLeftRadius: '0 !important' }}>
               <div className="min-h-full flex flex-col">
                 {/* Premier Canvas - Screen 1 */}
                 <div data-screen-anchor="screen1" className="relative">
                   <DesignCanvas
-                    editorMode={editorMode}
                     screenId="screen1"
                     ref={canvasRef}
                     selectedDevice={selectedDevice}
                     elements={canvasElements}
                     onElementsChange={setCanvasElements}
-                    background={screenBackgrounds.screen1?.devices?.[selectedDevice] || screenBackgrounds.screen1}
+                    background={canvasBackground}
                     campaign={campaignData}
                     onCampaignChange={handleCampaignConfigChange}
                     zoom={canvasZoom}
-                    enableInternalAutoFit={true}
                     onZoomChange={setCanvasZoom}
+                    enableInternalAutoFit={true}
                     selectedElement={selectedElement}
                     onSelectedElementChange={setSelectedElement}
                     selectedElements={selectedElements}
@@ -2089,115 +1606,86 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
                     containerClassName={mode === 'template' ? 'bg-gray-50' : undefined}
                     elementFilter={(element: any) => {
                       const role = typeof element?.role === 'string' ? element.role.toLowerCase() : '';
-                      return !role.includes('exit-message') && element?.screenId !== 'screen2' && element?.screenId !== 'screen3';
+                      return !role.includes('exit-message');
                     }}
+                    // Module system props
+                    modularModules={modularPage.screens.screen1}
+                    onModuleUpdate={handleModuleUpdate}
+                    selectedModuleId={selectedModuleId}
                     // Sidebar panel triggers
-                    onShowEffectsPanel={() => {
-                      if (!isWindowMobile) {
-                        setShowEffectsInSidebar(true);
-                        setShowAnimationsInSidebar(false);
-                        setShowPositionInSidebar(false);
-                      }
-                    }}
-                    onShowAnimationsPanel={() => {
-                      if (!isWindowMobile) {
-                        setShowAnimationsInSidebar(true);
-                        setShowEffectsInSidebar(false);
-                        setShowPositionInSidebar(false);
-                      }
-                    }}
-                    onShowPositionPanel={() => {
-                      if (!isWindowMobile) {
-                        setShowPositionInSidebar(true);
-                        setShowEffectsInSidebar(false);
-                        setShowAnimationsInSidebar(false);
-                        setShowDesignInSidebar(false);
-                      }
-                    }}
-                    onShowDesignPanel={(context?: 'fill' | 'border' | 'text') => {
-                      if (!isWindowMobile) {
-                        if (context) {
-                          setDesignColorContext(context);
+onShowEffectsPanel={() => {
+                        if (!isWindowMobile) {
+                          setShowEffectsInSidebar(true);
+                          setShowAnimationsInSidebar(false);
+                          setShowPositionInSidebar(false);
                         }
-                        setShowDesignInSidebar(true);
-                        setShowEffectsInSidebar(false);
-                        setShowAnimationsInSidebar(false);
-                        setShowPositionInSidebar(false);
-                        if (sidebarRef.current) {
-                          sidebarRef.current.setActiveTab('background');
+                      }}
+onShowAnimationsPanel={() => {
+                        if (!isWindowMobile) {
+                          setShowAnimationsInSidebar(true);
+                          setShowEffectsInSidebar(false);
+                          setShowPositionInSidebar(false);
                         }
-                      }
-                    }}
-                    onOpenElementsTab={() => {
-                      if (sidebarRef.current) {
-                        sidebarRef.current.setActiveTab('elements');
-                      }
-                      setShowEffectsInSidebar(false);
-                      setShowAnimationsInSidebar(false);
-                      setShowPositionInSidebar(false);
-                    }}
-                    onOpenWheelPanel={() => {
-                      setShowWheelPanel(true);
-                      if (sidebarRef.current) {
-                        sidebarRef.current.setActiveTab('wheel');
-                      }
-                      setShowEffectsInSidebar(false);
-                      setShowAnimationsInSidebar(false);
-                      setShowPositionInSidebar(false);
-                      setShowDesignInSidebar(false);
-                    }}
+                      }}
+onShowPositionPanel={() => {
+                        if (!isWindowMobile) {
+                          setShowPositionInSidebar(true);
+                          setShowEffectsInSidebar(false);
+                          setShowAnimationsInSidebar(false);
+                          setShowDesignInSidebar(false);
+                        }
+                      }}
+              onShowDesignPanel={(context?: 'fill' | 'border' | 'text') => {
+                // Met à jour le contexte immédiatement même si le panneau est déjà ouvert
+                if (context) {
+                  setDesignColorContext(context);
+                }
+                // Toujours ouvrir/forcer l'onglet Design
+                setShowDesignInSidebar(true);
+                setShowEffectsInSidebar(false);
+                setShowAnimationsInSidebar(false);
+                setShowPositionInSidebar(false);
+
+                if (sidebarRef.current) {
+                  sidebarRef.current.setActiveTab('background');
+                }
+              }}
+              onOpenElementsTab={() => {
+                // Utiliser la même logique que onForceElementsTab
+                if (sidebarRef.current) {
+                  sidebarRef.current.setActiveTab('elements');
+                }
+                // Fermer les autres panneaux
+                setShowEffectsInSidebar(false);
+                setShowAnimationsInSidebar(false);
+                setShowPositionInSidebar(false);
+              }}
                     // Mobile sidebar integrations
                     onAddElement={handleAddElement}
-                    onBackgroundChange={handleBackgroundChange}
-                    onExtractedColorsChange={handleExtractedColorsChange}
-                    // Group selection wiring
-                    selectedGroupId={selectedGroupId as any}
-                    onSelectedGroupChange={setSelectedGroupId as any}
-                    onUndo={undo}
-                    onRedo={redo}
-                    canUndo={canUndo}
-                    canRedo={canRedo}
-                    showWheelPanel={showWheelPanel}
-                    onWheelPanelChange={setShowWheelPanel}
-                    // Modular page (screen1)
-                    modularModules={modularPage.screens.screen1}
-                    onModuleUpdate={handleUpdateModule}
-                    onModuleDelete={handleDeleteModule}
-                    onModuleMove={handleMoveModule}
-                    onModuleDuplicate={handleDuplicateModule}
-                    selectedModuleId={selectedModuleId}
-                    selectedModule={selectedModule}
-                    onSelectedModuleChange={setSelectedModuleId}
                   />
                 </div>
-                
-                {/* Deuxième Canvas - Screen 2 (Wheel Game) - Seulement en mode Fullscreen */}
-                {editorMode === 'fullscreen' && (
+
+                {/* Deuxième Canvas - Screen 2 */}
                 <div className="mt-4 relative" data-screen-anchor="screen2">
-                  {/* Background pour éviter la transparence */}
                   <div 
                     className="absolute inset-0 z-0"
                     style={{
-                      background: screenBackgrounds.screen2.type === 'image'
-                        ? `url(${screenBackgrounds.screen2.value}) center/cover no-repeat`
-                        : screenBackgrounds.screen2.value || 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)'
+                      background: canvasBackground.type === 'image'
+                        ? `url(${canvasBackground.value}) center/cover no-repeat`
+                        : canvasBackground.value || 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)'
                     }}
                   />
-                  {/* Background supplémentaire pour l'espace entre les canvas */}
                   <div 
                     className="absolute -top-4 left-0 right-0 h-4 z-0"
-                    style={{
-                      background: '#f5f5f5'
-                    }}
+                    style={{ background: '#ffffff' }}
                   />
                   <div className="relative z-10">
                     <DesignCanvas
-                      editorMode={editorMode}
                       screenId="screen2"
                       selectedDevice={selectedDevice}
                       elements={canvasElements}
                       onElementsChange={setCanvasElements}
-                      background={screenBackgrounds.screen2?.devices?.[selectedDevice] || screenBackgrounds.screen2}
+                      background={canvasBackground}
                       campaign={campaignData}
                       onCampaignChange={handleCampaignConfigChange}
                       zoom={canvasZoom}
@@ -2208,15 +1696,13 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
                       selectedElements={selectedElements}
                       onSelectedElementsChange={setSelectedElements}
                       onElementUpdate={handleElementUpdate}
-                      // Wheel sync props
                       wheelModalConfig={wheelModalConfig}
                       extractedColors={extractedColors}
                       containerClassName={mode === 'template' ? 'bg-gray-50' : undefined}
                       elementFilter={(element: any) => {
                         const role = typeof element?.role === 'string' ? element.role.toLowerCase() : '';
-                        return !role.includes('exit-message') && (element?.screenId === 'screen2' || role.includes('form') || role.includes('contact'));
+                        return !role.includes('exit-message');
                       }}
-                      // Sidebar panel triggers
                       onShowEffectsPanel={() => {
                         if (!isWindowMobile) {
                           setShowEffectsInSidebar(true);
@@ -2250,21 +1736,9 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
                         setShowAnimationsInSidebar(false);
                         setShowPositionInSidebar(false);
                       }}
-                      onOpenWheelPanel={() => {
-                        setShowWheelPanel(true);
-                        if (sidebarRef.current) {
-                          sidebarRef.current.setActiveTab('wheel');
-                        }
-                        setShowEffectsInSidebar(false);
-                        setShowAnimationsInSidebar(false);
-                        setShowPositionInSidebar(false);
-                        setShowDesignInSidebar(false);
-                      }}
-                      // Mobile sidebar integrations
                       onAddElement={handleAddElement}
                       onBackgroundChange={handleBackgroundChange}
                       onExtractedColorsChange={handleExtractedColorsChange}
-                      // Group selection wiring
                       selectedGroupId={selectedGroupId as any}
                       onSelectedGroupChange={setSelectedGroupId as any}
                       onUndo={undo}
@@ -2273,47 +1747,37 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
                       canRedo={canRedo}
                       showWheelPanel={showWheelPanel}
                       onWheelPanelChange={setShowWheelPanel}
-                      // Modular page (screen2)
                       modularModules={modularPage.screens.screen2}
-                      onModuleUpdate={handleUpdateModule}
+                      onModuleUpdate={handleModuleUpdate}
+                      selectedModuleId={selectedModuleId}
                       onModuleDelete={handleDeleteModule}
                       onModuleMove={handleMoveModule}
                       onModuleDuplicate={handleDuplicateModule}
-                      selectedModuleId={selectedModuleId}
-                      selectedModule={selectedModule}
-                      onSelectedModuleChange={setSelectedModuleId}
                     />
                   </div>
                 </div>
-                )}
 
-                {/* Troisième Canvas - Screen 3 (Result Screen) - Seulement en mode Fullscreen */}
-                {editorMode === 'fullscreen' && (
+                {/* Troisième Canvas - Screen 3 */}
                 <div className="mt-4 relative" data-screen-anchor="screen3">
-                  {/* Background pour éviter la transparence */}
                   <div 
                     className="absolute inset-0 z-0"
                     style={{
-                      background: screenBackgrounds.screen3.type === 'image'
-                        ? `url(${screenBackgrounds.screen3.value}) center/cover no-repeat`
-                        : screenBackgrounds.screen3.value || 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)'
+                      background: canvasBackground.type === 'image'
+                        ? `url(${canvasBackground.value}) center/cover no-repeat`
+                        : canvasBackground.value || 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)'
                     }}
                   />
-                  {/* Background supplémentaire pour l'espace entre les canvas */}
                   <div 
                     className="absolute -top-4 left-0 right-0 h-4 z-0"
-                    style={{
-                      background: '#f5f5f5'
-                    }}
+                    style={{ background: '#ffffff' }}
                   />
                   <div className="relative z-10">
                     <DesignCanvas
-                      editorMode={editorMode}
                       screenId="screen3"
                       selectedDevice={selectedDevice}
                       elements={canvasElements}
                       onElementsChange={setCanvasElements}
-                      background={screenBackgrounds.screen3?.devices?.[selectedDevice] || screenBackgrounds.screen3}
+                      background={canvasBackground}
                       campaign={campaignData}
                       onCampaignChange={handleCampaignConfigChange}
                       zoom={canvasZoom}
@@ -2324,15 +1788,13 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
                       selectedElements={selectedElements}
                       onSelectedElementsChange={setSelectedElements}
                       onElementUpdate={handleElementUpdate}
-                      // Wheel sync props
                       wheelModalConfig={wheelModalConfig}
                       extractedColors={extractedColors}
                       containerClassName={mode === 'template' ? 'bg-gray-50' : undefined}
                       elementFilter={(element: any) => {
                         const role = typeof element?.role === 'string' ? element.role.toLowerCase() : '';
-                        return role.includes('exit-message') || element?.screenId === 'screen3';
+                        return role.includes('exit-message');
                       }}
-                      // Sidebar panel triggers
                       onShowEffectsPanel={() => {
                         if (!isWindowMobile) {
                           setShowEffectsInSidebar(true);
@@ -2375,21 +1837,9 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
                         setShowAnimationsInSidebar(false);
                         setShowPositionInSidebar(false);
                       }}
-                      onOpenWheelPanel={() => {
-                        setShowWheelPanel(true);
-                        if (sidebarRef.current) {
-                          sidebarRef.current.setActiveTab('wheel');
-                        }
-                        setShowEffectsInSidebar(false);
-                        setShowAnimationsInSidebar(false);
-                        setShowPositionInSidebar(false);
-                        setShowDesignInSidebar(false);
-                      }}
-                      // Mobile sidebar integrations
                       onAddElement={handleAddElement}
                       onBackgroundChange={handleBackgroundChange}
                       onExtractedColorsChange={handleExtractedColorsChange}
-                      // Group selection wiring
                       selectedGroupId={selectedGroupId as any}
                       onSelectedGroupChange={setSelectedGroupId as any}
                       onUndo={undo}
@@ -2398,44 +1848,37 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
                       canRedo={canRedo}
                       showWheelPanel={showWheelPanel}
                       onWheelPanelChange={setShowWheelPanel}
-                      // Modular page (screen3)
                       modularModules={modularPage.screens.screen3}
-                      onModuleUpdate={handleUpdateModule}
-                      onModuleDelete={handleDeleteModule}
-                      onModuleMove={handleMoveModule}
-                      onModuleDuplicate={handleDuplicateModule}
+                      onModuleUpdate={handleModuleUpdate}
                       selectedModuleId={selectedModuleId}
-                      selectedModule={selectedModule}
-                      onSelectedModuleChange={setSelectedModuleId}
                     />
                   </div>
                 </div>
-                )}
               </div>
             </div>
+            {/* Zoom Slider with integrated Screen navigation button */}
+            {!isWindowMobile && (
+              <ZoomSlider 
+                zoom={canvasZoom}
+                onZoomChange={setCanvasZoom}
+                minZoom={0.1}
+                maxZoom={1}
+                step={0.05}
+                onNavigateToScreen2={() => {
+                  const nextScreen = currentScreen === 'screen1'
+                    ? 'screen2'
+                    : currentScreen === 'screen2'
+                      ? 'screen3'
+                      : 'screen1';
+                  const scrolled = scrollToScreen(nextScreen);
+                  if (scrolled) {
+                    setCurrentScreen(nextScreen);
+                  }
+                }}
+                currentScreen={currentScreen}
+              />
+            )}
           </>
-        )}
-        {/* Zoom Slider intégré dans le canvas avec navigation entre écrans */}
-        {!isWindowMobile && !showFunnel && (
-          <ZoomSlider 
-            zoom={canvasZoom}
-            onZoomChange={setCanvasZoom}
-            minZoom={0.1}
-            maxZoom={1}
-            step={0.05}
-            onNavigateToScreen2={() => {
-              const nextScreen = currentScreen === 'screen1'
-                ? 'screen2'
-                : currentScreen === 'screen2'
-                  ? 'screen3'
-                  : 'screen1';
-              const scrolled = scrollToScreen(nextScreen);
-              if (scrolled) {
-                setCurrentScreen(nextScreen);
-              }
-            }}
-            currentScreen={currentScreen}
-          />
         )}
       </div>
       {/* Floating bottom-right actions (no band) */}
@@ -2443,7 +1886,7 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
         <div className="fixed bottom-6 right-6 flex items-center gap-3 z-30">
           <button
             onClick={() => navigate('/dashboard')}
-            className="inline-flex items-center px-3 py-1.5 text-sm rounded-xl bg-white text-gray-700 border border-gray-200 hover:bg-gray-50 transition-colors shadow-sm"
+            className="flex items-center px-3 py-2 text-xs sm:text-sm border border-gray-300 bg-white/90 backdrop-blur rounded-lg hover:bg-white transition-colors shadow-sm"
             title="Fermer"
           >
             <X className="w-4 h-4 mr-1" />
@@ -2451,7 +1894,7 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
           </button>
           <button
             onClick={handleSaveAndContinue}
-            className="inline-flex items-center px-4 py-2 text-sm rounded-xl bg-gradient-to-br from-[#841b60] to-[#b41b60] backdrop-blur-sm text-white font-medium border border-white/20 shadow-lg shadow-[#841b60]/20 hover:from-[#841b60] hover:to-[#6d164f] hover:shadow-xl hover:shadow-[#841b60]/30 transition-all duration-300 transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-[#841b60]/20"
+            className="flex items-center px-3 py-2 text-xs sm:text-sm rounded-lg text-white bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] hover:opacity-95 transition-colors shadow-sm"
             title="Sauvegarder et continuer"
           >
             <Save className="w-4 h-4 mr-1" />

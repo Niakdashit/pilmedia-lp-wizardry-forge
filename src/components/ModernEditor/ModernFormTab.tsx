@@ -14,7 +14,6 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import Modal from '@/components/common/Modal';
 import { useSavedForms } from '@/hooks/useSavedForms';
-import { useEditorPreviewSync } from '@/hooks/useEditorPreviewSync';
 
 interface ModernFormTabProps {
   campaign: any;
@@ -136,8 +135,6 @@ const ModernFormTab: React.FC<ModernFormTabProps> = ({
   setCampaign
 }) => {
   const formFields = campaign?.formFields || [];
-  const showFormBeforeResult = campaign?.showFormBeforeResult ?? true;
-  const { syncFormFields } = useEditorPreviewSync();
 
   // Saved forms state & logic
   const { forms, fetchForms, createForm, updateForm, error: formsError } = useSavedForms();
@@ -189,44 +186,29 @@ const ModernFormTab: React.FC<ModernFormTabProps> = ({
       options: []
     };
 
-    const updatedFields = [...(formFields || []), newField];
-    
     setCampaign((prev: any) => (prev ? {
       ...prev,
-      formFields: updatedFields,
+      formFields: [...(prev.formFields || []), newField],
       _lastUpdate: Date.now() // Force sync avec preview
     } : prev));
-    
-    // Synchroniser avec le preview en temps réel
-    syncFormFields(updatedFields);
   };
 
   const updateField = (fieldId: string, updates: any) => {
-    const updatedFields = (formFields || []).map((field: any) => 
-      field.id === fieldId ? { ...field, ...updates } : field
-    );
-    
     setCampaign((prev: any) => (prev ? {
       ...prev,
-      formFields: updatedFields,
+      formFields: (prev.formFields || []).map((field: any) => 
+        field.id === fieldId ? { ...field, ...updates } : field
+      ),
       _lastUpdate: Date.now() // Force sync avec preview
     } : prev));
-    
-    // Synchroniser avec le preview en temps réel
-    syncFormFields(updatedFields);
   };
 
   const removeField = (fieldId: string) => {
-    const updatedFields = (formFields || []).filter((field: any) => field.id !== fieldId);
-    
     setCampaign((prev: any) => (prev ? {
       ...prev,
-      formFields: updatedFields,
+      formFields: (prev.formFields || []).filter((field: any) => field.id !== fieldId),
       _lastUpdate: Date.now() // Force sync avec preview
     } : prev));
-    
-    // Synchroniser avec le preview en temps réel
-    syncFormFields(updatedFields);
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -235,15 +217,11 @@ const ModernFormTab: React.FC<ModernFormTabProps> = ({
       const oldIndex = formFields.findIndex((f: any) => f.id === active.id);
       const newIndex = formFields.findIndex((f: any) => f.id === over.id);
       const items = arrayMove(formFields, oldIndex, newIndex);
-      
       setCampaign((prev: any) => (prev ? {
         ...prev,
         formFields: items,
         _lastUpdate: Date.now() // Force sync avec preview
       } : prev));
-      
-      // Synchroniser avec le preview en temps réel
-      syncFormFields(items);
     }
   };
 
@@ -277,17 +255,11 @@ const ModernFormTab: React.FC<ModernFormTabProps> = ({
     if (!selected) return;
     const proceed = formFields.length === 0 || window.confirm('Charger ce formulaire remplacera les champs existants. Continuer ?');
     if (!proceed) return;
-    
-    const loadedFields = Array.isArray(selected.fields) ? selected.fields : [];
-    
     setCampaign((prev: any) => (prev ? {
       ...prev,
-      formFields: loadedFields,
+      formFields: Array.isArray(selected.fields) ? selected.fields : [],
       _lastUpdate: Date.now() // Force sync avec preview
     } : prev));
-    
-    // Synchroniser avec le preview en temps réel
-    syncFormFields(loadedFields);
   };
 
   const handleSelectAndLoad = (id: string) => {
@@ -320,33 +292,6 @@ const ModernFormTab: React.FC<ModernFormTabProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* Toggle pour activer/désactiver le formulaire après le quiz */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <div className="flex items-start gap-3">
-          <input
-            id="show-form-toggle"
-            type="checkbox"
-            checked={showFormBeforeResult}
-            onChange={(e) => {
-              setCampaign((prev: any) => ({
-                ...(prev || {}),
-                showFormBeforeResult: e.target.checked,
-                _lastUpdate: Date.now(),
-              }));
-            }}
-            className="w-5 h-5 mt-0.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-          />
-          <div className="flex-1">
-            <label htmlFor="show-form-toggle" className="block text-sm font-semibold text-gray-900 cursor-pointer">
-              Afficher le formulaire après le quiz
-            </label>
-            <p className="text-xs text-gray-600 mt-1">
-              Si activé, le formulaire de participation s'affichera entre la dernière question du quiz et l'écran de résultat.
-            </p>
-          </div>
-        </div>
-      </div>
-
       {/* Saved forms searchable dropdown */}
       <div ref={dropdownRef} className="relative">
         <button

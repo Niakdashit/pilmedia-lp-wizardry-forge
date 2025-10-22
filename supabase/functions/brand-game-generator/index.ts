@@ -65,8 +65,7 @@ serve(async (req) => {
     });
   } catch (error) {
     console.error('Error in brand-game-generator function:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    return new Response(JSON.stringify({ error: errorMessage }), {
+    return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
@@ -218,7 +217,7 @@ function extractAdvancedColors(html: string): EnhancedBrandData['colors'] {
   
   if (colorMatches.length >= 2) {
     return {
-      primary: colorMatches[0] || '#841b60',
+      primary: colorMatches[0],
       secondary: colorMatches[1] || '#6d164f',
       accent: colorMatches[2] || '#ffffff',
       background: '#f8fafc'

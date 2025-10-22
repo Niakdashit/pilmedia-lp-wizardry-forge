@@ -1,12 +1,11 @@
-'use client';
-
 import React, { useState, useMemo, useEffect, useRef, useCallback, lazy } from 'react';
-import { useLocation, useNavigate } from '@/lib/router-adapter';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Save, X } from 'lucide-react';
 
 const HybridSidebar = lazy(() => import('./HybridSidebar'));
 const DesignToolbar = lazy(() => import('./DesignToolbar'));
-import PreviewRenderer from '@/components/preview/PreviewRenderer';
+const FunnelUnlockedGame = lazy(() => import('@/components/funnels/FunnelUnlockedGame'));
+const FunnelQuizParticipate = lazy(() => import('../funnels/FunnelQuizParticipate'));
 import type { ModularPage, ScreenId, BlocBouton, Module } from '@/types/modularEditor';
 import { createEmptyModularPage } from '@/types/modularEditor';
 
@@ -20,8 +19,6 @@ import { useUndoRedo, useUndoRedoShortcuts } from '../../hooks/useUndoRedo';
 import { useGroupManager } from '../../hooks/useGroupManager';
 import { getDeviceDimensions } from '../../utils/deviceDimensions';
 import { getEditorDeviceOverride } from '@/utils/deviceOverrides';
-import { useEditorPreviewSync } from '@/hooks/useEditorPreviewSync';
-import type { ScreenBackgrounds, DeviceSpecificBackground } from '@/types/background';
 
 
 import { useCampaigns } from '@/hooks/useCampaigns';
@@ -109,46 +106,10 @@ interface QuizEditorLayoutProps {
 const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', hiddenTabs }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  
-  // Détection du mode Article via URL (?mode=article)
-  const searchParams = new URLSearchParams(location.search);
-  const editorMode = searchParams.get('mode') === 'article' ? 'article' : 'fullscreen';
-  
-  console.log('🎨 [QuizEditorLayout] Editor Mode:', editorMode);
   const getTemplateBaseWidths = useCallback((templateId?: string) => {
     const template = quizTemplates.find((tpl) => tpl.id === templateId) || quizTemplates[0];
     const width = template?.style?.containerWidth ?? 450;
-    // Zoom mobile par défaut à 70%
-    const mobileWidth = Math.round(width * 0.7);
-    return { desktop: `${width}px`, mobile: `${mobileWidth}px` };
-  }, []);
-
-  // Réinitialiser les backgrounds temporaires UNIQUEMENT au premier montage après un rafraîchissement
-  useEffect(() => {
-    try {
-      const w = window as any;
-      if (!w.__quizBgSessionInitialized) {
-        const devices: Array<'desktop' | 'tablet' | 'mobile'> = ['desktop', 'tablet', 'mobile'];
-        const screens: Array<'screen1' | 'screen2' | 'screen3'> = ['screen1', 'screen2', 'screen3'];
-        devices.forEach((d) => {
-          screens.forEach((s) => {
-            try { localStorage.removeItem(`quiz-bg-${d}-${s}`); } catch {}
-          });
-        });
-        w.__quizBgSessionInitialized = true;
-      }
-    } catch {}
-  }, []);
-
-  // Effet de montage: ne plus nettoyer les images de fond pour préserver l'édition après un aperçu
-  useEffect(() => {
-    // Laisser intacts les overrides en localStorage et l'état en mémoire
-    // Optionnel: notifier les canvases pour re-synchroniser visuellement
-    try {
-      window.dispatchEvent(new CustomEvent('quiz-bg-sync', { detail: { screenId: 'screen1' } }));
-      window.dispatchEvent(new CustomEvent('quiz-bg-sync', { detail: { screenId: 'screen2' } }));
-      window.dispatchEvent(new CustomEvent('quiz-bg-sync', { detail: { screenId: 'screen3' } }));
-    } catch {}
+    return { desktop: `${width}px`, mobile: `${width}px` };
   }, []);
 
   const initialTemplateWidths = useMemo(() => getTemplateBaseWidths('image-quiz'), [getTemplateBaseWidths]);
@@ -198,27 +159,16 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
 
   // Store centralisé pour l'optimisation
   const { 
-    campaign: storeCampaign,
     setCampaign,
     setPreviewDevice,
     setIsLoading,
-    setIsModified,
-    resetCampaign
+    setIsModified
   } = useEditorStore();
-  
-  // Hook de synchronisation preview
-  const { syncBackground } = useEditorPreviewSync();
   // Campagne centralisée (source de vérité pour les champs de contact)
   const campaignState = useEditorStore((s) => s.campaign);
 
   // Supabase campaigns API
   const { saveCampaign } = useCampaigns();
-
-  // Réinitialiser la campagne au montage de l'éditeur
-  useEffect(() => {
-    console.log('🎨 [QuizEditor] Mounting - resetting campaign state');
-    resetCampaign();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // État local pour la compatibilité existante
   const [selectedDevice, setSelectedDevice] = useState<'desktop' | 'tablet' | 'mobile'>(actualDevice);
@@ -232,20 +182,11 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
 
   // États principaux
   const [canvasElements, setCanvasElements] = useState<any[]>([]);
-  
-  // Background par écran - chaque écran a son propre background
-  const defaultBackground = mode === 'template'
-    ? { type: 'color' as const, value: '#4ECDC4' }
-    : { type: 'color' as const, value: 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)' };
-  
-  const [screenBackgrounds, setScreenBackgrounds] = useState<ScreenBackgrounds>({
-    screen1: defaultBackground,
-    screen2: defaultBackground,
-    screen3: defaultBackground
-  });
-  
-  // Background global (fallback pour compatibilité)
-  const [canvasBackground, setCanvasBackground] = useState<{ type: 'color' | 'image'; value: string }>(defaultBackground);
+  const [canvasBackground, setCanvasBackground] = useState<{ type: 'color' | 'image'; value: string }>(() => (
+    mode === 'template'
+      ? { type: 'color', value: '#4ECDC4' }
+      : { type: 'color', value: 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)' }
+  ));
   const [canvasZoom, setCanvasZoom] = useState(getDefaultZoom(selectedDevice));
 
   useEffect(() => {
@@ -333,76 +274,7 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
     }
   }, [actualDevice]);
 
-  // Synchronisation des champs du formulaire entre campaignState et campaignConfig
-  useEffect(() => {
-    if ((campaignState as any)?.formFields) {
-      setCampaignConfig((prev: any) => {
-        if (!prev) return prev;
-        return {
-          ...prev,
-          formFields: (campaignState as any).formFields
-        };
-      });
-    }
-  }, [(campaignState as any)?.formFields]);
-
-  // État pour forcer le re-render du preview quand l'image de fond change
-  const [backgroundUpdateTrigger, setBackgroundUpdateTrigger] = useState(0);
-
-  // Fonction commune pour mettre à jour l'image de fond
-  const updateBackgroundImage = useCallback((url: string, targetDevice: string) => {
-    console.log('🎨 [QuizEditor] Updating background image:', { url: url.substring(0, 50), targetDevice, selectedDevice });
-    
-    // Mettre à jour le background local de l'éditeur seulement si c'est le device actuel
-    if (targetDevice === selectedDevice) {
-      setCanvasBackground({ type: 'image', value: url });
-    }
-    
-    // Mettre à jour la campagne globale selon le device ciblé
-    try {
-      setCampaign((prev: any) => {
-        if (!prev) return prev;
-        const updatedDesign = { ...(prev.design || {}) };
-        
-        // Appliquer l'image uniquement au device approprié
-        if (targetDevice === 'mobile') {
-          updatedDesign.mobileBackgroundImage = url;
-        } else {
-          // Desktop et tablet partagent la même image
-          updatedDesign.backgroundImage = url;
-        }
-        
-        return {
-          ...prev,
-          name: prev.name || 'Campaign',
-          design: updatedDesign,
-          _lastUpdate: Date.now()
-        };
-      });
-    } catch {}
-    
-    // Mettre à jour la config locale utilisée par l'éditeur si présente
-    setCampaignConfig((prev: any) => {
-      if (!prev) return prev;
-      const updatedDesign = { ...(prev.design || {}) };
-      
-      if (targetDevice === 'mobile') {
-        updatedDesign.mobileBackgroundImage = url;
-      } else {
-        updatedDesign.backgroundImage = url;
-      }
-      
-      return {
-        ...prev,
-        design: updatedDesign
-      };
-    });
-    
-    // Forcer le re-render du preview
-    setBackgroundUpdateTrigger(prev => prev + 1);
-  }, [selectedDevice, setCampaign]);
-
-  // Écoute l'évènement global pour appliquer l'image de fond à tous les écrans par device
+  // Écoute l'évènement global pour appliquer l'image de fond à tous les écrans par device (desktop/tablette/mobile distinct)
   useEffect(() => {
     const handler = (e: Event) => {
       const detail = (e as CustomEvent<any>)?.detail as { url?: string; device?: string } | undefined;
@@ -411,48 +283,55 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
       if (!url) return;
       
       console.log('🎨 [QuizEditor] Received applyBackgroundAllScreens:', { url: url.substring(0, 50), targetDevice, selectedDevice });
-      updateBackgroundImage(url, targetDevice);
+      
+      // Mettre à jour le background local de l'éditeur seulement si c'est le device actuel
+      if (targetDevice === selectedDevice) {
+        setCanvasBackground({ type: 'image', value: url });
+      }
+      
+      // Mettre à jour la campagne globale selon le device ciblé
+      try {
+        setCampaign((prev: any) => {
+          if (!prev) return prev;
+          const updatedDesign = { ...(prev.design || {}) };
+          
+          // Appliquer l'image uniquement au device approprié
+          if (targetDevice === 'mobile') {
+            updatedDesign.mobileBackgroundImage = url;
+          } else {
+            // Desktop et tablet partagent la même image
+            updatedDesign.backgroundImage = url;
+          }
+          
+          return {
+            ...prev,
+            name: prev.name || 'Campaign',
+            design: updatedDesign,
+            _lastUpdate: Date.now()
+          };
+        });
+      } catch {}
+      
+      // Mettre à jour la config locale utilisée par l'éditeur si présente
+      setCampaignConfig((prev: any) => {
+        if (!prev) return prev;
+        const updatedDesign = { ...(prev.design || {}) };
+        
+        if (targetDevice === 'mobile') {
+          updatedDesign.mobileBackgroundImage = url;
+        } else {
+          updatedDesign.backgroundImage = url;
+        }
+        
+        return {
+          ...prev,
+          design: updatedDesign
+        };
+      });
     };
     window.addEventListener('applyBackgroundAllScreens', handler as EventListener);
     return () => window.removeEventListener('applyBackgroundAllScreens', handler as EventListener);
-  }, [updateBackgroundImage, selectedDevice]);
-
-  // Écoute l'évènement pour appliquer l'image uniquement à l'écran courant
-  useEffect(() => {
-    const handler = (e: Event) => {
-      // DesignCanvas applique visuellement par écran; ici on synchronise UNIQUEMENT le background de preview
-      // dans campaign.canvasConfig.background (preview-only), sans toucher campaign.design.*
-      const detail = (e as CustomEvent<any>)?.detail as { url?: string; device?: string; screenId?: string } | undefined;
-      const url = detail?.url;
-      if (!url) return;
-      const targetDevice = (detail?.device as 'desktop' | 'tablet' | 'mobile' | undefined) || selectedDevice;
-      console.log('🎨 [QuizEditor] applyBackgroundCurrentScreen → preview-only sync:', {
-        url: url.substring(0, 50),
-        targetDevice,
-        selectedDevice,
-        screenId: detail?.screenId
-      });
-
-      // Synchroniser via le hook dédié pour que le store Zustand soit mis à jour
-      try {
-        console.log('🔔 [QuizEditor] Syncing background via useEditorPreviewSync:', {
-          url: url.substring(0, 50) + '...',
-          device: targetDevice,
-          screenId: detail?.screenId
-        });
-        syncBackground({ type: 'image', value: url }, targetDevice as 'desktop' | 'tablet' | 'mobile');
-      } catch (err) {
-        console.error('❌ [QuizEditor] Failed to sync background:', err);
-      }
-
-      // Légère impulsion locale quand l'appareil correspond
-      if (targetDevice === selectedDevice) {
-        try { setBackgroundUpdateTrigger((p) => p + 1); } catch {}
-      }
-    };
-    window.addEventListener('applyBackgroundCurrentScreen', handler as EventListener);
-    return () => window.removeEventListener('applyBackgroundCurrentScreen', handler as EventListener);
-  }, [selectedDevice, syncBackground]);
+  }, [setCampaign, selectedDevice]);
   
   // Référence pour le canvas
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -644,139 +523,87 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
     return screen === 'screen3' ? 'Rejouer' : 'Participer';
   }, []);
 
-  // Assurer la présence d'un bouton "Rejouer" sur l'écran 3 en mode édition
-  // - Conserve l'option B: screen3 = fin avec "Rejouer"
-  // - Rend l'ajout plus robuste (évite doublons, tient compte des cartes avec boutons)
+  // Ajouter automatiquement un bouton "Rejouer" sur l'écran 3 s'il n'existe pas
   React.useEffect(() => {
-    // Ne s'exécute que lorsque l'écran 3 est affiché pour éviter des insertions inutiles
-    if (currentScreen !== 'screen3') return;
-
-    const screen3Modules = Array.isArray(modularPage.screens.screen3)
-      ? modularPage.screens.screen3
-      : [];
-
-    const hasStandaloneReplay = screen3Modules.some(
-      (m) => m.type === 'BlocBouton' && typeof (m as any).label === 'string'
-    );
-    const hasCardReplay = screenHasCardButton(screen3Modules);
-
-    if (hasStandaloneReplay || hasCardReplay) return; // déjà présent
-
-    const replayButton: BlocBouton = {
-      id: `bloc-bouton-replay-${Date.now()}`,
-      type: 'BlocBouton',
-      label: getDefaultButtonLabel('screen3'),
-      href: '#',
-      background: '#000000',
-      textColor: '#ffffff',
-      borderRadius: 9999,
-      borderWidth: 0,
-      borderColor: '#000000',
-      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-      uppercase: false,
-      bold: false,
-      spacingTop: 0,
-      spacingBottom: 0
-    };
-
-    const nextScreens: ModularPage['screens'] = { ...modularPage.screens };
-    nextScreens.screen3 = [...screen3Modules, replayButton];
-    persistModular({ screens: nextScreens, _updatedAt: Date.now() });
-  }, [currentScreen, modularPage.screens, persistModular, screenHasCardButton, getDefaultButtonLabel]);
+    const screen3Modules = modularPage.screens.screen3 || [];
+    const hasReplayButton = screen3Modules.some((m) => m.type === 'BlocBouton') || screenHasCardButton(screen3Modules);
+    
+    if (!hasReplayButton && currentScreen === 'screen3') {
+      const replayButton: BlocBouton = {
+        id: `bloc-bouton-replay-${Date.now()}`,
+        type: 'BlocBouton',
+        label: getDefaultButtonLabel('screen3'),
+        href: '#',
+        background: '#000000',
+        textColor: '#ffffff',
+        borderRadius: 9999,
+        borderWidth: 0,
+        borderColor: '#000000',
+        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+        uppercase: false,
+        bold: false,
+        spacingTop: 0,
+        spacingBottom: 0
+      };
+      
+      const nextScreens: ModularPage['screens'] = { ...modularPage.screens };
+      nextScreens.screen3 = [...screen3Modules, replayButton];
+      persistModular({ screens: nextScreens, _updatedAt: Date.now() });
+    }
+  }, [currentScreen, modularPage.screens.screen3, persistModular, screenHasCardButton, getDefaultButtonLabel]);
 
   // Modular handlers
   const handleAddModule = useCallback((screen: ScreenId, module: Module) => {
-    if (module.type === 'BlocLogo') {
-      const logoId = module.id || `BlocLogo-${Date.now()}`;
-      const cloneLogo = (base: typeof module): Module => ({
-        ...(base as Module),
-        id: logoId
-      });
+    setModularPage((prev) => {
+      let prevScreenModules = prev.screens[screen] || [];
 
-      const nextScreens: ModularPage['screens'] = { ...modularPage.screens };
-      (Object.keys(nextScreens) as ScreenId[]).forEach((screenId) => {
-        const withoutLogo = (nextScreens[screenId] || []).filter((m) => m.type !== 'BlocLogo');
-        nextScreens[screenId] = [cloneLogo(module), ...withoutLogo];
-      });
+      if (module.type === 'BlocCarte' && Array.isArray((module as any).children)) {
+        const cardHasButton = (module as any).children.some((child: Module) => child?.type === 'BlocBouton');
+        if (cardHasButton) {
+          prevScreenModules = prevScreenModules.filter((m) => m.type !== 'BlocBouton');
+          (module as any).children = (module as any).children.map((child: Module) => {
+            if (child?.type === 'BlocBouton') {
+              return {
+                ...child,
+                label: child?.label || getDefaultButtonLabel(screen)
+              } as Module;
+            }
+            return child;
+          });
+        }
+      }
+      const isParticiperButton = module.type === 'BlocBouton' && (module.label || '').trim().toLowerCase() === 'participer';
 
-      persistModular({ screens: nextScreens, _updatedAt: Date.now() });
-      return;
-    }
+      let updatedModules: Module[];
+      if (isParticiperButton) {
+        // Participer est supposé unique et restera en fin de tableau
+        updatedModules = [...prevScreenModules, module];
+      } else {
+        const participateIndex = prevScreenModules.findIndex((m) => m.type === 'BlocBouton' && (m as BlocBouton).label?.trim().toLowerCase() === 'participer');
+        if (participateIndex >= 0) {
+          updatedModules = [
+            module,
+            ...prevScreenModules.slice(0, participateIndex),
+            prevScreenModules[participateIndex],
+            ...prevScreenModules.slice(participateIndex + 1)
+          ];
+        } else {
+          updatedModules = [module, ...prevScreenModules];
+        }
+      }
 
-    if (module.type === 'BlocPiedDePage') {
-      const footerId = module.id || `BlocPiedDePage-${Date.now()}`;
-      const cloneFooter = (base: typeof module): Module => {
-        if (base.type !== 'BlocPiedDePage') return { ...base } as Module;
-        const footer = base;
-        return {
-          ...footer,
-          id: footerId,
-          footerLinks: Array.isArray(footer.footerLinks)
-            ? footer.footerLinks.map((link) => ({ ...link }))
-            : footer.footerLinks,
-          socialLinks: Array.isArray(footer.socialLinks)
-            ? footer.socialLinks.map((link) => ({ ...link }))
-            : footer.socialLinks
-        } as Module;
+      const next: ModularPage = {
+        screens: {
+          ...prev.screens,
+          [screen]: updatedModules
+        },
+        _updatedAt: Date.now()
       };
 
-      const nextScreens: ModularPage['screens'] = { ...modularPage.screens };
-      (Object.keys(nextScreens) as ScreenId[]).forEach((screenId) => {
-        const withoutFooter = (nextScreens[screenId] || []).filter((m) => m.type !== 'BlocPiedDePage');
-        nextScreens[screenId] = [...withoutFooter, cloneFooter(module)];
-      });
-
-      persistModular({ screens: nextScreens, _updatedAt: Date.now() });
-      return;
-    }
-
-    let prevScreenModules = modularPage.screens[screen] || [];
-
-    if (module.type === 'BlocCarte' && Array.isArray((module as any).children)) {
-      const cardHasButton = (module as any).children.some((child: Module) => child?.type === 'BlocBouton');
-      if (cardHasButton) {
-        prevScreenModules = prevScreenModules.filter((m) => m.type !== 'BlocBouton');
-        (module as any).children = (module as any).children.map((child: Module) => {
-          if (child?.type === 'BlocBouton') {
-            return {
-              ...child,
-              label: child?.label || getDefaultButtonLabel(screen)
-            } as Module;
-          }
-          return child;
-        });
-      }
-    }
-    const isParticiperButton = module.type === 'BlocBouton' && (module.label || '').trim().toLowerCase() === 'participer';
-
-    let updatedModules: Module[];
-    if (isParticiperButton) {
-      // Participer est supposé unique et restera en fin de tableau
-      updatedModules = [...prevScreenModules, module];
-    } else {
-      const participateIndex = prevScreenModules.findIndex((m) => m.type === 'BlocBouton' && (m as BlocBouton).label?.trim().toLowerCase() === 'participer');
-      if (participateIndex >= 0) {
-        updatedModules = [
-          module,
-          ...prevScreenModules.slice(0, participateIndex),
-          prevScreenModules[participateIndex],
-          ...prevScreenModules.slice(participateIndex + 1)
-        ];
-      } else {
-        updatedModules = [module, ...prevScreenModules];
-      }
-    }
-
-    const next: ModularPage = {
-      screens: {
-        ...modularPage.screens,
-        [screen]: updatedModules
-      },
-      _updatedAt: Date.now()
-    };
-
-    persistModular(next);
-  }, [modularPage, persistModular, getDefaultButtonLabel]);
+      persistModular(next);
+      return next;
+    });
+  }, [persistModular]);
 
   const handleUpdateModule = useCallback((id: string, patch: Partial<Module>) => {
     const nextScreens: ModularPage['screens'] = { ...modularPage.screens };
@@ -1077,95 +904,13 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
   };
 
   // Ajoute à l'historique lors du changement de background (granulaire)
-  const handleBackgroundChange = (bg: any, options?: { screenId?: 'screen1' | 'screen2' | 'screen3'; applyToAllScreens?: boolean; device?: 'desktop' | 'tablet' | 'mobile' }) => {
-    console.log('🎨 [QuizEditor] handleBackgroundChange:', { bg, options });
-    
-    if (options?.applyToAllScreens) {
-      // Appliquer à tous les écrans
-      console.log('✅ Applying background to ALL screens');
-      setScreenBackgrounds({
-        screen1: bg,
-        screen2: bg,
-        screen3: bg
-      });
-      setCanvasBackground(bg); // Fallback global
-    } else if (options?.screenId && options?.device) {
-      // 📱 Appliquer uniquement à l'écran ET appareil spécifiés
-      console.log(`✅ Applying background to ${options.screenId} on ${options.device} ONLY`);
-      setScreenBackgrounds(prev => {
-        const screenKey = options.screenId!;
-        const deviceKey = options.device!;
-        const currentScreenBg = prev[screenKey];
-        
-        // Structure: { type, value, devices: { desktop: {...}, mobile: {...}, tablet: {...} } }
-        const newScreenBg = {
-          ...currentScreenBg,
-          devices: {
-            ...(currentScreenBg?.devices || {}),
-            [deviceKey]: bg
-          }
-        };
-        
-        console.log('📱 Updated screen background with device-specific data:', {
-          screenKey,
-          deviceKey,
-          newScreenBg
-        });
-        
-        return {
-          ...prev,
-          [screenKey]: newScreenBg
-        };
-      });
-    } else if (options?.screenId) {
-      // Appliquer uniquement à l'écran spécifié (tous devices)
-      console.log(`✅ Applying background to ${options.screenId} ONLY`);
-      setScreenBackgrounds(prev => ({
-        ...prev,
-        [options.screenId!]: bg
-      }));
-      // Ne pas modifier canvasBackground global
-    } else {
-      // Pas d'options : comportement par défaut (appliquer globalement)
-      console.log('⚠️ No options provided, applying globally (fallback)');
-      setScreenBackgrounds({
-        screen1: bg,
-        screen2: bg,
-        screen3: bg
-      });
-      setCanvasBackground(bg);
-    }
-    
-    // 🔗 Mode Article: si une image de fond est uploadée depuis le panneau gauche,
-    // la refléter aussi vers la bannière Article pour un feedback immédiat.
-    try {
-      const searchParams = new URLSearchParams(location.search);
-      const isArticleMode = searchParams.get('mode') === 'article';
-      if (isArticleMode && bg?.type === 'image' && typeof bg?.value === 'string') {
-        setCampaignConfig((prev: any) => {
-          const base = prev || {};
-          const baseArticle = base.articleConfig || {};
-          const baseBanner = baseArticle.banner || {};
-          return {
-            ...base,
-            articleConfig: {
-              ...baseArticle,
-              banner: {
-                ...baseBanner,
-                imageUrl: bg.value
-              }
-            }
-          };
-        });
-      }
-    } catch {}
-
+  const handleBackgroundChange = (bg: any) => {
+    setCanvasBackground(bg);
     setTimeout(() => {
       addToHistory({
         campaignConfig: { ...campaignConfig },
         canvasElements: JSON.parse(JSON.stringify(canvasElements)),
-        canvasBackground: { ...bg },
-        screenBackgrounds: { ...screenBackgrounds }
+        canvasBackground: { ...bg }
       }, 'background_update');
     }, 0);
 
@@ -1838,28 +1583,13 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
     const secondaryColor = '#ffffff';
 
     // Build dynamic quiz questions for preview:
-    let configuredQuestions = (
+    const configuredQuestions = (
       (campaignState as any)?.quizConfig?.questions ||
       (campaignConfig as any)?.quizConfig?.questions ||
       (campaignState as any)?.gameConfig?.quiz?.questions ||
       (campaignConfig as any)?.gameConfig?.quiz?.questions ||
       []
     );
-    // If none are defined (e.g., user hasn't opened the "Jeu" tab yet), seed a default question
-    if (!Array.isArray(configuredQuestions) || configuredQuestions.length === 0) {
-      configuredQuestions = [
-        {
-          id: `q_${Date.now()}`,
-          question: 'Nouvelle question',
-          image: undefined,
-          answers: [
-            { id: `a_${Date.now()}_1`, text: 'Réponse 1', isCorrect: true },
-            { id: `a_${Date.now()}_2`, text: 'Réponse 2', isCorrect: false }
-          ],
-          correctAnswerId: `a_${Date.now()}_1`
-        }
-      ];
-    }
     
     console.log('🧭 [QuizEditorLayout] campaignData questions:', {
       count: Array.isArray(configuredQuestions) ? configuredQuestions.length : 0,
@@ -1927,23 +1657,11 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
       return merged;
     });
 
-    console.log('🎨 [QuizEditorLayout] Creating campaignData with background:', {
-      canvasBackground,
-      backgroundImage: campaignConfig?.design?.backgroundImage,
-      mobileBackgroundImage: campaignConfig?.design?.mobileBackgroundImage
-    });
-    
     return {
       id: 'quiz-design-preview',
       type: 'quiz',
-      // Fournir la configuration Article pour le mode article
-      articleConfig: (campaignConfig as any)?.articleConfig,
       design: {
         background: canvasBackground,
-        screenBackgrounds: screenBackgrounds, // Backgrounds par écran pour le preview
-        // Ajouter les propriétés backgroundImage pour le preview
-        backgroundImage: campaignConfig?.design?.backgroundImage || (canvasBackground?.type === 'image' ? canvasBackground.value : undefined),
-        mobileBackgroundImage: campaignConfig?.design?.mobileBackgroundImage || (canvasBackground?.type === 'image' ? canvasBackground.value : undefined),
         customTexts: customTexts,
         customImages: customImages,
         extractedColors: extractedColors,
@@ -2009,35 +1727,23 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
       // Champs de contact dynamiques depuis le store (fallback uniquement si indéfini)
       formFields: ((campaignState as any)?.formFields !== undefined)
         ? ((campaignState as any)?.formFields as any)
-        : campaignConfig?.formFields || [
+        : [
             { id: 'prenom', label: 'Prénom', type: 'text', required: true },
             { id: 'nom', label: 'Nom', type: 'text', required: true },
             { id: 'email', label: 'Email', type: 'email', required: true }
           ],
-      // Fournir aussi la version snake_case attendue par certains composants de preview
-      form_fields: ((campaignState as any)?.formFields !== undefined)
-        ? ((campaignState as any)?.formFields as any)
-        : (campaignConfig?.formFields || [
-            { id: 'prenom', label: 'Prénom', type: 'text', required: true },
-            { id: 'nom', label: 'Nom', type: 'text', required: true },
-            { id: 'email', label: 'Email', type: 'email', required: true }
-          ]),
       // Garder la configuration canvas pour compatibilité - INCLURE LES MODULES
       canvasConfig: {
         elements: [...canvasElements, ...allModules],
         background: canvasBackground,
-        screenBackgrounds: screenBackgrounds, // Backgrounds par écran
         device: selectedDevice
       },
       // Ajouter modularPage pour compatibilité
-      modularPage: modularPage,
-      // Inclure articleConfig depuis le store pour le mode Article
-      articleConfig: (campaignState as any)?.articleConfig
+      modularPage: modularPage
     };
   }, [
     canvasElements,
     canvasBackground,
-    screenBackgrounds,
     campaignConfig,
     extractedColors,
     selectedDevice,
@@ -2046,8 +1752,7 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
     launchButtonStyles,
     quizStyleOverrides,
     quizConfig,
-    modularPage,
-    backgroundUpdateTrigger
+    modularPage
   ]);
   
   // Log pour vérifier que campaignData contient bien les éléments
@@ -2056,11 +1761,6 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
     campaignDataCanvasConfigElements: campaignData?.canvasConfig?.elements?.length || 0,
     customTextsCount: campaignData?.design?.customTexts?.length || 0,
     customImagesCount: campaignData?.design?.customImages?.length || 0,
-    backgroundType: canvasBackground?.type,
-    backgroundValue: canvasBackground?.value?.substring(0, 50),
-    designBackgroundImage: campaignData?.design?.backgroundImage?.substring(0, 50),
-    designMobileBackgroundImage: campaignData?.design?.mobileBackgroundImage?.substring(0, 50),
-    campaignConfigBackgroundImage: campaignConfig?.design?.backgroundImage?.substring(0, 50),
     showFunnel
   });
 
@@ -2141,13 +1841,10 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
           },
           // Préserver modularPage pour la synchronisation avec le preview
           modularPage: (transformedCampaign as any).modularPage || prev.modularPage,
-          // Préserver design.quizModules et les images de fond si présentes
+          // Préserver design.quizModules si présent
           design: {
             ...(transformedCampaign as any).design,
-            quizModules: (transformedCampaign as any).modularPage || prev.design?.quizModules,
-            // Préserver les images de fond qui ont pu être définies par applyBackgroundAllScreens
-            backgroundImage: (transformedCampaign as any).design?.backgroundImage || prev.design?.backgroundImage,
-            mobileBackgroundImage: (transformedCampaign as any).design?.mobileBackgroundImage || prev.design?.mobileBackgroundImage
+            quizModules: (transformedCampaign as any).modularPage || prev.design?.quizModules
           }
         } as any;
       });
@@ -2176,20 +1873,6 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
   };
 
   const handlePreview = () => {
-    // Forcer la synchronisation du store vers le preview
-    console.log('🔄 [DesignEditorLayout] Preview toggled, syncing store to preview');
-    
-    // Mettre à jour le store avec les dernières données
-    setCampaign(campaignState);
-    
-    // Dispatcher un événement pour forcer le re-render du preview
-    window.dispatchEvent(new CustomEvent('editor-force-sync', {
-      detail: {
-        timestamp: Date.now(),
-        modularPage: (campaignState as any)?.modularPage
-      }
-    }));
-    
     setShowFunnel(!showFunnel);
   };
 
@@ -2559,11 +2242,11 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
           'radial-gradient(130% 130% at 12% 20%, rgba(235, 155, 100, 0.8) 0%, rgba(235, 155, 100, 0) 55%), radial-gradient(120% 120% at 78% 18%, rgba(128, 82, 180, 0.85) 0%, rgba(128, 82, 180, 0) 60%), radial-gradient(150% 150% at 55% 82%, rgba(68, 52, 128, 0.75) 0%, rgba(68, 52, 128, 0) 65%), linear-gradient(90deg, #E07A3A 0%, #9A5CA9 50%, #3D2E72 100%)',
         backgroundBlendMode: showFunnel ? 'normal' : 'screen, screen, lighten, normal',
         backgroundColor: showFunnel ? 'transparent' : '#3D2E72',
-        padding: showFunnel ? '0' : (isWindowMobile ? '9px' : '0 9px 9px 9px'),
+        padding: showFunnel ? '0' : '0 9px 9px 9px',
         boxSizing: 'border-box'
       }}
     >
-    <MobileStableEditor className={showFunnel ? "h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden" : (isWindowMobile ? "h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden pb-[6px] rounded-tl-[28px] rounded-tr-[28px] rounded-br-[28px] transform -translate-y-[0.4vh]" : "h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden pt-[1.25cm] pb-[6px] rounded-tl-[28px] rounded-tr-[28px] rounded-br-[28px] transform -translate-y-[0.4vh]")}>
+    <MobileStableEditor className={showFunnel ? "h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden" : "h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden pt-[1.25cm] pb-[6px] rounded-tl-[28px] rounded-tr-[28px] transform -translate-y-[0.4vh]"}>
 
       {/* Top Toolbar - Hidden only in preview mode */}
       {!showFunnel && (
@@ -2596,7 +2279,7 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
       <div className="flex-1 flex overflow-hidden relative">
         {showFunnel ? (
           /* Funnel Preview Mode */
-          <div className="group fixed inset-0 z-40 w-full h-[100dvh] min-h-[100dvh] overflow-hidden bg-[#2c2c35] flex items-center justify-center">
+          <div className="group fixed inset-0 z-40 w-full h-[100dvh] min-h-[100dvh] overflow-hidden bg-transparent flex">
             {/* Floating Edit Mode Button */}
             <button
               onClick={() => setShowFunnel(false)}
@@ -2604,30 +2287,15 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
             >
               Mode édition
             </button>
-            {(selectedDevice === 'mobile' && actualDevice !== 'mobile') ? (
-              /* Mobile Preview sur Desktop: Canvas centré avec fond #2c2c35 - Dimensions identiques au mode édition */
-              <div className="flex items-center justify-center w-full h-full">
-                <div 
-                  className="relative overflow-hidden rounded-[32px] shadow-2xl"
-                  style={{
-                    width: '430px',
-                    height: '932px',
-                    maxHeight: '90vh'
-                  }}
-                >
-                  <PreviewRenderer
-                    campaign={campaignData}
-                    previewMode="mobile"
-                    wheelModalConfig={wheelModalConfig}
-                    constrainedHeight={true}
-                  />
-                </div>
-              </div>
+            {campaignData?.type === 'quiz' ? (
+              <FunnelQuizParticipate
+              campaign={campaignData as any}
+                previewMode={selectedDevice}
+              />
             ) : (
-              /* Desktop/Tablet Preview OU Mobile physique: Fullscreen sans cadre */
-              <PreviewRenderer
+              <FunnelUnlockedGame
                 campaign={campaignData}
-                previewMode={actualDevice === 'desktop' && selectedDevice === 'desktop' ? 'desktop' : selectedDevice}
+                previewMode={selectedDevice}
                 wheelModalConfig={wheelModalConfig}
               />
             )}
@@ -2649,7 +2317,6 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
                 onElementsChange={setCanvasElements}
                 selectedElement={selectedElement}
                 onElementUpdate={handleElementUpdate}
-                forceFullTabs={editorMode === 'article'}
                 // Modular editor wiring
                 currentScreen={currentScreen}
                 onAddModule={handleAddModule}
@@ -2683,9 +2350,6 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
                 selectedModule={selectedModule}
                 onModuleUpdate={handleUpdateModule}
                 onSelectedModuleChange={setSelectedModuleId}
-                // Modules de l'écran actuel pour le panneau de calques
-                modules={modularPage.screens[currentScreen] || []}
-                onModuleDelete={handleDeleteModule}
                 // Quiz config props for HybridSidebar
                 quizQuestionCount={quizConfig.questionCount}
                 quizTimeLimit={quizConfig.timeLimit}
@@ -2948,36 +2612,17 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
                 className={isWindowMobile ? "vertical-sidebar-drawer" : ""}
               />
             {/* Canvas Scrollable Area */}
-            <div
-              className="flex-1 canvas-scroll-area relative z-20 rounded-br-[28px] rounded-bl-none"
-              style={{ borderBottomLeftRadius: '0 !important' }}
-              onMouseDown={(e) => {
-                // Only left button
-                if (e.button !== 0) return;
-                const target = e.target as HTMLElement | null;
-                if (!target) return;
-                // Ignore clicks inside any canvas root
-                const isInsideCanvas = target.closest('[data-canvas-root="true"]');
-                if (isInsideCanvas) return;
-                // Ignore UI controls to avoid disrupting interactions
-                const interactive = target.closest('button, [role="button"], input, textarea, select, [contenteditable="true"]');
-                if (interactive) return;
-                // Clear selection when clicking light gray background/empty area
-                setSelectedElement(null);
-                setSelectedElements([]);
-              }}
-            >
+            <div className="flex-1 canvas-scroll-area relative z-20 rounded-br-[28px] rounded-bl-none" style={{ borderBottomLeftRadius: '0 !important' }}>
               <div className="min-h-full flex flex-col">
                 {/* Premier Canvas */}
                 <div data-screen-anchor="screen1" className="relative">
                   <DesignCanvas
-                    editorMode={editorMode}
                     screenId="screen1"
                     ref={canvasRef}
                     selectedDevice={selectedDevice}
                     elements={canvasElements}
                     onElementsChange={setCanvasElements}
-                    background={screenBackgrounds.screen1?.devices?.[selectedDevice] || screenBackgrounds.screen1}
+                    background={canvasBackground}
                     campaign={campaignData}
                     onCampaignChange={handleCampaignConfigChange}
                     zoom={canvasZoom}
@@ -3060,8 +2705,7 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
                   />
                 </div>
                 
-                {/* Deuxième Canvas - Seulement en mode Fullscreen */}
-                {editorMode === 'fullscreen' && (
+                {/* Deuxième Canvas */}
                 <div className="mt-4 relative" data-screen-anchor="screen2">
                   {/* Background pour éviter la transparence de la bande magenta */}
                   <div 
@@ -3081,12 +2725,11 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
                   />
                   <div className="relative z-10">
                     <DesignCanvas
-                      editorMode={editorMode}
                       screenId="screen2"
                       selectedDevice={selectedDevice}
                       elements={canvasElements}
                       onElementsChange={setCanvasElements}
-                      background={screenBackgrounds.screen2?.devices?.[selectedDevice] || screenBackgrounds.screen2}
+                      background={canvasBackground}
                       campaign={campaignData}
                       onCampaignChange={handleCampaignConfigChange}
                       zoom={canvasZoom}
@@ -3167,10 +2810,8 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
                     />
                   </div>
                 </div>
-                )}
 
-                {/* Troisième Canvas - Seulement en mode Fullscreen */}
-                {editorMode === 'fullscreen' && (
+                {/* Troisième Canvas */}
                 <div className="mt-4 relative" data-screen-anchor="screen3">
                   {/* Background pour éviter la transparence de la bande magenta */}
                   <div 
@@ -3190,12 +2831,11 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
                   />
                   <div className="relative z-10">
                     <DesignCanvas
-                      editorMode={editorMode}
                       screenId="screen3"
                       selectedDevice={selectedDevice}
                       elements={canvasElements}
                       onElementsChange={setCanvasElements}
-                      background={screenBackgrounds.screen3?.devices?.[selectedDevice] || screenBackgrounds.screen3}
+                      background={canvasBackground}
                       campaign={campaignData}
                       onCampaignChange={handleCampaignConfigChange}
                       zoom={canvasZoom}
@@ -3284,7 +2924,6 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
                     />
                   </div>
                 </div>
-                )}
               </div>
             </div>
             {/* Zoom Slider with integrated Screen navigation button */}

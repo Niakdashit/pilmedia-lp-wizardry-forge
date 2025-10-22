@@ -1,14 +1,11 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { toast } from 'sonner';
 import TemplatedQuiz from '../shared/TemplatedQuiz';
 import FormHandler from './components/FormHandler';
-import DynamicContactForm from '../forms/DynamicContactForm';
 import type { Tables } from '@/integrations/supabase/types';
 import { QuizModuleRenderer } from '../QuizEditor/QuizRenderer';
 import { useParticipations } from '../../hooks/useParticipations';
 import type { Module } from '@/types/modularEditor';
-import { useEditorPreviewSync } from '@/hooks/useEditorPreviewSync';
-import { useEditorStore } from '@/stores/editorStore';
 
 const SAFE_ZONE_PADDING: Record<'desktop' | 'tablet' | 'mobile', number> = {
   desktop: 56,
@@ -37,46 +34,22 @@ const FunnelQuizParticipate: React.FC<FunnelQuizParticipateProps> = ({ campaign,
   const [forceUpdate, setForceUpdate] = useState(0);
 
   const showScore = !!(campaign?.game_config as any)?.quiz?.showScore;
-  const storeCampaign = useEditorStore((state) => state.campaign);
-  const { getCanonicalPreviewData } = useEditorPreviewSync();
   
   // Écouter les mises à jour de style pour forcer le re-render
-  useEffect(() => {
+  React.useEffect(() => {
     const handleStyleUpdate = () => {
       console.log('🔄 [FunnelQuizParticipate] Style update received, forcing re-render');
-      setForceUpdate(prev => prev + 1);
-    };
-    
-    const handleFormFieldsSync = (e: Event) => {
-      const detail = (e as CustomEvent).detail;
-      console.log('📋 [FunnelQuizParticipate] FormFields sync event received:', {
-        fieldsCount: detail?.formFields?.length,
-        timestamp: detail?.timestamp
-      });
-      setForceUpdate(prev => prev + 1);
-    };
-    
-    const handleModularSync = (e: Event) => {
-      const detail = (e as CustomEvent).detail;
-      console.log('📦 [FunnelQuizParticipate] Modular sync event received:', {
-        hasModularPage: !!detail?.modularPage,
-        timestamp: detail?.timestamp
-      });
       setForceUpdate(prev => prev + 1);
     };
     
     window.addEventListener('quizStyleUpdate', handleStyleUpdate);
     window.addEventListener('quizStyleUpdateFallback', handleStyleUpdate);
     window.addEventListener('modularModuleSelected', handleStyleUpdate);
-    window.addEventListener('editor-formfields-sync', handleFormFieldsSync);
-    window.addEventListener('editor-force-sync', handleModularSync);
     
     return () => {
       window.removeEventListener('quizStyleUpdate', handleStyleUpdate);
       window.removeEventListener('quizStyleUpdateFallback', handleStyleUpdate);
       window.removeEventListener('modularModuleSelected', handleStyleUpdate);
-      window.removeEventListener('editor-formfields-sync', handleFormFieldsSync);
-      window.removeEventListener('editor-force-sync', handleModularSync);
     };
   }, []);
 
@@ -128,45 +101,13 @@ const FunnelQuizParticipate: React.FC<FunnelQuizParticipateProps> = ({ campaign,
   const safeZonePadding = SAFE_ZONE_PADDING[previewMode] ?? SAFE_ZONE_PADDING.desktop;
   const safeZoneRadius = SAFE_ZONE_RADIUS[previewMode] ?? SAFE_ZONE_RADIUS.desktop;
 
-  const fields = useMemo(() => {
-    // Priorité 1: Données canoniques du hook de synchronisation
-    const canonicalData = getCanonicalPreviewData();
-    if (canonicalData.formFields && Array.isArray(canonicalData.formFields) && canonicalData.formFields.length > 0) {
-      console.log('📋 [FunnelQuizParticipate] ✅ Using canonical formFields:', {
-        count: canonicalData.formFields.length,
-        fields: canonicalData.formFields.map((f: any) => ({ id: f.id, label: f.label, type: f.type })),
-        timestamp: canonicalData.timestamp
-      });
-      return canonicalData.formFields;
-    }
-    
-    // Priorité 2: Store campaign
-    if (storeCampaign?.formFields && Array.isArray(storeCampaign.formFields) && storeCampaign.formFields.length > 0) {
-      console.log('📋 [FunnelQuizParticipate] ⚠️ Using storeCampaign formFields:', {
-        count: storeCampaign.formFields.length,
-        fields: storeCampaign.formFields.map((f: any) => ({ id: f.id, label: f.label, type: f.type }))
-      });
-      return storeCampaign.formFields;
-    }
-    
-    // Priorité 3: Campaign props (form_fields avec underscore OU formFields camelCase)
-    const campaignFields = (campaign as any)?.formFields || campaign?.form_fields;
-    if (campaignFields && Array.isArray(campaignFields) && campaignFields.length > 0) {
-      console.log('📋 [FunnelQuizParticipate] ⚠️ Using campaign formFields (default from generator):', {
-        count: campaignFields.length,
-        fields: campaignFields.map((f: any) => ({ id: f.id, label: f.label, type: f.type }))
-      });
-      return campaignFields;
-    }
-    
-    // Fallback: Champs par défaut
-    console.warn('📋 [FunnelQuizParticipate] ❌ Using fallback default formFields');
-    return [
+  const fields = useMemo(() => (
+    (campaign?.form_fields && Array.isArray(campaign.form_fields)) ? campaign.form_fields : [
       { id: 'prenom', label: 'Prénom', type: 'text', required: true },
       { id: 'nom', label: 'Nom', type: 'text', required: true },
       { id: 'email', label: 'Email', type: 'email', required: true }
-    ];
-  }, [getCanonicalPreviewData, storeCampaign?.formFields, storeCampaign?._lastUpdate, campaign?.form_fields, (campaign as any)?.formFields, forceUpdate]);
+    ]
+  ), [campaign?.form_fields]);
 
   const backgroundStyle: React.CSSProperties = useMemo(() => {
     const design = (campaign.design as any);
@@ -214,21 +155,10 @@ const FunnelQuizParticipate: React.FC<FunnelQuizParticipateProps> = ({ campaign,
 
   // Récupérer directement modularPage pour un rendu unifié
   const campaignAny = campaign as any;
-  const storeCampaignAny = storeCampaign as any;
-  
-  // Priorité: utiliser storeCampaign (synchronisé) plutôt que campaign (props)
-  const modularPage = storeCampaignAny?.modularPage || campaignAny?.modularPage || { screens: { screen1: [], screen2: [], screen3: [] }, _updatedAt: Date.now() };
+  const modularPage = campaignAny?.modularPage || { screens: { screen1: [], screen2: [], screen3: [] }, _updatedAt: Date.now() };
   const modules = modularPage.screens.screen1 || [];
   const modules2 = modularPage.screens.screen2 || [];
   const modules3 = modularPage.screens.screen3 || [];
-  
-  console.log('📦 [FunnelQuizParticipate] Modules loaded:', {
-    screen1: modules.length,
-    screen2: modules2.length,
-    screen3: modules3.length,
-    modularPageTimestamp: modularPage._updatedAt,
-    source: storeCampaignAny?.modularPage ? 'storeCampaign' : 'campaign'
-  });
 
   type LayoutWidth = NonNullable<Module['layoutWidth']>;
   const layoutSpan: Record<LayoutWidth, number> = {
@@ -320,8 +250,7 @@ const FunnelQuizParticipate: React.FC<FunnelQuizParticipateProps> = ({ campaign,
     );
   };
   
-  console.log('🔍 [FunnelQuizParticipate] Component state:', {
-    phase,
+  console.log('🔍 [FunnelQuizParticipate] Using modularPage:', {
     screen1Count: modules.length,
     screen2Count: modules2.length,
     screen3Count: modules3.length,
@@ -404,29 +333,6 @@ const FunnelQuizParticipate: React.FC<FunnelQuizParticipateProps> = ({ campaign,
     setPhase('quiz');
   };
 
-  const handleQuizComplete = () => {
-    console.log('🎯 [FunnelQuizParticipate] Quiz completed');
-    console.log('📋 [FunnelQuizParticipate] Current phase:', phase);
-    console.log('📝 [FunnelQuizParticipate] Fields:', fields);
-    console.log('🔍 [FunnelQuizParticipate] Campaign object:', campaign);
-    
-    // Check if form should be shown before result
-    const showFormBeforeResult = (campaign as any)?.showFormBeforeResult ?? true;
-    console.log('🔍 [FunnelQuizParticipate] showFormBeforeResult:', showFormBeforeResult);
-    console.log('🔍 [FunnelQuizParticipate] Raw campaign.showFormBeforeResult:', (campaign as any)?.showFormBeforeResult);
-    
-    // FORCE FORM DISPLAY FOR DEBUGGING
-    console.warn('⚠️ [FunnelQuizParticipate] FORCING FORM DISPLAY - showFormBeforeResult is TRUE by default');
-    
-    if (showFormBeforeResult) {
-      console.log('✅ [FunnelQuizParticipate] Transitioning to form phase');
-      setPhase('form');
-    } else {
-      console.log('⏭️ [FunnelQuizParticipate] Skipping form, going directly to thank you');
-      setPhase('thankyou');
-    }
-  };
-
   const handleFormSubmit = async (formData: Record<string, string>) => {
     setParticipationLoading(true);
     try {
@@ -468,41 +374,26 @@ const FunnelQuizParticipate: React.FC<FunnelQuizParticipateProps> = ({ campaign,
         <div className="absolute inset-0" style={backgroundStyle} />
 
         {/* Participate phase */}
-        {phase === 'participate' && (() => {
-          console.log('🎯 [FunnelQuizParticipate] Rendering screen1 - modules:', modules.length, 'hasPrimaryCTA:', hasPrimaryCTA);
-          return (
-            <div
-              className="relative z-10 h-full flex flex-col items-center justify-center gap-6"
-              style={{ padding: safeZonePadding, boxSizing: 'border-box' }}
-            >
-              {/* Render modules using unified QuizModuleRenderer */}
-              {(() => {
-                console.log('🎯 [FunnelQuizParticipate] Rendering modules:', {
-                  count: modules.length,
-                  modules: modules.map((m: Module) => ({ id: m.id, type: m.type }))
-                });
-                return modules.length > 0 ? (
-                  renderModuleGrid(modules as Module[], { onButtonClick: handleParticipate, device: previewMode })
-                ) : (
-                  <div className="text-center text-white/80">
-                    <p className="text-sm mb-4">Aucun contenu configuré pour l'écran 1</p>
-                  </div>
-                );
-              })()}
-              
-              {/* Bouton Participer - affiché uniquement si aucun CTA modulaire n'est présent */}
-              {!hasPrimaryCTA && (
-                <button
-                  onClick={handleParticipate}
-                  className={ctaClassName}
-                  style={ctaStyles}
-                >
-                  {ctaLabel}
-                </button>
-              )}
-            </div>
-          );
-        })()}
+        {phase === 'participate' && (
+          <div
+            className="relative z-10 h-full flex flex-col gap-6"
+            style={{ padding: safeZonePadding, boxSizing: 'border-box' }}
+          >
+            {/* Render modules using unified QuizModuleRenderer */}
+            {renderModuleGrid(modules as Module[], { onButtonClick: handleParticipate, device: previewMode })}
+            
+            {/* Bouton Participer - affiché uniquement si aucun CTA modulaire n'est présent */}
+            {!hasPrimaryCTA && (
+              <button
+                onClick={handleParticipate}
+                className={ctaClassName}
+                style={ctaStyles}
+              >
+                {ctaLabel}
+              </button>
+            )}
+          </div>
+        )}
 
         {/* Quiz phase - Afficher le quiz réel */}
         {phase === 'quiz' && (
@@ -518,7 +409,10 @@ const FunnelQuizParticipate: React.FC<FunnelQuizParticipateProps> = ({ campaign,
                 campaign={campaign}
                 device={previewMode}
                 disabled={false}
-                onClick={handleQuizComplete}
+                onClick={() => {
+                  console.log('🎯 Quiz completed, showing form');
+                  setShowFormModal(true);
+                }}
                 templateId={campaignAny?.gameConfig?.quiz?.templateId || 'image-quiz'}
                 onAnswerSelected={(isCorrect: boolean) => {
                   if (isCorrect) {
@@ -530,66 +424,15 @@ const FunnelQuizParticipate: React.FC<FunnelQuizParticipateProps> = ({ campaign,
           </div>
         )}
 
-        {/* Form phase - Afficher le formulaire dans le funnel */}
-        {phase === 'form' && (() => {
-          console.log('📝 [FunnelQuizParticipate] Rendering FORM phase');
-          console.log('📋 Fields to render:', fields);
-          console.warn('⚠️ [FunnelQuizParticipate] FORM PHASE IS ACTIVE - YOU SHOULD SEE THE FORM NOW');
-          return (
-            <div
-              className="relative z-10 h-full flex flex-col items-center justify-center gap-6"
-              style={{ padding: safeZonePadding, boxSizing: 'border-box' }}
-            >
-              {/* Debug indicator */}
-              <div className="absolute top-4 left-4 bg-green-500 text-white px-4 py-2 rounded-lg font-bold text-sm shadow-lg z-50">
-                ✅ FORMULAIRE ACTIF (phase={phase})
-              </div>
-              
-              <div className="w-full max-w-md bg-white/95 backdrop-blur-sm rounded-2xl shadow-xl p-8">
-                <h2 className="text-2xl font-bold text-gray-800 mb-2 text-center">
-                  {campaignAny?.screens?.[1]?.title || 'Vos informations'}
-                </h2>
-                {campaignAny?.screens?.[1]?.description && (
-                  <p className="text-sm text-gray-600 mb-6 text-center">
-                    {campaignAny.screens[1].description}
-                  </p>
-                )}
-                <DynamicContactForm
-                  fields={fields as any}
-                  submitLabel={participationLoading ? 'Chargement...' : campaignAny?.screens?.[1]?.buttonText || "Participer"}
-                  onSubmit={handleFormSubmit}
-                  textStyles={{
-                    label: {
-                      color: '#374151',
-                      fontFamily: 'inherit'
-                    },
-                    button: {
-                      backgroundColor: ctaStyles.background as string || '#000000',
-                      color: ctaStyles.color as string || '#ffffff',
-                      borderRadius: typeof ctaStyles.borderRadius === 'string' ? ctaStyles.borderRadius : '8px',
-                      fontFamily: 'inherit',
-                      fontWeight: '600'
-                    }
-                  }}
-                  inputBorderColor="#E5E7EB"
-                  inputFocusColor="#000000"
-                />
-              </div>
-            </div>
-          );
-        })()}
-
-        {/* Form modal - keep for backward compatibility but hidden when in form phase */}
-        {phase !== 'form' && (
-          <FormHandler
-            showFormModal={showFormModal}
-            campaign={campaignAny}
-            fields={fields as any}
-            participationLoading={participationLoading}
-            onClose={() => setShowFormModal(false)}
-            onSubmit={handleFormSubmit}
-          />
-        )}
+        {/* Form phase - use modal component to keep look consistent */}
+        <FormHandler
+          showFormModal={showFormModal}
+          campaign={campaignAny}
+          fields={fields as any}
+          participationLoading={participationLoading}
+          onClose={() => setShowFormModal(false)}
+          onSubmit={handleFormSubmit}
+        />
 
         {/* Thank you phase */}
         {phase === 'thankyou' && (

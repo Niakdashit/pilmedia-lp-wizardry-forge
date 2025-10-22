@@ -1,10 +1,10 @@
 
-// import { useNavigate } from 'react-router-dom'; // Not used in Next.js
+import { useNavigate } from 'react-router-dom';
 
 export const createSaveHandler = (
   campaign: any,
   saveCampaign: (data: any) => Promise<any>,
-  navigate: (path: string) => void,
+  navigate: ReturnType<typeof useNavigate>,
   setCampaign: React.Dispatch<React.SetStateAction<any>>
 ) => {
   return async (continueEditing = false) => {
@@ -93,7 +93,7 @@ export const saveCampaignToDB = async (
 export const createSaveAndContinueHandler = (
   campaign: any,
   saveCampaign: (data: any) => Promise<any>,
-  navigate: (path: string) => void,
+  navigate: ReturnType<typeof useNavigate>,
   setCampaign: React.Dispatch<React.SetStateAction<any>>
 ) => {
   return async () => {

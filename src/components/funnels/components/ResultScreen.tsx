@@ -71,26 +71,8 @@ const ResultScreen: React.FC<ResultScreenProps> = ({
   };
 
   return (
-    <>
-      <style>{`
-        @keyframes slideUpFromBottom {
-          from {
-            transform: translateY(100%);
-            opacity: 0;
-          }
-          to {
-            transform: translateY(0);
-            opacity: 1;
-          }
-        }
-      `}</style>
-      <div 
-        className="w-full h-full flex items-center justify-center p-4"
-        style={{
-          animation: 'slideUpFromBottom 0.5s ease-out forwards'
-        }}
-      >
-        <ContrastBackground
+    <div className="w-full h-full flex items-center justify-center p-4">
+      <ContrastBackground
         enabled={true}
         config={frameConfig}
         className="text-center space-y-4 w-full max-w-lg rounded-[2px] border border-black/5"
@@ -126,8 +108,7 @@ const ResultScreen: React.FC<ResultScreenProps> = ({
           </button>
         </div>
       </ContrastBackground>
-      </div>
-    </>
+    </div>
   );
 };
 

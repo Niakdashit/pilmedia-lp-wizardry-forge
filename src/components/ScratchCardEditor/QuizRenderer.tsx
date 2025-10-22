@@ -1,7 +1,6 @@
 import React, { useRef, useState, useCallback } from 'react';
 import type { Module, BlocTexte, BlocImage, BlocVideo, BlocBouton, BlocCarte, BlocLogo, BlocPiedDePage } from '@/types/modularEditor';
 import type { DeviceType } from '@/utils/deviceDimensions';
-import { STANDARD_DEVICE_DIMENSIONS, getDeviceScale } from '@/utils/deviceDimensions';
 
 interface QuizModuleRendererProps {
   modules: Module[];
@@ -36,13 +35,7 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
   onModuleUpdate
 }) => {
   const isMobileDevice = device === 'mobile';
-  
-  // Calcul du deviceScale : 65% de la taille desktop pour mobile
-  const scale = getDeviceScale('desktop', device);
-  const deviceScale = Math.min(scale.x, scale.y);
-  
-  console.log(`📱 [ScratchCardRenderer] Device: ${device}, Scale: ${deviceScale.toFixed(3)} (${device === 'mobile' ? '51.8% desktop' : '100%'})`);
-  console.log(`📌 [ScratchCardRenderer] Modules seront ${device === 'mobile' ? '51.8%' : '100%'} de la taille desktop`);
+  const deviceScale = isMobileDevice ? 0.8 : 1;
   const [editingModuleId, setEditingModuleId] = useState<string | null>(null);
   const textRefs = useRef<Record<string, HTMLDivElement | null>>({});
 

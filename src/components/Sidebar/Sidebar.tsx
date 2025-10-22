@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Target, Gamepad2, BarChart3, Handshake } from 'lucide-react';
+import { LayoutDashboard, Target, Gamepad2, BarChart3 } from 'lucide-react';
 const logoIcon = '/prosplay-icon.svg';
 
 const Sidebar: React.FC = () => {
@@ -14,7 +14,6 @@ const Sidebar: React.FC = () => {
     '/campaigns': () => import('../../pages/Campaigns'),
     '/gamification': () => import('../../pages/Gamification'),
     '/statistics': () => import('../../pages/Statistics'),
-    '/partnerships': () => import('../../pages/Partnerships'),
     // '/templates-editor': () => import('../../pages/TemplatesEditor'), // Add if linked in sidebar later
   };
 
@@ -29,7 +28,6 @@ const Sidebar: React.FC = () => {
     { name: 'Accueil', path: '/dashboard', icon: <LayoutDashboard className="w-5 h-5" /> },
     { name: 'Campagnes', path: '/campaigns', icon: <Target className="w-5 h-5" /> },
     { name: 'Gamification', path: '/gamification', icon: <Gamepad2 className="w-5 h-5" /> },
-    { name: 'Partenariats', path: '/partnerships', icon: <Handshake className="w-5 h-5" /> },
     { name: 'Stats', path: '/statistics', icon: <BarChart3 className="w-5 h-5" /> }
   ];
 

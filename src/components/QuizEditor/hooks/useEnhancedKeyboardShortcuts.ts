@@ -2,7 +2,7 @@ import { useEffect, useCallback } from 'react';
 import { useEditorStore } from '../../../stores/editorStore';
 
 interface EnhancedKeyboardShortcutsProps {
-  canvasRef: React.RefObject<HTMLDivElement | null>;
+  canvasRef: React.RefObject<HTMLDivElement>;
   onAddText?: (position?: { x: number; y: number }) => void;
   onSave?: () => void;
   onPreview?: () => void;

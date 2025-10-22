@@ -20,7 +20,6 @@ import { useEditorStore } from '../../stores/editorStore';
 import CanvasContextMenu from '../DesignEditor/components/CanvasContextMenu';
 
 import AnimationSettingsPopup from '../DesignEditor/panels/AnimationSettingsPopup';
-import ResultScreenPreview from '../DesignEditor/ResultScreenPreview';
 
 import MobileResponsiveLayout from '../DesignEditor/components/MobileResponsiveLayout';
 import type { DeviceType } from '../../utils/deviceDimensions';
@@ -28,10 +27,6 @@ import { isRealMobile } from '../../utils/isRealMobile';
 import ModularCanvas from './modules/ModularCanvas';
 import { QuizModuleRenderer } from './QuizRenderer';
 import type { Module } from '@/types/modularEditor';
-
-// Import pour le mode Article
-import ArticleCanvas from '../ArticleEditor/ArticleCanvas';
-import { DEFAULT_ARTICLE_CONFIG } from '../ArticleEditor/types/ArticleTypes';
 
 type CanvasScreenId = 'screen1' | 'screen2' | 'screen3' | 'all';
 
@@ -48,7 +43,6 @@ const SAFE_ZONE_RADIUS: Record<DeviceType, number> = {
 };
 
 export interface DesignCanvasProps {
-  editorMode?: 'fullscreen' | 'article'; // Mode Article ou Fullscreen
   screenId?: CanvasScreenId;
   selectedDevice: DeviceType;
   elements: any[];
@@ -119,12 +113,9 @@ export interface DesignCanvasProps {
   onModuleDelete?: (id: string) => void;
   onModuleMove?: (id: string, dir: 'up' | 'down') => void;
   onModuleDuplicate?: (id: string) => void;
-  // Preview mode flag to disable rounded corners
-  isPreviewMode?: boolean;
 }
 
 const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({ 
-  editorMode = 'fullscreen',
   screenId = 'screen1',
   selectedDevice,
   elements,
@@ -179,44 +170,6 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   onModuleDuplicate
 }, ref) => {
 
-  // MODE ARTICLE
-  if (editorMode === 'article') {
-    const articleConfig = campaign?.articleConfig || DEFAULT_ARTICLE_CONFIG;
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-100 p-8">
-        <ArticleCanvas
-          articleConfig={articleConfig}
-          onBannerChange={(imageUrl) => {
-            if (onCampaignChange && campaign) {
-              onCampaignChange({ ...campaign, articleConfig: { ...articleConfig, banner: { ...articleConfig.banner, imageUrl } } });
-            }
-          }}
-          onBannerRemove={() => {
-            if (onCampaignChange && campaign) {
-              onCampaignChange({ ...campaign, articleConfig: { ...articleConfig, banner: { ...articleConfig.banner, imageUrl: undefined } } });
-            }
-          }}
-          onTitleChange={(title) => {
-            if (onCampaignChange && campaign) {
-              onCampaignChange({ ...campaign, articleConfig: { ...articleConfig, content: { ...articleConfig.content, title } } });
-            }
-          }}
-          onDescriptionChange={(description) => {
-            if (onCampaignChange && campaign) {
-              onCampaignChange({ ...campaign, articleConfig: { ...articleConfig, content: { ...articleConfig.content, description } } });
-            }
-          }}
-          onCTAClick={() => console.log('🎯 Article CTA clicked')}
-          currentStep="article"
-          editable={!readOnly}
-          maxWidth={810}
-          campaignType={campaign?.type || 'scratch'}
-        />
-      </div>
-    );
-  }
-
-  // MODE FULLSCREEN
   const canvasRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const autoFitEnabledRef = useRef(true);
@@ -230,19 +183,6 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
       ? Math.max(0.1, Math.min(1, zoom))
       : 1
   );
-  
-  // Synchroniser le zoom depuis la prop externe (ZoomSlider)
-  useEffect(() => {
-    // Synchroniser depuis le prop uniquement s'il est valide
-    if (typeof zoom === 'number' && !Number.isNaN(zoom)) {
-      const clamped = Math.max(0.1, Math.min(1, zoom));
-      // Éviter les mises à jour inutiles
-      if (Math.abs(clamped - localZoom) > 0.0001) {
-        setLocalZoom(clamped);
-      }
-    }
-  }, [zoom, localZoom]);
-  
   // Pan offset in screen pixels, applied before scale with origin at center for stable centering
   const [panOffset] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   // Local override for per-screen background images (stored per device to maintain distinct images)
@@ -2132,9 +2072,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
         {(() => {
           if (readOnly) return false;
           const isModuleText = (externalSelectedElement as any)?.role === 'module-text' && (externalSelectedElement as any)?.moduleId;
-          // Vérifier si le module sélectionné appartient à cet écran
-          const isModuleOnThisScreen = (externalSelectedElement as any)?.screenId === screenId;
-          const shouldShow = ((selectedElementData && (selectedElementData.type === 'text' || selectedElementData.type === 'shape')) && selectedDevice !== 'mobile') || (isModuleText && isModuleOnThisScreen);
+          const shouldShow = ((selectedElementData && (selectedElementData.type === 'text' || selectedElementData.type === 'shape')) && selectedDevice !== 'mobile') || isModuleText;
           if (!shouldShow) return false;
 
           // Build a synthetic selected element for module text to drive the toolbar UI
@@ -2265,7 +2203,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
           >
             <div 
               ref={activeCanvasRef}
-              className={`relative bg-transparent overflow-hidden ${!readOnly ? 'rounded-3xl' : ''}`} 
+              className="relative bg-transparent rounded-3xl overflow-hidden" 
               style={{
                 width: `${effectiveCanvasSize.width}px`,
                 height: `${effectiveCanvasSize.height}px`,
@@ -2495,14 +2433,6 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                 </div>
               )}
             </div>
-
-            {/* Aperçu de la carte de résultat pour l'écran 3 */}
-            {screenId === 'screen3' && (
-              <ResultScreenPreview
-                campaign={campaign}
-                device={selectedDevice}
-              />
-            )}
 
             {/* Modular stacked content (HubSpot-like) */}
             {Array.isArray(modularModules) && modularModules.length > 0 && (() => {

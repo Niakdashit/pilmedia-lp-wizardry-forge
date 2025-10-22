@@ -1,20 +1,17 @@
 
 import React from 'react';
 import QuizContainer from './Quiz/QuizContainer';
-import { ScreenLayoutWrapper, useLayoutFromCampaign } from '../Layout/ScreenLayoutWrapper';
 
 interface QuizPreviewProps {
   config: any;
   design?: any;
   className?: string;
-  campaign?: any; // Pour récupérer la configuration de layout
 }
 
 const QuizPreview: React.FC<QuizPreviewProps> = ({ 
   config, 
   design = {},
-  className = '',
-  campaign
+  className = ''
 }) => {
   // Configuration par défaut si aucune question n'est fournie
   const defaultConfig = {
@@ -46,17 +43,16 @@ const QuizPreview: React.FC<QuizPreviewProps> = ({
     ...design
   };
 
-  // 🎯 Récupérer le layout depuis la campagne
-  const layout = useLayoutFromCampaign(campaign);
-
   return (
-    <ScreenLayoutWrapper layout={layout} className={className}>
+    <div
+      className={`quiz-preview-container w-full h-screen flex items-center justify-center ${className}`}
+    >
       <QuizContainer 
         config={finalConfig}
         design={enhancedDesign}
         className="w-full"
       />
-    </ScreenLayoutWrapper>
+    </div>
   );
 };
 

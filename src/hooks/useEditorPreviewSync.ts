@@ -131,52 +131,25 @@ export const useEditorPreviewSync = () => {
   }, [setCampaign]);
 
   /**
-   * Synchronise les champs de formulaire entre l'éditeur et le preview
-   */
-  const syncFormFields = useCallback((formFields: any[]) => {
-    setCampaign((prev: any) => {
-      const updated = {
-        ...prev,
-        formFields,
-        _lastUpdate: Date.now(),
-        _syncTimestamp: Date.now()
-      };
-      
-      console.log('🔄 [useEditorPreviewSync] FormFields synced:', {
-        fieldsCount: formFields.length,
-        fields: formFields.map(f => ({ id: f.id, label: f.label, type: f.type })),
-        timestamp: updated._syncTimestamp
-      });
-      
-      return updated;
-    });
-
-    // Émettre un événement pour forcer le re-render du preview
-    window.dispatchEvent(new CustomEvent('editor-formfields-sync', { 
-      detail: { formFields, timestamp: Date.now() } 
-    }));
-  }, [setCampaign]);
-
-  /**
    * Obtenir la configuration canonique pour le preview
    * Cette fonction garantit que le preview utilise toujours les données les plus récentes
    */
   const getCanonicalPreviewData = useCallback(() => {
     const design = campaign?.design || {};
-    const modularPage = (campaign as any)?.modularPage
-      || (campaign?.design as any)?.designModules
-      || { screens: { screen1: [], screen2: [], screen3: [] }, _updatedAt: Date.now() };
+    const modularPage = (campaign as any)?.modularPage || (campaign?.design as any)?.designModules || { 
+      screens: { screen1: [], screen2: [], screen3: [] }, 
+      _updatedAt: Date.now() 
+    };
 
     // Déterminer l'image de fond canonique
     let canonicalBackground: { type: 'color' | 'image'; value: string };
     
-    // Priorité 1: canvasConfig.background (preview-only, le plus à jour)
-    if ((campaign as any)?.canvasConfig?.background) {
-      canonicalBackground = (campaign as any).canvasConfig.background;
-    } else if (design.background && typeof design.background === 'object') {
+    if (design.background && typeof design.background === 'object') {
       canonicalBackground = design.background as any;
     } else if (design.backgroundImage) {
       canonicalBackground = { type: 'image', value: design.backgroundImage };
+    } else if ((campaign as any)?.canvasConfig?.background) {
+      canonicalBackground = (campaign as any).canvasConfig.background;
     } else {
       canonicalBackground = { 
         type: 'color', 
@@ -184,13 +157,9 @@ export const useEditorPreviewSync = () => {
       };
     }
 
-    // Récupérer les champs de formulaire canoniques
-    const canonicalFormFields = (campaign as any)?.formFields || [];
-
     return {
       background: canonicalBackground,
       modularPage,
-      formFields: canonicalFormFields,
       timestamp: (campaign as any)?._syncTimestamp || Date.now()
     };
   }, [campaign]);
@@ -222,7 +191,6 @@ export const useEditorPreviewSync = () => {
     syncBackground,
     syncModules,
     syncModule,
-    syncFormFields,
     getCanonicalPreviewData,
     forceSync
   };

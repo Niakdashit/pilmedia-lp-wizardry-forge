@@ -157,7 +157,7 @@ export class WheelConfigService {
       borderWidth: 12,
       scale: 1,
       size: 200,
-      showBulbs: false, // Ampoules décochées par défaut
+      showBulbs: false,
       position: 'center' as const,
 
     };
@@ -347,23 +347,19 @@ export class WheelConfigService {
     position: 'center' | 'left' | 'right' = 'center',
     device: 'desktop' | 'tablet' | 'mobile' = 'desktop'
   ) {
-    console.log('🎯 [WheelConfigService] getWheelCroppingStyles INPUT:', { shouldCrop, position, device });
-    
     if (!shouldCrop) {
-      const result = {
+      return {
         containerClass: 'flex justify-center items-center z-40',
         wheelClass: '',
         transform: ''
       };
-      console.log('🎯 [WheelConfigService] getWheelCroppingStyles OUTPUT (no crop):', result);
-      return result;
     }
 
     // Cas 1: Position "center" => conserver l'ancien découpage (croppé en bas) pour tous les devices
     if (position === 'center' || device !== 'desktop') {
-      const base = 'absolute bottom-0 transform translate-y-1/3 overflow-hidden pointer-events-none';
+      const base = 'absolute bottom-0 transform translate-y-1/3 overflow-hidden';
       const centerClass = 'left-1/2 -translate-x-1/2';
-      const result = {
+      return {
         containerClass: `${base} ${centerClass} z-40`,
         wheelClass: 'cursor-pointer pointer-events-auto transition-all duration-200 hover:brightness-105',
         transform: 'translate-y-1/3',
@@ -371,22 +367,18 @@ export class WheelConfigService {
           paddingBottom: '-30%'
         }
       };
-      console.log('🎯 [WheelConfigService] getWheelCroppingStyles OUTPUT (center):', result);
-      return result;
     }
 
     // Cas 2: Desktop + (left|right) => visible entièrement et centré verticalement
     const base = 'absolute top-1/2 transform -translate-y-1/2';
     const positionClass = position === 'left' ? 'left-0' : 'right-0';
     const insetStyles = position === 'left' ? { left: '150px' } : { right: '150px' };
-    const result = {
+    return {
       containerClass: `${base} ${positionClass} z-40`,
       wheelClass: 'cursor-pointer pointer-events-auto transition-all duration-200 hover:brightness-105',
       transform: '-translate-y-1/2',
       styles: insetStyles
     };
-    console.log(`🎯 [WheelConfigService] getWheelCroppingStyles OUTPUT (${position}):`, result);
-    return result;
   }
 
   /**
@@ -397,8 +389,6 @@ export class WheelConfigService {
     setWheelModalConfig: (config: WheelModalConfig | ((prev: WheelModalConfig) => WheelModalConfig)) => void
   ) {
     return (updates: Partial<WheelConfig>) => {
-      console.log('🔧 [WheelConfigService] createConfigUpdateHandler called with updates:', updates);
-      
       // Mettre à jour la configuration de la modal
       setWheelModalConfig((prev) => {
         const newConfig: WheelModalConfig = { ...prev };
@@ -427,7 +417,7 @@ export class WheelConfigService {
         return newConfig;
       });
 
-      // Mettre à jour la campagne avec _lastUpdate pour trigger useEffect
+      // Mettre à jour la campagne
       setCampaign((prevCampaign) => prevCampaign ? ({
         ...prevCampaign,
         design: {
@@ -442,8 +432,7 @@ export class WheelConfigService {
             position: updates.position !== undefined ? updates.position : (prevCampaign.design?.wheelConfig as any)?.position,
 
           }
-        },
-        _lastUpdate: Date.now() // Force reactivity in useWheelConfigSync
+        }
       }) : null);
     };
   }
@@ -453,23 +442,32 @@ export class WheelConfigService {
    */
   static updateSegmentColors(segments: any[], extractedColors: string[] = []): any[] {
     if (!segments || !Array.isArray(segments)) {
+      console.log('🔧 updateSegmentColors: No segments provided, returning empty array');
       return [];
     }
     
     if (extractedColors.length === 0) {
+      console.log('🔧 updateSegmentColors: No extracted colors, returning original segments');
       return segments;
     }
 
     const primaryColor = extractedColors[0];
+    console.log('🔧 updateSegmentColors: Updating segments', {
+      originalSegments: segments,
+      extractedColors,
+      primaryColor
+    });
     
     const updatedSegments = segments.map((segment, index) => {
       // Mettre à jour uniquement les segments avec la couleur par défaut violette
       if (segment.color === '#841b60') {
+        console.log(`🔧 updateSegmentColors: Updating segment ${segment.id} from ${segment.color} to ${primaryColor}`);
         return { ...segment, color: primaryColor };
       }
       return segment;
     });
     
+    console.log('🔧 updateSegmentColors: Final segments', updatedSegments);
     return updatedSegments;
   }
 }

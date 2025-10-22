@@ -1,13 +1,12 @@
 import React, { useState, useMemo, useEffect, useRef, useCallback, lazy } from 'react';
-// Align routing with QuizEditor via router adapter
-import { useLocation, useNavigate } from '@/lib/router-adapter';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Save, X } from 'lucide-react';
 const HybridSidebar = lazy(() => import('./HybridSidebar'));
 const DesignToolbar = lazy(() => import('./DesignToolbar'));
 import FunnelUnlockedGame from '@/components/funnels/FunnelUnlockedGame';
 
 import ZoomSlider from './components/ZoomSlider';
-const DesignCanvas = lazy(() => import('./DesignCanvas'));
+import DesignCanvas from './DesignCanvas';
 import { useEditorStore } from '../../stores/editorStore';
 import { useKeyboardShortcuts } from '../ModernEditor/hooks/useKeyboardShortcuts';
 import { useUndoRedo, useUndoRedoShortcuts } from '../../hooks/useUndoRedo';
@@ -16,7 +15,6 @@ import { useUndoRedo, useUndoRedoShortcuts } from '../../hooks/useUndoRedo';
 import { useGroupManager } from '../../hooks/useGroupManager';
 import { getDeviceDimensions } from '../../utils/deviceDimensions';
 import { getEditorDeviceOverride } from '@/utils/deviceOverrides';
-import { useEditorPreviewSync } from '@/hooks/useEditorPreviewSync';
 import EditorStateCleanup from '../EditorStateCleanup';
 
 
@@ -43,6 +41,9 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
   }, []);
 
   const initialTemplateWidths = useMemo(() => getTemplateBaseWidths('image-quiz'), [getTemplateBaseWidths]);
+
+  // Hook pour surveiller les changements du store en temps réel
+  const storeCampaign = useEditorStore((state) => state.campaign);
   
   // Détection automatique de l'appareil basée sur l'user-agent pour éviter le basculement lors du redimensionnement de fenêtre
   const detectDevice = (): 'desktop' | 'tablet' | 'mobile' => {
@@ -88,25 +89,17 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
   };
 
   // Store centralisé pour l'optimisation
-  const {
-    campaign: storeCampaign,
+  const { 
     setCampaign,
     setPreviewDevice,
     setIsLoading,
-    setIsModified,
-    resetCampaign
+    setIsModified
   } = useEditorStore();
   // Campagne centralisée (source de vérité pour les champs de contact)
   const campaignState = useEditorStore((s) => s.campaign);
 
   // Supabase campaigns API
   const { saveCampaign } = useCampaigns();
-
-  // Réinitialiser la campagne au montage de l'éditeur
-  useEffect(() => {
-    console.log('🎨 [ModelEditor] Mounting - resetting campaign state');
-    resetCampaign();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // État local pour la compatibilité existante
   const [selectedDevice, setSelectedDevice] = useState<'desktop' | 'tablet' | 'mobile'>(actualDevice);
@@ -168,8 +161,6 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
   const [showAnimationsInSidebar, setShowAnimationsInSidebar] = useState(false);
   const [showPositionInSidebar, setShowPositionInSidebar] = useState(false);
   const [showDesignInSidebar, setShowDesignInSidebar] = useState(false);
-  // État pour l'onglet actif dans HybridSidebar
-  const [activeTab, setActiveTab] = useState<string | null>('background');
   // Référence pour contrôler l'onglet actif dans HybridSidebar
   const sidebarRef = useRef<{ setActiveTab: (tab: string) => void }>(null); // Nouvelle référence pour suivre la demande d'ouverture
   // Context de couleur demandé depuis la toolbar ('fill' | 'border' | 'text')
@@ -391,27 +382,8 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
   };
 
   // Ajoute à l'historique lors du changement de background (granulaire)
-  const handleBackgroundChange = (bg: any, options?: { screenId?: 'screen1' | 'screen2' | 'screen3'; applyToAllScreens?: boolean; device?: 'desktop' | 'tablet' | 'mobile' }) => {
-    console.log('🎨 [ModelEditor] handleBackgroundChange:', { bg, options });
-    
-    if (options?.device) {
-      // 📱 Stocker avec device-specific data
-      const newBg = {
-        ...bg,
-        devices: {
-          ...(canvasBackground?.devices || {}),
-          [options.device]: bg
-        }
-      };
-      console.log('📱 Updated background with device-specific data:', {
-        deviceKey: options.device,
-        newBg
-      });
-      setCanvasBackground(newBg);
-    } else {
-      setCanvasBackground(bg);
-    }
-    
+  const handleBackgroundChange = (bg: any) => {
+    setCanvasBackground(bg);
     setTimeout(() => {
       addToHistory({
         campaignConfig: { ...campaignConfig },
@@ -664,9 +636,6 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
     onElementsChange: setCanvasElements,
     onAddToHistory: addToHistory
   });
-  
-  // Hook de synchronisation preview
-  const { syncBackground } = useEditorPreviewSync();
   
   const {
     createGroup,
@@ -956,9 +925,6 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
             { id: 'email', label: 'Email', type: 'email', required: true }
           ],
       // Garder la configuration canvas pour compatibilité
-      modularPage: modularPage,
-      // Inclure articleConfig depuis le store pour le mode Article
-      articleConfig: (campaignState as any)?.articleConfig,
       canvasConfig: {
         elements: canvasElements,
         background: canvasBackground,
@@ -1475,11 +1441,11 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
           'radial-gradient(130% 130% at 12% 20%, rgba(235, 155, 100, 0.8) 0%, rgba(235, 155, 100, 0) 55%), radial-gradient(120% 120% at 78% 18%, rgba(128, 82, 180, 0.85) 0%, rgba(128, 82, 180, 0) 60%), radial-gradient(150% 150% at 55% 82%, rgba(68, 52, 128, 0.75) 0%, rgba(68, 52, 128, 0) 65%), linear-gradient(90deg, #E07A3A 0%, #9A5CA9 50%, #3D2E72 100%)',
         backgroundBlendMode: 'screen, screen, lighten, normal',
         backgroundColor: '#3D2E72',
-        padding: isWindowMobile ? '9px' : '0 9px 9px 9px',
+        padding: '0 9px 9px 9px',
         boxSizing: 'border-box'
       }}
     >
-    <MobileStableEditor className={isWindowMobile ? "h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden pb-[6px] rounded-tl-[28px] rounded-tr-[28px] rounded-br-[28px] transform -translate-y-[0.4vh]" : "h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden pt-[1.25cm] pb-[6px] rounded-tl-[28px] rounded-tr-[28px] rounded-br-[28px] transform -translate-y-[0.4vh]"}>
+    <MobileStableEditor className="h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden pt-[1.25cm] pb-[6px] rounded-tl-[28px] rounded-tr-[28px] rounded-br-[28px] transform -translate-y-[0.4vh]">
       {/* Nettoyage des états d'éditeur */}
       <EditorStateCleanup />
       
@@ -1530,7 +1496,7 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
             // Pour le form-editor, afficher le formulaire en plein écran
             if (showFormOverlay) {
               const node = (
-                <div className="group fixed inset-0 z-[9999] w-full h-[100dvh] min-h-[100dvh] overflow-hidden bg-[#2c2c35] flex items-center justify-center">
+                <div className="group fixed inset-0 z-[9999] w-full h-[100dvh] min-h-[100dvh] overflow-hidden bg-transparent flex">
                   {/* Floating Edit Mode Button */}
                   <button
                     onClick={() => setShowFunnel(false)}
@@ -1540,7 +1506,7 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
                   >
                     Mode édition
                 </button>
-                <div className="relative w-full h-full flex items-center justify-center">
+                <div className="relative w-full h-full">
                   {/* Afficher le formulaire en plein écran comme les autres éditeurs */}
                   <FunnelUnlockedGame 
                     campaign={previewCampaign}
@@ -1564,7 +1530,7 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
 
             // Pour les autres types de jeux, utiliser FunnelUnlockedGame
             const node = (
-              <div className="group fixed inset-0 z-[9999] w-full h-[100dvh] min-h-[100dvh] overflow-hidden bg-[#2c2c35] flex items-center justify-center">
+              <div className="group fixed inset-0 z-[9999] w-full h-[100dvh] min-h-[100dvh] overflow-hidden bg-transparent flex">
                 {/* Floating Edit Mode Button */}
                 <button
                   onClick={() => setShowFunnel(false)}
@@ -1574,7 +1540,7 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
                 >
                   Mode édition
                 </button>
-                <div className="relative w-full h-full flex items-center justify-center">
+                <div className="relative w-full h-full">
                   <FunnelUnlockedGame 
                     campaign={previewCampaign}
                     previewMode={selectedDevice}
@@ -1627,8 +1593,6 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
                     setShowDesignInSidebar(false);
                   }
                 }}
-                activeTab={activeTab}
-                onActiveTabChange={setActiveTab}
                 canvasRef={canvasRef}
                 selectedElements={selectedElements}
                 onSelectedElementsChange={setSelectedElements}
@@ -1916,7 +1880,7 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
               selectedDevice={selectedDevice}
               elements={canvasElements}
               onElementsChange={setCanvasElements}
-              background={canvasBackground?.devices?.[selectedDevice] || canvasBackground}
+              background={canvasBackground}
               campaign={campaignData}
               onCampaignChange={handleCampaignConfigChange}
               zoom={canvasZoom}

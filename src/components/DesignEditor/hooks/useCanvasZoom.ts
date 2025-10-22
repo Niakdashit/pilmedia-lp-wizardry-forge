@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, RefObject } from 'react';
 import { shouldForceDesktopEditorUI } from '@/utils/deviceOverrides';
 
 interface UseCanvasZoomProps {
-  canvasRef: RefObject<HTMLDivElement | null>;
+  canvasRef: RefObject<HTMLDivElement>;
   minZoom?: number;
   maxZoom?: number;
   zoomStep?: number;

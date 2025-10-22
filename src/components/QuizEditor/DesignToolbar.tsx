@@ -1,7 +1,5 @@
-'use client';
-
 import React from 'react';
-import { useNavigate } from '@/lib/router-adapter';
+import { useNavigate } from 'react-router-dom';
 import { Monitor, Smartphone, Save, Eye, X, Undo, Redo, Layers } from 'lucide-react';
 
 interface QuizToolbarProps {

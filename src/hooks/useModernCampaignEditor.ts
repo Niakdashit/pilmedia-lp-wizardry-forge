@@ -1,4 +1,3 @@
-'use client';
 
 import { useState, useEffect } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
@@ -10,8 +9,7 @@ import { useOptimizedCampaignState } from '../components/ModernEditor/hooks/useO
 import { usePreviewOptimization } from '../components/ModernEditor/hooks/usePreviewOptimization';
 
 export const useModernCampaignEditor = () => {
-  const params = useParams();
-  const routeId = params?.id as string | undefined;
+  const { id: routeId } = useParams();
   const [searchParams] = useSearchParams();
   const location = window.location.pathname;
   

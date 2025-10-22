@@ -40,7 +40,7 @@ const OptimizedGameCanvasPreview: React.FC<OptimizedGameCanvasPreviewProps> = me
   const deviceDimensions = useMemo(() => {
     switch (previewDevice) {
       case 'mobile':
-        return { width: 430, height: 932 }; // Dimensions standard (iPhone 14 Pro Max)
+        return { width: 360, height: 640 };
       case 'tablet':
         return { width: 820, height: 1180 };
       default:

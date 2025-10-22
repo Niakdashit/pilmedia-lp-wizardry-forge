@@ -1,8 +1,8 @@
 import React from 'react';
-import JackpotEditorLayout from '../components/JackpotEditor/JackpotEditorLayout';
+import ModelEditorLayout from '../components/ModelEditor/DesignEditorLayout';
 
 const JackpotEditor: React.FC = () => {
-  return <JackpotEditorLayout mode="campaign" />;
+  return <ModelEditorLayout mode="campaign" />;
 };
 
 export default JackpotEditor;

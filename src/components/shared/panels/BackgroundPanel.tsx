@@ -20,7 +20,7 @@ const QUICK_TEXT_EFFECTS: QuickFx[] = [
 ];
 
 interface BackgroundPanelProps {
-  onBackgroundChange: (background: { type: 'color' | 'image'; value: string }, options?: { screenId?: 'screen1' | 'screen2' | 'screen3'; applyToAllScreens?: boolean; device?: 'desktop' | 'tablet' | 'mobile' }) => void;
+  onBackgroundChange: (background: { type: 'color' | 'image'; value: string }) => void;
   onExtractedColorsChange?: (colors: string[]) => void;
   currentBackground?: { type: 'color' | 'image'; value: string };
   extractedColors?: string[];
@@ -164,10 +164,9 @@ const BackgroundPanel: React.FC<BackgroundPanelProps> = ({
     if (isTextSelected) {
       if (colorEditingContext === 'border') {
         // Texte peut ne pas avoir de bordure; fallback à la couleur du texte si absent
-        return selectedElement.borderColor || selectedElement.color || selectedElement.bodyColor || '#000000';
+        return selectedElement.borderColor || selectedElement.color || '#000000';
       }
-      // Pour BlocTexte, utiliser bodyColor, sinon color
-      return selectedElement.bodyColor || selectedElement.color || '#000000';
+      return selectedElement.color || '#000000';
     }
     if (isShapeSelected) {
       if (colorEditingContext === 'border') {
@@ -211,9 +210,7 @@ const BackgroundPanel: React.FC<BackgroundPanelProps> = ({
         onElementUpdate({ borderColor: color });
       } else {
         console.log('🎨 Updating text color:', color);
-        // Pour BlocTexte, utiliser bodyColor, sinon color
-        const colorProp = selectedElement.type === 'BlocTexte' ? 'bodyColor' : 'color';
-        onElementUpdate({ [colorProp]: color });
+        onElementUpdate({ color });
       }
     } else if (isShapeSelected && onElementUpdate) {
       // Forme: selon le contexte
@@ -230,14 +227,7 @@ const BackgroundPanel: React.FC<BackgroundPanelProps> = ({
     } else {
       // Appliquer à l'arrière-plan (toujours fill)
       console.log('🎨 Updating background color:', color);
-      onBackgroundChange(
-        { type: 'color', value: color },
-        {
-          screenId: currentScreen,
-          applyToAllScreens: applyToAllScreens,
-          device: selectedDevice
-        }
-      );
+      onBackgroundChange({ type: 'color', value: color });
       
       // Émettre un événement pour synchroniser avec TemplatedQuiz et FunnelQuizParticipate
       const event = new CustomEvent('quizStyleUpdate', {
@@ -464,36 +454,20 @@ const BackgroundPanel: React.FC<BackgroundPanelProps> = ({
           selectedDevice,
           imageUrlLength: imageUrl?.length
         });
-        // Appliquer l'image via le callback avec les options appropriées
-        onBackgroundChange(
-          { type: 'image', value: imageUrl },
-          {
-            screenId: currentScreen,
-            applyToAllScreens: applyToAllScreens,
-            device: selectedDevice
+        // Si la case est cochée, appliquer à tous les écrans MAIS uniquement pour l'appareil courant (device-scoped)
+        if (applyToAllScreens) {
+          if (typeof window !== 'undefined') {
+            console.log('🎨 [BackgroundPanel] Dispatching applyBackgroundAllScreens for device:', selectedDevice);
+            const evt = new CustomEvent('applyBackgroundAllScreens', { detail: { url: imageUrl, device: selectedDevice } });
+            window.dispatchEvent(evt);
           }
-        );
-        // Émettre des événements pour synchroniser le mode Article (ArticleEditorLayout écoute ces événements)
-        try {
-          const evtCurrent = new CustomEvent('applyBackgroundCurrentScreen', {
-            detail: {
-              url: imageUrl,
-              screenId: currentScreen,
-              device: selectedDevice
-            }
-          });
-          window.dispatchEvent(evtCurrent);
-          if (applyToAllScreens) {
-            const evtAll = new CustomEvent('applyBackgroundAllScreens', {
-              detail: {
-                url: imageUrl,
-                device: selectedDevice
-              }
-            });
-            window.dispatchEvent(evtAll);
+        } else {
+          // Sinon, ne pas toucher au background global: appliquer uniquement à l'écran courant
+          if (typeof window !== 'undefined' && currentScreen) {
+            console.log('🎨 [BackgroundPanel] Dispatching applyBackgroundCurrentScreen for screen:', currentScreen, 'device:', selectedDevice);
+            const evt2 = new CustomEvent('applyBackgroundCurrentScreen', { detail: { url: imageUrl, screenId: currentScreen, device: selectedDevice } });
+            window.dispatchEvent(evt2);
           }
-        } catch (err) {
-          console.warn('⚠️ Failed to dispatch article background sync events:', err);
         }
         
         // Extract colors from the uploaded image
@@ -699,20 +673,12 @@ const BackgroundPanel: React.FC<BackgroundPanelProps> = ({
             <h4 className="text-sm font-semibold text-gray-700">{selectedFontCategory?.name || 'Aucune'}</h4>
             <div className="grid grid-cols-1 gap-2 max-h-40 overflow-y-auto pr-1">
               {(selectedFontCategory?.fonts || []).map((font) => {
-                // Pour BlocTexte, vérifier bodyFontFamily, sinon fontFamily
-                const currentFont = selectedElement?.type === 'BlocTexte' 
-                  ? selectedElement?.bodyFontFamily 
-                  : selectedElement?.fontFamily;
-                const isActiveFont = currentFont === font;
+                const isActiveFont = selectedElement?.fontFamily === font;
                 return (
                   <button
                     key={font}
                     type="button"
-                    onClick={() => {
-                      // Pour BlocTexte, utiliser bodyFontFamily, sinon fontFamily
-                      const fontProp = selectedElement?.type === 'BlocTexte' ? 'bodyFontFamily' : 'fontFamily';
-                      onElementUpdate?.({ [fontProp]: font });
-                    }}
+                    onClick={() => onElementUpdate?.({ fontFamily: font })}
                     className={`p-3 border rounded text-left transition-colors group ${
                       isActiveFont
                         ? 'border-[hsl(var(--primary))] bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white'

@@ -5,9 +5,9 @@ interface ShapeRendererProps {
   width: number;
   height: number;
   color: string;
-  borderRadius?: string | number;
+  borderRadius?: string;
   borderStyle?: string;
-  borderWidth?: string | number;
+  borderWidth?: string;
   borderColor?: string;
   className?: string;
   style?: React.CSSProperties;
@@ -16,7 +16,7 @@ interface ShapeRendererProps {
   onContentChange?: (content: string) => void;
   onKeyDown?: (e: React.KeyboardEvent) => void;
   onBlur?: () => void;
-  textRef?: React.RefObject<HTMLDivElement | null>;
+  textRef?: React.RefObject<HTMLDivElement>;
   fontSize?: number;
   fontFamily?: string;
   fontWeight?: string;
@@ -51,30 +51,13 @@ export const ShapeRenderer: React.FC<ShapeRendererProps> = ({
   textAlign = 'center',
   textColor = '#000000',
 }) => {
-  // Normalize border values to ensure proper CSS format
-  const normalizeBorderRadius = (val: string | number): string => {
-    if (typeof val === 'number') return `${val}px`;
-    if (typeof val === 'string' && !val.includes('px')) return `${val}px`;
-    return val;
-  };
-  
-  const normalizeBorderWidth = (val: string | number): string => {
-    if (typeof val === 'number') return `${val}px`;
-    if (typeof val === 'string' && !val.includes('px') && val !== 'none') return `${val}px`;
-    return val;
-  };
-  
-  const normalizedBorderRadius = normalizeBorderRadius(borderRadius);
-  const normalizedBorderWidth = normalizeBorderWidth(borderWidth);
-  
   // Style de base pour les formes simples
   const baseStyle: React.CSSProperties = {
     width: '100%',
     height: '100%',
     backgroundColor: color,
-    borderRadius: normalizedBorderRadius,
-    border: borderStyle !== 'none' ? `${normalizedBorderWidth} ${borderStyle} ${borderColor}` : 'none',
-    boxSizing: 'border-box', // Important pour que les bordures ne débordent pas
+    borderRadius: borderRadius,
+    border: borderStyle !== 'none' ? `${borderWidth} ${borderStyle} ${borderColor}` : 'none',
     ...style,
   };
 
@@ -131,7 +114,7 @@ export const ShapeRenderer: React.FC<ShapeRendererProps> = ({
             style={{
               ...baseStyle,
               borderRadius: shapeType === 'rounded-rectangle'
-                ? (normalizedBorderRadius && normalizedBorderRadius !== '0px' ? normalizedBorderRadius : '20px')
+                ? (borderRadius && borderRadius !== '0' ? borderRadius : '20px')
                 : baseStyle.borderRadius,
             }}
           />
@@ -150,7 +133,7 @@ export const ShapeRenderer: React.FC<ShapeRendererProps> = ({
       {/* Zone de texte éditable au centre de la forme */}
       {isEditing ? (
         <div
-          ref={textRef as React.RefObject<HTMLDivElement>}
+          ref={textRef}
           contentEditable
           suppressContentEditableWarning
           style={textStyle}

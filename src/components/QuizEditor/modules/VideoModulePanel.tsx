@@ -14,39 +14,11 @@ const alignmentOptions: Array<{ id: BlocVideo['align']; label: string; icon: Rea
   { id: 'right', label: 'Droite', icon: AlignRight }
 ];
 
-// Fonction pour convertir les URLs YouTube normales en URLs embed
-const convertToEmbedUrl = (url: string): string => {
-  if (!url) return url;
-  
-  // YouTube: https://www.youtube.com/watch?v=VIDEO_ID -> https://www.youtube.com/embed/VIDEO_ID
-  const youtubeMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]+)/);
-  if (youtubeMatch) {
-    return `https://www.youtube.com/embed/${youtubeMatch[1]}`;
-  }
-  
-  // Vimeo: https://vimeo.com/VIDEO_ID -> https://player.vimeo.com/video/VIDEO_ID
-  const vimeoMatch = url.match(/vimeo\.com\/(\d+)/);
-  if (vimeoMatch) {
-    return `https://player.vimeo.com/video/${vimeoMatch[1]}`;
-  }
-  
-  // Si c'est déjà une URL embed, la retourner telle quelle
-  return url;
-};
-
 const VideoModulePanel: React.FC<VideoModulePanelProps> = ({ module, onUpdate, onBack }) => {
   const currentRadius = typeof module.borderRadius === 'number' ? module.borderRadius : 0;
   const currentAlign = module.align || 'center';
   const currentFit = module.objectFit || 'cover';
   const currentWidth = module.layoutWidth || 'full';
-  const currentBorderWidth = (module as any).borderWidth ?? 0;
-  const currentBorderColor = (module as any).borderColor ?? '#000000';
-  
-  // Gérer le changement d'URL avec conversion automatique
-  const handleUrlChange = (url: string) => {
-    const embedUrl = convertToEmbedUrl(url);
-    onUpdate({ src: embedUrl });
-  };
 
   return (
     <div className="h-full overflow-y-auto pb-12">
@@ -102,17 +74,14 @@ const VideoModulePanel: React.FC<VideoModulePanelProps> = ({ module, onUpdate, o
           <section className="space-y-3">
             <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wide">Source</h4>
             <label className="block">
-              <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">URL de la vidéo</span>
+              <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">URL d'intégration</span>
               <input
                 type="text"
                 value={module.src || ''}
-                onChange={(e) => handleUrlChange(e.target.value)}
-                placeholder="https://www.youtube.com/watch?v=... ou https://vimeo.com/..."
+                onChange={(e) => onUpdate({ src: e.target.value })}
+                placeholder="https://www.youtube.com/embed/…"
                 className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#841b60] focus:ring-[#841b60]"
               />
-              <p className="mt-1 text-xs text-gray-500">
-                Collez n'importe quelle URL YouTube ou Vimeo, elle sera automatiquement convertie
-              </p>
             </label>
             <label className="block">
               <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Titre (optionnel)</span>
@@ -176,52 +145,6 @@ const VideoModulePanel: React.FC<VideoModulePanelProps> = ({ module, onUpdate, o
               <button
                 type="button"
                 onClick={() => onUpdate({ borderRadius: 0 })}
-                className="px-3 py-1.5 text-xs rounded-lg border border-gray-200 text-gray-600 hover:border-[#841b60] hover:text-[#841b60] transition"
-              >
-                Réinitialiser
-              </button>
-            </div>
-          </section>
-
-          <section className="space-y-3">
-            <div className="flex items-center justify-between">
-              <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wide">Bordure</h4>
-              <span className="text-xs font-semibold text-gray-600">{currentBorderWidth}px</span>
-            </div>
-            <input
-              type="range"
-              min={0}
-              max={20}
-              value={currentBorderWidth}
-              onChange={(e) => onUpdate({ borderWidth: Number(e.target.value) } as any)}
-              className="w-full"
-            />
-            {currentBorderWidth > 0 && (
-              <div className="space-y-2">
-                <label className="block">
-                  <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Couleur de bordure</span>
-                  <div className="mt-1 flex items-center gap-2">
-                    <input
-                      type="color"
-                      value={currentBorderColor}
-                      onChange={(e) => onUpdate({ borderColor: e.target.value } as any)}
-                      className="h-10 w-16 rounded border border-gray-300 cursor-pointer"
-                    />
-                    <input
-                      type="text"
-                      value={currentBorderColor}
-                      onChange={(e) => onUpdate({ borderColor: e.target.value } as any)}
-                      placeholder="#000000"
-                      className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#841b60] focus:ring-[#841b60]"
-                    />
-                  </div>
-                </label>
-              </div>
-            )}
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => onUpdate({ borderWidth: 0 } as any)}
                 className="px-3 py-1.5 text-xs rounded-lg border border-gray-200 text-gray-600 hover:border-[#841b60] hover:text-[#841b60] transition"
               >
                 Réinitialiser

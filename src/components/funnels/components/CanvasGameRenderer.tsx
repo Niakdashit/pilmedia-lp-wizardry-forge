@@ -1,21 +1,11 @@
-import React, { useMemo, createPortal } from 'react';
-import ContrastBackground from '../../common/ContrastBackground';
-import ValidationMessage from '../../common/ValidationMessage';
-import WheelPreview from '../../GameTypes/WheelPreview';
-import { Jackpot } from '../../GameTypes';
-import QuizPreview from '../../GameTypes/QuizPreview';
-import ScratchPreview from '../../GameTypes/ScratchPreview';
-import DicePreview from '../../GameTypes/DicePreview';
-import { GAME_SIZES, GameSize } from '../../configurators/GameSizeSelector';
-import useCenteredStyles from '../../../hooks/useCenteredStyles';
-import { getCampaignBackgroundImage } from '../../../utils/background';
-import { useUniversalResponsive } from '../../../hooks/useUniversalResponsive';
+import React, { useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { useEditorStore } from '../../../stores/editorStore';
+import WheelPreview from '../../GameTypes/WheelPreview';
 import FormPreview from '../../GameTypes/FormPreview';
 import CustomElementsRenderer from '../../ModernEditor/components/CustomElementsRenderer';
-
-// Charger SlotJackpot UNE SEULE FOIS en dehors du composant
-const SlotJackpot = React.lazy(() => import('../../SlotJackpot'));
+import { useUniversalResponsive } from '../../../hooks/useUniversalResponsive';
+import ValidationMessage from '../../common/ValidationMessage';
 
 interface CanvasGameRendererProps {
   campaign: any;
@@ -141,37 +131,27 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
 
   // Générer les classes CSS d'animation
 
-  // Calculer les dimensions du canvas selon l'appareil - UTILISER LES DIMENSIONS STANDARD
+  // Calculer les dimensions du canvas selon l'appareil
   const getCanvasSize = () => {
     switch (previewMode) {
       case 'desktop':
         return { width: '100%', height: '100%' };
       case 'tablet':
-        return { width: 820, height: 1180 }; // Dimensions standard
+        return { width: 768, height: 1024 };
       case 'mobile':
-        return { width: 430, height: 932 }; // Dimensions standard (iPhone 14 Pro Max)
+        return { width: 360, height: 640 };
       default:
-        return { width: 430, height: 932 };
+        return { width: 360, height: 640 };
     }
   };
 
   const canvasSize = getCanvasSize();
 
 
-  const handleGameComplete = React.useCallback((result: 'win' | 'lose') => {
-    console.log('🎯 [CanvasGameRenderer] Game completed with result:', result);
-    // Délai pour laisser l'animation se terminer complètement avant d'appeler onGameFinish
-    // Victoire: 1500ms pour voir les confettis, Défaite: 1200ms pour voir le résultat
-    const delay = result === 'win' ? 1500 : 1200;
-    console.log(`⏱️ [CanvasGameRenderer] Will call onGameFinish in ${delay}ms`);
-    setTimeout(() => {
-      console.log('✅ [CanvasGameRenderer] Now calling onGameFinish');
-      onGameFinish(result);
-    }, delay);
-  }, [onGameFinish]);
-
-  const handleWin = React.useCallback(() => handleGameComplete('win'), [handleGameComplete]);
-  const handleLose = React.useCallback(() => handleGameComplete('lose'), [handleGameComplete]);
+  const handleGameComplete = (result: 'win' | 'lose') => {
+    console.log('Game completed with result:', result);
+    onGameFinish(result);
+  };
 
   const handleGameStartInternal = () => {
     console.log('Game started');
@@ -326,16 +306,18 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
         effectiveTemplate
       });
       
-      // SlotJackpot est maintenant chargé en haut du fichier pour éviter les re-chargements
+      // Utiliser le même composant que l'éditeur pour garantir la parité visuelle
+      const SlotJackpot = React.lazy(() => import('../../SlotJackpot'));
+      
       return (
         <div className="absolute inset-0" style={{ zIndex: 10 }}>
           <React.Suspense fallback={<div>Loading...</div>}>
             <SlotJackpot
-              key="slotjackpot-stable"
+              key={`slotjackpot-${effectiveTemplate || 'default'}-${(effectiveSymbols?.length || 0)}-${effectiveCustomUrl || 'no-url'}-${effectiveBorderColor || 'no-border'}-${effectiveBackgroundColor || 'no-bg'}`}
               templateOverride={effectiveTemplate}
               symbols={effectiveSymbols}
-              onWin={handleWin}
-              onLose={handleLose}
+              onWin={() => handleGameComplete('win')}
+              onLose={() => handleGameComplete('lose')}
               disabled={!formValidated}
             />
           </React.Suspense>

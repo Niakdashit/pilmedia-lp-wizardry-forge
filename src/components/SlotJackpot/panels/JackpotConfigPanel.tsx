@@ -119,7 +119,7 @@ const JackpotConfigPanel: React.FC<JackpotConfigPanelProps> = ({
   reelSymbols = ['🍎', '🍊', '🍋', '🍇', '🍓', '🥝', '🍒'],
   spinDuration = 1500,
   winProbability = 15,
-  selectedTemplate = 'jackpot-11',
+  selectedTemplate = 'jackpot-frame',
   reelSize = 70,
   fontSize = 32,
   borderColor = '#ffd700',
@@ -249,38 +249,40 @@ const JackpotConfigPanel: React.FC<JackpotConfigPanelProps> = ({
                     </div>
                   )}
 
-                  <div className="relative">
-                    {/* Icon - aligné à gauche */}
-                    <div className="absolute left-0 top-0">
-                      <div className={`p-2 rounded-lg ${
-                        selectedTemplate === template.id
-                          ? 'text-white'
-                          : 'bg-gray-100 text-gray-400'
-                      }`} style={selectedTemplate === template.id ? {
-                        background: 'linear-gradient(135deg, #841b60 0%, #a21d6b 100%)'
-                      } : {}}>
-                        <Image className="w-5 h-5" />
-                      </div>
+                  <div className="flex items-center space-x-3">
+                    <div className={`p-2 rounded-lg ${
+                      selectedTemplate === template.id
+                        ? 'text-white'
+                        : 'bg-gray-100 text-gray-400'
+                    }`} style={selectedTemplate === template.id ? {
+                      background: 'linear-gradient(135deg, #841b60 0%, #a21d6b 100%)'
+                    } : {}}>
+                      <Image className="w-5 h-5" />
                     </div>
 
-                    {/* Preview image - centré */}
-                    <div className="flex justify-center">
-                      <div className="w-20 h-20 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
-                        {template.imagePath ? (
-                          <img 
-                            src={template.imagePath}
-                            alt={template.name}
-                            className="w-full h-full object-contain"
-                            onError={(e) => {
-                              e.currentTarget.style.display = 'none';
-                            }}
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-xs text-gray-500">
-                            Aperçu
-                          </div>
-                        )}
-                      </div>
+                    <div className="flex-1 flex flex-col gap-1">
+                      <span className="h-2 rounded bg-gray-200" />
+                      <span className="h-2 w-2/3 rounded bg-gray-100" />
+                    </div>
+                  </div>
+
+                  {/* Preview image */}
+                  <div className="mt-3 flex justify-center">
+                    <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
+                      {template.imagePath ? (
+                        <img 
+                          src={template.imagePath}
+                          alt={template.name}
+                          className="w-full h-full object-contain"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                          }}
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-xs text-gray-500">
+                          Aperçu
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

@@ -23,7 +23,7 @@ export interface CanvasElementProps {
   onUpdate: (id: string, updates: any) => void;
   onDelete: (id: string) => void;
   selectedDevice: DeviceType;
-  containerRef?: React.RefObject<HTMLDivElement | null>;
+  containerRef?: React.RefObject<HTMLDivElement>;
   onAddElement?: (element: any) => void;
   elements?: any[];
   readOnly?: boolean;
@@ -37,8 +37,6 @@ export interface CanvasElementProps {
   campaign?: CampaignConfig;
   // Extracted colors from background image
   extractedColors?: string[];
-  // Callback to open wheel configuration panel
-  onOpenWheelPanel?: () => void;
   // New alignment system
   alignmentSystem?: {
     snapElement: (element: { x: number; y: number; width: number; height: number; id: string }) => { x: number; y: number; guides: any[] };
@@ -72,7 +70,6 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
   activeGroupId,
   campaign,
   extractedColors,
-  onOpenWheelPanel,
   alignmentSystem,
   customRenderers = {}
 }) => {
@@ -135,30 +132,6 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
     () => getPropertiesForDevice(element, selectedDevice),
     [element, selectedDevice, getPropertiesForDevice]
   );
-
-  // 📱 Vérifier si l'élément doit être visible sur l'appareil actuel
-  const isVisibleOnCurrentDevice = useMemo(() => {
-    // Si l'élément n'a pas de restriction de visibilité, il est visible partout
-    if (!element.visibleDevices || element.visibleDevices.length === 0) {
-      return true;
-    }
-    // Vérifier si l'appareil actuel est dans la liste des appareils visibles
-    const isVisible = element.visibleDevices.includes(selectedDevice);
-    console.log('📱 Vérification visibilité élément:', {
-      elementId: element.id,
-      elementType: element.type,
-      visibleDevices: element.visibleDevices,
-      selectedDevice,
-      isVisible
-    });
-    return isVisible;
-  }, [element.visibleDevices, selectedDevice, element.id, element.type]);
-
-  // Si l'élément n'est pas visible sur cet appareil, ne rien rendre
-  if (!isVisibleOnCurrentDevice) {
-    console.log('🚫 Élément masqué sur', selectedDevice, ':', element.id);
-    return null;
-  }
 
   const isLaunchButton = useMemo(() => {
     const role = (element as any)?.role;
@@ -438,10 +411,8 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
     if (readOnly || isLaunchButton) return; // Disable entering edit mode for fixed button
     if (element.type === 'text' || element.type === 'shape') {
       setIsEditing(true);
-    } else if (element.type === 'wheel' && onOpenWheelPanel) {
-      onOpenWheelPanel();
     }
-  }, [element.type, readOnly, isLaunchButton, onOpenWheelPanel]);
+  }, [element.type, readOnly, isLaunchButton]);
 
 
   // Commit edits on blur/Enter without re-rendering per keystroke
@@ -1241,61 +1212,23 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
           </div>
         );
       }
-      case 'image': {
-        // Afficher un badge indiquant les appareils de visibilité si configuré
-        const visibilityBadge = element.visibleDevices && element.visibleDevices.length > 0 && isSelected && !readOnly ? (
-          <div className="absolute top-1 right-1 bg-purple-600 text-white text-xs px-2 py-0.5 rounded-full z-10 pointer-events-none">
-            {element.visibleDevices.map((d: string) => {
-              const icons: Record<string, string> = { desktop: '🖥️', tablet: '📱', mobile: '📱' };
-              return icons[d] || d;
-            }).join(' ')}
-          </div>
-        ) : null;
-        
+      case 'image':
         return (
-          <>
-            {visibilityBadge}
-            <img
-              src={element.src}
-              alt={element.alt || 'Image'}
-              className={`${readOnly ? '' : 'cursor-move'} object-cover`}
-              draggable={false}
-              loading="lazy"
-              style={elementStyle}
-            />
-          </>
+          <img
+            src={element.src}
+            alt={element.alt || 'Image'}
+            className={`${readOnly ? '' : 'cursor-move'} object-cover`}
+            draggable={false}
+            loading="lazy"
+            style={elementStyle}
+          />
         );
-      }
       case 'wheel':
-        // Get wheel position from campaign config
-        const wheelPosition = (campaign as any)?.design?.wheelConfig?.position || element.wheelPosition || 'center';
-        
-        // Calculate position styles based on wheelPosition
-        const getWheelPositionStyle = (): React.CSSProperties => {
-          const baseStyle: React.CSSProperties = {
-            display: 'flex',
-            alignItems: 'center',
-            width: '100%',
-            height: '100%'
-          };
-          
-          switch (wheelPosition) {
-            case 'left':
-              return { ...baseStyle, justifyContent: 'flex-start' };
-            case 'right':
-              return { ...baseStyle, justifyContent: 'flex-end' };
-            case 'center':
-            default:
-              return { ...baseStyle, justifyContent: 'center' };
-          }
-        };
-        
         return (
           <div 
             className={`${readOnly ? '' : 'cursor-move'}`}
             style={{ 
               ...elementStyle,
-              ...getWheelPositionStyle(),
               pointerEvents: 'none' // Empêche l'interaction directe avec la roue
             }}
           >
@@ -1308,10 +1241,9 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
                     `${s.id ?? idx}:${s.label ?? ''}:${s.color ?? ''}:${s.textColor ?? ''}:${s.contentType ?? 'text'}:${s.imageUrl ?? ''}`
                   ).join('|');
                   const size = Math.min(element.width || 300, element.height || 300);
-                  const pos = wheelPosition || 'center';
-                  return `${segs.length}-${parts}-${size}-${pos}`;
+                  return `${segs.length}-${parts}-${size}`;
                 } catch {
-                  return `${campaignSegments.length || (element.segments || []).length}-${Math.min(element.width || 300, element.height || 300)}-${wheelPosition}`;
+                  return `${campaignSegments.length || (element.segments || []).length}-${Math.min(element.width || 300, element.height || 300)}`;
                 }
               })()}
               segments={campaignSegments.length > 0 ? campaignSegments : (element.segments || [])}
@@ -1337,29 +1269,6 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
           </div>
         );
       case 'shape':
-        // Parse border width to ensure it's a number
-        const parseBorderWidth = (val: any): number => {
-          if (typeof val === 'number') return val;
-          if (typeof val === 'string') {
-            const match = val.match(/(\d+)/);
-            return match ? parseInt(match[1], 10) : 0;
-          }
-          return 0;
-        };
-        
-        // Parse border radius to ensure it's a number
-        const parseBorderRadius = (val: any): number => {
-          if (typeof val === 'number') return val;
-          if (typeof val === 'string') {
-            const match = val.match(/(\d+)/);
-            return match ? parseInt(match[1], 10) : 0;
-          }
-          return 0;
-        };
-        
-        const borderWidthNum = parseBorderWidth(element.borderWidth || element.style?.borderWidth || '0px');
-        const borderRadiusNum = parseBorderRadius(element.borderRadius || element.style?.borderRadius || '0px');
-        
         return (
           <div className={`${readOnly ? '' : 'cursor-move'}`} style={elementStyle}>
             <ShapeRenderer
@@ -1367,10 +1276,10 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
               width={element.width || 100}
               height={element.height || 100}
               color={element.backgroundColor || element.style?.backgroundColor || '#3B82F6'}
-              borderRadius={borderRadiusNum}
-              borderStyle={element.borderStyle || element.style?.borderStyle || 'none'}
-              borderWidth={borderWidthNum}
-              borderColor={element.borderColor || element.style?.borderColor || '#000000'}
+              borderRadius={element.borderRadius || element.style?.borderRadius}
+              borderStyle={element.borderStyle || 'none'}
+              borderWidth={element.borderWidth || '0px'}
+              borderColor={element.borderColor || '#000000'}
               isEditing={isEditing}
               content={element.content || ''}
               onContentChange={(content: string) => {

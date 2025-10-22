@@ -22,7 +22,6 @@ const TemplatedQuiz: React.FC<TemplatedQuizProps> = ({
   onAnswerSelected
 }) => {
   const [forceUpdate, setForceUpdate] = useState(0);
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   
   // Interface pour les styles actuels du quiz
   interface CurrentStyles {
@@ -174,31 +173,9 @@ const TemplatedQuiz: React.FC<TemplatedQuizProps> = ({
   };
 
   const questions = quizConfig.questions || [];
-  const currentQuestion = questions[currentQuestionIndex] || {};
+  const currentQuestion = questions[0] || {};
   const answers = currentQuestion.answers || [];
   const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
-  
-  // Fonction pour gérer la sélection d'une réponse
-  const handleAnswerClick = (isCorrect: boolean) => {
-    console.log('🎯 [TemplatedQuiz] Answer clicked:', { 
-      currentQuestionIndex, 
-      totalQuestions: questions.length, 
-      isCorrect 
-    });
-    
-    // Notifier la réponse sélectionnée
-    onAnswerSelected?.(isCorrect);
-    
-    // Si c'est la dernière question, appeler onClick pour passer à l'étape suivante
-    if (currentQuestionIndex >= questions.length - 1) {
-      console.log('✅ [TemplatedQuiz] Last question answered, calling onClick');
-      onClick?.();
-    } else {
-      // Sinon, passer à la question suivante
-      console.log('➡️ [TemplatedQuiz] Moving to next question');
-      setCurrentQuestionIndex(prev => prev + 1);
-    }
-  };
 
   // Debug log pour vérifier les valeurs actuelles
   useEffect(() => {
@@ -517,7 +494,8 @@ const TemplatedQuiz: React.FC<TemplatedQuizProps> = ({
                 transition: 'all 0.2s ease',
                 ...template.cardStyle
               }}
-              onClick={() => handleAnswerClick(!!answer.isCorrect)}
+              onClick={onClick}
+              onMouseUp={() => onAnswerSelected?.(!!answer.isCorrect)}
               onMouseEnter={(e) => {
                 const target = e.currentTarget as HTMLElement;
                 target.style.transform = 'translateY(-2px)';
@@ -650,7 +628,8 @@ const TemplatedQuiz: React.FC<TemplatedQuizProps> = ({
                 };
                 document.addEventListener('mouseup', onMouseUp, { once: true });
               }}
-              onClick={() => handleAnswerClick(!!answer.isCorrect)}
+              onClick={onClick}
+              onMouseUp={() => onAnswerSelected?.(!!answer.isCorrect)}
               role="button"
               tabIndex={0}
             >
@@ -674,28 +653,19 @@ const TemplatedQuiz: React.FC<TemplatedQuizProps> = ({
   return (
     <div className="w-full h-full flex items-center justify-center p-4">
       <div id="quiz-preview-container" style={containerStyle}>
-        {/* Progress indicator */}
-        {questions.length > 1 && (
-          <div style={{
-            textAlign: 'center',
-            fontSize: '14px',
-            color: currentStyles.textColor || campaign?.design?.quizConfig?.style?.textColor || '#6b7280',
-            marginBottom: '12px',
-            fontWeight: 500
-          }}>
-            Question {currentQuestionIndex + 1} sur {questions.length}
-          </div>
-        )}
-        
         {/* Optional header/banner */}
         {template.header && (
           <div
             style={{
-              background: (template.header as any).background || template.header.backgroundColor || '#3B82F6',
-              padding: (template.header as any).padding || '12px 16px',
+              height: `${template.header.height}px`,
+              background: template.header.backgroundColor,
               display: 'flex',
               alignItems: 'center',
-              justifyContent: template.header.align || 'center',
+              justifyContent: (() => {
+                const a = (currentStyles.questionTextAlign || campaign?.design?.quizConfig?.style?.questionTextAlign || (template.header.align as 'left'|'center'|'right') || 'center');
+                return a === 'left' ? 'flex-start' : a === 'right' ? 'flex-end' : 'center';
+              })(),
+              padding: '0 16px',
               // Suivre exactement l'arrondi du conteneur pour couvrir parfaitement les coins
               borderRadius: `${unifiedBorderRadius} ${unifiedBorderRadius} 0 0`,
               margin: '-16px -16px 16px -16px',

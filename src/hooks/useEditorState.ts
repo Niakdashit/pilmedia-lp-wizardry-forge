@@ -1,5 +1,3 @@
-'use client';
-
 import { useEditorStore } from '../stores/editorStore';
 import { useLocation } from 'react-router-dom';
 import { useEffect } from 'react';
@@ -10,14 +8,13 @@ import { useEffect } from 'react';
  */
 export const useEditorState = () => {
   const location = useLocation();
-  const pathname = location.pathname;
   
   // Déterminer le type d'éditeur basé sur la route
   const getEditorType = () => {
-    if (pathname === '/form-editor') return 'form-editor';
-    if (pathname === '/jackpot-editor') return 'jackpot-editor';
-    if (pathname === '/quiz-editor') return 'quiz-editor';
-    if (pathname === '/scratch-card-editor') return 'scratch-card-editor';
+    if (location.pathname === '/form-editor') return 'form-editor';
+    if (location.pathname === '/jackpot-editor') return 'jackpot-editor';
+    if (location.pathname === '/quiz-editor') return 'quiz-editor';
+    if (location.pathname === '/scratch-card-editor') return 'scratch-card-editor';
     return 'default';
   };
   

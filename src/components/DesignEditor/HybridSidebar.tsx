@@ -3,42 +3,35 @@ import {
   ChevronLeft,
   ChevronRight,
   Plus,
-  Gamepad2,
-  Palette,
   FormInput,
-  MessageSquare,
-  Image,
-  Type,
-  MousePointer,
-  List
+  Palette,
+  Gamepad2
 } from 'lucide-react';
-import { BackgroundPanel, CompositeElementsPanel, TextEffectsPanel } from '@/components/shared';
-import ImageModulePanel from '../QuizEditor/modules/ImageModulePanel';
-import LogoModulePanel from '../QuizEditor/modules/LogoModulePanel';
-import FooterModulePanel from '../QuizEditor/modules/FooterModulePanel';
-import ButtonModulePanel from '../QuizEditor/modules/ButtonModulePanel';
-import VideoModulePanel from '../QuizEditor/modules/VideoModulePanel';
-import SocialModulePanel from '../QuizEditor/modules/SocialModulePanel';
-import HtmlModulePanel from '../QuizEditor/modules/HtmlModulePanel';
-import CartePanel from '../QuizEditor/panels/CartePanel';
-import QuizConfigPanel from '../QuizEditor/panels/QuizConfigPanel';
-import ModernFormTab from '../ModernEditor/ModernFormTab';
-import GameManagementPanel from './panels/GameManagementPanel';
+import { BackgroundPanel, TextEffectsPanel } from '@/components/shared';
+import TextAnimationsPanel from './panels/TextAnimationsPanel';
 import WheelConfigPanel from './panels/WheelConfigPanel';
-import MessagesPanel from './panels/MessagesPanel';
-import ArticleModePanel from './panels/ArticleModePanel';
+import GameManagementPanel from './panels/GameManagementPanel';
+import ModernFormTab from '../ModernEditor/ModernFormTab';
 import { useEditorStore } from '../../stores/editorStore';
 import { getEditorDeviceOverride } from '@/utils/deviceOverrides';
-import { quizTemplates } from '../../types/quizTemplates';
-import type { Module, BlocImage, BlocCarte, BlocLogo, BlocPiedDePage } from '@/types/modularEditor';
-import { useArticleBannerSync } from '@/hooks/useArticleBannerSync';
+import DesignCompositeElementsPanel from './modules/DesignCompositeElementsPanel';
+import type { DesignScreenId, DesignModule, DesignBlocImage, DesignBlocLogo, DesignBlocPiedDePage, DesignBlocCarte } from '@/types/designEditorModular';
+// Panels de configuration des modules
+import ImageModulePanel from './modules/ImageModulePanel';
+import LogoModulePanel from './modules/LogoModulePanel';
+import FooterModulePanel from './modules/FooterModulePanel';
+import ButtonModulePanel from './modules/ButtonModulePanel';
+import VideoModulePanel from './modules/VideoModulePanel';
+import SocialModulePanel from './modules/SocialModulePanel';
+import HtmlModulePanel from './modules/HtmlModulePanel';
+import CartePanel from './panels/CartePanel';
+
 
 // Lazy-loaded heavy panels
-const loadPositionPanel = () => import('../DesignEditor/panels/PositionPanel');
-const loadAnimationsPanel = () => import('./panels/TextAnimationsPanel');
+const loadPositionPanel = () => import('./panels/PositionPanel');
 
 const LazyPositionPanel = React.lazy(loadPositionPanel);
-const LazyAnimationsPanel = React.lazy(loadAnimationsPanel);
+
 
 export interface HybridSidebarRef {
   setActiveTab: (tab: string) => void;
@@ -49,7 +42,10 @@ interface HybridSidebarProps extends React.HTMLAttributes<HTMLDivElement> {
   onBackgroundChange?: (background: { type: 'color' | 'image'; value: string }) => void;
   onExtractedColorsChange?: (colors: string[]) => void;
   currentBackground?: { type: 'color' | 'image'; value: string };
-  extractedColors?: string[]; 
+  extractedColors?: string[];
+  // Multi-screen system props
+  currentScreen?: DesignScreenId;
+  onAddModule?: (screen: DesignScreenId, module: DesignModule) => void; 
   // Campaign config from DesignEditorLayout (optional, not directly used here but passed through)
   campaignConfig?: any;
   onCampaignConfigChange?: (cfg: any) => void;
@@ -63,79 +59,18 @@ interface HybridSidebarProps extends React.HTMLAttributes<HTMLDivElement> {
   onAnimationsPanelChange?: (show: boolean) => void;
   showPositionPanel?: boolean;
   onPositionPanelChange?: (show: boolean) => void;
-  // Inline quiz panel controls
-  showQuizPanel?: boolean;
-  onQuizPanelChange?: (show: boolean) => void;
   // Inline wheel panel controls
   showWheelPanel?: boolean;
   onWheelPanelChange?: (show: boolean) => void;
   // Design panel controls
   showDesignPanel?: boolean;
   onDesignPanelChange?: (show: boolean) => void;
-  canvasRef?: React.RefObject<HTMLDivElement | null>;
+  canvasRef?: React.RefObject<HTMLDivElement>;
   // Props pour le système de groupes
   selectedElements?: any[];
   onSelectedElementsChange?: (elements: any[]) => void;
   onAddToHistory?: (snapshot: any) => void;
-  // Tab state controls
-  activeTab?: string | null;
-  onActiveTabChange?: (tab: string | null) => void;
-  // Quiz config values & callbacks (provided by parent)
-  quizQuestionCount?: number;
-  quizTimeLimit?: number;
-  quizDifficulty?: 'easy' | 'medium' | 'hard';
-  quizBorderRadius?: number;
-  quizWidth?: string;
-  quizMobileWidth?: string;
-  selectedQuizTemplate?: string;
-  // Style properties that need to be available
-  backgroundColor?: string;
-  backgroundOpacity?: number;
-  textColor?: string;
-  width?: string;
-  mobileWidth?: string;
-  // Button colors
-  buttonBackgroundColor?: string;
-  buttonTextColor?: string;
-  buttonHoverBackgroundColor?: string;
-  buttonActiveBackgroundColor?: string;
-  onQuizWidthChange?: (width: string) => void;
-  onQuizMobileWidthChange?: (width: string) => void;
-  onBackgroundColorChange?: (color: string) => void;
-  onBackgroundOpacityChange?: (opacity: number) => void;
-  onTextColorChange?: (color: string) => void;
-  onButtonBackgroundColorChange?: (color: string) => void;
-  onButtonTextColorChange?: (color: string) => void;
-  onButtonHoverBackgroundColorChange?: (color: string) => void;
-  onButtonActiveBackgroundColorChange?: (color: string) => void;
-  launchButtonStyles?: React.CSSProperties | null;
-  launchButtonText?: string;
-  onLaunchButtonStyleChange?: (styles: Partial<React.CSSProperties>) => void;
-  onLaunchButtonTextChange?: (text: string) => void;
-  onLaunchButtonReset?: () => void;
-  selectedModuleId?: string | null;
-  selectedModule?: Module | null;
-  onModuleUpdate?: (id: string, patch: Partial<Module>) => void;
-  onSelectedModuleChange?: (moduleId: string | null) => void;
-  modules?: Module[];
-  onModuleDelete?: (id: string) => void;
-  onQuizQuestionCountChange?: (count: number) => void;
-  onQuizTimeLimitChange?: (time: number) => void;
-  onQuizDifficultyChange?: (difficulty: 'easy' | 'medium' | 'hard') => void;
-  onQuizBorderRadiusChange?: (radius: number) => void;
-  onQuizTemplateChange?: (templateId: string) => void;
-  selectedDevice?: 'desktop' | 'tablet' | 'mobile';
-  // Callback pour forcer l'ouverture de l'onglet Elements
-  onForceElementsTab?: () => void;
-  // Tabs à masquer (par id: 'campaign', 'export', ...)
-  hiddenTabs?: string[];
-  // Propagate color editing context from toolbar -> layout -> sidebar -> background panel
-  colorEditingContext?: 'fill' | 'border' | 'text';
-  // Modular editor props
-  currentScreen?: 'screen1' | 'screen2' | 'screen3';
-  onScreenChange?: (screen: 'screen1' | 'screen2' | 'screen3') => void;
-  onAddModule?: (screen: 'screen1' | 'screen2' | 'screen3', module: any) => void;
-  // Wheel configuration props
+  // Wheel config values & callbacks (provided by parent)
   wheelBorderStyle?: string;
   wheelBorderColor?: string;
   wheelBorderWidth?: number;
@@ -147,12 +82,22 @@ interface HybridSidebarProps extends React.HTMLAttributes<HTMLDivElement> {
   onWheelBorderWidthChange?: (width: number) => void;
   onWheelScaleChange?: (scale: number) => void;
   onWheelShowBulbsChange?: (show: boolean) => void;
-  onWheelPositionChange?: (position: 'left' | 'right' | 'center') => void;
-  // When true, use the fullscreen tab set even if editorMode is 'article'
-  forceFullTabs?: boolean;
+  onWheelPositionChange?: (pos: 'left' | 'right' | 'center') => void;
+  selectedDevice?: 'desktop' | 'tablet' | 'mobile';
+  // Callback pour forcer l'ouverture de l'onglet Elements
+  onForceElementsTab?: () => void;
+  // Tabs à masquer (par id: 'campaign', 'export', ...)
+  hiddenTabs?: string[];
+  // Propagate color editing context from toolbar -> layout -> sidebar -> background panel
+  colorEditingContext?: 'fill' | 'border' | 'text';
+  // Module selection props (pour afficher les panels de configuration)
+  selectedModuleId?: string | null;
+  selectedModule?: DesignModule | null;
+  onModuleUpdate?: (moduleId: string, updates: Partial<DesignModule>) => void;
+  onSelectedModuleChange?: (moduleId: string | null) => void;
 }
 
-const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({ 
+const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
   onAddElement,
   onBackgroundChange,
   onExtractedColorsChange,
@@ -170,10 +115,6 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
   onAnimationsPanelChange,
   showPositionPanel = false,
   onPositionPanelChange,
-  quizBorderRadius,
-  onQuizBorderRadiusChange,
-  showQuizPanel = false,
-  onQuizPanelChange,
   showWheelPanel = false,
   onWheelPanelChange,
   showDesignPanel = false,
@@ -182,38 +123,6 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
   selectedElements = [],
   onSelectedElementsChange,
   onAddToHistory,
-  quizQuestionCount = 5,
-  quizTimeLimit = 30,
-  quizDifficulty = 'medium',
-  selectedQuizTemplate,
-  onQuizQuestionCountChange,
-  onQuizTimeLimitChange,
-  onQuizDifficultyChange,
-  onQuizTemplateChange: handleQuizTemplateChange,
-  onQuizWidthChange: handleQuizWidthChange,
-  onQuizMobileWidthChange: handleQuizMobileWidthChange,
-  selectedDevice = 'desktop',
-  hiddenTabs = [],
-  onForceElementsTab,
-  colorEditingContext,
-  launchButtonStyles,
-  launchButtonText,
-  onLaunchButtonStyleChange,
-  onLaunchButtonTextChange,
-  onLaunchButtonReset,
-  selectedModuleId,
-  selectedModule,
-  onModuleUpdate,
-  onSelectedModuleChange,
-  modules,
-  onModuleDelete,
-  activeTab,
-  onActiveTabChange,
-  // modular editor
-  currentScreen,
-  onScreenChange,
-  onAddModule,
-  // wheel configuration
   wheelBorderStyle,
   wheelBorderColor,
   wheelBorderWidth,
@@ -226,13 +135,17 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
   onWheelScaleChange,
   onWheelShowBulbsChange,
   onWheelPositionChange,
-  forceFullTabs = false
+  selectedDevice = 'desktop',
+  hiddenTabs = [],
+  onForceElementsTab,
+  colorEditingContext,
+  currentScreen = 'screen1',
+  onAddModule,
+  selectedModuleId,
+  selectedModule,
+  onModuleUpdate,
+  onSelectedModuleChange
 }: HybridSidebarProps, ref) => {
-  // Détection du mode Article via URL
-  const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
-  const editorMode = searchParams?.get('mode') === 'article' ? 'article' : 'fullscreen';
-  
-  console.log('🎨 [HybridSidebar] Editor Mode:', editorMode);
   // Détection du format 9:16 (fenêtre portrait)
   const [windowSize, setWindowSize] = useState({ width: 0, height: 0 });
   const isWindowMobile = windowSize.height > windowSize.width && windowSize.width < 768;
@@ -264,13 +177,26 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
   // Détecter si l'appareil est réellement mobile via l'user-agent plutôt que la taille de la fenêtre
   React.useEffect(() => {
     const ua = typeof navigator !== 'undefined' ? navigator.userAgent : '';
-
+    
     // Exposer la fonction pour forcer l'onglet Elements si elle est fournie
     if (onForceElementsTab) {
       (window as any).forceElementsTab = onForceElementsTab;
     }
-
+    
+    // Debug logging pour la détection mobile
     const deviceOverride = getEditorDeviceOverride();
+
+    console.log('📱 HybridSidebar - Mobile detection:', {
+      userAgent: ua,
+      isMobileUA: /Mobi|Android/i.test(ua),
+      windowWidth: typeof window !== 'undefined' ? window.innerWidth : 'N/A',
+      windowHeight: typeof window !== 'undefined' ? window.innerHeight : 'N/A',
+      isWindowMobile,
+      selectedDevice,
+      willCollapse: deviceOverride === null && (/Mobi|Android/i.test(ua) || isWindowMobile),
+      deviceOverride
+    });
+
     if (deviceOverride === 'desktop' && !isWindowMobile) {
       setIsCollapsed(false);
       return;
@@ -279,38 +205,20 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
     if (/Mobi|Android/i.test(ua) || isWindowMobile) {
       setIsCollapsed(true);
     }
-  }, [onForceElementsTab, isWindowMobile]);
+  }, [onForceElementsTab, selectedDevice, isWindowMobile]);
+  // Default to 'Elements' tab on entry (pour afficher les modules par défaut)
+  const [activeTab, _setActiveTab] = useState<string | null>('elements');
 
-  // Synchroniser les uploads d'images avec la bannière article
-  useArticleBannerSync(editorMode);
-  const [internalActiveTab, setInternalActiveTab] = useState<string | null>('background');
-  // Flag to indicate a deliberate user tab switch to avoid auto-switch overrides
-  const isUserTabSwitchingRef = React.useRef(false);
-  // Short-lived guard to ignore external setActiveTab calls (e.g. onOpenElementsTab) after manual tab switch
-  const ignoreExternalUntilRef = React.useRef<number>(0);
-
-  React.useEffect(() => {
-    if (activeTab !== undefined && activeTab !== internalActiveTab) {
-      setInternalActiveTab(activeTab);
-    }
-  }, [activeTab, internalActiveTab]);
+  // Monitor activeTab state changes for debugging
+  useEffect(() => {
+    console.log('🔄 [USE EFFECT] activeTab changed to:', activeTab);
+    console.log('🔄 [USE EFFECT] Component will re-render');
+  }, [activeTab]);
   
   // Exposer setActiveTab via ref
   useImperativeHandle(ref, () => ({
     setActiveTab: (tab: string) => {
-      // Always allow external calls to open the Elements tab (e.g., after selecting a module)
-      // and make sure the sidebar is expanded on mobile.
-      if (tab === 'elements') {
-        setIsCollapsed(false);
-      }
-
-      // Keep a soft guard for rapid repeat calls but do not block the switch
-      if (Date.now() < ignoreExternalUntilRef.current && tab === 'elements') {
-        ignoreExternalUntilRef.current = 0;
-      }
-
-      setInternalActiveTab(tab);
-      onActiveTabChange?.(tab);
+      _setActiveTab(tab);
       // Mettre à jour les états des panneaux en fonction de l'onglet sélectionné
       if (tab === 'background') {
         onDesignPanelChange?.(true);
@@ -320,66 +228,31 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
         onAnimationsPanelChange?.(true);
       } else if (tab === 'position') {
         onPositionPanelChange?.(true);
-      } else if (tab === 'quiz') {
-        onQuizPanelChange?.(true);
       } else if (tab === 'wheel') {
         onWheelPanelChange?.(true);
       }
     }
-  }), [onDesignPanelChange, onEffectsPanelChange, onAnimationsPanelChange, onPositionPanelChange, onQuizPanelChange, onWheelPanelChange, setIsCollapsed]);
-
-  // Removed event-based auto-switching to avoid flicker and unintended returns to Elements.
-
-  // Désélectionner le module si l'onglet actif n'est pas 'elements' ou 'background'
-  // (background est autorisé pour les BlocTexte)
-  React.useEffect(() => {
-    if (internalActiveTab !== 'elements' && internalActiveTab !== 'background') {
-      onSelectedModuleChange?.(null);
-    }
-  }, [internalActiveTab, onSelectedModuleChange]);
+  }), [onDesignPanelChange, onEffectsPanelChange, onAnimationsPanelChange, onPositionPanelChange, onWheelPanelChange]);
   
-  // Log pour debug - ne pas forcer le changement d'onglet ici pour éviter les boucles
-  // La logique de changement d'onglet est gérée par DesignEditorLayout
-  React.useEffect(() => {
-    console.log('🎯 [HybridSidebar] selectedModuleId changed:', {
-      selectedModuleId,
-      selectedModule,
-      internalActiveTab,
-      moduleType: selectedModule?.type
-    });
-  }, [selectedModuleId, selectedModule?.type, internalActiveTab]);
-  
-  // Fonction interne pour gérer le changement d'onglet
-  const activeTemplate = React.useMemo(() => {
-    return quizTemplates.find((tpl) => tpl.id === selectedQuizTemplate) || quizTemplates[0];
-  }, [selectedQuizTemplate]);
-  const templateDesktopWidth = React.useMemo(() => `${activeTemplate?.style?.containerWidth ?? 450}px`, [activeTemplate]);
-  const templateMobileWidth = React.useMemo(() => `${activeTemplate?.style?.containerWidth ?? 450}px`, [activeTemplate]);
-
   // Fonction interne pour gérer le changement d'onglet
   const setActiveTab = (tab: string | null) => {
-    setInternalActiveTab(tab);
-    onActiveTabChange?.(tab);
+    _setActiveTab(tab);
   };
-  
-  // État pour le menu déroulant des écrans
-  const [showScreenMenu, setShowScreenMenu] = React.useState(false);
   
   // Référence pour suivre les états précédents
   const prevStatesRef = useRef({
     showEffectsPanel,
     showAnimationsPanel,
     showPositionPanel,
-    showQuizPanel,
     showWheelPanel,
     showDesignPanel,
-    activeTab: internalActiveTab
+    activeTab
   });
 
   // Gérer l'affichage des onglets en fonction des états des panneaux
   React.useEffect(() => {
     const prev = prevStatesRef.current;
-    let newActiveTab = internalActiveTab;
+    let newActiveTab = activeTab;
     let shouldUpdate = false;
 
     // Vérifier si un panneau a été activé/désactivé
@@ -387,42 +260,31 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
       { key: 'effects', active: showEffectsPanel, prevActive: prev.showEffectsPanel },
       { key: 'animations', active: showAnimationsPanel, prevActive: prev.showAnimationsPanel },
       { key: 'position', active: showPositionPanel, prevActive: prev.showPositionPanel },
-      { key: 'quiz', active: showQuizPanel, prevActive: prev.showQuizPanel },
       { key: 'wheel', active: showWheelPanel, prevActive: prev.showWheelPanel },
       { key: 'background', active: showDesignPanel, prevActive: prev.showDesignPanel }
     ];
 
-    // Si le panneau Quiz est activé, forcer l'onglet quiz
-    if (showQuizPanel && !prev.showQuizPanel) {
-      newActiveTab = 'quiz';
-      shouldUpdate = true;
-    }
-    // Si le panneau Wheel est activé, forcer l'onglet wheel
-    else if (showWheelPanel && !prev.showWheelPanel) {
-      newActiveTab = 'wheel';
-      shouldUpdate = true;
-    }
-    // Si le panneau Design est activé, forcer l'onglet background (sauf si déjà sur background)
-    else if (showDesignPanel && !prev.showDesignPanel && internalActiveTab !== 'background') {
+    // Si le panneau Design est activé, forcer l'onglet background
+    if (showDesignPanel && !prev.showDesignPanel) {
       newActiveTab = 'background';
       shouldUpdate = true;
     } 
     // Si un autre panneau a été activé, basculer vers son onglet correspondant
     else {
-      const activatedPanel = panelStates.find(p => p.active && !p.prevActive && p.key !== 'background' && p.key !== 'quiz' && p.key !== 'wheel');
+      const activatedPanel = panelStates.find(p => p.active && !p.prevActive && p.key !== 'background');
       if (activatedPanel) {
         newActiveTab = activatedPanel.key;
         shouldUpdate = true;
       } 
-      // Si l'onglet actif est un panneau qui a été désactivé, revenir à 'game' pour wheel ou 'elements' pour les autres
-      else if (panelStates.some(p => p.key === internalActiveTab && !p.active && p.prevActive)) {
-        newActiveTab = internalActiveTab === 'wheel' ? 'game' : 'elements';
+      // Si l'onglet actif est un panneau qui a été désactivé, revenir à 'elements'
+      else if (panelStates.some(p => p.key === activeTab && !p.active && p.prevActive)) {
+        newActiveTab = 'elements';
         shouldUpdate = true;
       }
     }
 
     // Mettre à jour l'état si nécessaire
-    if (shouldUpdate && newActiveTab !== internalActiveTab) {
+    if (shouldUpdate && newActiveTab !== activeTab) {
       setActiveTab(newActiveTab);
     }
 
@@ -431,7 +293,6 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
       showEffectsPanel,
       showAnimationsPanel,
       showPositionPanel,
-      showQuizPanel,
       showWheelPanel,
       showDesignPanel,
       activeTab: newActiveTab
@@ -448,20 +309,22 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
     showEffectsPanel, 
     showAnimationsPanel, 
     showPositionPanel, 
-    showQuizPanel,
     showWheelPanel,
     showDesignPanel,
     activeTab,
     onDesignPanelChange
   ]);
 
+  // La gestion de onForceElementsTab a été déplacée dans le premier useEffect
+  // pour éviter la duplication de code et les effets secondaires multiples
+
   // Fermer automatiquement le panneau d'effets si aucun élément texte n'est sélectionné
   React.useEffect(() => {
-    if (internalActiveTab === 'effects' && (!selectedElement || selectedElement.type !== 'text')) {
+    if (activeTab === 'effects' && (!selectedElement || selectedElement.type !== 'text')) {
       onEffectsPanelChange?.(false);
       setActiveTab('elements');
     }
-  }, [selectedElement, internalActiveTab, onEffectsPanelChange]);
+  }, [selectedElement, activeTab, onEffectsPanelChange]);
 
   // Idle prefetch heavy panels to smooth first open without blocking initial render
   React.useEffect(() => {
@@ -484,41 +347,90 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
     return () => cancel(id);
   }, [activeTab]);
 
-  // Tab definitions
-  const articleTabs = [
-    { id: 'banner', label: 'Bannière', icon: Image },
-    { id: 'text', label: 'Texte', icon: Type },
-    { id: 'button', label: 'Bouton', icon: MousePointer },
-    { id: 'funnel', label: 'Funnel', icon: List }
-  ] as const;
-  const fullscreenTabs = [
-    { id: 'background', label: 'Design', icon: Palette, debug: 'Onglet Design (background)' },
-    { id: 'elements', label: 'Éléments', icon: Plus },
-    { id: 'form', label: 'Formulaire', icon: FormInput },
-    { id: 'game', label: 'Jeu', icon: Gamepad2 },
-    { id: 'messages', label: 'Sortie', icon: MessageSquare }
-  ] as const;
-
-  // Choose tabs: allow forcing fullscreen even in article mode
-  const useArticleTabs = (editorMode === 'article') && !forceFullTabs;
-  const allTabs = useArticleTabs ? (articleTabs as any[]) : (fullscreenTabs as any[]);
-  
+  const allTabs = [
+    { 
+      id: 'background', 
+      label: 'Design', 
+      icon: Palette,
+      debug: 'Onglet Design (background)'
+    },
+    { 
+      id: 'elements', 
+      label: 'Éléments', 
+      icon: Plus
+    },
+    {
+      id: 'game',
+      label: 'Jeu',
+      icon: Gamepad2
+    },
+    { 
+      id: 'form', 
+      label: 'Formulaire', 
+      icon: FormInput
+    }
+  ];
+  console.log('📌 hiddenTabs:', hiddenTabs);
   // Vérifier si hiddenTabs est défini et est un tableau
   const safeHiddenTabs = Array.isArray(hiddenTabs) ? hiddenTabs : [];
+  console.log('🔍 [HybridSidebar] hiddenTabs reçus:', hiddenTabs);
+  console.log('🔍 [HybridSidebar] hiddenTabs après vérification:', safeHiddenTabs);
   
-  const tabs = allTabs.filter(tab => !safeHiddenTabs.includes(tab.id));
-
+  const tabs = allTabs.filter(tab => {
+    const isHidden = safeHiddenTabs.includes(tab.id);
+    console.log(`🔍 [${tab.id}] ${tab.label} - Masqué: ${isHidden}`, tab);
+    return !isHidden;
+  });
+  
+  // Log détaillé du filtrage des onglets
+  console.log('🔍 [HybridSidebar] Filtrage des onglets:', {
+    allTabs: allTabs.map(t => t.id),
+    safeHiddenTabs,
+    filteredTabs: tabs.map(t => t.id),
+    hasBackgroundTab: allTabs.some(t => t.id === 'background'),
+    isBackgroundHidden: safeHiddenTabs.includes('background')
+  });
+  
+  console.log('🔍 [HybridSidebar] Tous les onglets disponibles:', allTabs.map(t => `${t.id} (${t.label})`));
+  console.log('✅ [HybridSidebar] Onglets visibles après filtrage:', tabs.map(t => `${t.id} (${t.label})`));
+  console.log('📋 [HybridSidebar] Onglets masqués:', safeHiddenTabs);
+  
   // Ensure a valid default active tab on mount and when visible tabs change
   React.useEffect(() => {
     const backgroundVisible = tabs.some(t => t.id === 'background');
-    const activeIsVisible = internalActiveTab ? tabs.some(t => t.id === internalActiveTab) : false;
-    const isTransientQuiz = internalActiveTab === 'quiz' && showQuizPanel;
-    const isTransientWheel = internalActiveTab === 'wheel' && showWheelPanel;
+    const activeIsVisible = activeTab ? tabs.some(t => t.id === activeTab) : false;
+    const isTransientWheel = activeTab === 'wheel' && showWheelPanel;
 
-    if (!activeIsVisible && !isTransientQuiz && !isTransientWheel) {
-      setInternalActiveTab(backgroundVisible ? 'background' : (tabs[0]?.id ?? null));
+    if (!activeIsVisible && !isTransientWheel) {
+      _setActiveTab(backgroundVisible ? 'background' : (tabs[0]?.id ?? null));
     }
-  }, [tabs, internalActiveTab, showQuizPanel, showWheelPanel]);
+  }, [tabs, activeTab, showWheelPanel]);
+
+  // Vérifier si l'onglet 'background' (Design) est présent
+  const hasBackgroundTab = allTabs.some(tab => tab.id === 'background');
+  console.log('🔍 [HybridSidebar] L\'onglet background (Design) est présent:', hasBackgroundTab);
+  
+  // Vérifier si l'onglet 'background' est masqué
+  const isBackgroundHidden = safeHiddenTabs.includes('background');
+  console.log('🔍 [HybridSidebar] L\'onglet background (Design) est masqué:', isBackgroundHidden);
+  
+  // Effet pour vérifier l'état des onglets au chargement
+  React.useEffect(() => {
+    console.log('🔄 [HybridSidebar] Vérification des onglets au chargement...');
+    console.log('📋 Nombre total d\'onglets:', allTabs.length);
+    console.log('📋 Onglets cachés:', safeHiddenTabs);
+    console.log('📋 Onglets visibles:', tabs.map(t => t.id));
+    
+    // Vérifier si l'onglet 'background' est dans les onglets visibles
+    const backgroundTab = tabs.find(tab => tab.id === 'background');
+    console.log('🔍 Onglet background trouvé dans les onglets visibles:', !!backgroundTab);
+    
+    if (backgroundTab) {
+      console.log('✅ L\'onglet Design est présent et visible');
+    } else {
+      console.warn('⚠️ L\'onglet Design est masqué ou non trouvé dans les onglets visibles');
+    }
+  }, [tabs, allTabs, safeHiddenTabs]);
 
   // Prefetch on hover/touch to smooth first paint
   const prefetchTab = (tabId: string) => {
@@ -528,6 +440,14 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
   };
 
   // Theme variables to align with Home sidebar colors
+  // Approximations in HSL for:
+  // - background: #2c2c34 -> hsl(240 8% 19%)
+  // - border: #4b5563 -> hsl(220 10% 34%)
+  // - hover: #3f3f46 -> hsl(240 5% 26%)
+  // - icon default: #d1d5db -> hsl(220 9% 72%)
+  // - icon active/text primary: #ffffff -> hsl(0 0% 100%)
+  // - active background (approx mid of gradient #841b60 -> #b41b60): use #9e1b60 -> hsl(326 70% 37%)
+  // - active accent/border: #b41b60 -> hsl(336 75% 41%)
   const themeVars: React.CSSProperties = {
     // Container/backgrounds
     ['--sidebar-bg' as any]: '240 8% 19%',
@@ -545,47 +465,46 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
   } as React.CSSProperties;
 
   const handleTabClick = (tabId: string) => {
-    // mark deliberate user tab change for a short window to ignore auto-switchers
-    isUserTabSwitchingRef.current = true;
-    ignoreExternalUntilRef.current = Date.now() + 2000;
-    setTimeout(() => { isUserTabSwitchingRef.current = false; }, 300);
+    console.log('🗂️ Clic sur onglet détecté:', tabId, 'État actuel:', activeTab);
     
-    // TOUJOURS fermer TOUS les panneaux temporaires lors d'un changement d'onglet
-    onEffectsPanelChange?.(false);
-    onAnimationsPanelChange?.(false);
-    onPositionPanelChange?.(false);
-    onQuizPanelChange?.(false);
-    onWheelPanelChange?.(false);
-    onDesignPanelChange?.(false);
-    
-    // Si la cible N'EST PAS 'elements', toujours désélectionner le module pour éviter que le panel temporaire reste ouvert
-    if (tabId !== 'elements' && onSelectedModuleChange) {
-      onSelectedModuleChange(null);
+    // Si on clique sur un onglet différent, fermer les panneaux spéciaux
+    if (showEffectsPanel && tabId !== 'effects') {
+      console.log('🗂️ Fermeture du panneau effects');
+      onEffectsPanelChange?.(false);
     }
-
-    // Ouvrir explicitement le panneau correspondant au tab ciblé
-    if (tabId === 'background') {
-      onDesignPanelChange?.(true);
-    } else if (tabId === 'effects') {
-      onEffectsPanelChange?.(true);
-    } else if (tabId === 'animations') {
-      onAnimationsPanelChange?.(true);
-    } else if (tabId === 'position') {
-      onPositionPanelChange?.(true);
-    } else if (tabId === 'quiz') {
-      onQuizPanelChange?.(true);
-    } else if (tabId === 'wheel') {
-      onWheelPanelChange?.(true);
+    if (showAnimationsPanel && tabId !== 'animations') {
+      console.log('🗂️ Fermeture du panneau animations');
+      onAnimationsPanelChange?.(false);
+    }
+    if (showPositionPanel && tabId !== 'position') {
+      console.log('🗂️ Fermeture du panneau position');
+      onPositionPanelChange?.(false);
+    }
+    if (showWheelPanel && tabId !== 'wheel') {
+      console.log('🗂️ Fermeture du panneau roue');
+      onWheelPanelChange?.(false);
     }
     
-    if (internalActiveTab === tabId) {
+    if (activeTab === tabId) {
+      console.log('🗂️ Fermeture de l\'onglet actif:', tabId);
       setActiveTab(null); // Close if clicking on active tab
     } else {
+      console.log('🗂️ Ouverture du nouvel onglet:', tabId);
       setActiveTab(tabId);
+      
+      // Log supplémentaire pour le tab game
+      if (tabId === 'game') {
+        console.log('🎮 [GAME TAB] Onglet Jeu activé!');
+        console.log('🎮 [GAME TAB] setActiveTab appelé avec:', tabId);
+        setTimeout(() => {
+          console.log('🎮 [GAME TAB] Vérification activeTab après timeout');
+        }, 100);
+      }
     }
   };
 
   const renderPanel = (tabId: string) => {
+    console.log('🎯 [RENDER PANEL] Rendu du panneau pour:', tabId);
     switch (tabId) {
       case 'effects':
         return (
@@ -600,16 +519,14 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
         );
       case 'animations':
         return (
-          <React.Suspense fallback={<div className="p-4 text-sm text-gray-500">Chargement des animations…</div>}>
-            <LazyAnimationsPanel 
-              onBack={() => {
-                onAnimationsPanelChange?.(false);
-                setActiveTab('elements');
-              }}
-              selectedElement={selectedElement}
-              onElementUpdate={onElementUpdate}
-            />
-          </React.Suspense>
+          <TextAnimationsPanel 
+            onBack={() => {
+              onAnimationsPanelChange?.(false);
+              setActiveTab('elements');
+            }}
+            selectedElement={selectedElement}
+            onElementUpdate={onElementUpdate}
+          />
         );
       case 'position':
         return (
@@ -625,142 +542,67 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
             />
           </React.Suspense>
         );
-      case 'quiz':
-        return (
-          <QuizConfigPanel
-            onBack={() => {
-              onQuizPanelChange?.(false);
-              setActiveTab('elements');
-            }}
-            quizQuestionCount={quizQuestionCount || 5}
-            quizTimeLimit={quizTimeLimit || 30}
-            quizDifficulty={quizDifficulty || 'medium'}
-            quizBorderRadius={quizBorderRadius}
-            selectedTemplate={selectedQuizTemplate}
-            onQuestionCountChange={(c) => onQuizQuestionCountChange?.(c)}
-            onTimeLimitChange={(t) => onQuizTimeLimitChange?.(t)}
-            onDifficultyChange={(d) => onQuizDifficultyChange?.(d)}
-            onBorderRadiusChange={(r) => onQuizBorderRadiusChange?.(r)}
-            onTemplateChange={(template) => handleQuizTemplateChange?.(template.id)}
-            quizWidth={(campaign?.design?.quizConfig as any)?.style?.width ?? templateDesktopWidth}
-            quizMobileWidth={(campaign?.design?.quizConfig as any)?.style?.mobileWidth ?? templateMobileWidth}
-            backgroundColor={(campaign?.design?.quizConfig as any)?.style?.backgroundColor ?? '#ffffff'}
-            backgroundOpacity={(campaign?.design?.quizConfig as any)?.style?.backgroundOpacity ?? 100}
-            textColor={(campaign?.design?.quizConfig as any)?.style?.textColor ?? '#000000'}
-            buttonBackgroundColor={(campaign?.design?.quizConfig as any)?.style?.buttonBackgroundColor ?? '#f3f4f6'}
-            buttonTextColor={(campaign?.design?.quizConfig as any)?.style?.buttonTextColor ?? '#000000'}
-            buttonHoverBackgroundColor={(campaign?.design?.quizConfig as any)?.style?.buttonHoverBackgroundColor ?? '#9fa4a4'}
-            buttonActiveBackgroundColor={(campaign?.design?.quizConfig as any)?.style?.buttonActiveBackgroundColor ?? '#a7acb5'}
-            onQuizWidthChange={(width: string) => {
-              setCampaign((prev: any) => {
-                if (!prev) return null;
-                return {
-                  ...prev,
-                  name: prev.name || 'Campaign',
-                  design: {
-                    ...prev.design,
-                    quizConfig: {
-                      ...prev.design?.quizConfig,
-                      style: {
-                        ...prev.design?.quizConfig?.style,
-                        width
-                      }
-                    }
-                  }
-                };
-              });
-              handleQuizWidthChange?.(width);
-            }}
-            onQuizMobileWidthChange={(width: string) => {
-              setCampaign((prev: any) => {
-                if (!prev) return null;
-                return {
-                  ...prev,
-                  name: prev.name || 'Campaign',
-                  design: {
-                    ...prev.design,
-                    quizConfig: {
-                      ...prev.design?.quizConfig,
-                      style: {
-                        ...prev.design?.quizConfig?.style,
-                        mobileWidth: width
-                      }
-                    }
-                  }
-                };
-              });
-              handleQuizMobileWidthChange?.(width);
-            }}
-            selectedDevice={selectedDevice}
-          />
-        );
       case 'wheel':
         return (
           <WheelConfigPanel
             onBack={() => {
               onWheelPanelChange?.(false);
-              setActiveTab('game');
+              setActiveTab('elements');
             }}
             wheelBorderStyle={wheelBorderStyle || 'solid'}
-            wheelBorderColor={wheelBorderColor || '#ffd700'}
+            wheelBorderColor={wheelBorderColor || '#000000'}
             wheelBorderWidth={wheelBorderWidth || 2}
-            wheelScale={wheelScale || 67}
-            wheelShowBulbs={wheelShowBulbs ?? true}
-            wheelPosition={wheelPosition || 'center'}
-            onBorderStyleChange={onWheelBorderStyleChange || (() => {})}
-            onBorderColorChange={onWheelBorderColorChange || (() => {})}
-            onBorderWidthChange={onWheelBorderWidthChange || (() => {})}
-            onScaleChange={onWheelScaleChange || (() => {})}
-            onShowBulbsChange={onWheelShowBulbsChange || (() => {})}
-            onPositionChange={onWheelPositionChange || (() => {})}
+            wheelScale={wheelScale || 1}
+            wheelShowBulbs={wheelShowBulbs || false}
+            wheelPosition={wheelPosition || 'right'}
+            onBorderStyleChange={(s) => onWheelBorderStyleChange?.(s)}
+            onBorderColorChange={(c) => onWheelBorderColorChange?.(c)}
+            onBorderWidthChange={(w) => onWheelBorderWidthChange?.(w)}
+            onScaleChange={(s) => onWheelScaleChange?.(s)}
+            onShowBulbsChange={(b) => onWheelShowBulbsChange?.(b)}
+            onPositionChange={(p) => onWheelPositionChange?.(p)}
             selectedDevice={selectedDevice}
           />
         );
-      // Mode Article - Panneaux spécifiques
-      case 'banner':
-      case 'text':
-      case 'button':
-      case 'funnel':
-        if (editorMode === 'article') {
-          return (
-            <ArticleModePanel
-              campaign={campaign}
-              onCampaignChange={(updates) => setCampaign(updates as any)}
-              activePanel={tabId as 'banner' | 'text' | 'button' | 'funnel'}
-            />
-          );
-        }
-        return null;
-      
       case 'background':
         // Pour les modules texte, passer le module comme selectedElement
         const elementForBackground = selectedModule?.type === 'BlocTexte' ? selectedModule : selectedElement;
         const updateForBackground = selectedModule?.type === 'BlocTexte' && onModuleUpdate 
-          ? (updates: any) => onModuleUpdate(selectedModule.id, updates)
+          ? (updates: any) => {
+              console.log('🔧 [HybridSidebar] updateForBackground appelé pour BlocTexte:', selectedModule.id, updates);
+              onModuleUpdate(selectedModule.id, updates);
+            }
           : onElementUpdate;
         
+        console.log('🎨 [HybridSidebar] Rendu BackgroundPanel:', {
+          selectedModule: selectedModule?.id,
+          selectedModuleType: selectedModule?.type,
+          isBlocTexte: selectedModule?.type === 'BlocTexte',
+          elementForBackground: elementForBackground?.id,
+          hasUpdateForBackground: !!updateForBackground
+        });
+        
         return (
-          <BackgroundPanel 
-            onBackgroundChange={onBackgroundChange || (() => {})} 
-            onExtractedColorsChange={onExtractedColorsChange}
-            currentBackground={currentBackground}
-            extractedColors={extractedColors}
-            selectedElement={elementForBackground}
-            onElementUpdate={updateForBackground}
-            onModuleUpdate={onModuleUpdate}
-            colorEditingContext={colorEditingContext}
-            currentScreen={currentScreen}
-            selectedDevice={selectedDevice}
-          />
+          <div className="h-full overflow-y-auto">
+            <BackgroundPanel 
+              onBackgroundChange={onBackgroundChange || (() => {})} 
+              onExtractedColorsChange={onExtractedColorsChange}
+              currentBackground={currentBackground}
+              extractedColors={extractedColors}
+              selectedElement={elementForBackground}
+              onElementUpdate={updateForBackground}
+              colorEditingContext={colorEditingContext}
+            />
+          </div>
         );
       case 'elements':
+        // Si un module est sélectionné, afficher son panel de configuration
         if (selectedModule?.type === 'BlocBouton' && onModuleUpdate) {
           return (
             <ButtonModulePanel
               module={selectedModule as any}
               onUpdate={(patch: any) => onModuleUpdate(selectedModule.id, patch)}
               onBack={() => {
-                // Désélectionner le module et rester sur l'onglet éléments
                 onSelectedModuleChange?.(null);
                 setActiveTab('elements');
               }}
@@ -770,8 +612,8 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
         if (selectedModule?.type === 'BlocImage' && onModuleUpdate) {
           return (
             <ImageModulePanel
-              module={selectedModule as BlocImage}
-              onUpdate={(patch: Partial<BlocImage>) => {
+              module={selectedModule as DesignBlocImage}
+              onUpdate={(patch: Partial<DesignBlocImage>) => {
                 onModuleUpdate(selectedModule.id, patch);
               }}
               onBack={() => {
@@ -781,12 +623,11 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
             />
           );
         }
-        
         if (selectedModule?.type === 'BlocLogo' && onModuleUpdate) {
           return (
             <LogoModulePanel
-              module={selectedModule as BlocLogo}
-              onUpdate={(patch: Partial<BlocLogo>) => {
+              module={selectedModule as DesignBlocLogo}
+              onUpdate={(patch: Partial<DesignBlocLogo>) => {
                 onModuleUpdate(selectedModule.id, patch);
               }}
               onBack={() => {
@@ -796,12 +637,11 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
             />
           );
         }
-        
         if (selectedModule?.type === 'BlocPiedDePage' && onModuleUpdate) {
           return (
             <FooterModulePanel
-              module={selectedModule as BlocPiedDePage}
-              onUpdate={(patch: Partial<BlocPiedDePage>) => {
+              module={selectedModule as DesignBlocPiedDePage}
+              onUpdate={(patch: Partial<DesignBlocPiedDePage>) => {
                 onModuleUpdate(selectedModule.id, patch);
               }}
               onBack={() => {
@@ -811,7 +651,6 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
             />
           );
         }
-        
         if (selectedModule?.type === 'BlocVideo' && onModuleUpdate) {
           return (
             <VideoModulePanel
@@ -853,44 +692,34 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
         if (selectedModule?.type === 'BlocCarte' && onModuleUpdate) {
           return (
             <CartePanel
-              module={selectedModule as BlocCarte}
-              onUpdate={(id: string, patch: Partial<BlocCarte>) => onModuleUpdate(id, patch)}
-              onAddChild={(parentId: string, childModule: Module) => {
-                // Ajouter un enfant à la carte
-                const carte = selectedModule as BlocCarte;
+              module={selectedModule as DesignBlocCarte}
+              onUpdate={(id: string, patch: Partial<DesignBlocCarte>) => onModuleUpdate(id, patch)}
+              onAddChild={(parentId: string, childModule: DesignModule) => {
+                const carte = selectedModule as DesignBlocCarte;
                 const updatedChildren = [...(carte.children || []), childModule];
                 onModuleUpdate(parentId, { children: updatedChildren } as any);
               }}
               onDeleteChild={(parentId: string, childId: string) => {
-                // Supprimer un enfant de la carte
-                const carte = selectedModule as BlocCarte;
+                const carte = selectedModule as DesignBlocCarte;
                 const updatedChildren = (carte.children || []).filter(c => c.id !== childId);
                 onModuleUpdate(parentId, { children: updatedChildren } as any);
+              }}
+              onBack={() => {
+                onSelectedModuleChange?.(null);
+                setActiveTab('elements');
               }}
             />
           );
         }
+        // Sinon, afficher le panel par défaut (liste des modules)
         return (
-          <CompositeElementsPanel
-            currentScreen={currentScreen || 'screen1'}
-            onAddModule={(screen, module) => {
-              if (typeof onAddModule === 'function') {
-                onAddModule(screen, module);
-              }
-            }}
+          <DesignCompositeElementsPanel
+            currentScreen={currentScreen}
+            onAddModule={onAddModule || (() => {})}
             onAddElement={onAddElement}
             selectedElement={selectedElement}
             onElementUpdate={onElementUpdate}
             selectedDevice={selectedDevice}
-            elements={elements}
-            onElementsChange={onElementsChange}
-            selectedElements={selectedElements}
-            onSelectedElementsChange={onSelectedElementsChange}
-            onAddToHistory={onAddToHistory}
-            modules={modules}
-            selectedModuleId={selectedModuleId}
-            onModuleSelect={onSelectedModuleChange}
-            onModuleDelete={onModuleDelete}
           />
         );
       case 'game':
@@ -909,13 +738,6 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
             />
           </div>
         );
-      case 'messages':
-        return (
-          <MessagesPanel 
-            campaignConfig={campaignConfig}
-            onCampaignConfigChange={onCampaignConfigChange}
-          />
-        );
       default:
         return null;
     }
@@ -924,6 +746,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
   if (isCollapsed) {
     return (
       <div data-hybrid-sidebar="collapsed" className="w-16 bg-[hsl(var(--sidebar-bg))] border-r border-[hsl(var(--sidebar-border))] flex flex-col" style={themeVars}>
+        {/* Collapse/Expand Button */}
         <button
           onClick={() => setIsCollapsed(false)}
           className="p-4 hover:bg-[hsl(var(--sidebar-hover))] border-b border-[hsl(var(--sidebar-border))]"
@@ -932,30 +755,39 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
           <ChevronRight className="w-5 h-5 text-[hsl(var(--sidebar-icon))] hover:text-[hsl(var(--sidebar-icon-active))]" />
         </button>
         
+        {/* Collapsed Icons */}
         <div className="flex flex-col space-y-2 p-2">
           {tabs.map((tab) => {
             const Icon = tab.icon;
-            const isActive = internalActiveTab === tab.id;
             return (
               <button
                 key={tab.id}
                 onClick={(e) => {
+                  console.log('🗂️ Clic sur onglet réduit:', tab.id);
                   e.preventDefault();
                   e.stopPropagation();
                   setIsCollapsed(false);
-                  // Use same guarded flow as expanded to avoid external forcing
-                  handleTabClick(tab.id);
+                  setActiveTab(tab.id);
                 }}
                 onMouseEnter={() => prefetchTab(tab.id)}
                 onTouchStart={() => prefetchTab(tab.id)}
+                onMouseDown={(e) => {
+                  console.log('🗂️ MouseDown sur onglet réduit:', tab.id);
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
                 className={`w-12 h-12 rounded-lg flex items-center justify-center transition-colors cursor-pointer ${
-                  isActive
+                  activeTab === tab.id
                     ? 'bg-[hsl(var(--sidebar-active-bg))] text-[hsl(var(--sidebar-icon-active))]'
                     : 'text-[hsl(var(--sidebar-icon))] hover:bg-[hsl(var(--sidebar-hover))] hover:text-[hsl(var(--sidebar-icon-active))]'
                 }`}
                 title={tab.label}
+                style={{ 
+                  pointerEvents: 'auto',
+                  userSelect: 'none'
+                }}
               >
-                <Icon className="w-5 h-5" />
+                <Icon className="w-5 h-5" style={{ pointerEvents: 'none' }} />
               </button>
             );
           })}
@@ -966,7 +798,9 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
 
   return (
     <div data-hybrid-sidebar="expanded" className="flex h-full min-h-0">
+      {/* Vertical Tab Sidebar */}
       <div className="w-20 bg-[hsl(var(--sidebar-bg))] border-r border-[hsl(var(--sidebar-border))] flex flex-col shadow-sm min-h-0 rounded-bl-[28px]" style={themeVars}>
+        {/* Collapse Button */}
         <button
           onClick={() => setIsCollapsed(true)}
           className="p-3 hover:bg-[hsl(var(--sidebar-hover))] border-b border-[hsl(var(--sidebar-border))] transition-all duration-200"
@@ -975,78 +809,86 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
           <ChevronLeft className="w-5 h-5 text-[hsl(var(--sidebar-icon))] hover:text-[hsl(var(--sidebar-icon-active))]" />
         </button>
         
+        {/* Vertical Tabs */}
         <div className="flex flex-col flex-1">
+          {(() => {
+            console.log('📊 Rendu des onglets:', tabs.map(t => t.id));
+            return null;
+          })()}
           {tabs.map((tab) => {
             const Icon = tab.icon;
-            const isActive = internalActiveTab === tab.id;
+            const isActive = activeTab === tab.id;
             
             return (
               <button
                 key={tab.id}
                 onClick={(e) => {
+                  console.log('🗂️ Événement clic sur bouton onglet:', tab.id);
                   e.preventDefault();
                   e.stopPropagation();
                   handleTabClick(tab.id);
                 }}
                 onMouseEnter={() => prefetchTab(tab.id)}
-                onTouchStart={() => prefetchTab(tab.id)}
+                onMouseDown={(e) => {
+                  console.log('🗂️ Événement mouseDown sur bouton onglet:', tab.id);
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
+                onTouchStart={(e) => {
+                  console.log('🗂️ Événement touchStart sur bouton onglet:', tab.id);
+                  prefetchTab(tab.id);
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
                 className={`p-4 flex flex-col items-center justify-center border-b border-[hsl(var(--sidebar-border))] transition-all duration-200 cursor-pointer ${
                   isActive 
                     ? 'bg-[hsl(var(--sidebar-active-bg))] text-[hsl(var(--sidebar-icon-active))] border-r-2 border-r-[hsl(var(--sidebar-active))] shadow-sm' 
                     : 'text-[hsl(var(--sidebar-icon))] hover:bg-[hsl(var(--sidebar-hover))] hover:text-[hsl(var(--sidebar-icon-active))]'
                 }`}
                 title={tab.label}
+                style={{ 
+                  pointerEvents: 'auto',
+                  userSelect: 'none'
+                }}
               >
-                <Icon className="w-6 h-6 mb-1" />
-                <span className="text-xs font-medium">{tab.label}</span>
+                <Icon className="w-6 h-6 mb-1" style={{ pointerEvents: 'none' }} />
+                <span className="text-xs font-medium" style={{ pointerEvents: 'none' }}>{tab.label}</span>
               </button>
             );
           })}
         </div>
       </div>
 
-      {internalActiveTab && (
+      {/* Panel Content */}
+      {(() => {
+        console.log('🎯 [PANEL WRAPPER] activeTab:', activeTab);
+        console.log('🎯 [PANEL WRAPPER] Condition activeTab &&:', activeTab && true);
+        return null;
+      })()}
+      {activeTab && (
         <div className="w-80 bg-white border-r border-[hsl(var(--sidebar-border))] flex flex-col h-full min-h-0 shadow-sm">
+          {/* Panel Header */}
           <div className="p-6 border-b border-[hsl(var(--sidebar-border))] bg-[hsl(var(--sidebar-surface))]">
-            {(() => {
-              const screenTitle = (currentScreen === 'screen2') ? 'Écran 2' : (currentScreen === 'screen3') ? 'Écran 3' : 'Écran 1';
-              
-              return (
-                <div className="relative">
-                  <button
-                    onClick={() => setShowScreenMenu(!showScreenMenu)}
-                    className="w-full flex items-center justify-between font-semibold text-[hsl(var(--sidebar-text-primary))] font-inter hover:text-[#0ea5b7] transition-colors group"
-                  >
-                    <span>{screenTitle}</span>
-                    <svg className="w-4 h-4 transition-transform group-hover:text-[#0ea5b7]" style={{ transform: showScreenMenu ? 'rotate(180deg)' : 'rotate(0deg)' }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </button>
-                  {showScreenMenu && (
-                    <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-50 overflow-hidden">
-                      {(['screen1', 'screen2', 'screen3'] as const).map((screen, idx) => (
-                        <button
-                          key={screen}
-                          onClick={() => {
-                            onScreenChange?.(screen);
-                            setShowScreenMenu(false);
-                          }}
-                          className={`w-full px-4 py-2 text-left hover:bg-gray-50 transition-colors ${
-                            currentScreen === screen ? 'bg-[#0ea5b7]/10 text-[#0ea5b7] font-medium' : 'text-gray-700'
-                          }`}
-                        >
-                          Écran {idx + 1}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              );
-            })()}
+            <h2 className="font-semibold text-[hsl(var(--sidebar-text-primary))] font-inter">
+              {activeTab === 'effects' ? 'Effets de texte' : 
+               activeTab === 'animations' ? 'Animations de texte' : 
+               activeTab === 'position' ? 'Position' : 
+               activeTab === 'wheel' ? 'Roue de fortune' : 
+               activeTab === 'game' ? 'Jeu' :
+               tabs.find(tab => tab.id === activeTab)?.label}
+            </h2>
           </div>
 
+          {/* Panel Content */}
           <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
-            {renderPanel(internalActiveTab)}
+            {(() => {
+              console.log('🎯 [PANEL CONTENT] Rendu du contenu pour activeTab:', activeTab);
+              console.log('🎯 [PANEL CONTENT] activeTab === "game":', activeTab === 'game');
+              const panelContent = renderPanel(activeTab);
+              console.log('🎯 [PANEL CONTENT] Contenu généré:', panelContent ? 'OUI' : 'NON');
+              console.log('🎯 [PANEL CONTENT] Type du contenu:', typeof panelContent);
+              return panelContent;
+            })()}
           </div>
         </div>
       )}
@@ -1054,6 +896,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
   );
 });
 
+// Ajouter displayName pour le débogage
 HybridSidebar.displayName = 'HybridSidebar';
 
 export default HybridSidebar;

@@ -17,7 +17,6 @@ import { useAdaptiveAutoSave } from '../ModernEditor/hooks/useAdaptiveAutoSave';
 import { useVirtualizedCanvas } from '../ModernEditor/hooks/useVirtualizedCanvas';
 import { useEditorStore } from '../../stores/editorStore';
 import CanvasContextMenu from '../DesignEditor/components/CanvasContextMenu';
-import { ScreenLayoutWrapper, useLayoutFromCampaign } from '../Layout/ScreenLayoutWrapper';
 
 import AnimationSettingsPopup from '../DesignEditor/panels/AnimationSettingsPopup';
 
@@ -27,10 +26,6 @@ import { isRealMobile } from '../../utils/isRealMobile';
 import ModularCanvas from './modules/ModularCanvas';
 import { QuizModuleRenderer } from './QuizRenderer';
 import type { Module } from '@/types/modularEditor';
-
-// Import pour le mode Article
-import ArticleCanvas from '../ArticleEditor/ArticleCanvas';
-import { DEFAULT_ARTICLE_CONFIG } from '../ArticleEditor/types/ArticleTypes';
 
 type CanvasScreenId = 'screen1' | 'screen2' | 'screen3' | 'all';
 
@@ -47,7 +42,6 @@ const SAFE_ZONE_RADIUS: Record<DeviceType, number> = {
 };
 
 export interface DesignCanvasProps {
-  editorMode?: 'fullscreen' | 'article'; // Mode Article ou Fullscreen
   screenId?: CanvasScreenId;
   selectedDevice: DeviceType;
   elements: any[];
@@ -118,12 +112,9 @@ export interface DesignCanvasProps {
   onModuleDelete?: (id: string) => void;
   onModuleMove?: (id: string, dir: 'up' | 'down') => void;
   onModuleDuplicate?: (id: string) => void;
-  // Preview mode flag to disable rounded corners
-  isPreviewMode?: boolean;
 }
 
 const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({ 
-  editorMode = 'fullscreen',
   screenId = 'screen1',
   selectedDevice,
   elements,
@@ -178,134 +169,6 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   onModuleDuplicate
 }, ref) => {
 
-  // Déterminer si nous sommes en mode Article (utilisé pour lier les événements d'upload)
-  const isArticleMode = editorMode === 'article';
-
-  // En mode Article, synchroniser les événements d'upload d'image de fond du panneau gauche
-  // avec la bannière Article (articleConfig.banner.imageUrl)
-  useEffect(() => {
-    if (!isArticleMode || !onCampaignChange || !campaign) return;
-
-    const applyBannerUrl = (url?: string) => {
-      const baseConfig = campaign.articleConfig || DEFAULT_ARTICLE_CONFIG;
-      onCampaignChange({
-        ...campaign,
-        articleConfig: {
-          ...baseConfig,
-          banner: {
-            ...baseConfig.banner,
-            imageUrl: url,
-          },
-        },
-      });
-    };
-
-    const handleApplyBackgroundCurrent = (e: Event) => {
-      const detail = (e as CustomEvent<any>)?.detail as { url?: string } | undefined;
-      if (detail && typeof detail.url === 'string') applyBannerUrl(detail.url);
-    };
-
-    const handleApplyBackgroundAll = (e: Event) => {
-      const detail = (e as CustomEvent<any>)?.detail as { url?: string } | undefined;
-      if (detail && typeof detail.url === 'string') applyBannerUrl(detail.url);
-    };
-
-    const handleClearBackground = (_e: Event) => {
-      applyBannerUrl(undefined);
-    };
-
-    window.addEventListener('applyBackgroundCurrentScreen', handleApplyBackgroundCurrent as EventListener);
-    window.addEventListener('applyBackgroundAllScreens', handleApplyBackgroundAll as EventListener);
-    window.addEventListener('clearBackgroundOtherScreens', handleClearBackground as EventListener);
-
-    return () => {
-      window.removeEventListener('applyBackgroundCurrentScreen', handleApplyBackgroundCurrent as EventListener);
-      window.removeEventListener('applyBackgroundAllScreens', handleApplyBackgroundAll as EventListener);
-      window.removeEventListener('clearBackgroundOtherScreens', handleClearBackground as EventListener);
-    };
-  }, [isArticleMode, onCampaignChange, campaign]);
-
-  // ============================================
-  // MODE ARTICLE - Rendu simplifié
-  // ============================================
-  if (editorMode === 'article') {
-    const articleConfig = campaign?.articleConfig || DEFAULT_ARTICLE_CONFIG;
-    
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-100 p-8">
-        <ArticleCanvas
-          articleConfig={articleConfig}
-          onBannerChange={(imageUrl) => {
-            if (onCampaignChange && campaign) {
-              onCampaignChange({
-                ...campaign,
-                articleConfig: {
-                  ...articleConfig,
-                  banner: {
-                    ...articleConfig.banner,
-                    imageUrl,
-                  },
-                },
-              });
-            }
-          }}
-          onBannerRemove={() => {
-            if (onCampaignChange && campaign) {
-              onCampaignChange({
-                ...campaign,
-                articleConfig: {
-                  ...articleConfig,
-                  banner: {
-                    ...articleConfig.banner,
-                    imageUrl: undefined,
-                  },
-                },
-              });
-            }
-          }}
-          onTitleChange={(title) => {
-            if (onCampaignChange && campaign) {
-              onCampaignChange({
-                ...campaign,
-                articleConfig: {
-                  ...articleConfig,
-                  content: {
-                    ...articleConfig.content,
-                    title,
-                  },
-                },
-              });
-            }
-          }}
-          onDescriptionChange={(description) => {
-            if (onCampaignChange && campaign) {
-              onCampaignChange({
-                ...campaign,
-                articleConfig: {
-                  ...articleConfig,
-                  content: {
-                    ...articleConfig.content,
-                    description,
-                  },
-                },
-              });
-            }
-          }}
-          onCTAClick={() => {
-            console.log('🎯 Article CTA clicked - Navigation vers étape suivante');
-          }}
-          currentStep="article"
-          editable={!readOnly}
-          maxWidth={810}
-          campaignType={campaign?.type || 'quiz'}
-        />
-      </div>
-    );
-  }
-
-  // ============================================
-  // MODE FULLSCREEN - Rendu normal avec modules
-  // ============================================
   const canvasRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const autoFitEnabledRef = useRef(true);
@@ -319,19 +182,6 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
       ? Math.max(0.1, Math.min(1, zoom))
       : 1
   );
-  
-  // Synchroniser le zoom depuis la prop externe (ZoomSlider)
-  useEffect(() => {
-    // Synchroniser depuis le prop uniquement s'il est valide
-    if (typeof zoom === 'number' && !Number.isNaN(zoom)) {
-      const clamped = Math.max(0.1, Math.min(1, zoom));
-      // Éviter les mises à jour inutiles
-      if (Math.abs(clamped - localZoom) > 0.0001) {
-        setLocalZoom(clamped);
-      }
-    }
-  }, [zoom, localZoom]);
-  
   // Pan offset in screen pixels, applied before scale with origin at center for stable centering
   const [panOffset] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   // Local override for per-screen background images (stored per device to maintain distinct images)
@@ -367,11 +217,11 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     return DEVICE_DIMENSIONS[selectedDevice];
   }, [selectedDevice, DEVICE_DIMENSIONS]);
 
-  // Forcer un format mobile selon les dimensions de l'iPhone 14 Pro Max
+  // Forcer un format mobile 9:16 sans bordures ni encoches
   const effectiveCanvasSize = useMemo(() => {
     if (selectedDevice === 'mobile') {
-      // iPhone 14 Pro Max dimensions (correspond à Chrome DevTools)
-      return { width: 430, height: 932 };
+      // 9:16 exact ratio
+      return { width: 360, height: 640 };
     }
     return canvasSize;
   }, [selectedDevice, canvasSize]);
@@ -433,45 +283,6 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     }
   }, [elements, measuredBounds, effectiveCanvasSize.width, effectiveCanvasSize.height, onElementsChange, selectedDevice]);
 
-  // Export a lightweight overlay snapshot for preview consumption (positions, sizes, text)
-  useEffect(() => {
-    try {
-      const visible = elements.filter((el: any) => {
-        const targetScreen = (el?.screenId ?? 'screen1') as CanvasScreenId;
-        return screenId === 'all' || targetScreen === 'all' || targetScreen === screenId;
-      });
-      const snapshot = {
-        baseSize: { width: effectiveCanvasSize.width, height: effectiveCanvasSize.height },
-        device: selectedDevice,
-        screenId,
-        items: visible.map((el: any) => {
-          const devProps = getPropertiesForDevice(el, selectedDevice);
-          return {
-            id: String(el.id),
-            type: el.type,
-            text: el.text || el.content || '',
-            src: el.src || '',
-            x: Number(devProps?.x ?? el.x ?? 0),
-            y: Number(devProps?.y ?? el.y ?? 0),
-            width: Number(devProps?.width ?? el.width ?? 100),
-            height: Number(devProps?.height ?? el.height ?? 30),
-            fontSize: Number(devProps?.fontSize ?? el.fontSize ?? 16),
-            color: el.color || (el.style && (el.style.color as any)) || undefined,
-            textAlign: devProps?.textAlign || el.textAlign || undefined
-          };
-        })
-      };
-
-      const json = JSON.stringify(snapshot);
-      const devicesToPersist: Array<'desktop' | 'tablet' | 'mobile'> = selectedDevice === 'mobile' ? ['mobile'] : ['desktop', 'tablet'];
-      devicesToPersist.forEach((d) => {
-        try { localStorage.setItem(`quiz-layer-${d}-${screenId}`, json); } catch {}
-      });
-      // notify preview to refresh
-      try { window.dispatchEvent(new CustomEvent('quiz-layer-sync', { detail: { device: selectedDevice, screenId } })); } catch {}
-    } catch {}
-  }, [elements, selectedDevice, screenId, effectiveCanvasSize.width, effectiveCanvasSize.height, getPropertiesForDevice]);
-
   // Derive simplified alignment bounds preferring measured layout when available
   const alignmentElements = useMemo(() => {
     const visibleElements = elements.filter((el: any) => {
@@ -491,19 +302,6 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
       return { id: String(el.id), x, y, width, height, screenId: el?.screenId ?? null };
     });
   }, [elements, measuredBounds, elementFilter, screenId]);
-
-  // Persist modular modules for this screen/device to localStorage so preview can read live changes
-  useEffect(() => {
-    try {
-      const mods = Array.isArray(modularModules) ? modularModules : [];
-      const json = JSON.stringify(mods);
-      const devicesToPersist: Array<'desktop' | 'tablet' | 'mobile'> = selectedDevice === 'mobile' ? ['mobile'] : ['desktop', 'tablet'];
-      devicesToPersist.forEach((d) => {
-        try { localStorage.setItem(`quiz-modules-${d}-${screenId}`, json); } catch {}
-      });
-      try { window.dispatchEvent(new CustomEvent('quiz-modules-sync', { detail: { device: selectedDevice, screenId } })); } catch {}
-    } catch {}
-  }, [modularModules, selectedDevice, screenId]);
 
   // Stable origin bounds for resize interactions to prevent drift
   const multiResizeOriginRef = useRef<{ x: number; y: number; width: number; height: number } | null>(null);
@@ -587,7 +385,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   useEffect(() => {
     if (!isRealMobile()) return;
     
-    const canvas = (typeof activeCanvasRef === 'object' ? (activeCanvasRef as React.RefObject<HTMLDivElement | null>).current : null);
+    const canvas = (typeof activeCanvasRef === 'object' ? (activeCanvasRef as React.RefObject<HTMLDivElement>).current : null);
     if (!canvas) return;
 
     let initialDistance = 0;
@@ -655,23 +453,17 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
       if (!detail || typeof detail.url !== 'string') return;
       if (detail.screenId === (screenId as any)) {
         const targetDevice = detail.device || selectedDevice;
-        // Upload background for device
+        console.log(`📤 [${screenId}] Uploading background for ${targetDevice}:`, detail.url?.substring(0, 50) + '...');
         // Mettre à jour l'état pour l'appareil spécifique
         setDeviceBackgrounds(prev => ({
           ...prev,
           [targetDevice]: detail.url || null
         }));
-        // Persister pour le preview (clé par device + screen)
+        // Stocker pour l'appareil ciblé pour conserver des images distinctes par device
         try {
-          const devicesToPersist: Array<'desktop' | 'tablet' | 'mobile'> =
-            targetDevice === 'mobile' ? ['mobile'] : ['desktop', 'tablet'];
-          devicesToPersist.forEach((d) => {
-            try { localStorage.setItem(`quiz-bg-${d}-${screenId}` as string, detail.url || ''); } catch {}
-          });
-        } catch {}
-        // Synchroniser les autres canvas du même écran
-        try {
-          // Background set in-memory
+          localStorage.setItem(`quiz-bg-${targetDevice}-${detail.screenId}`, detail.url);
+          console.log(`🔔 [${screenId}] Emitting quiz-bg-sync event for ${detail.screenId}`);
+          // Émettre un événement de synchronisation pour les autres canvas
           window.dispatchEvent(new CustomEvent('quiz-bg-sync', { detail: { screenId: detail.screenId } }));
         } catch {}
       }
@@ -686,26 +478,17 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
       const detail = (e as CustomEvent<any>)?.detail as { url?: string; device?: 'desktop' | 'tablet' | 'mobile' } | undefined;
       if (!detail || typeof detail.url !== 'string') return;
       const targetDevice = detail.device || selectedDevice;
-      // Apply background to all screens
+      console.log(`🎨 [${screenId}] Received applyBackgroundAllScreens for device:`, targetDevice);
       // Appliquer à TOUS les écrans (pas de vérification de screenId)
       // Mettre à jour l'état pour l'appareil spécifique
       setDeviceBackgrounds(prev => ({
         ...prev,
         [targetDevice]: detail.url || null
       }));
-      // Persister pour tous les écrans afin que le preview puisse lire la valeur
+      // Stocker pour l'appareil ciblé afin de conserver les images distinctes par device
       try {
-        const screens: Array<'screen1' | 'screen2' | 'screen3'> = ['screen1', 'screen2', 'screen3'];
-        const devicesToPersist: Array<'desktop' | 'tablet' | 'mobile'> =
-          targetDevice === 'mobile' ? ['mobile'] : ['desktop', 'tablet'];
-        devicesToPersist.forEach((d) => {
-          screens.forEach((s) => {
-            try { localStorage.setItem(`quiz-bg-${d}-${s}`, detail.url || ''); } catch {}
-          });
-        });
-      } catch {}
-      try {
-        // Applied background to device
+        localStorage.setItem(`quiz-bg-${targetDevice}-${screenId}`, detail.url);
+        console.log(`✅ [${screenId}] Applied background to device ${targetDevice}`);
       } catch {}
     };
     window.addEventListener('applyBackgroundAllScreens', handler as EventListener);
@@ -720,7 +503,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
       const targetDevice = detail.device || selectedDevice;
       // Si ce n'est pas l'écran à conserver, supprimer le background pour ce device
       if (detail.keepScreenId !== screenId) {
-        // Clearing background
+        console.log(`🗑️ [${screenId}] Clearing background for device ${targetDevice}`);
         setDeviceBackgrounds(prev => ({
           ...prev,
           [targetDevice]: null
@@ -734,44 +517,24 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     return () => window.removeEventListener('clearBackgroundOtherScreens', handler as EventListener);
   }, [screenId, selectedDevice]);
 
-  // Nettoyer les images de fond au montage (réinitialisation à chaque chargement de page)
+  // Charger toutes les images de fond au montage initial (une seule fois)
   useEffect(() => {
-    try {
-      // Nettoyer toutes les clés de background pour ce screenId
-      const devices: Array<'desktop' | 'tablet' | 'mobile'> = ['desktop', 'tablet', 'mobile'];
-      devices.forEach((d) => {
-        try { 
-          localStorage.removeItem(`quiz-bg-${d}-${screenId}`);
-        } catch {}
-      });
-      
-      // Réinitialiser l'état
-      setDeviceBackgrounds({ desktop: null, tablet: null, mobile: null });
-      // Backgrounds cleared on page load
-    } catch {
-      setDeviceBackgrounds({ desktop: null, tablet: null, mobile: null });
-    }
-  }, [screenId]);
-
-  // Écouter la synchronisation globale de fond envoyée par le layout
-  useEffect(() => {
-    const onEditorBackgroundSync = (e: Event) => {
-      const detail = (e as CustomEvent<any>)?.detail || {};
-      if (detail?.reason === 'mount-clear') {
-        try {
-          const devices: Array<'desktop' | 'tablet' | 'mobile'> = ['desktop', 'tablet', 'mobile'];
-          // Nettoyer toutes les clés persistées pour CE screenId
-          devices.forEach((d) => {
-            try { localStorage.removeItem(`quiz-bg-${d}-${screenId}`); } catch {}
-          });
-          // Réinitialiser les overrides en mémoire pour ne pas afficher d'image
-          setDeviceBackgrounds({ desktop: null, tablet: null, mobile: null });
-          // Cleared device backgrounds
-        } catch {}
-      }
+    const loadAllBackgrounds = () => {
+      try {
+        const devices: Array<'desktop' | 'tablet' | 'mobile'> = ['desktop', 'tablet', 'mobile'];
+        const loadedBackgrounds: Record<string, string | null> = {};
+        
+        devices.forEach(device => {
+          const saved = localStorage.getItem(`quiz-bg-${device}-${screenId}`);
+          loadedBackgrounds[device] = saved || null;
+        });
+        
+        console.log(`🖼️ [${screenId}] Loading backgrounds for device ${selectedDevice}:`, loadedBackgrounds);
+        setDeviceBackgrounds(loadedBackgrounds);
+      } catch {}
     };
-    window.addEventListener('editor-background-sync', onEditorBackgroundSync as EventListener);
-    return () => window.removeEventListener('editor-background-sync', onEditorBackgroundSync as EventListener);
+
+    loadAllBackgrounds();
   }, [screenId]);
 
   // Synchroniser avec les autres canvas du même écran
@@ -779,8 +542,13 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     const handleStorageSync = (e: Event) => {
       const detail = (e as CustomEvent<any>)?.detail as { screenId?: string } | undefined;
       if (detail?.screenId === screenId) {
-        // Synchronisation inter-canvas: garder l'état en mémoire uniquement
-        setDeviceBackgrounds(prev => ({ ...prev }));
+        const devices: Array<'desktop' | 'tablet' | 'mobile'> = ['desktop', 'tablet', 'mobile'];
+        const loadedBackgrounds: Record<string, string | null> = {};
+        devices.forEach(device => {
+          const saved = localStorage.getItem(`quiz-bg-${device}-${screenId}`);
+          loadedBackgrounds[device] = saved || null;
+        });
+        setDeviceBackgrounds(loadedBackgrounds);
       }
     };
     window.addEventListener('quiz-bg-sync', handleStorageSync as EventListener);
@@ -1219,7 +987,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
 
   // Compute canvas-space coordinates from a pointer event
   const getCanvasPointFromClient = useCallback((clientX: number, clientY: number) => {
-    const canvasEl = (activeCanvasRef as React.RefObject<HTMLDivElement | null>).current;
+    const canvasEl = (activeCanvasRef as React.RefObject<HTMLDivElement>).current;
     if (!canvasEl) return { x: 0, y: 0 };
     const rect = canvasEl.getBoundingClientRect();
     // rect is in CSS pixels and includes the scale; divide by zoom to get canvas-space
@@ -1247,7 +1015,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     setMarqueeEnd(pt);
     setIsMarqueeActive(true);
     // Mark canvas as marquee-active so mobile canvas lock can bypass blocking
-    const canvasEl = (activeCanvasRef as React.RefObject<HTMLDivElement | null>).current;
+    const canvasEl = (activeCanvasRef as React.RefObject<HTMLDivElement>).current;
     canvasEl?.setAttribute('data-marquee', 'active');
 
     // Clear single selection immediately; multi selection will be set on pointerup
@@ -1271,7 +1039,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
       setIsMarqueeActive(false);
       setMarqueeEnd(null);
       // Clear marquee-active flag on canvas
-      const canvasEl = (activeCanvasRef as React.RefObject<HTMLDivElement | null>).current;
+      const canvasEl = (activeCanvasRef as React.RefObject<HTMLDivElement>).current;
       canvasEl?.removeAttribute('data-marquee');
       // Ensure suppression flag is cleared
       setTimeout(() => { suppressNextClickClearRef.current = false; }, 0);
@@ -1286,7 +1054,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
         setIsMarqueeActive(false);
         setMarqueeEnd(null);
         // Clear marquee-active flag on canvas
-        const canvasEl = (activeCanvasRef as React.RefObject<HTMLDivElement | null>).current;
+        const canvasEl = (activeCanvasRef as React.RefObject<HTMLDivElement>).current;
         canvasEl?.removeAttribute('data-marquee');
         // Allow click-clear after event loop turn
         setTimeout(() => { suppressNextClickClearRef.current = false; }, 0);
@@ -1311,7 +1079,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
         setIsMarqueeActive(false);
         setMarqueeEnd(null);
         // Clear marquee-active flag on canvas
-        const canvasEl = (activeCanvasRef as React.RefObject<HTMLDivElement | null>).current;
+        const canvasEl = (activeCanvasRef as React.RefObject<HTMLDivElement>).current;
         canvasEl?.removeAttribute('data-marquee');
         setTimeout(() => { suppressNextClickClearRef.current = false; }, 0);
         return;
@@ -1343,7 +1111,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
       setIsMarqueeActive(false);
       setMarqueeEnd(null);
       // Clear marquee-active flag on canvas
-      const canvasEl2 = (activeCanvasRef as React.RefObject<HTMLDivElement | null>).current;
+      const canvasEl2 = (activeCanvasRef as React.RefObject<HTMLDivElement>).current;
       canvasEl2?.removeAttribute('data-marquee');
       console.debug('🟦 Marquee end (pointerup)', { selected: newSelection.map((e: any) => e.id), rect: { minX, minY, maxX, maxY } });
       // Defer reset so the subsequent click doesn't clear the fresh selection
@@ -1664,7 +1432,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
 
   // Zoom au pincement (pinch) sur écrans tactiles
   useEffect(() => {
-    const el = (typeof activeCanvasRef === 'object' && (activeCanvasRef as React.RefObject<HTMLDivElement | null>)?.current) as HTMLElement | null;
+    const el = (typeof activeCanvasRef === 'object' && (activeCanvasRef as React.RefObject<HTMLDivElement>)?.current) as HTMLElement | null;
     if (!el) return;
 
     let isPinching = false;
@@ -1841,7 +1609,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     // Delay to ensure DOM is ready
     requestAnimationFrame(() => {
       const el = document.querySelector('[data-element-id="quiz-template"]') as HTMLElement | null;
-      const canvasEl = (activeCanvasRef as React.RefObject<HTMLDivElement | null>)?.current;
+      const canvasEl = (activeCanvasRef as React.RefObject<HTMLDivElement>)?.current;
       if (!el || !canvasEl) return;
       const elRect = el.getBoundingClientRect();
       const canvasRect = canvasEl.getBoundingClientRect();
@@ -2003,7 +1771,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
       
       if (elementInDOM) {
         const rect = elementInDOM.getBoundingClientRect();
-        const canvasRect = (activeCanvasRef as React.RefObject<HTMLDivElement | null>).current?.getBoundingClientRect();
+        const canvasRect = (activeCanvasRef as React.RefObject<HTMLDivElement>).current?.getBoundingClientRect();
         
         if (canvasRect) {
           // Position relative au canvas
@@ -2131,23 +1899,20 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     };
   }, [campaign, resolvedQuizTemplateId]);
 
-  // 🎯 Récupérer le layout dynamique pour le positionnement du quiz
-  const quizLayout = useMemo(() => useLayoutFromCampaign(campaign), [campaign]);
-
   const customElementRenderers = useMemo(() => ({
     'quiz-template': ({ elementStyle }: any) => (
       <div className="relative w-full h-full" style={elementStyle} data-canvas-ui="quiz-template">
-        <ScreenLayoutWrapper layout={quizLayout} className="absolute inset-0 pointer-events-none">
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
           <TemplatedQuiz
             campaign={quizCampaignForRenderer}
             device={selectedDevice}
             disabled={readOnly}
             templateId={resolvedQuizTemplateId}
           />
-        </ScreenLayoutWrapper>
+        </div>
       </div>
     )
-  }), [quizCampaignForRenderer, resolvedQuizTemplateId, selectedDevice, readOnly, quizLayout]);
+  }), [quizCampaignForRenderer, resolvedQuizTemplateId, selectedDevice, readOnly]);
 
   const handleElementTap = useCallback((element: any) => {
     if (!element || readOnly) return;
@@ -2236,7 +2001,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
         onShowEffectsPanel={onShowEffectsPanel}
         onShowAnimationsPanel={onShowAnimationsPanel}
         onShowPositionPanel={onShowPositionPanel}
-        canvasRef={activeCanvasRef as React.RefObject<HTMLDivElement | null>}
+        canvasRef={activeCanvasRef as React.RefObject<HTMLDivElement>}
         zoom={localZoom}
         forceDeviceType={selectedDevice}
         className={`design-canvas-container flex-1 h-full flex flex-col items-center ${isWindowMobile ? 'justify-start pt-0' : 'justify-center pt-40'} pb-4 px-4 ${containerClassName ? containerClassName : 'bg-gray-100'} relative`}
@@ -2258,9 +2023,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
         {(() => {
           if (readOnly) return false;
           const isModuleText = (externalSelectedElement as any)?.role === 'module-text' && (externalSelectedElement as any)?.moduleId;
-          // Vérifier si le module sélectionné appartient à cet écran
-          const isModuleOnThisScreen = (externalSelectedElement as any)?.screenId === screenId;
-          const shouldShow = ((selectedElementData && (selectedElementData.type === 'text' || selectedElementData.type === 'shape')) && selectedDevice !== 'mobile') || (isModuleText && isModuleOnThisScreen);
+          const shouldShow = ((selectedElementData && (selectedElementData.type === 'text' || selectedElementData.type === 'shape')) && selectedDevice !== 'mobile') || isModuleText;
           if (!shouldShow) return false;
 
           // Build a synthetic selected element for module text to drive the toolbar UI
@@ -2341,7 +2104,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                 onShowPositionPanel={onShowPositionPanel}
                 onShowDesignPanel={onShowDesignPanel}
                 onOpenElementsTab={onOpenElementsTab}
-                canvasRef={activeCanvasRef as React.RefObject<HTMLDivElement | null>}
+                canvasRef={activeCanvasRef as React.RefObject<HTMLDivElement>}
               />
             </div>
           );
@@ -2353,7 +2116,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
           onPointerDownCapture={(e) => {
             // Enable selecting elements even when they visually overflow outside the clipped canvas
             // Only handle when clicking outside the actual canvas element to avoid interfering
-            const canvasEl = typeof activeCanvasRef === 'object' ? (activeCanvasRef as React.RefObject<HTMLDivElement | null>).current : null;
+            const canvasEl = typeof activeCanvasRef === 'object' ? (activeCanvasRef as React.RefObject<HTMLDivElement>).current : null;
             if (!canvasEl || readOnly) return;
             if (canvasEl.contains(e.target as Node)) return;
             // Convert pointer to canvas-space coordinates using canvas bounding rect and current pan/zoom
@@ -2391,8 +2154,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
           >
             <div 
               ref={activeCanvasRef}
-              data-canvas-root="true"
-              className={`relative bg-transparent overflow-hidden ${!readOnly ? 'rounded-3xl' : ''}`} 
+              className="relative bg-transparent rounded-3xl overflow-hidden" 
               style={{
                 width: `${effectiveCanvasSize.width}px`,
                 height: `${effectiveCanvasSize.height}px`,
@@ -2589,7 +2351,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                 const shouldRenderInlinePreview = !hideInlineQuizPreview && (!elements.some(el => el.id === 'quiz-template'));
 
                 return (
-                  <ScreenLayoutWrapper layout={quizLayout} className="w-full h-full">
+                  <div className={`w-full h-full flex justify-center ${selectedDevice === 'mobile' ? 'items-start pt-24' : 'items-center'}`}>
                     {shouldRenderInlinePreview && (
                       <div
                         role="button"
@@ -2625,7 +2387,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                         />
                       </div>
                     )}
-                  </ScreenLayoutWrapper>
+                  </div>
                 );
               })()}
 
@@ -2962,7 +2724,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                   onSelect={handleElementSelect} 
                   onUpdate={handleElementUpdate} 
                   onDelete={handleElementDelete}
-                  containerRef={activeCanvasRef as React.RefObject<HTMLDivElement | null>}
+                  containerRef={activeCanvasRef as React.RefObject<HTMLDivElement>}
                   readOnly={readOnly}
                   onMeasureBounds={handleMeasureBounds}
                   onAddElement={(newElement) => {

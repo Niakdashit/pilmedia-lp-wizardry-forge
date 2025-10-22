@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useButtonStyleCSS } from '@/stores/buttonStore';
 
 export type FieldConfig = {
   id: string;
@@ -39,9 +38,6 @@ const DynamicContactForm: React.FC<DynamicContactFormProps> = ({
   inputBorderRadius = "2px",
   launchButtonStyles
 }) => {
-  // Utiliser le style global du bouton de lancement
-  const globalButtonStyle = useButtonStyleCSS();
-  
   // Stabilize defaultValues to avoid identity changes causing effects to loop
   const stableDefaultValues = useMemo(() => defaultValues ?? {}, [defaultValues]);
 
@@ -205,11 +201,11 @@ const DynamicContactForm: React.FC<DynamicContactFormProps> = ({
 
       <button
         type="submit"
-        className="w-full px-6 py-3 font-medium transition-colors duration-200 hover:opacity-90"
+        className="w-full px-6 py-3 font-medium transition-colors duration-200"
         style={{
-          ...globalButtonStyle,
           ...launchButtonStyles,
-          ...(launchButtonStyles ? {} : (textStyles?.button || {}))
+          ...(launchButtonStyles ? {} : (textStyles?.button || {})),
+          ...(launchButtonStyles ? {} : { borderRadius: 2 })
         }}
       >
         {submitLabel}

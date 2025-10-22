@@ -16,7 +16,7 @@ interface ShapeRendererProps {
   onContentChange?: (content: string) => void;
   onKeyDown?: (e: React.KeyboardEvent) => void;
   onBlur?: () => void;
-  textRef?: React.RefObject<HTMLDivElement | null>;
+  textRef?: React.RefObject<HTMLDivElement>;
   fontSize?: number;
   fontFamily?: string;
   fontWeight?: string;
@@ -133,7 +133,7 @@ export const ShapeRenderer: React.FC<ShapeRendererProps> = ({
       {/* Zone de texte éditable au centre de la forme */}
       {isEditing ? (
         <div
-          ref={textRef as React.RefObject<HTMLDivElement>}
+          ref={textRef}
           contentEditable
           suppressContentEditableWarning
           style={textStyle}

@@ -63,11 +63,7 @@ const ZoomSlider: React.FC<ZoomSliderProps> = React.memo(({
           onChange={handleSliderChange}
           className="w-40 h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer zoom-slider"
           style={{
-            // keep solid base; progress overlay handled in CSS with background-size
-            backgroundImage: 'linear-gradient(#e5b5cf, #e5b5cf)',
-            backgroundRepeat: 'no-repeat',
-            backgroundSize: `${((zoom - minZoom) / (maxZoom - minZoom)) * 100}% 100%`,
-            backgroundColor: '#e5e7eb'
+            background: `linear-gradient(to right, hsl(var(--primary)) 0%, hsl(var(--primary)) ${((zoom - minZoom) / (maxZoom - minZoom)) * 100}%, hsl(var(--border)) ${((zoom - minZoom) / (maxZoom - minZoom)) * 100}%, hsl(var(--border)) 100%)`
           }}
           aria-label="Zoom"
         />
@@ -107,25 +103,7 @@ const ZoomSlider: React.FC<ZoomSliderProps> = React.memo(({
 
       <style dangerouslySetInnerHTML={{
         __html: `
-          /* Base input reset */
-          .zoom-slider {
-            -webkit-appearance: none;
-            appearance: none;
-            height: 4px;
-            border-radius: 9999px;
-            outline: none;
-            background-color: #e5e7eb;
-          }
-
-          /* WebKit track */
-          .zoom-slider::-webkit-slider-runnable-track {
-            height: 4px;
-            background: var(--track-bg, #e5e7eb);
-            border-radius: 9999px;
-          }
-
           .zoom-slider::-webkit-slider-thumb {
-            -webkit-appearance: none;
             appearance: none;
             height: 16px;
             width: 16px;
@@ -133,14 +111,6 @@ const ZoomSlider: React.FC<ZoomSliderProps> = React.memo(({
             background: #841b60;
             cursor: pointer;
             border: 2px solid #ffffff;
-            margin-top: -6px; /* center thumb on 4px track */
-          }
-
-          /* Firefox track */
-          .zoom-slider::-moz-range-track {
-            height: 4px;
-            background: var(--track-bg, #e5e7eb);
-            border-radius: 9999px;
           }
 
           .zoom-slider::-moz-range-thumb {
@@ -150,9 +120,8 @@ const ZoomSlider: React.FC<ZoomSliderProps> = React.memo(({
             background: #841b60;
             cursor: pointer;
             border: 2px solid #ffffff;
+            border: none;
           }
-
-          .zoom-slider:focus { outline: none; box-shadow: none; }
         `
       }} />
     </div>

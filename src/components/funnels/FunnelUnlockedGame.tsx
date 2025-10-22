@@ -1,4 +1,3 @@
-// FunnelUnlockedGame - Version avec logos/footers collés aux bords (UPDATED)
 import React, { useMemo, useState, useEffect } from 'react';
 import { useParticipations } from '../../hooks/useParticipations';
 import { toast } from 'react-toastify';
@@ -18,7 +17,6 @@ import ScratchCardCanvas from '../ScratchCardEditor/ScratchCardCanvas';
 import { useScratchCardStore } from '../ScratchCardEditor/state/scratchcard.store';
 import { QuizModuleRenderer } from '../ScratchCardEditor/QuizRenderer';
 import { DesignModuleRenderer } from '../DesignEditor/DesignRenderer';
-import { ScreenLayoutWrapper, useLayoutFromCampaign } from '../Layout/ScreenLayoutWrapper';
 
 const SAFE_ZONE_PADDING: Record<'desktop' | 'tablet' | 'mobile', number> = {
   desktop: 56,
@@ -53,13 +51,12 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
     console.warn(`Type de jeu "${campaign.type}" utilise FunnelUnlockedGame mais devrait utiliser FunnelStandard`);
   }
 
-  // LOGIQUE FUNNEL UNLOCKED : écran 1 en premier, formulaire s'ouvre au grattage
-  const [currentScreen, setCurrentScreen] = useState<'screen1' | 'screen2' | 'screen3'>('screen1'); // Écran 1 en premier
+  // LOGIQUE FUNNEL UNLOCKED : formulaire obligatoire pour démarrer le jeu
+  const [currentScreen, setCurrentScreen] = useState<'screen1' | 'screen2' | 'screen3'>('screen1');
   const [formValidated, setFormValidated] = useState(false);
   const [showFormModal, setShowFormModal] = useState(false);
   const [showValidationMessage, setShowValidationMessage] = useState(false);
   const [gameResult, setGameResult] = useState<'win' | 'lose' | null>(null);
-  const [showResultScreen, setShowResultScreen] = useState(false);
   const [participationLoading, setParticipationLoading] = useState(false);
   const [forceUpdate, setForceUpdate] = useState(0);
   const [hasPlayed, setHasPlayed] = useState(false);
@@ -76,22 +73,12 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
       setForceUpdate(prev => prev + 1);
     };
     
-    const handleFormFieldsSync = (e: Event) => {
-      const detail = (e as CustomEvent).detail;
-      console.log('📋 [FunnelUnlockedGame] FormFields sync event received:', {
-        fieldsCount: detail?.formFields?.length,
-        timestamp: detail?.timestamp
-      });
-      setForceUpdate(prev => prev + 1);
-    };
-    
     window.addEventListener('quizStyleUpdate', handleStyleUpdate);
     window.addEventListener('modularModuleSelected', handleStyleUpdate);
     window.addEventListener('editor-background-sync', handleEditorSync);
     window.addEventListener('editor-modules-sync', handleEditorSync);
     window.addEventListener('editor-module-sync', handleEditorSync);
     window.addEventListener('editor-force-sync', handleEditorSync);
-    window.addEventListener('editor-formfields-sync', handleFormFieldsSync);
     
     return () => {
       window.removeEventListener('quizStyleUpdate', handleStyleUpdate);
@@ -100,7 +87,6 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
       window.removeEventListener('editor-modules-sync', handleEditorSync);
       window.removeEventListener('editor-module-sync', handleEditorSync);
       window.removeEventListener('editor-force-sync', handleEditorSync);
-      window.removeEventListener('editor-formfields-sync', handleFormFieldsSync);
     };
   }, []);
 
@@ -203,9 +189,6 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
             storeCampaign.design?.background ??
             campaign.design?.background
         },
-        // ✅ IMPORTANT: Synchroniser les formFields depuis le store
-        formFields: storeCampaign.formFields || campaign.formFields,
-        _lastUpdate: storeCampaign._lastUpdate || Date.now(),
         // Préserver les messages personnalisés
         scratchResultMessages: storeCampaign.scratchResultMessages || campaign.scratchResultMessages
       });
@@ -284,24 +267,12 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
   // Background style avec synchronisation en temps réel et override par écran (DesignCanvas)
   // Utilise les données canoniques du hook de synchronisation
   const backgroundStyle: React.CSSProperties = useMemo(() => {
-    // Priorité 1: Backgrounds par écran depuis campaign
-    const screenBackgrounds = campaign?.canvasConfig?.screenBackgrounds || campaign?.design?.screenBackgrounds;
-    if (screenBackgrounds && screenBackgrounds[currentScreen]) {
-      const screenBg = screenBackgrounds[currentScreen];
-      console.log(`✅ [FunnelUnlockedGame] Using screen-specific background for ${currentScreen}:`, screenBg);
-      if (screenBg.type === 'image' && screenBg.value) {
-        return { background: `url(${screenBg.value}) center/cover no-repeat` };
-      }
-      return { background: screenBg.value || 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)' };
-    }
-    
-    // Priorité 2: Per-screen localStorage
     const perScreenUrl = getPerScreenBg(currentScreen, previewMode);
     if (perScreenUrl) {
       return { background: `url(${perScreenUrl}) center/cover no-repeat` };
     }
     
-    // Priorité 3: Obtenir les données canoniques depuis le hook de synchronisation
+    // Obtenir les données canoniques depuis le hook de synchronisation
     const canonicalData = getCanonicalPreviewData();
     const canonicalBg = canonicalData.background;
     
@@ -319,7 +290,7 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
     }
     
     return { background: canonicalBg.value };
-  }, [campaign, currentScreen, previewMode, getCanonicalPreviewData, forceUpdate]);
+  }, [currentScreen, previewMode, getCanonicalPreviewData, forceUpdate]);
 
   // Récupérer directement modularPage depuis les données canoniques
   const canonicalData = getCanonicalPreviewData();
@@ -336,18 +307,11 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
     timestamp: canonicalData.timestamp
   });
 
-  // Séparer les modules Logo et Footer pour tous les écrans
+  // Séparer les modules Logo et Footer pour l'écran 1
   const logoModules1 = (modules || []).filter((m: any) => m?.type === 'BlocLogo');
   const footerModules1 = (modules || []).filter((m: any) => m?.type === 'BlocPiedDePage');
   const regularModules1 = (modules || []).filter((m: any) => m?.type !== 'BlocLogo' && m?.type !== 'BlocPiedDePage');
-  
-  const logoModules2 = (modules2 || []).filter((m: any) => m?.type === 'BlocLogo');
-  const footerModules2 = (modules2 || []).filter((m: any) => m?.type === 'BlocPiedDePage');
-  const regularModules2 = (modules2 || []).filter((m: any) => m?.type !== 'BlocLogo' && m?.type !== 'BlocPiedDePage');
-  
-  const logoModules3 = (modules3 || []).filter((m: any) => m?.type === 'BlocLogo');
-  const footerModules3 = (modules3 || []).filter((m: any) => m?.type === 'BlocPiedDePage');
-  const regularModules3 = (modules3 || []).filter((m: any) => m?.type !== 'BlocLogo' && m?.type !== 'BlocPiedDePage');
+  const logoBandHeight1 = logoModules1.reduce((acc: number, m: any) => Math.max(acc, m?.bandHeight ?? 60), 0);
 
   useEffect(() => {
     if (liveCampaign?.type !== 'form') {
@@ -371,48 +335,28 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
   } = useParticipations();
 
   const fields: FieldConfig[] = useMemo(() => {
-    // Priorité 1: Données canoniques du hook de synchronisation
-    const canonicalData = getCanonicalPreviewData();
-    if (canonicalData.formFields && Array.isArray(canonicalData.formFields) && canonicalData.formFields.length > 0) {
-      console.log('📋 [FunnelUnlockedGame] ✅ Using canonical formFields:', {
-        count: canonicalData.formFields.length,
-        fields: canonicalData.formFields.map((f: any) => ({ id: f.id, label: f.label, type: f.type })),
-        timestamp: canonicalData.timestamp
-      });
-      return canonicalData.formFields;
-    }
-    
-    // Priorité 2: Utilisation des champs depuis liveCampaign.formFields (synchronisé en temps réel)
+    // Utilisation prioritaire des champs depuis liveCampaign.formFields (synchronisé en temps réel)
     if (liveCampaign?.formFields && Array.isArray(liveCampaign.formFields) && liveCampaign.formFields.length > 0) {
-      console.log('📋 [FunnelUnlockedGame] ⚠️ Using liveCampaign formFields:', {
-        count: liveCampaign.formFields.length,
-        fields: liveCampaign.formFields.map((f: any) => ({ id: f.id, label: f.label, type: f.type }))
-      });
       return liveCampaign.formFields;
     }
-    
-    // Priorité 3: Fallback vers campaign.formFields si liveCampaign n'est pas encore synchronisé
+    // Fallback vers campaign.formFields si liveCampaign n'est pas encore synchronisé
     if (campaign?.formFields && Array.isArray(campaign.formFields) && campaign.formFields.length > 0) {
-      console.log('📋 [FunnelUnlockedGame] ⚠️ Using campaign formFields (default from generator):', {
-        count: campaign.formFields.length,
-        fields: campaign.formFields.map((f: any) => ({ id: f.id, label: f.label, type: f.type }))
-      });
       return campaign.formFields;
     }
-    
-    // Fallback final: Champs par défaut (ne devrait jamais être utilisé)
-    console.warn('📋 [FunnelUnlockedGame] ❌ Using fallback default formFields - this should not happen!');
+    // Fallback vers les champs par défaut
     return [
       { id: 'prenom', label: 'Prénom', type: 'text', required: true },
       { id: 'nom', label: 'Nom', type: 'text', required: true },
       { id: 'email', label: 'Email', type: 'email', required: true }
     ];
-  }, [getCanonicalPreviewData, liveCampaign?.formFields, liveCampaign?._lastUpdate, campaign?.formFields, campaign?._lastUpdate, forceUpdate]);
+  }, [liveCampaign?.formFields, liveCampaign?._lastUpdate, campaign?.formFields, campaign?._lastUpdate]);
 
   const handleGameButtonClick = () => {
     // Passer à l'écran 2 (cartes visibles mais bloquées)
     setCurrentScreen('screen2');
-    // Ne pas ouvrir le formulaire automatiquement, il s'ouvrira au grattage
+    if (!formValidated) {
+      setShowFormModal(true);
+    }
   };
 
   const handleCardClick = () => {
@@ -452,9 +396,6 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
   };
 
   const handleGameFinish = async (result: 'win' | 'lose') => {
-    console.log('🎯 [FunnelUnlockedGame] handleGameFinish called with result:', result);
-    
-    // Le délai est géré dans CanvasGameRenderer, donc on peut définir gameResult immédiatement
     try {
       if (campaign.id) {
         await createParticipation({
@@ -468,26 +409,24 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
     } catch (error) {
       console.error('Erreur lors de la sauvegarde du résultat:', error);
     }
-    console.log('📦 [FunnelUnlockedGame] Setting gameResult to:', result);
     setGameResult(result);
-    // Afficher l'écran de résultat immédiatement après avoir défini gameResult
-    console.log('✅ [FunnelUnlockedGame] Now showing result screen');
-    setShowResultScreen(true);
   };
 
   // FONCTION DE RESET COMPLET pour le funnel unlocked
   const handleReset = () => {
-    setCurrentScreen('screen1'); // Retour à l'écran 1
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('🔄 Reset complet du funnel unlocked game');
+    }
+    setCurrentScreen('screen1');
     setFormValidated(false);  // ⚠️ IMPORTANT : remettre le formulaire à false
     setGameResult(null);
-    setShowResultScreen(false);
     setShowFormModal(false);
     setShowValidationMessage(false);
     setHasPlayed(false);
   };
 
-  // Si on a un résultat de jeu ET qu'on doit afficher l'écran de résultat
-  if (gameResult && showResultScreen) {
+  // Si on a un résultat de jeu, afficher l'écran de résultat avec le même fond que le canvas
+  if (gameResult) {
     const backgroundStyle: React.CSSProperties = {
       background: campaign.design?.background?.type === 'image'
         ? `url(${campaign.design.background.value}) center/cover no-repeat`
@@ -496,42 +435,25 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
     return (
       <div className="w-full h-[100dvh] min-h-[100dvh]">
         <div className="relative w-full h-full">
-          {/* Background avec TOUT le contenu à l'intérieur - EXACTEMENT comme DesignCanvas */}
-          <div className="absolute inset-0" style={backgroundStyle}>
-            {/* Safe zone overlay */}
+          <div className="absolute inset-0 pointer-events-none z-20">
             <div
-              className="pointer-events-none absolute inset-0 z-[6]"
-              aria-hidden="true"
-            >
-              <div
-                className="absolute border border-dashed border-white/60"
-                style={{
-                  inset: `${safeZonePadding}px`,
-                  borderRadius: `${safeZoneRadius}px`,
-                  boxShadow: '0 0 0 1px rgba(12, 18, 31, 0.08) inset'
-                }}
-              />
-            </div>
-            
-            {/* Content À L'INTÉRIEUR du background */}
-            <div 
-              className="relative h-full w-full"
+              className="absolute border border-dashed border-white/60"
               style={{
-                paddingLeft: `${safeZonePadding}px`,
-                paddingRight: `${safeZonePadding}px`,
-                paddingTop: `${safeZonePadding}px`,
-                paddingBottom: `${safeZonePadding}px`,
-                boxSizing: 'border-box'
+                inset: safeZonePadding,
+                borderRadius: safeZoneRadius,
+                boxShadow: '0 0 0 1px rgba(12, 18, 31, 0.08) inset'
               }}
-            >
-              <ResultScreen 
-                gameResult={gameResult} 
-                campaign={liveCampaign} 
-                mobileConfig={mobileConfig} 
-                onReset={handleReset}
-                launchButtonStyles={launchButtonStyles}
-              />
-            </div>
+            />
+          </div>
+          <div className="absolute inset-0 z-0" style={backgroundStyle} />
+          <div className="relative z-30 h-full w-full" style={{ padding: safeZonePadding, boxSizing: 'border-box' }}>
+            <ResultScreen 
+              gameResult={gameResult} 
+              campaign={liveCampaign} 
+              mobileConfig={mobileConfig} 
+              onReset={handleReset}
+              launchButtonStyles={launchButtonStyles}
+            />
           </div>
         </div>
       </div>
@@ -559,71 +481,22 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
     return (
       <div className="w-full h-[100dvh] min-h-[100dvh]">
         <div className="relative w-full h-full">
-          {/* Background avec TOUT le contenu à l'intérieur - EXACTEMENT comme DesignCanvas */}
-          <div className="absolute inset-0" style={backgroundStyle}>
-            {/* Safe zone overlay */}
-            <div
-              className="pointer-events-none absolute inset-0 z-[6]"
-              aria-hidden="true"
-            >
-              <div
-                className="absolute border border-dashed border-white/60"
-                style={{
-                  inset: `${safeZonePadding}px`,
-                  borderRadius: `${safeZoneRadius}px`,
-                  boxShadow: '0 0 0 1px rgba(12, 18, 31, 0.08) inset'
-                }}
-              />
-            </div>
-            
-            {/* Content À L'INTÉRIEUR du background */}
-            <div 
-              className="relative h-full w-full overflow-y-auto"
-              style={{
-                paddingLeft: `${safeZonePadding}px`,
-                paddingRight: `${safeZonePadding}px`,
-                paddingTop: `${safeZonePadding}px`,
-                paddingBottom: `${safeZonePadding}px`,
-                boxSizing: 'border-box'
-              }}
-            >
-              <div className="flex flex-col h-full">
-              {/* Modules Logo (collés en haut sans padding) */}
-              {logoModules1.length > 0 && (
-                <div className="w-full">
-                  <DesignModuleRenderer
-                    modules={logoModules1 as any}
-                    previewMode
-                    device={previewMode}
-                  />
-                </div>
-              )}
-              
-              {/* Contenu principal - flex-1 pour pousser le footer en bas */}
-              {/* IMPORTANT: Pas de padding ici pour éviter le doublon avec les espacements des modules */}
-              <div className="flex-1 relative">
-                {regularModules1.length > 0 && (
-                  <DesignModuleRenderer
-                    modules={regularModules1 as any}
-                    previewMode
-                    device={previewMode}
-                    onButtonClick={handleGameButtonClick}
-                  />
-                )}
-              </div>
-              
-              {/* Modules Footer (collés en bas sans padding) */}
-              {footerModules1.length > 0 && (
-                <div className="w-full">
-                  <DesignModuleRenderer
-                    modules={footerModules1 as any}
-                    previewMode
-                    device={previewMode}
-                  />
-                </div>
-              )}
-              </div>
-            </div>
+          <div className="absolute inset-0 z-0" style={backgroundStyle} />
+          <div
+            className="relative z-30 h-full w-full overflow-y-auto"
+            style={{ padding: safeZonePadding, boxSizing: 'border-box' }}
+          >
+            {modules.length > 0 && (
+              <section className="space-y-6" data-design-screen="screen1">
+                <DesignModuleRenderer
+                  modules={modules as any}
+                  previewMode
+                  device={previewMode}
+                  onButtonClick={handleGameButtonClick}
+                />
+              </section>
+            )}
+
           </div>
         </div>
       </div>
@@ -634,244 +507,176 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
     return (
       <div className="w-full h-[100dvh] min-h-[100dvh]">
         <div className="relative w-full h-full">
-          {/* Background avec TOUT le contenu à l'intérieur - EXACTEMENT comme DesignCanvas */}
-          <div className="absolute inset-0" style={backgroundStyle}>
-            {/* Safe zone overlay */}
+          <div className="absolute inset-0 pointer-events-none">
             <div
-              className="pointer-events-none absolute inset-0 z-[6]"
-              aria-hidden="true"
-            >
-              <div
-                className="absolute border border-dashed border-white/60"
-                style={{
-                  inset: `${safeZonePadding}px`,
-                  borderRadius: `${safeZoneRadius}px`,
-                  boxShadow: '0 0 0 1px rgba(12, 18, 31, 0.08) inset'
-                }}
-              />
-            </div>
-
-            {/* Content À L'INTÉRIEUR du background */}
-            <div 
-              className="relative h-full w-full overflow-y-auto"
+              className="absolute border border-dashed border-white/60"
               style={{
-                paddingLeft: `${safeZonePadding}px`,
-                paddingRight: `${safeZonePadding}px`,
-                paddingTop: `${safeZonePadding}px`,
-                paddingBottom: `${safeZonePadding}px`,
-                boxSizing: 'border-box'
+                inset: safeZonePadding,
+                borderRadius: safeZoneRadius,
+                boxShadow: '0 0 0 1px rgba(12, 18, 31, 0.08) inset'
               }}
-            >
-            {/* ÉCRAN 1 : Avant le jeu */}
-            {currentScreen === 'screen1' && (
-              <div className="flex flex-col h-full">
-                {/* Modules Logo (collés en haut sans padding) */}
-                {logoModules1.length > 0 && (
-                  <div className="w-full">
+            />
+          </div>
+          <div className="absolute inset-0" style={backgroundStyle} />
+
+          {/* ÉCRAN 1 : Avant le jeu */}
+          {currentScreen === 'screen1' && (
+            <>
+              {/* Bande logo absolue en haut (comme l'éditeur) */}
+              {logoModules1.length > 0 && (
+                <div
+                  className="absolute left-0 top-0 w-full z-40"
+                  style={{ pointerEvents: 'none', padding: safeZonePadding, boxSizing: 'border-box' }}
+                >
+                  <div className="w-full" style={{ pointerEvents: 'auto' }}>
                     <QuizModuleRenderer 
                       modules={logoModules1}
                       previewMode={true}
                       device={previewMode}
                     />
                   </div>
-                )}
-                
-                {/* Contenu principal - flex-1 pour pousser le footer en bas */}
-                {/* IMPORTANT: Pas de padding ici pour éviter le doublon avec les espacements des modules */}
-                <div className="flex-1 relative">
-                  {regularModules1.length > 0 && (
-                    <QuizModuleRenderer 
-                      modules={regularModules1}
-                      previewMode={true}
-                      device={previewMode}
-                      onButtonClick={handleGameButtonClick}
-                    />
-                  )}
                 </div>
-                
-                {/* Modules Footer (collés en bas sans padding) */}
-                {footerModules1.length > 0 && (
-                  <div className="w-full">
+              )}
+
+              {/* Contenu régulier sous la bande - Layout identique à l'éditeur */}
+              <div
+                className="relative z-30 h-full w-full"
+                style={{ padding: safeZonePadding, boxSizing: 'border-box' }}
+              >
+                {logoModules1.length > 0 && (
+                  <div style={{ height: logoBandHeight1 }} />
+                )}
+                {regularModules1.length > 0 && (
+                  <QuizModuleRenderer 
+                    modules={regularModules1}
+                    previewMode={true}
+                    device={previewMode}
+                    onButtonClick={handleGameButtonClick}
+                  />
+                )}
+              </div>
+
+              {/* Bande footer absolue en bas */}
+              {footerModules1.length > 0 && (
+                <div
+                  className="absolute left-0 bottom-0 w-full z-40"
+                  style={{ pointerEvents: 'none', padding: safeZonePadding, boxSizing: 'border-box' }}
+                >
+                  <div className="w-full" style={{ pointerEvents: 'auto' }}>
                     <QuizModuleRenderer 
                       modules={footerModules1}
                       previewMode={true}
                       device={previewMode}
                     />
                   </div>
-                )}
-              </div>
-            )}
+                </div>
+              )}
+            </>
+          )}
 
-            {/* ÉCRAN 2 : Cartes visibles (bloquées si formulaire non validé) */}
-            {currentScreen === 'screen2' && gameResult === null && (
-              <div className="flex flex-col h-full">
-              {/* Modules Logo (collés en haut sans padding) */}
-              {logoModules2.length > 0 && (
-                <div className="w-full" style={{ pointerEvents: 'auto' }}>
+          {/* ÉCRAN 2 : Cartes visibles (bloquées si formulaire non validé) */}
+          {currentScreen === 'screen2' && gameResult === null && (
+            <>
+              {/* Modules screen2 - en arrière-plan - Layout identique à l'éditeur */}
+              <div
+                className="relative z-30 h-full w-full"
+                style={{ pointerEvents: 'none', padding: safeZonePadding, boxSizing: 'border-box' }}
+              >
+                {modules2.length > 0 && (
                   <QuizModuleRenderer 
-                    modules={logoModules2}
+                    modules={modules2}
                     previewMode={true}
                     device={previewMode}
                   />
+                )}
+              </div>
+
+              {/* Game Component (Roue ou Cartes selon le type) */}
+              <div 
+                className="absolute inset-0 flex items-center justify-center" 
+                style={{ 
+                  zIndex: formValidated ? 100 : 50,
+                  pointerEvents: formValidated ? 'auto' : 'none'
+                }}
+              >
+                {liveCampaign.type === 'wheel' || campaign.type === 'wheel' ? (
+                  <GameRenderer
+                    campaign={liveCampaign}
+                    formValidated={formValidated}
+                    showValidationMessage={false}
+                    previewMode={previewMode}
+                    mobileConfig={mobileConfig}
+                    onGameFinish={handleGameFinish}
+                    onGameStart={() => console.log('🎮 Game started')}
+                    onGameButtonClick={handleCardClick}
+                  />
+                ) : (
+                  <ScratchCardCanvas 
+                    selectedDevice={previewMode}
+                    previewMode={!formValidated}
+                  />
+                )}
+              </div>
+              
+              {/* Overlay invisible pour intercepter les clics si formulaire non validé */}
+              {!formValidated && (
+                <div 
+                  className="absolute inset-0 cursor-pointer" 
+                  style={{ zIndex: 999999, backgroundColor: 'transparent' }}
+                  onClick={(e) => {
+                    console.log('🚫 Overlay clicked - opening form modal');
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleCardClick();
+                  }}
+                  onPointerDown={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleCardClick();
+                  }}
+                  onTouchStart={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleCardClick();
+                  }}
+                />
+              )}
+              {formValidated && (
+                <div style={{ position: 'absolute', top: 10, left: 10, zIndex: 9999, background: 'lime', padding: '5px', fontSize: '12px' }}>
+                  ✅ Form validated - Wheel should be clickable
                 </div>
               )}
-              
-                {/* Contenu principal avec padding - flex-1 pour pousser le footer en bas */}
-                <div className="flex-1 relative overflow-hidden">
-                  {/* Modules screen2 réguliers - en arrière-plan */}
-                  {regularModules2.length > 0 && (
-                    <div style={{ pointerEvents: 'none', position: 'absolute', inset: 0 }}>
-                      <QuizModuleRenderer 
-                        modules={regularModules2}
-                        previewMode={true}
-                        device={previewMode}
-                      />
-                    </div>
-                  )}
+            </>
+          )}
 
-                  {/* Game Component (Roue ou Cartes selon le type) */}
-                  <div 
-                    className="absolute inset-0 flex items-center justify-center" 
-                    style={{ 
-                      zIndex: formValidated ? 100 : 50,
-                      pointerEvents: 'auto'
-                    }}
-                  >
-                    <div className="relative flex items-center justify-center" style={{ maxWidth: '100%', maxHeight: '100%', width: '100%', height: '100%' }}>
-                      {liveCampaign.type === 'wheel' || campaign.type === 'wheel' || liveCampaign.type === 'jackpot' || campaign.type === 'jackpot' ? (
-                        <GameRenderer
-                          campaign={liveCampaign}
-                          formValidated={formValidated}
-                          showValidationMessage={false}
-                          previewMode={previewMode}
-                          mobileConfig={mobileConfig}
-                          onGameFinish={handleGameFinish}
-                          onGameStart={handleGameStart}
-                          onGameButtonClick={handleCardClick}
-                        />
-                      ) : (
-                        <div style={{ 
-                          maxWidth: '100%', 
-                          maxHeight: '100%', 
-                          width: '100%', 
-                          height: '100%', 
-                          display: 'flex', 
-                          alignItems: 'center', 
-                          justifyContent: 'center',
-                          overflow: 'hidden',
-                          position: 'relative'
-                        }}>
-                          <div style={{
-                            width: '100%',
-                            height: '100%',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            transform: 'scale(0.85)',
-                            transformOrigin: 'center center'
-                          }}>
-                            <ScratchCardCanvas 
-                              selectedDevice={previewMode}
-                              previewMode={!formValidated}
-                            />
-                          </div>
-                        </div>
-                      )}
-                      
-                      {/* Overlay invisible pour intercepter les clics si formulaire non validé */}
-                      {!formValidated && (
-                        <div 
-                          className="absolute inset-0 cursor-pointer" 
-                          style={{ zIndex: 150, backgroundColor: 'rgba(255,0,0,0.1)' }}
-                          onClick={(e) => {
-                            console.log('🚫 Overlay clicked - opening form modal');
-                            e.preventDefault();
-                            e.stopPropagation();
-                            handleCardClick();
-                          }}
-                          onPointerDown={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            handleCardClick();
-                          }}
-                          onTouchStart={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            handleCardClick();
-                          }}
-                        />
-                      )}
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Modules Footer (collés en bas sans padding) */}
-                {footerModules2.length > 0 && (
-                  <div className="w-full">
-                    <QuizModuleRenderer 
-                      modules={footerModules2}
-                      previewMode={true}
-                      device={previewMode}
-                    />
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* ÉCRAN 3 : Après le jeu (gameResult='win' ou 'lose') - Layout identique à l'éditeur */}
-            {gameResult !== null && (
-              <div className="flex flex-col h-full">
-                {/* Modules Logo (collés en haut sans padding) */}
-                {logoModules3.length > 0 && (
-                  <div className="w-full">
-                    <QuizModuleRenderer 
-                      modules={logoModules3}
-                      previewMode={true}
-                      device={previewMode}
-                    />
-                  </div>
-                )}
-                
-                {/* Contenu principal - flex-1 pour pousser le footer en bas */}
-                {/* IMPORTANT: Pas de padding ici pour éviter le doublon avec les espacements des modules */}
-                <div className="flex-1 relative">
-                  {regularModules3.length > 0 && (
-                    <QuizModuleRenderer 
-                      modules={regularModules3}
-                      previewMode={true}
-                      device={previewMode}
-                      onButtonClick={handleReset}
-                    />
-                  )}
-                </div>
-                
-                {/* Modules Footer (collés en bas sans padding) */}
-                {footerModules3.length > 0 && (
-                  <div className="w-full">
-                    <QuizModuleRenderer 
-                      modules={footerModules3}
-                      previewMode={true}
-                      device={previewMode}
-                    />
-                  </div>
-                )}
-              </div>
-            )}
+          {/* ÉCRAN 3 : Après le jeu (gameResult='win' ou 'lose') - Layout identique à l'éditeur */}
+          {gameResult !== null && (
+            <div
+              className="relative z-30 h-full w-full"
+              style={{ padding: safeZonePadding, boxSizing: 'border-box' }}
+            >
+              {modules3.length > 0 && (
+                <QuizModuleRenderer 
+                  modules={modules3}
+                  previewMode={true}
+                  device={previewMode}
+                  onButtonClick={handleReset}
+                />
+              )}
             </div>
-            
-            {/* Modal de formulaire - À L'INTÉRIEUR du background pour rester dans le cadre */}
-            <FormHandler
-              showFormModal={showFormModal}
-              campaign={campaign}
-              fields={fields}
-              participationLoading={participationLoading}
-              onClose={() => setShowFormModal(false)}
-              onSubmit={handleFormSubmit}
-              launchButtonStyles={launchButtonStyles}
-              usePortal={false}
-            />
-          </div>
+          )}
         </div>
+
+        {/* Modal de formulaire */}
+        <FormHandler
+          showFormModal={showFormModal}
+          campaign={campaign}
+          fields={fields}
+          participationLoading={participationLoading}
+          onClose={() => setShowFormModal(false)}
+          onSubmit={handleFormSubmit}
+          launchButtonStyles={launchButtonStyles}
+        />
       </div>
     );
   }
@@ -947,39 +752,40 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
         </div>
 
         {/* Afficher le formulaire configuré exactement comme dans l'éditeur */}
-        <div className="absolute inset-0 z-20">
-          <ScreenLayoutWrapper 
-            layout={useLayoutFromCampaign(liveCampaign)}
-            style={{ padding: '1rem' }}
-          >
+        <div className="absolute inset-0 z-20 flex items-center justify-center p-4">
+          <div className="w-full max-w-md">
             {(() => {
               // Reproduire exactement la logique de DesignCanvas pour le formulaire
               const campaignDesign = (liveCampaign as any)?.design || {};
+              const formPosition = (campaignDesign.formPosition as 'left' | 'right') || 'right';
               const formWidth = campaignDesign.formWidth || campaignDesign.formConfig?.widthPx ? `${campaignDesign.formConfig.widthPx}px` : '360px';
-            const buttonColor = campaignDesign.buttonColor || '#841b60';
-            const buttonTextColor = campaignDesign.buttonTextColor || '#ffffff';
-            const borderColor = campaignDesign.borderColor || '#E5E7EB';
-            const focusColor = buttonColor;
-            const borderRadius = typeof campaignDesign.borderRadius === 'number' ? `${campaignDesign.borderRadius}px` : (campaignDesign.borderRadius || '12px');
-            const inputBorderRadius = typeof campaignDesign.inputBorderRadius === 'number' ? campaignDesign.inputBorderRadius : (typeof campaignDesign.borderRadius === 'number' ? campaignDesign.borderRadius : 2);
-            const panelBg = campaignDesign.blockColor || '#ffffff';
-            const textColor = campaignDesign?.textStyles?.label?.color || '#111827';
-            const title = (liveCampaign as any)?.screens?.[1]?.title || 'Vos informations';
-            const description = (liveCampaign as any)?.screens?.[1]?.description || 'Remplissez le formulaire pour participer';
-            const submitLabel = (liveCampaign as any)?.screens?.[1]?.buttonText || 'SPIN';
+              const buttonColor = campaignDesign.buttonColor || '#841b60';
+              const buttonTextColor = campaignDesign.buttonTextColor || '#ffffff';
+              const borderColor = campaignDesign.borderColor || '#E5E7EB';
+              const focusColor = buttonColor;
+              const borderRadius = typeof campaignDesign.borderRadius === 'number' ? `${campaignDesign.borderRadius}px` : (campaignDesign.borderRadius || '12px');
+              const inputBorderRadius = typeof campaignDesign.inputBorderRadius === 'number' ? campaignDesign.inputBorderRadius : (typeof campaignDesign.borderRadius === 'number' ? campaignDesign.borderRadius : 2);
+              const panelBg = campaignDesign.blockColor || '#ffffff';
+              const textColor = campaignDesign?.textStyles?.label?.color || '#111827';
+              const title = (liveCampaign as any)?.screens?.[1]?.title || 'Vos informations';
+              const description = (liveCampaign as any)?.screens?.[1]?.description || 'Remplissez le formulaire pour participer';
+              const submitLabel = (liveCampaign as any)?.screens?.[1]?.buttonText || 'SPIN';
 
-            return (
-              <div
-                className={`opacity-100 pointer-events-auto`}
-                style={{
-                  // Centrage complet au milieu de l'écran
-                  width: '100%',
-                  maxWidth: formWidth,
-                  height: 'auto',
-                  maxHeight: 'calc(100vh - 2rem)'
-                }}
-                data-canvas-ui
-              >
+              return (
+                <div
+                  className={`absolute z-[60] opacity-100 pointer-events-auto flex`}
+                  style={{
+                    // Centrage vertical et ancrage horizontal selon la position choisie
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    ...(formPosition === 'left' ? { left: '4%' } : { right: '4%' }),
+                    // Largeur configurée par l'utilisateur
+                    width: formWidth,
+                    height: 'auto',
+                    maxHeight: 'calc(100% - 32px)'
+                  }}
+                  data-canvas-ui
+                >
                   <div
                     className={`w-full shadow-2xl rounded-xl p-6 overflow-y-auto`}
                     style={{ backgroundColor: panelBg, maxHeight: 'calc(100% - 0px)' }}
@@ -1020,7 +826,7 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
                 </div>
               );
             })()}
-          </ScreenLayoutWrapper>
+          </div>
         </div>
 
         <FormHandler
@@ -1048,7 +854,7 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
         fullScreen={false}
         onGameFinish={handleGameFinish} 
         onGameStart={handleGameStart} 
-        onGameButtonClick={handleCardClick} 
+        onGameButtonClick={handleGameButtonClick} 
       />
 
       {/* Modal de formulaire pour tous les jeux unlocked - avec styles appliqués */}
@@ -1062,7 +868,6 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
         }}
         onSubmit={handleFormSubmit}
         launchButtonStyles={launchButtonStyles}
-        usePortal={false}
       />
     </div>
   );

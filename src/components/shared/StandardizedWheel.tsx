@@ -107,39 +107,10 @@ const StandardizedWheel: React.FC<StandardizedWheelProps> = ({
     }
   }, [segments.length, structuralSegmentsFingerprint, wheelConfig.borderStyle, wheelConfig.borderWidth, wheelConfig.size, wheelConfig.showBulbs]);
 
-  // Lire la position directement depuis la campagne (source de vérité)
-  const wheelPosition = useMemo(() => {
-    const pos = (campaign?.design?.wheelConfig as any)?.position || wheelConfig.position || 'center';
-    console.log('🎯 [StandardizedWheel] Position resolved:', {
-      fromCampaign: (campaign?.design?.wheelConfig as any)?.position,
-      fromWheelConfig: wheelConfig.position,
-      final: pos
-    });
-    return pos;
-  }, [campaign?.design?.wheelConfig, wheelConfig.position]);
-
-  // Lire showBulbs directement depuis la campagne (source de vérité)
-  // Par défaut: false (ampoules décochées)
-  const resolvedShowBulbs = useMemo(() => {
-    const campaignValue = (campaign?.design?.wheelConfig as any)?.showBulbs;
-    const configValue = wheelConfig.showBulbs;
-    
-    // Si la valeur est explicitement définie (true ou false), on la respecte
-    // Sinon, on force false par défaut
-    const bulbs = campaignValue !== undefined ? campaignValue : (configValue !== undefined ? configValue : false);
-    
-    console.log('💡 [StandardizedWheel] ShowBulbs resolved:', {
-      fromCampaign: campaignValue,
-      fromWheelConfig: configValue,
-      final: bulbs
-    });
-    return bulbs;
-  }, [campaign?.design?.wheelConfig, wheelConfig.showBulbs]);
-
   // Styles de découpage
   const croppingStyles = useMemo(
-    () => WheelConfigService.getWheelCroppingStyles(shouldCropWheel, wheelPosition, device as 'desktop' | 'tablet' | 'mobile'),
-    [shouldCropWheel, wheelPosition, device]
+    () => WheelConfigService.getWheelCroppingStyles(shouldCropWheel, wheelConfig.position || 'center', device as 'desktop' | 'tablet' | 'mobile'),
+    [shouldCropWheel, wheelConfig.position, device]
   );
 
   // Resolve spin props from props -> campaign/config -> defaults
@@ -166,16 +137,24 @@ const StandardizedWheel: React.FC<StandardizedWheelProps> = ({
     (typeof campaign?.gameConfig?.wheel?.winProbability === 'number' ? campaign?.gameConfig?.wheel?.winProbability :
     (typeof campaign?.config?.roulette?.winProbability === 'number' ? campaign?.config?.roulette?.winProbability : undefined))));
 
-  console.log('🎡 StandardizedWheel - Configuration:', {
-    position: wheelConfig.position,
-    shouldCropWheel,
-    device,
+  console.log('🎡 StandardizedWheel - Rendu:', {
+    wheelConfig,
     segments: segments.length,
-    size: wheelConfig.size,
-    scale: wheelConfig.scale
+    shouldCropWheel,
+    device
   });
   
-  console.log('🎡 StandardizedWheel - Cropping styles:', croppingStyles);
+  console.log('🎡 StandardizedWheel - Taille finale:', {
+    wheelSize: wheelConfig.size,
+    wheelConfigSize: wheelConfig.size,
+    scale: wheelConfig.scale
+  });
+
+  // Debug: afficher les couleurs des segments pour vérifier l'alternance stricte
+  try {
+    const segColors = segments.map((s: any) => s?.color || '');
+    console.log('🎨 StandardizedWheel - Segment colors:', segColors);
+  } catch {}
 
   // Décalage géré via WheelConfigService.getWheelCroppingStyles (inset 150px)
 
@@ -183,15 +162,12 @@ const StandardizedWheel: React.FC<StandardizedWheelProps> = ({
     <div 
       className={`${croppingStyles.containerClass} ${className}`}
       style={{
-        ...((croppingStyles as any).styles || {}),
+        ...croppingStyles.styles,
         ...style
       }}
     >
       <div 
         className={croppingStyles.wheelClass}
-        style={{
-          transform: croppingStyles.transform || undefined
-        }}
         onClick={(e) => {
           // Empêcher la propagation afin d'éviter les sélections ou autres handlers globaux
           e.stopPropagation();
@@ -206,7 +182,7 @@ const StandardizedWheel: React.FC<StandardizedWheelProps> = ({
           borderStyle={wheelConfig.borderStyle}
           customBorderColor={wheelConfig.borderColor}
           customBorderWidth={wheelConfig.borderWidth}
-          showBulbs={resolvedShowBulbs}
+          showBulbs={wheelConfig.showBulbs}
 
           brandColors={{
             primary: wheelConfig.brandColors?.primary || '#841b60',

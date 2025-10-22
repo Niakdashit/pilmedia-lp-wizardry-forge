@@ -1,6 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef, useCallback, lazy } from 'react';
-// Align routing with QuizEditor via router adapter
-import { useLocation, useNavigate } from '@/lib/router-adapter';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Save, X } from 'lucide-react';
 
 const HybridSidebar = lazy(() => import('./HybridSidebar'));
@@ -21,17 +20,12 @@ import { useUndoRedo, useUndoRedoShortcuts } from '../../hooks/useUndoRedo';
 import { useGroupManager } from '../../hooks/useGroupManager';
 import { getDeviceDimensions } from '../../utils/deviceDimensions';
 import { getEditorDeviceOverride } from '@/utils/deviceOverrides';
-import { recalculateAllElements } from '../../utils/recalculateAllModules';
-import { useEditorPreviewSync } from '@/hooks/useEditorPreviewSync';
-import type { ScreenBackgrounds, DeviceSpecificBackground } from '@/types/background';
 
 
 import { useCampaigns } from '@/hooks/useCampaigns';
 import { createSaveAndContinueHandler, saveCampaignToDB } from '@/hooks/useModernCampaignEditor/saveHandler';
 import { quizTemplates } from '../../types/quizTemplates';
 import { useScratchCardStore } from './state/scratchcard.store';
-import type { GameModalConfig } from '@/types/gameConfig';
-import { createGameConfigFromQuiz } from '@/types/gameConfig';
 
 const KeyboardShortcutsHelp = lazy(() => import('../shared/KeyboardShortcutsHelp'));
 const MobileStableEditor = lazy(() => import('./components/MobileStableEditor'));
@@ -186,12 +180,6 @@ interface ScratchCardEditorLayoutProps {
 const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode = 'campaign', hiddenTabs }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  
-  // Détection du mode Article via URL (?mode=article)
-  const searchParams = new URLSearchParams(location.search);
-  const editorMode = searchParams.get('mode') === 'article' ? 'article' : 'fullscreen';
-  
-  console.log('🎨 [ScratchCardEditorLayout] Editor Mode:', editorMode);
   const getTemplateBaseWidths = useCallback((templateId?: string) => {
     const template = quizTemplates.find((tpl) => tpl.id === templateId) || quizTemplates[0];
     const width = template?.style?.containerWidth ?? 450;
@@ -232,40 +220,35 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
         if (!Number.isNaN(v) && v >= 0.1 && v <= 1) return v;
       }
     } catch {}
-    // Uniformisation : même zoom que le mode preview pour tous les appareils
-    // Cela garantit que l'écran a exactement la même taille en édition et en preview
+    if (device === 'mobile' && typeof window !== 'undefined') {
+      const { width, height } = getDeviceDimensions('mobile');
+      const scale = Math.min(window.innerWidth / width, window.innerHeight / height);
+      return Math.min(scale, 1);
+    }
     switch (device) {
       case 'desktop':
         return 0.7;
       case 'tablet':
         return 0.55;
       case 'mobile':
-        return 1.0; // 100% - Identique au mode preview pour une taille uniforme
+        return 0.45;
       default:
         return 0.7;
     }
   };
 
   // Store centralisé pour l'optimisation
-  const {
-    campaign: storeCampaign,
+  const { 
     setCampaign,
     setPreviewDevice,
     setIsLoading,
-    setIsModified,
-    resetCampaign
+    setIsModified
   } = useEditorStore();
   // Campagne centralisée (source de vérité pour les champs de contact)
   const campaignState = useEditorStore((s) => s.campaign);
 
   // Supabase campaigns API
   const { saveCampaign } = useCampaigns();
-
-  // Réinitialiser la campagne au montage de l'éditeur
-  useEffect(() => {
-    console.log('🎨 [ScratchEditor] Mounting - resetting campaign state');
-    resetCampaign();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // État local pour la compatibilité existante
   const [selectedDevice, setSelectedDevice] = useState<'desktop' | 'tablet' | 'mobile'>(actualDevice);
@@ -279,20 +262,11 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
 
   // États principaux
   const [canvasElements, setCanvasElements] = useState<any[]>([]);
-  
-  // Background par écran - chaque écran a son propre background
-  const defaultBackground = mode === 'template'
-    ? { type: 'color' as const, value: '#4ECDC4' }
-    : { type: 'color' as const, value: 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)' };
-  
-  const [screenBackgrounds, setScreenBackgrounds] = useState<ScreenBackgrounds>({
-    screen1: defaultBackground,
-    screen2: defaultBackground,
-    screen3: defaultBackground
-  });
-  
-  // Background global (fallback pour compatibilité)
-  const [canvasBackground, setCanvasBackground] = useState<{ type: 'color' | 'image'; value: string }>(defaultBackground);
+  const [canvasBackground, setCanvasBackground] = useState<{ type: 'color' | 'image'; value: string }>(() => (
+    mode === 'template'
+      ? { type: 'color', value: '#4ECDC4' }
+      : { type: 'color', value: 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)' }
+  ));
   const [canvasZoom, setCanvasZoom] = useState(getDefaultZoom(selectedDevice));
 
   useEffect(() => {
@@ -443,8 +417,14 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
     return () => window.removeEventListener('resize', updateWindowSize);
   }, []);
 
-  // Note: Le zoom mobile est maintenant fixe à 100% pour correspondre au mode preview
-  // L'ancien code qui ajustait automatiquement le zoom lors du redimensionnement a été supprimé
+  // Ajuste automatiquement le zoom lors du redimensionnement sur mobile
+  useEffect(() => {
+    if (actualDevice === 'mobile') {
+      const updateZoom = () => setCanvasZoom(getDefaultZoom('mobile'));
+      window.addEventListener('resize', updateZoom);
+      return () => window.removeEventListener('resize', updateZoom);
+    }
+  }, [actualDevice]);
   
   // Référence pour le canvas
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -530,49 +510,11 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
   const [currentScreen, setCurrentScreen] = useState<'screen1' | 'screen2' | 'screen3'>('screen1');
   // Modular editor JSON state
   const [modularPage, setModularPage] = useState<ModularPage>(createEmptyModularPage());
-  
   const selectedModule: Module | null = useMemo(() => {
     if (!selectedModuleId) return null;
     const allModules = (Object.values(modularPage.screens) as Module[][]).flat();
     return allModules.find((module) => module.id === selectedModuleId) || null;
   }, [selectedModuleId, modularPage.screens]);
-
-  // 🔄 MIGRATION AUTOMATIQUE : Recalcule le scaling mobile (-48.2%) pour les modules existants
-  const [hasRecalculated, setHasRecalculated] = useState(false);
-  useEffect(() => {
-    // Recalculer les éléments canvas (si présents)
-    if (canvasElements.length > 0 && !hasRecalculated) {
-      console.log('🔄 [Migration Canvas] Recalcul automatique du scaling mobile pour', canvasElements.length, 'éléments...');
-      const recalculated = recalculateAllElements(canvasElements, 'desktop');
-      setCanvasElements(recalculated);
-      setHasRecalculated(true);
-      console.log('✅ [Migration Canvas] Scaling recalculé avec succès !');
-    }
-
-    // Recalculer les modules modulaires (modularPage)
-    const allModules = (Object.values(modularPage.screens) as Module[][]).flat();
-    if (allModules.length > 0 && !hasRecalculated) {
-      console.log('🔄 [Migration Modules] Recalcul automatique du scaling mobile pour', allModules.length, 'modules...');
-      const recalculatedModules = recalculateAllElements(allModules as any[], 'desktop');
-      
-      // Reconstruire modularPage avec les modules recalculés
-      const nextScreens: ModularPage['screens'] = { ...modularPage.screens };
-      let moduleIndex = 0;
-      
-      (Object.keys(nextScreens) as ScreenId[]).forEach((screenId) => {
-        const screenModules = nextScreens[screenId] || [];
-        nextScreens[screenId] = screenModules.map(() => {
-          const recalculated = recalculatedModules[moduleIndex];
-          moduleIndex++;
-          return recalculated as Module;
-        });
-      });
-      
-      setModularPage({ screens: nextScreens, _updatedAt: Date.now() });
-      setHasRecalculated(true);
-      console.log('✅ [Migration Modules] Scaling recalculé avec succès !');
-    }
-  }, [canvasElements.length, modularPage.screens, hasRecalculated]);
   
   // Détecter la position de scroll pour changer l'écran courant
   useEffect(() => {
@@ -676,81 +618,37 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
     return screen === 'screen3' ? 'Rejouer' : 'Participer';
   }, []);
 
-  // Bouton "Rejouer" sur l'écran 3 désactivé (retiré par demande utilisateur)
-  // React.useEffect(() => {
-  //   const screen3Modules = modularPage.screens.screen3 || [];
-  //   const hasReplayButton = screen3Modules.some((m) => m.type === 'BlocBouton') || screenHasCardButton(screen3Modules);
-  //   if (!hasReplayButton && currentScreen === 'screen3') {
-  //     const replayButton: BlocBouton = {
-  //       id: `bloc-bouton-replay-${Date.now()}`,
-  //       type: 'BlocBouton',
-  //       label: getDefaultButtonLabel('screen3'),
-  //       href: '#',
-  //       background: '#000000',
-  //       textColor: '#ffffff',
-  //       borderRadius: 9999,
-  //       borderWidth: 0,
-  //       borderColor: '#000000',
-  //       boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-  //       uppercase: false,
-  //       bold: false,
-  //       spacingTop: 0,
-  //       spacingBottom: 0
-  //     };
-  //     const nextScreens: ModularPage['screens'] = { ...modularPage.screens };
-  //     nextScreens.screen3 = [...screen3Modules, replayButton];
-  //     persistModular({ screens: nextScreens, _updatedAt: Date.now() });
-  //   }
-  // }, [currentScreen, modularPage.screens.screen3, persistModular, screenHasCardButton, getDefaultButtonLabel]);
+  // Ajouter automatiquement un bouton "Rejouer" sur l'écran 3 s'il n'existe pas
+  React.useEffect(() => {
+    const screen3Modules = modularPage.screens.screen3 || [];
+    const hasReplayButton = screen3Modules.some((m) => m.type === 'BlocBouton') || screenHasCardButton(screen3Modules);
+    
+    if (!hasReplayButton && currentScreen === 'screen3') {
+      const replayButton: BlocBouton = {
+        id: `bloc-bouton-replay-${Date.now()}`,
+        type: 'BlocBouton',
+        label: getDefaultButtonLabel('screen3'),
+        href: '#',
+        background: '#000000',
+        textColor: '#ffffff',
+        borderRadius: 9999,
+        borderWidth: 0,
+        borderColor: '#000000',
+        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+        uppercase: false,
+        bold: false,
+        spacingTop: 0,
+        spacingBottom: 0
+      };
+      
+      const nextScreens: ModularPage['screens'] = { ...modularPage.screens };
+      nextScreens.screen3 = [...screen3Modules, replayButton];
+      persistModular({ screens: nextScreens, _updatedAt: Date.now() });
+    }
+  }, [currentScreen, modularPage.screens.screen3, persistModular, screenHasCardButton, getDefaultButtonLabel]);
 
   // Modular handlers
   const handleAddModule = useCallback((screen: ScreenId, module: Module) => {
-    // Logo : ajouté automatiquement sur tous les écrans en haut
-    if (module.type === 'BlocLogo') {
-      const logoId = module.id || `BlocLogo-${Date.now()}`;
-      const cloneLogo = (base: typeof module): Module => ({
-        ...(base as Module),
-        id: logoId
-      });
-
-      const nextScreens: ModularPage['screens'] = { ...modularPage.screens };
-      (Object.keys(nextScreens) as ScreenId[]).forEach((screenId) => {
-        const withoutLogo = (nextScreens[screenId] || []).filter((m) => m.type !== 'BlocLogo');
-        nextScreens[screenId] = [cloneLogo(module), ...withoutLogo];
-      });
-
-      persistModular({ screens: nextScreens, _updatedAt: Date.now() });
-      return;
-    }
-
-    // Pied de page : ajouté automatiquement sur tous les écrans en bas
-    if (module.type === 'BlocPiedDePage') {
-      const footerId = module.id || `BlocPiedDePage-${Date.now()}`;
-      const cloneFooter = (base: typeof module): Module => {
-        if (base.type !== 'BlocPiedDePage') return { ...base } as Module;
-        const footer = base;
-        return {
-          ...footer,
-          id: footerId,
-          footerLinks: Array.isArray(footer.footerLinks)
-            ? footer.footerLinks.map((link) => ({ ...link }))
-            : footer.footerLinks,
-          socialLinks: Array.isArray(footer.socialLinks)
-            ? footer.socialLinks.map((link) => ({ ...link }))
-            : footer.socialLinks
-        } as Module;
-      };
-
-      const nextScreens: ModularPage['screens'] = { ...modularPage.screens };
-      (Object.keys(nextScreens) as ScreenId[]).forEach((screenId) => {
-        const withoutFooter = (nextScreens[screenId] || []).filter((m) => m.type !== 'BlocPiedDePage');
-        nextScreens[screenId] = [...withoutFooter, cloneFooter(module)];
-      });
-
-      persistModular({ screens: nextScreens, _updatedAt: Date.now() });
-      return;
-    }
-
     setModularPage((prev) => {
       let prevScreenModules = prev.screens[screen] || [];
 
@@ -976,12 +874,6 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
     }
   }, [canvasElements]);
   const [extractedColors, setExtractedColors] = useState<string[]>([]);
-
-  // Game modal config unifié (nouveau) - doit être après extractedColors
-  const gameModalConfig: GameModalConfig = useMemo(() => createGameConfigFromQuiz({
-    ...quizModalConfig,
-    extractedColors
-  }, 'scratch'), [quizModalConfig, extractedColors]);
   const [showFunnel, setShowFunnel] = useState(false);
   const [previewButtonSide, setPreviewButtonSide] = useState<'left' | 'right'>(() =>
     (typeof window !== 'undefined' && localStorage.getItem('previewButtonSide') === 'left') ? 'left' : 'right'
@@ -1107,71 +999,13 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
   };
 
   // Ajoute à l'historique lors du changement de background (granulaire)
-  const handleBackgroundChange = (bg: any, options?: { screenId?: 'screen1' | 'screen2' | 'screen3'; applyToAllScreens?: boolean; device?: 'desktop' | 'tablet' | 'mobile' }) => {
-    console.log('🎨 [ScratchCardEditor] handleBackgroundChange:', { bg, options });
-    
-    if (options?.applyToAllScreens) {
-      // Appliquer à tous les écrans
-      console.log('✅ Applying background to ALL screens');
-      setScreenBackgrounds({
-        screen1: bg,
-        screen2: bg,
-        screen3: bg
-      });
-      setCanvasBackground(bg); // Fallback global
-    } else if (options?.screenId && options?.device) {
-      // 📱 Appliquer uniquement à l'écran ET appareil spécifiés
-      console.log(`✅ Applying background to ${options.screenId} on ${options.device} ONLY`);
-      setScreenBackgrounds(prev => {
-        const screenKey = options.screenId!;
-        const deviceKey = options.device!;
-        const currentScreenBg = prev[screenKey];
-        
-        // Structure: { type, value, devices: { desktop: {...}, mobile: {...}, tablet: {...} } }
-        const newScreenBg = {
-          ...currentScreenBg,
-          devices: {
-            ...(currentScreenBg?.devices || {}),
-            [deviceKey]: bg
-          }
-        };
-        
-        console.log('📱 Updated screen background with device-specific data:', {
-          screenKey,
-          deviceKey,
-          newScreenBg
-        });
-        
-        return {
-          ...prev,
-          [screenKey]: newScreenBg
-        };
-      });
-    } else if (options?.screenId) {
-      // Appliquer uniquement à l'écran spécifié (tous devices)
-      console.log(`✅ Applying background to ${options.screenId} ONLY`);
-      setScreenBackgrounds(prev => ({
-        ...prev,
-        [options.screenId!]: bg
-      }));
-      // Ne pas modifier canvasBackground global
-    } else {
-      // Pas d'options : comportement par défaut (appliquer globalement)
-      console.log('⚠️ No options provided, applying globally (fallback)');
-      setScreenBackgrounds({
-        screen1: bg,
-        screen2: bg,
-        screen3: bg
-      });
-      setCanvasBackground(bg);
-    }
-    
+  const handleBackgroundChange = (bg: any) => {
+    setCanvasBackground(bg);
     setTimeout(() => {
       addToHistory({
         campaignConfig: { ...campaignConfig },
         canvasElements: JSON.parse(JSON.stringify(canvasElements)),
-        canvasBackground: { ...bg },
-        screenBackgrounds: { ...screenBackgrounds }
+        canvasBackground: { ...bg }
       }, 'background_update');
     }, 0);
 
@@ -1458,9 +1292,6 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
     onElementsChange: setCanvasElements,
     onAddToHistory: addToHistory
   });
-  
-  // Hook de synchronisation preview
-  const { syncBackground } = useEditorPreviewSync();
   
   const {
     createGroup,
@@ -1965,7 +1796,6 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
       type: 'scratch',
       design: {
         background: canvasBackground,
-        screenBackgrounds: screenBackgrounds, // Backgrounds par écran pour le preview
         customTexts: customTexts,
         customImages: customImages,
         extractedColors: extractedColors,
@@ -2004,18 +1834,14 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
       canvasConfig: {
         elements: [...canvasElements, ...allModules],
         background: canvasBackground,
-        screenBackgrounds: screenBackgrounds, // Backgrounds par écran
         device: selectedDevice
       },
       // Ajouter modularPage pour compatibilité
-      modularPage: modularPage,
-      // Inclure articleConfig depuis le store pour le mode Article
-      articleConfig: (campaignState as any)?.articleConfig
+      modularPage: modularPage
     };
   }, [
     canvasElements,
     canvasBackground,
-    screenBackgrounds,
     campaignConfig,
     extractedColors,
     selectedDevice,
@@ -2514,11 +2340,11 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
           'radial-gradient(130% 130% at 12% 20%, rgba(235, 155, 100, 0.8) 0%, rgba(235, 155, 100, 0) 55%), radial-gradient(120% 120% at 78% 18%, rgba(128, 82, 180, 0.85) 0%, rgba(128, 82, 180, 0) 60%), radial-gradient(150% 150% at 55% 82%, rgba(68, 52, 128, 0.75) 0%, rgba(68, 52, 128, 0) 65%), linear-gradient(90deg, #E07A3A 0%, #9A5CA9 50%, #3D2E72 100%)',
         backgroundBlendMode: showFunnel ? 'normal' : 'screen, screen, lighten, normal',
         backgroundColor: showFunnel ? 'transparent' : '#3D2E72',
-        padding: showFunnel ? '0' : (isWindowMobile ? '9px' : '0 9px 9px 9px'),
+        padding: showFunnel ? '0' : '0 9px 9px 9px',
         boxSizing: 'border-box'
       }}
     >
-    <MobileStableEditor className={showFunnel ? "h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden" : (isWindowMobile ? "h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden pb-[6px] rounded-tl-[28px] rounded-tr-[28px] rounded-br-[28px] transform -translate-y-[0.4vh]" : "h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden pt-[1.25cm] pb-[6px] rounded-tl-[28px] rounded-tr-[28px] rounded-br-[28px] transform -translate-y-[0.4vh]")}>
+    <MobileStableEditor className={showFunnel ? "h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden" : `h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden ${shouldUseReducedPadding ? 'pt-[9px]' : 'pt-[1.25cm]'} pb-[6px] rounded-tl-[28px] rounded-tr-[28px] transform -translate-y-[0.4vh]`}>
 
       {/* Top Toolbar - Hidden only in preview mode */}
       {!showFunnel && (
@@ -2551,7 +2377,7 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
       <div className="flex-1 flex overflow-hidden relative">
         {showFunnel ? (
           /* Funnel Preview Mode */
-          <div className="group fixed inset-0 z-40 w-full h-[100dvh] min-h-[100dvh] overflow-hidden bg-[#2c2c35] flex items-center justify-center">
+          <div className="group fixed inset-0 z-40 w-full h-[100dvh] min-h-[100dvh] overflow-hidden bg-transparent flex">
             {/* Floating Edit Mode Button */}
             <button
               onClick={() => setShowFunnel(false)}
@@ -2559,50 +2385,21 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
             >
               Mode édition
             </button>
-            {(selectedDevice === 'mobile' && actualDevice !== 'mobile') ? (
-              /* Mobile Preview sur Desktop: Canvas centré avec cadre */
-              <div className="flex items-center justify-center w-full h-full">
-                <div 
-                  className="relative overflow-hidden rounded-[32px] shadow-2xl"
-                  style={{
-                    width: '430px',
-                    height: '932px',
-                    maxHeight: '90vh'
-                  }}
-                >
-                  {campaignData?.type === 'quiz' ? (
-                    <FunnelQuizParticipate
-                      campaign={campaignData as any}
-                      previewMode="mobile"
-                    />
-                  ) : (
-                    <FunnelUnlockedGame
-                      campaign={campaignData}
-                      previewMode="mobile"
-                      wheelModalConfig={wheelModalConfig}
-                      launchButtonStyles={launchButtonStyles}
-                    />
-                  )}
-                </div>
-              </div>
-            ) : (
-              /* Desktop/Tablet Preview OU Mobile physique: Fullscreen */
-              <div className="w-full h-full pointer-events-auto flex items-center justify-center">
-                {campaignData?.type === 'quiz' ? (
-                  <FunnelQuizParticipate
-                    campaign={campaignData as any}
-                    previewMode={selectedDevice}
-                  />
-                ) : (
-                  <FunnelUnlockedGame
-                    campaign={campaignData}
-                    previewMode={actualDevice === 'desktop' && selectedDevice === 'desktop' ? 'desktop' : selectedDevice}
-                    wheelModalConfig={wheelModalConfig}
-                    launchButtonStyles={launchButtonStyles}
-                  />
-                )}
-              </div>
-            )}
+            <div className="w-full h-full pointer-events-auto">
+              {campaignData?.type === 'quiz' ? (
+                <FunnelQuizParticipate
+                  campaign={campaignData as any}
+                  previewMode={selectedDevice}
+                />
+              ) : (
+                <FunnelUnlockedGame
+                  campaign={campaignData}
+                  previewMode={selectedDevice}
+                  wheelModalConfig={wheelModalConfig}
+                  launchButtonStyles={launchButtonStyles}
+                />
+              )}
+            </div>
           </div>
         ) : (
           /* Design Editor Mode */
@@ -2654,9 +2451,6 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
                 selectedModule={selectedModule}
                 onModuleUpdate={handleUpdateModule}
                 onSelectedModuleChange={setSelectedModuleId}
-                // Modules de l'écran actuel pour le panneau de calques
-                modules={modularPage.screens[currentScreen] || []}
-                onModuleDelete={handleDeleteModule}
                 // Quiz config props for HybridSidebar
                 quizQuestionCount={quizConfig.questionCount}
                 quizTimeLimit={quizConfig.timeLimit}
@@ -2924,13 +2718,12 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
                 {/* Premier Canvas */}
                 <div data-screen-anchor="screen1" className="relative">
                   <DesignCanvas
-                    editorMode={editorMode}
                     screenId="screen1"
                     ref={canvasRef}
                     selectedDevice={selectedDevice}
                     elements={canvasElements}
                     onElementsChange={setCanvasElements}
-                    background={screenBackgrounds.screen1?.devices?.[selectedDevice] || screenBackgrounds.screen1}
+                    background={canvasBackground}
                     campaign={campaignData}
                     onCampaignChange={handleCampaignConfigChange}
                     zoom={canvasZoom}
@@ -2948,9 +2741,7 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
                     hideInlineQuizPreview
                     elementFilter={(element: any) => {
                       const role = typeof element?.role === 'string' ? element.role.toLowerCase() : '';
-                      return !role.includes('exit-message') && 
-                             element?.screenId !== 'screen2' && 
-                             element?.screenId !== 'screen3';
+                      return !role.includes('exit-message');
                     }}
                     // Sidebar panel triggers
                     onShowAnimationsPanel={() => {
@@ -3012,14 +2803,10 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
                     onModuleDelete={handleDeleteModule}
                     onModuleMove={handleMoveModule}
                     onModuleDuplicate={handleDuplicateModule}
-                    selectedModuleId={selectedModuleId}
-                    selectedModule={selectedModule}
-                    onSelectedModuleChange={setSelectedModuleId}
                   />
                 </div>
                 
-                {/* Deuxième Canvas - Seulement en mode Fullscreen */}
-                {editorMode === 'fullscreen' && (
+                {/* Deuxième Canvas */}
                 <div className="mt-4 relative" data-screen-anchor="screen2">
                   {/* Background pour éviter la transparence de la bande magenta */}
                   <div 
@@ -3039,12 +2826,11 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
                   />
                   <div className="relative z-10">
                     <DesignCanvas
-                      editorMode={editorMode}
                       screenId="screen2"
                       selectedDevice={selectedDevice}
                       elements={canvasElements}
                       onElementsChange={setCanvasElements}
-                      background={screenBackgrounds.screen2?.devices?.[selectedDevice] || screenBackgrounds.screen2}
+                      background={canvasBackground}
                       campaign={campaignData}
                       onCampaignChange={handleCampaignConfigChange}
                       zoom={canvasZoom}
@@ -3061,10 +2847,7 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
                       containerClassName={mode === 'template' ? 'bg-gray-50' : undefined}
                       elementFilter={(element: any) => {
                         const role = typeof element?.role === 'string' ? element.role.toLowerCase() : '';
-                        return !role.includes('exit-message') && 
-                               (element?.screenId === 'screen2' || 
-                                role.includes('form') || 
-                                role.includes('contact'));
+                        return !role.includes('exit-message');
                       }}
                       // Sidebar panel triggers
                       onShowEffectsPanel={() => {
@@ -3125,16 +2908,11 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
                       onModuleDelete={handleDeleteModule}
                       onModuleMove={handleMoveModule}
                       onModuleDuplicate={handleDuplicateModule}
-                      selectedModuleId={selectedModuleId}
-                      selectedModule={selectedModule}
-                      onSelectedModuleChange={setSelectedModuleId}
                     />
                   </div>
                 </div>
-                )}
 
-                {/* Troisième Canvas - Seulement en mode Fullscreen */}
-                {editorMode === 'fullscreen' && (
+                {/* Troisième Canvas */}
                 <div className="mt-4 relative" data-screen-anchor="screen3">
                   {/* Background pour éviter la transparence de la bande magenta */}
                   <div 
@@ -3154,12 +2932,11 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
                   />
                   <div className="relative z-10">
                     <DesignCanvas
-                      editorMode={editorMode}
                       screenId="screen3"
                       selectedDevice={selectedDevice}
                       elements={canvasElements}
                       onElementsChange={setCanvasElements}
-                      background={screenBackgrounds.screen3?.devices?.[selectedDevice] || screenBackgrounds.screen3}
+                      background={canvasBackground}
                       campaign={campaignData}
                       onCampaignChange={handleCampaignConfigChange}
                       zoom={canvasZoom}
@@ -3176,7 +2953,7 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
                       containerClassName={mode === 'template' ? 'bg-gray-50' : undefined}
                       elementFilter={(element: any) => {
                         const role = typeof element?.role === 'string' ? element.role.toLowerCase() : '';
-                        return role.includes('exit-message') || element?.screenId === 'screen3';
+                        return role.includes('exit-message');
                       }}
                       // Sidebar panel triggers
                       onShowEffectsPanel={() => {
@@ -3245,14 +3022,9 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
                       onModuleUpdate={handleUpdateModule}
                       onModuleDelete={handleDeleteModule}
                       onModuleMove={handleMoveModule}
-                      onModuleDuplicate={handleDuplicateModule}
-                      selectedModuleId={selectedModuleId}
-                      selectedModule={selectedModule}
-                      onSelectedModuleChange={setSelectedModuleId}
                     />
                   </div>
                 </div>
-                )}
               </div>
             </div>
             {/* Zoom Slider with integrated Screen navigation button */}
