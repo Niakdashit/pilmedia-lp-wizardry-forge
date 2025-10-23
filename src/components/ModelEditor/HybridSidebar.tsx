@@ -1155,7 +1155,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
   return (
     <div data-hybrid-sidebar="expanded" className="flex h-full min-h-0">
       {/* Vertical Tab Sidebar */}
-      <div className="w-20 bg-[hsl(var(--sidebar-bg))] border-r border-[hsl(var(--sidebar-border))] flex flex-col shadow-sm min-h-0 rounded-bl-[28px]" style={themeVars}>
+      <div className="w-20 bg-[hsl(var(--sidebar-bg))] border-r border-[hsl(var(--sidebar-border))] flex flex-col shadow-sm min-h-0 rounded-bl-[18px]" style={themeVars}>
         {/* Collapse Button */}
         <button
           onClick={() => setIsCollapsed(true)}
