@@ -62,9 +62,8 @@ export interface ArticleCTA {
   // Styles personnalisés
   backgroundColor?: string;
   textColor?: string;
-  borderRadius?: number; // En pixels
+  borderRadius?: string;
   borderColor?: string;
-  borderWidth?: number; // Épaisseur du contour en pixels
 }
 
 export interface ArticleFunnelFlow {
@@ -171,7 +170,7 @@ export const DEFAULT_ARTICLE_CONFIG: ArticleConfig = {
     alt: 'Bannière article',
   },
   content: {
-    title: 'Titre de votre article',
+    title: '',
     description: 'Décrivez votre contenu ici...',
     titleStyle: {
       fontSize: '2rem',
@@ -192,11 +191,6 @@ export const DEFAULT_ARTICLE_CONFIG: ArticleConfig = {
     size: 'large',
     icon: 'arrow',
     action: 'next-step',
-    backgroundColor: '#841b60',
-    textColor: '#ffffff',
-    borderRadius: 8,
-    borderWidth: 0,
-    borderColor: '#841b60',
   },
   funnelFlow: {
     steps: ['article', 'form', 'game', 'result'],

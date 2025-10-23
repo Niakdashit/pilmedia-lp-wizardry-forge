@@ -7,6 +7,7 @@ import { Save, X } from 'lucide-react';
 const HybridSidebar = lazy(() => import('./HybridSidebar'));
 const DesignToolbar = lazy(() => import('./DesignToolbar'));
 import PreviewRenderer from '@/components/preview/PreviewRenderer';
+import ArticleCanvas from '@/components/ArticleEditor/ArticleCanvas';
 import type { ModularPage, ScreenId, BlocBouton, Module } from '@/types/modularEditor';
 import { createEmptyModularPage } from '@/types/modularEditor';
 
@@ -112,7 +113,7 @@ const FormEditorLayout: React.FC<FormEditorLayoutProps> = ({ mode = 'campaign', 
   
   // Détection du mode Article via URL (?mode=article)
   const searchParams = new URLSearchParams(location.search);
-  const editorMode = searchParams.get('mode') === 'article' ? 'article' : 'fullscreen';
+  const editorMode: 'article' | 'fullscreen' = searchParams.get('mode') === 'article' ? 'article' : 'fullscreen';
   
   console.log('🎨 [FormEditorLayout] Editor Mode:', editorMode);
   const getTemplateBaseWidths = useCallback((templateId?: string) => {
@@ -513,8 +514,13 @@ const FormEditorLayout: React.FC<FormEditorLayoutProps> = ({ mode = 'campaign', 
   // État pour l'élément sélectionné
   const [selectedElement, setSelectedElement] = useState<any>(null);
   const [selectedModuleId, setSelectedModuleId] = useState<string | null>(null);
-  const [activeSidebarTab, setActiveSidebarTab] = useState<string>('elements');
-  const [previousSidebarTab, setPreviousSidebarTab] = useState<string>('elements');
+  // Initialiser avec 'design' en mode article, 'elements' en mode fullscreen
+  const [activeSidebarTab, setActiveSidebarTab] = useState<string>(
+    editorMode === 'article' ? 'design' : 'elements'
+  );
+  const [previousSidebarTab, setPreviousSidebarTab] = useState<string>(
+    editorMode === 'article' ? 'design' : 'elements'
+  );
   
   // Debug wrapper pour setSelectedElement
   const debugSetSelectedElement = (element: any) => {
@@ -900,6 +906,8 @@ const FormEditorLayout: React.FC<FormEditorLayoutProps> = ({ mode = 'campaign', 
   }, [canvasElements]);
   const [extractedColors, setExtractedColors] = useState<string[]>([]);
   const [showFunnel, setShowFunnel] = useState(false);
+  // For form campaigns, start directly with the form (no article step)
+  const [currentStep, setCurrentStep] = useState<'article' | 'form' | 'game' | 'result'>('form');
   const [previewButtonSide, setPreviewButtonSide] = useState<'left' | 'right'>(() =>
     (typeof window !== 'undefined' && localStorage.getItem('previewButtonSide') === 'left') ? 'left' : 'right'
   );
@@ -1513,7 +1521,8 @@ const FormEditorLayout: React.FC<FormEditorLayoutProps> = ({ mode = 'campaign', 
       setPreviousSidebarTab(activeSidebarTab);
       // Si c'est un BlocTexte, ouvrir l'onglet Design (background) pour éditer le texte
       // Sinon, ouvrir l'onglet Elements pour les autres modules
-      if (selectedModule?.type === 'BlocTexte') {
+      // En mode article, ne pas forcer l'onglet background car il n'existe pas
+      if (selectedModule?.type === 'BlocTexte' && editorMode !== 'article') {
         setActiveSidebarTab('background');
       } else {
         setActiveSidebarTab('elements');
@@ -2131,6 +2140,27 @@ const FormEditorLayout: React.FC<FormEditorLayoutProps> = ({ mode = 'campaign', 
     }));
     
     setShowFunnel(!showFunnel);
+    // For form campaigns, keep the form step (don't reset to article)
+    if (!showFunnel) {
+      setCurrentStep('form');
+    }
+  };
+
+  // Funnel progression handlers for Form
+  // Form flow: Article → Form → Result (no game)
+  const handleCTAClick = () => {
+    console.log('🎯 [FormEditor] CTA clicked, moving to form step');
+    setCurrentStep('form');
+  };
+
+  const handleFormSubmit = (data: Record<string, string>) => {
+    console.log('📝 [FormEditor] Form submitted:', data);
+    setCurrentStep('result'); // Form campaigns skip game
+  };
+
+  const handleGameComplete = () => {
+    console.log('🎮 [FormEditor] Game completed (should not happen for form)');
+    setCurrentStep('result');
   };
 
   // Save and continue: persist then navigate to settings page
@@ -2548,28 +2578,68 @@ const FormEditorLayout: React.FC<FormEditorLayoutProps> = ({ mode = 'campaign', 
               /* Mobile Preview sur Desktop: Canvas centré avec fond #2c2c35 - Dimensions identiques au mode édition */
               <div className="flex items-center justify-center w-full h-full">
                 <div 
-                  className="relative overflow-hidden rounded-[32px] shadow-2xl"
+                  className="relative overflow-y-auto rounded-[32px] shadow-2xl"
                   style={{
                     width: '430px',
                     height: '932px',
                     maxHeight: '90vh'
                   }}
                 >
-                  <PreviewRenderer
-                    campaign={campaignData}
-                    previewMode="mobile"
-                    wheelModalConfig={wheelModalConfig}
-                    constrainedHeight={true}
-                  />
+                  {editorMode === 'article' ? (
+                    <ArticleCanvas
+                      articleConfig={(campaignState as any)?.articleConfig || {}}
+                      onBannerChange={() => {}}
+                      onBannerRemove={() => {}}
+                      onTitleChange={() => {}}
+                      onDescriptionChange={() => {}}
+                      onCTAClick={handleCTAClick}
+                      onFormSubmit={handleFormSubmit}
+                      onGameComplete={handleGameComplete}
+                      currentStep={currentStep}
+                      editable={false}
+                      maxWidth={810}
+                      campaignType="form"
+                      formFields={(campaignState as any)?.formFields}
+                      onStepChange={setCurrentStep}
+                    />
+                  ) : (
+                    <PreviewRenderer
+                      campaign={campaignData}
+                      previewMode="mobile"
+                      wheelModalConfig={wheelModalConfig}
+                      constrainedHeight={true}
+                    />
+                  )}
                 </div>
               </div>
             ) : (
               /* Desktop/Tablet Preview OU Mobile physique: Fullscreen sans cadre */
-              <PreviewRenderer
-                campaign={campaignData}
-                previewMode={actualDevice === 'desktop' && selectedDevice === 'desktop' ? 'desktop' : selectedDevice}
-                wheelModalConfig={wheelModalConfig}
-              />
+              editorMode === 'article' ? (
+                <div className="w-full h-full flex items-start justify-center overflow-y-auto py-8" style={{ backgroundColor: '#2c2c35' }}>
+                  <ArticleCanvas
+                    articleConfig={(campaignState as any)?.articleConfig || {}}
+                    onBannerChange={() => {}}
+                    onBannerRemove={() => {}}
+                    onTitleChange={() => {}}
+                    onDescriptionChange={() => {}}
+                    onCTAClick={handleCTAClick}
+                    onFormSubmit={handleFormSubmit}
+                    onGameComplete={handleGameComplete}
+                    currentStep={currentStep}
+                    editable={false}
+                    maxWidth={810}
+                    campaignType="form"
+                    formFields={(campaignState as any)?.formFields}
+                    onStepChange={setCurrentStep}
+                  />
+                </div>
+              ) : (
+                <PreviewRenderer
+                  campaign={campaignData}
+                  previewMode={actualDevice === 'desktop' && selectedDevice === 'desktop' ? 'desktop' : selectedDevice}
+                  wheelModalConfig={wheelModalConfig}
+                />
+              )
             )}
           </div>
         ) : (
@@ -2909,6 +2979,79 @@ const FormEditorLayout: React.FC<FormEditorLayoutProps> = ({ mode = 'campaign', 
               <div className="min-h-full flex flex-col">
                 {/* Premier Canvas */}
                 <div data-screen-anchor="screen1" className="relative">
+                  {editorMode === 'article' ? (
+                    /* Article Mode: Show ArticleCanvas with funnel */
+                    <div className="w-full flex items-start justify-center bg-gray-100 overflow-y-auto p-8">
+                      <ArticleCanvas
+                        articleConfig={(campaignState as any)?.articleConfig || {}}
+                        onBannerChange={(imageUrl) => {
+                          if (campaignState) {
+                            setCampaign({
+                              ...campaignState,
+                              articleConfig: {
+                                ...(campaignState as any).articleConfig,
+                                banner: {
+                                  ...(campaignState as any).articleConfig?.banner,
+                                  imageUrl,
+                                },
+                              },
+                            });
+                          }
+                        }}
+                        onBannerRemove={() => {
+                          if (campaignState) {
+                            setCampaign({
+                              ...campaignState,
+                              articleConfig: {
+                                ...(campaignState as any).articleConfig,
+                                banner: {
+                                  ...(campaignState as any).articleConfig?.banner,
+                                  imageUrl: undefined,
+                                },
+                              },
+                            });
+                          }
+                        }}
+                        onTitleChange={(title) => {
+                          if (campaignState) {
+                            setCampaign({
+                              ...campaignState,
+                              articleConfig: {
+                                ...(campaignState as any).articleConfig,
+                                content: {
+                                  ...(campaignState as any).articleConfig?.content,
+                                  title,
+                                },
+                              },
+                            });
+                          }
+                        }}
+                        onDescriptionChange={(description) => {
+                          if (campaignState) {
+                            setCampaign({
+                              ...campaignState,
+                              articleConfig: {
+                                ...(campaignState as any).articleConfig,
+                                content: {
+                                  ...(campaignState as any).articleConfig?.content,
+                                  description,
+                                },
+                              },
+                            });
+                          }
+                        }}
+                        onCTAClick={handleCTAClick}
+                        onFormSubmit={handleFormSubmit}
+                        onGameComplete={handleGameComplete}
+                        currentStep={currentStep}
+                        editable={true}
+                        maxWidth={810}
+                        campaignType="form"
+                        formFields={(campaignState as any)?.formFields}
+                        onStepChange={setCurrentStep}
+                      />
+                    </div>
+                  ) : (
                   <DesignCanvas
                     editorMode={editorMode}
                     screenId="screen1"
@@ -2997,6 +3140,7 @@ const FormEditorLayout: React.FC<FormEditorLayoutProps> = ({ mode = 'campaign', 
                     onModuleMove={handleMoveModule}
                     onModuleDuplicate={handleDuplicateModule}
                   />
+                  )}
                 </div>
                 
                 {/* Deuxième Canvas - Seulement en mode Fullscreen */}

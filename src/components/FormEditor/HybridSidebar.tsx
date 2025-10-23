@@ -6,7 +6,11 @@ import {
   Gamepad2,
   Palette,
   FormInput,
-  MessageSquare
+  MessageSquare,
+  Image,
+  Type,
+  MousePointer,
+  List
 } from 'lucide-react';
 import { BackgroundPanel, CompositeElementsPanel, TextEffectsPanel } from '@/components/shared';
 import ImageModulePanel from '../QuizEditor/modules/ImageModulePanel';
@@ -23,7 +27,7 @@ import GameManagementPanel from './panels/GameManagementPanel';
 import FormConfigPanel from './panels/FormConfigPanel';
 import WheelConfigPanel from './panels/WheelConfigPanel';
 import MessagesPanel from './panels/MessagesPanel';
-import ArticleSidebar from './ArticleSidebar';
+import ArticleModePanel from '../DesignEditor/panels/ArticleModePanel';
 import { useEditorStore } from '../../stores/editorStore';
 import { useArticleBannerSync } from '@/hooks/useArticleBannerSync';
 import { getEditorDeviceOverride } from '@/utils/deviceOverrides';
@@ -274,7 +278,10 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
       setIsCollapsed(true);
     }
   }, [onForceElementsTab, isWindowMobile]);
-  const [internalActiveTab, setInternalActiveTab] = useState<string | null>('background');
+  // Initialiser l'onglet actif en fonction du mode : 'design' pour article, 'background' pour fullscreen
+  const [internalActiveTab, setInternalActiveTab] = useState<string | null>(
+    editorMode === 'article' ? 'design' : 'background'
+  );
   // Flag to indicate a deliberate user tab switch to avoid auto-switch overrides
   const isUserTabSwitchingRef = React.useRef(false);
   // Short-lived guard to ignore external setActiveTab calls (e.g. onOpenElementsTab) after manual tab switch
@@ -472,34 +479,42 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
     return () => cancel(id);
   }, [activeTab]);
 
-  const allTabs = [
-    { 
-      id: 'background', 
-      label: 'Design', 
-      icon: Palette,
-      debug: 'Onglet Design (background)'
-    },
-    { 
-      id: 'elements', 
-      label: 'Éléments', 
-      icon: Plus
-    },
-    { 
-      id: 'form', 
-      label: 'Formulaire', 
-      icon: FormInput
-    },
-    { 
-      id: 'game', 
-      label: 'Jeu', 
-      icon: Gamepad2
-    },
-    { 
-      id: 'messages', 
-      label: 'Sortie', 
-      icon: MessageSquare
-    }
-  ];
+  // Onglets différents selon le mode (Article vs Fullscreen)
+  const allTabs = editorMode === 'article' 
+    ? [
+        { id: 'design', label: 'Design', icon: Palette },
+        { id: 'form', label: 'Formulaire', icon: FormInput },
+        { id: 'game', label: 'Jeu', icon: Gamepad2 },
+        { id: 'messages', label: 'Sortie', icon: MessageSquare }
+      ]
+    : [
+        { 
+          id: 'background', 
+          label: 'Design', 
+          icon: Palette,
+          debug: 'Onglet Design (background)'
+        },
+        { 
+          id: 'elements', 
+          label: 'Éléments', 
+          icon: Plus
+        },
+        { 
+          id: 'form', 
+          label: 'Formulaire', 
+          icon: FormInput
+        },
+        { 
+          id: 'game', 
+          label: 'Jeu', 
+          icon: Gamepad2
+        },
+        { 
+          id: 'messages', 
+          label: 'Sortie', 
+          icon: MessageSquare
+        }
+      ];
   
   // Vérifier si hiddenTabs est défini et est un tableau
   const safeHiddenTabs = Array.isArray(hiddenTabs) ? hiddenTabs : [];
@@ -596,6 +611,18 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
             onElementUpdate={onElementUpdate}
           />
         );
+      case 'design':
+        if (editorMode === 'article') {
+          return (
+            <ArticleModePanel
+              campaign={campaign}
+              onCampaignChange={(updates) => setCampaign((prev: any) => ({ ...(prev || {}), ...updates }))}
+              activePanel={'banner'}
+              grouped
+            />
+          );
+        }
+        return null;
       case 'animations':
         return (
           <React.Suspense fallback={<div className="p-4 text-sm text-gray-500">Chargement des animations…</div>}>
@@ -714,6 +741,20 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
             selectedDevice={selectedDevice}
           />
         );
+      case 'banner':
+      case 'text':
+      case 'button':
+      case 'funnel':
+        if (editorMode === 'article') {
+          return (
+            <ArticleModePanel
+              campaign={campaign}
+              onCampaignChange={(updates) => setCampaign(updates as any)}
+              activePanel={tabId as 'banner' | 'text' | 'button' | 'funnel'}
+            />
+          );
+        }
+        return null;
       case 'background':
         // Pour les modules texte, passer le module comme selectedElement
         const elementForBackground = selectedModule?.type === 'BlocTexte' ? selectedModule : selectedElement;
@@ -880,7 +921,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
           <div className="space-y-6">
             <FormConfigPanel
               campaign={campaign}
-              onCampaignChange={setCampaign}
+              setCampaign={setCampaign}
             />
           </div>
         );

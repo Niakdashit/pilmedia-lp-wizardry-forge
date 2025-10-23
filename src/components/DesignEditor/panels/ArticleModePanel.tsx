@@ -6,6 +6,7 @@ interface ArticleModePanelProps {
   campaign: OptimizedCampaign | null;
   onCampaignChange: (updates: Partial<OptimizedCampaign>) => void;
   activePanel: 'banner' | 'text' | 'button' | 'funnel';
+  grouped?: boolean;
 }
 
 /**
@@ -18,8 +19,17 @@ const ArticleModePanel: React.FC<ArticleModePanelProps> = ({
   campaign,
   onCampaignChange,
   activePanel,
+  grouped = false,
 }) => {
   const articleConfig = campaign?.articleConfig || {};
+  const [groupTab, setGroupTab] = React.useState<'banner' | 'text' | 'button'>('banner');
+
+  // Sync with external activePanel only on mount or when explicitly changed
+  React.useEffect(() => {
+    if (activePanel === 'text' || activePanel === 'button') {
+      setGroupTab(activePanel);
+    }
+  }, []); // Empty deps: only run once on mount
 
   const handleBannerAspectRatio = (ratio: '2215/1536' | '1500/744') => {
     onCampaignChange({
@@ -75,6 +85,47 @@ const ArticleModePanel: React.FC<ArticleModePanelProps> = ({
     });
   };
 
+  const handleBannerImageChange = async (file: File | undefined) => {
+    if (!file) return;
+    const toDataUrl = (f: File) =>
+      new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(f);
+      });
+    try {
+      const dataUrl = await toDataUrl(file);
+      onCampaignChange({
+        articleConfig: {
+          ...articleConfig,
+          banner: {
+            ...articleConfig.banner,
+            imageUrl: dataUrl,
+          },
+        },
+      });
+      try {
+        const evt = new CustomEvent('applyBackgroundCurrentScreen', {
+          detail: { url: dataUrl }
+        });
+        window.dispatchEvent(evt);
+      } catch {}
+    } catch {}
+  };
+
+  const handleBannerImageRemove = () => {
+    onCampaignChange({
+      articleConfig: {
+        ...articleConfig,
+        banner: {
+          ...articleConfig.banner,
+          imageUrl: undefined,
+        },
+      },
+    });
+  };
+
   const handleFunnelChange = (updates: any) => {
     onCampaignChange({
       articleConfig: {
@@ -90,6 +141,36 @@ const ArticleModePanel: React.FC<ArticleModePanelProps> = ({
   // Panneau Bannière
   const renderBannerPanel = () => (
     <div className="space-y-6">
+      <div>
+        <h3 className="font-semibold text-sm text-gray-700 mb-3">IMAGE DE FOND (DESKTOP/TABLET)</h3>
+        <label className="w-full p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-[hsl(var(--primary))] hover:bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] hover:text-white transition-colors flex flex-col items-center group cursor-pointer">
+          <Upload className="w-6 h-6 mb-2 text-gray-600 group-hover:text-white" />
+          <span className="text-sm text-gray-600 group-hover:text-white">Télécharger pour Desktop/Tablet</span>
+          <span className="text-xs text-gray-500 group-hover:text-white">PNG, JPG jusqu'à 10MB</span>
+          <input
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => handleBannerImageChange(e.target.files?.[0])}
+          />
+        </label>
+        {articleConfig.banner?.imageUrl && (
+          <div className="mt-3 flex items-center gap-3">
+            <img
+              src={articleConfig.banner.imageUrl}
+              alt="Bannière"
+              className="h-16 w-auto rounded border border-gray-200"
+            />
+            <button
+              onClick={handleBannerImageRemove}
+              className="px-3 py-2 text-sm rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
+            >
+              Supprimer
+            </button>
+          </div>
+        )}
+      </div>
+
       <div>
         <h3 className="text-sm font-semibold text-gray-700 mb-3">Ratio d'image</h3>
         <div className="space-y-2">
@@ -112,13 +193,6 @@ const ArticleModePanel: React.FC<ArticleModePanelProps> = ({
             <span className="text-sm text-gray-700">1500×744px (Panoramique)</span>
           </label>
         </div>
-      </div>
-
-      <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-        <p className="text-xs text-blue-800 leading-relaxed">
-          💡 Double-cliquez sur la zone de bannière dans le canvas pour uploader une image. 
-          La bannière reste visible à toutes les étapes du funnel.
-        </p>
       </div>
     </div>
   );
@@ -341,7 +415,40 @@ const ArticleModePanel: React.FC<ArticleModePanelProps> = ({
     </div>
   );
 
-  // Rendu selon le panneau actif
+  // Mode groupé: onglets internes Design (Bannière / Texte / Bouton)
+  if (grouped && activePanel !== 'funnel') {
+    return (
+      <div className="flex flex-col h-full">
+        <div className="flex border-b border-gray-200 bg-gray-50">
+          {[
+            { id: 'banner' as const, label: 'Bannière', icon: Upload },
+            { id: 'text' as const, label: 'Texte', icon: Type },
+            { id: 'button' as const, label: 'Bouton', icon: MousePointer },
+          ].map((t) => (
+            <button
+              key={t.id}
+              onClick={() => setGroupTab(t.id)}
+              className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${
+                groupTab === t.id
+                  ? 'text-[#841b60] border-b-2 border-[#841b60] bg-white'
+                  : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
+              }`}
+            >
+              <t.icon className="w-4 h-4" />
+              <span className="hidden sm:inline">{t.label}</span>
+            </button>
+          ))}
+        </div>
+        <div className="flex-1 overflow-y-auto p-6">
+          {groupTab === 'banner' && renderBannerPanel()}
+          {groupTab === 'text' && renderTextPanel()}
+          {groupTab === 'button' && renderButtonPanel()}
+        </div>
+      </div>
+    );
+  }
+
+  // Rendu selon le panneau actif (mode non-groupé ou pour 'funnel')
   switch (activePanel) {
     case 'banner':
       return renderBannerPanel();

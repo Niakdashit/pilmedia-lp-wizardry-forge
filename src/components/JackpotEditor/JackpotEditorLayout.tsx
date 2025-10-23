@@ -11,6 +11,8 @@ const FunnelQuizParticipate = lazy(() => import('../funnels/FunnelQuizParticipat
 import type { ModularPage, ScreenId, BlocBouton, Module } from '@/types/modularEditor';
 import { createEmptyModularPage } from '@/types/modularEditor';
 
+import PreviewRenderer from '@/components/preview/PreviewRenderer';
+import ArticleCanvas from '@/components/ArticleEditor/ArticleCanvas';
 import ZoomSlider from './components/ZoomSlider';
 const DesignCanvas = lazy(() => import('./DesignCanvas'));
 import { useEditorStore } from '../../stores/editorStore';
@@ -116,7 +118,7 @@ const JackpotEditorLayout: React.FC<JackpotEditorLayoutProps> = ({ mode = 'campa
   
   // Détection du mode Article via URL (?mode=article)
   const searchParams = new URLSearchParams(location.search);
-  const editorMode = searchParams.get('mode') === 'article' ? 'article' : 'fullscreen';
+  const editorMode: 'article' | 'fullscreen' = searchParams.get('mode') === 'article' ? 'article' : 'fullscreen';
   
   console.log('🎨 [JackpotEditorLayout] Editor Mode:', editorMode);
   const getTemplateBaseWidths = useCallback((templateId?: string) => {
@@ -440,8 +442,13 @@ const JackpotEditorLayout: React.FC<JackpotEditorLayoutProps> = ({ mode = 'campa
   const [selectedElement, setSelectedElement] = useState<any>(null);
   const [selectedModuleId, setSelectedModuleId] = useState<string | null>(null);
   
-  const [activeSidebarTab, setActiveSidebarTab] = useState<string>('elements');
-  const [previousSidebarTab, setPreviousSidebarTab] = useState<string>('elements');
+  // Initialiser avec 'design' en mode article, 'elements' en mode fullscreen
+  const [activeSidebarTab, setActiveSidebarTab] = useState<string>(
+    editorMode === 'article' ? 'design' : 'elements'
+  );
+  const [previousSidebarTab, setPreviousSidebarTab] = useState<string>(
+    editorMode === 'article' ? 'design' : 'elements'
+  );
   
   // Debug wrapper pour setSelectedElement
   const debugSetSelectedElement = (element: any) => {
@@ -910,6 +917,7 @@ const JackpotEditorLayout: React.FC<JackpotEditorLayoutProps> = ({ mode = 'campa
     extractedColors
   }, 'jackpot'), [quizModalConfig, extractedColors]);
   const [showFunnel, setShowFunnel] = useState(false);
+  const [currentStep, setCurrentStep] = useState<'article' | 'form' | 'game' | 'result'>('article');
   const [previewButtonSide, setPreviewButtonSide] = useState<'left' | 'right'>(() =>
     (typeof window !== 'undefined' && localStorage.getItem('previewButtonSide') === 'left') ? 'left' : 'right'
   );
@@ -1530,7 +1538,8 @@ const JackpotEditorLayout: React.FC<JackpotEditorLayoutProps> = ({ mode = 'campa
       const allModules = (Object.values(modularPage.screens) as Module[][]).flat();
       const module = allModules.find((m) => m.id === moduleId);
       
-      if (module?.type === 'BlocTexte') {
+      // En mode article, ne pas forcer l'onglet background car il n'existe pas
+      if (module?.type === 'BlocTexte' && editorMode !== 'article') {
         if (activeSidebarTab !== 'background') {
           setActiveSidebarTab('background');
           if (sidebarRef.current) {
@@ -2073,6 +2082,26 @@ const JackpotEditorLayout: React.FC<JackpotEditorLayoutProps> = ({ mode = 'campa
 
   const handlePreview = () => {
     setShowFunnel(!showFunnel);
+    // Reset to article step when entering preview
+    if (!showFunnel) {
+      setCurrentStep('article');
+    }
+  };
+
+  // Funnel progression handlers
+  const handleCTAClick = () => {
+    console.log('🎯 [JackpotEditor] CTA clicked, moving to form step');
+    setCurrentStep('form');
+  };
+
+  const handleFormSubmit = (data: Record<string, string>) => {
+    console.log('📝 [JackpotEditor] Form submitted:', data);
+    setCurrentStep('game');
+  };
+
+  const handleGameComplete = () => {
+    console.log('🎮 [JackpotEditor] Game completed');
+    setCurrentStep('result');
   };
 
   // Save and continue: persist then navigate to settings page
@@ -2490,14 +2519,59 @@ const JackpotEditorLayout: React.FC<JackpotEditorLayoutProps> = ({ mode = 'campa
               /* Mobile Preview sur Desktop: Canvas centré avec cadre */
               <div className="flex items-center justify-center w-full h-full">
                 <div 
-                  className="relative overflow-hidden rounded-[32px] shadow-2xl"
+                  className="relative overflow-y-auto rounded-[32px] shadow-2xl"
                   style={{
                     width: '430px',
                     height: '932px',
                     maxHeight: '90vh'
                   }}
                 >
-                  {campaignData?.type === 'quiz' ? (
+                  {editorMode === 'article' ? (
+                    <ArticleCanvas
+                      articleConfig={(campaignState as any)?.articleConfig || {}}
+                      onBannerChange={() => {}}
+                      onBannerRemove={() => {}}
+                      onTitleChange={(title) => {
+                        if (campaignState) {
+                          setCampaign({
+                            ...campaignState,
+                            articleConfig: {
+                              ...(campaignState as any).articleConfig,
+                              content: {
+                                ...(campaignState as any).articleConfig?.content,
+                                title,
+                              },
+                            },
+                          });
+                        }
+                      }}
+                      onDescriptionChange={(description) => {
+                        if (campaignState) {
+                          setCampaign({
+                            ...campaignState,
+                            articleConfig: {
+                              ...(campaignState as any).articleConfig,
+                              content: {
+                                ...(campaignState as any).articleConfig?.content,
+                                description,
+                              },
+                            },
+                          });
+                        }
+                      }}
+                      onCTAClick={handleCTAClick}
+                      onFormSubmit={handleFormSubmit}
+                      onGameComplete={handleGameComplete}
+                      currentStep={currentStep}
+                      editable={false}
+                      maxWidth={810}
+                      campaignType={(campaignState as any)?.type || 'jackpot'}
+                      formFields={(campaignState as any)?.formFields}
+                      campaign={campaignData}
+                      wheelModalConfig={wheelModalConfig}
+                      gameModalConfig={wheelModalConfig}
+                    />
+                  ) : campaignData?.type === 'quiz' ? (
                     <FunnelQuizParticipate
                       campaign={campaignData as any}
                       previewMode="mobile"
@@ -2514,21 +2588,70 @@ const JackpotEditorLayout: React.FC<JackpotEditorLayoutProps> = ({ mode = 'campa
               </div>
             ) : (
               /* Desktop/Tablet Preview OU Mobile physique: Fullscreen */
-              <div className="w-full h-full pointer-events-auto flex items-center justify-center">
-                {campaignData?.type === 'quiz' ? (
-                  <FunnelQuizParticipate
-                    campaign={campaignData as any}
-                    previewMode={selectedDevice}
-                  />
-                ) : (
-                  <FunnelUnlockedGame
+              editorMode === 'article' ? (
+                <div className="w-full h-full flex items-start justify-center bg-gray-100 overflow-y-auto py-8" style={{ backgroundColor: '#2c2c35' }}>
+                  <ArticleCanvas
+                    articleConfig={(campaignState as any)?.articleConfig || {}}
+                    onBannerChange={() => {}}
+                    onBannerRemove={() => {}}
+                    onTitleChange={(title) => {
+                      if (campaignState) {
+                        setCampaign({
+                          ...campaignState,
+                          articleConfig: {
+                            ...(campaignState as any).articleConfig,
+                            content: {
+                              ...(campaignState as any).articleConfig?.content,
+                              title,
+                            },
+                          },
+                        });
+                      }
+                    }}
+                    onDescriptionChange={(description) => {
+                      if (campaignState) {
+                        setCampaign({
+                          ...campaignState,
+                          articleConfig: {
+                            ...(campaignState as any).articleConfig,
+                            content: {
+                              ...(campaignState as any).articleConfig?.content,
+                              description,
+                            },
+                          },
+                        });
+                      }
+                    }}
+                    onCTAClick={handleCTAClick}
+                    onFormSubmit={handleFormSubmit}
+                    onGameComplete={handleGameComplete}
+                    currentStep={currentStep}
+                    editable={false}
+                    maxWidth={810}
+                    campaignType={(campaignState as any)?.type || 'jackpot'}
+                    formFields={(campaignState as any)?.formFields}
                     campaign={campaignData}
-                    previewMode={actualDevice === 'desktop' && selectedDevice === 'desktop' ? 'desktop' : selectedDevice}
                     wheelModalConfig={wheelModalConfig}
-                    launchButtonStyles={launchButtonStyles}
+                    gameModalConfig={wheelModalConfig}
                   />
-                )}
-              </div>
+                </div>
+              ) : (
+                <div className="w-full h-full pointer-events-auto flex items-center justify-center">
+                  {campaignData?.type === 'quiz' ? (
+                    <FunnelQuizParticipate
+                      campaign={campaignData as any}
+                      previewMode={selectedDevice}
+                    />
+                  ) : (
+                    <FunnelUnlockedGame
+                      campaign={campaignData}
+                      previewMode={actualDevice === 'desktop' && selectedDevice === 'desktop' ? 'desktop' : selectedDevice}
+                      wheelModalConfig={wheelModalConfig}
+                      launchButtonStyles={launchButtonStyles}
+                    />
+                  )}
+                </div>
+              )
             )}
           </div>
         ) : (
@@ -2858,6 +2981,85 @@ const JackpotEditorLayout: React.FC<JackpotEditorLayoutProps> = ({ mode = 'campa
               <div className="min-h-full flex flex-col">
                 {/* Premier Canvas */}
                 <div data-screen-anchor="screen1" className="relative">
+                  <div className="flex-1 flex flex-col items-center justify-center overflow-hidden relative">
+                    {editorMode === 'article' ? (
+                      /* Article Mode: Show ArticleCanvas with funnel */
+                      <div className="w-full h-full flex items-start justify-center bg-gray-100 overflow-y-auto p-8">
+                        <ArticleCanvas
+                          articleConfig={(campaignState as any)?.articleConfig || {}}
+                          onBannerChange={(imageUrl) => {
+                            if (campaignState) {
+                              setCampaign({
+                                ...campaignState,
+                                articleConfig: {
+                                  ...(campaignState as any).articleConfig,
+                                  banner: {
+                                    ...(campaignState as any).articleConfig?.banner,
+                                    imageUrl,
+                                  },
+                                },
+                              });
+                            }
+                          }}
+                          onBannerRemove={() => {
+                            if (campaignState) {
+                              setCampaign({
+                                ...campaignState,
+                                articleConfig: {
+                                  ...(campaignState as any).articleConfig,
+                                  banner: {
+                                    ...(campaignState as any).articleConfig?.banner,
+                                    imageUrl: undefined,
+                                  },
+                                },
+                              });
+                            }
+                          }}
+                          onTitleChange={(title) => {
+                            if (campaignState) {
+                              setCampaign({
+                                ...campaignState,
+                                articleConfig: {
+                                  ...(campaignState as any).articleConfig,
+                                  content: {
+                                    ...(campaignState as any).articleConfig?.content,
+                                    title,
+                                  },
+                                },
+                              });
+                            }
+                          }}
+                          onDescriptionChange={(description) => {
+                            if (campaignState) {
+                              setCampaign({
+                                ...campaignState,
+                                articleConfig: {
+                                  ...(campaignState as any).articleConfig,
+                                  content: {
+                                    ...(campaignState as any).articleConfig?.content,
+                                    description,
+                                  },
+                                },
+                              });
+                            }
+                          }}
+                          onCTAClick={handleCTAClick}
+                          onFormSubmit={handleFormSubmit}
+                          onGameComplete={handleGameComplete}
+                          currentStep={currentStep}
+                          editable={true}
+                          maxWidth={810}
+                          campaignType={(campaignState as any)?.type || 'jackpot'}
+                          formFields={(campaignState as any)?.formFields}
+                          campaign={campaignData}
+                          wheelModalConfig={wheelModalConfig}
+                          gameModalConfig={wheelModalConfig}
+                          onStepChange={setCurrentStep}
+                        />
+                      </div>
+                    ) : null}
+                  </div>
+                  {editorMode !== 'article' && (
                   <DesignCanvas
                     editorMode={editorMode}
                     screenId="screen1"
@@ -2957,6 +3159,7 @@ const JackpotEditorLayout: React.FC<JackpotEditorLayoutProps> = ({ mode = 'campa
                     selectedModule={selectedModule}
                     onSelectedModuleChange={setSelectedModuleId}
                   />
+                  )}
                 </div>
                 
                 {/* Deuxième Canvas - Seulement en mode Fullscreen */}

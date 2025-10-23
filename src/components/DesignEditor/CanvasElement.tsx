@@ -444,20 +444,27 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
   }, [element.type, readOnly, isLaunchButton, onOpenWheelPanel]);
 
 
-  // Commit edits on blur/Enter without re-rendering per keystroke
+  // Commit edits on blur/Enter; persist rich HTML when present and plain text for search/index
   const commitEditingContent = useCallback(() => {
-    const newText = (editingTextRef.current ?? '').replace(/\n/g, '');
-    const current = element.content ?? '';
-    if (newText !== current) {
-      onUpdate(element.id, { content: newText });
+    const el = textRef.current;
+    const html = el ? el.innerHTML : undefined;
+    const newText = (el?.textContent ?? editingTextRef.current ?? '').replace(/\n/g, '');
+    const payload: any = { content: newText };
+    if (html && html.trim() !== '') {
+      payload.richHtml = html;
     }
-  }, [element.content, element.id, onUpdate]);
+    onUpdate(element.id, payload);
+  }, [element.id, onUpdate]);
 
   const handleTextKeyDown = useCallback((e: React.KeyboardEvent) => {
     const isMac = navigator.platform.toUpperCase().includes('MAC');
     const isMod = isMac ? (e.metaKey as boolean) : (e.ctrlKey as boolean);
 
     if (isMod) {
+      // When editing a text contentEditable, let the browser handle inline formatting (Cmd/Ctrl+B/I/U)
+      if (isEditing && element.type === 'text') {
+        return;
+      }
       const key = e.key.toLowerCase();
 
       if (key === 'b') {
@@ -534,22 +541,29 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
     setIsEditing(false);
   }, [commitEditingContent]);
 
-  // ContentEditable input handler to persist content changes
+  // ContentEditable input handler: track plain text and persist rich HTML live for toolbar inline actions
   const handleContentEditableInput = useCallback((e: React.FormEvent<HTMLDivElement>) => {
-    const newText = (e.currentTarget.textContent ?? '').replace(/\n/g, '');
+    const target = e.currentTarget as HTMLDivElement;
+    const newText = (target.textContent ?? '').replace(/\n/g, '');
     editingTextRef.current = newText;
-  }, []);
+    // Persist rich HTML so inline bold/italic/underline is not lost
+    const html = target.innerHTML;
+    onUpdate(element.id, { richHtml: html });
+  }, [element.id, onUpdate]);
 
   // Autofocus editable div and place caret at end on entering edit mode
   React.useEffect(() => {
     if (isEditing && !readOnly) {
       const el = textRef.current;
       if (el) {
-        // Initialize editing buffer with current content (no placeholder during edit)
-        const initial = (element.content ?? '');
-        editingTextRef.current = initial;
-        if (el.textContent !== initial) {
-          el.textContent = initial;
+        // Initialize editing DOM with richHtml when available, else plain content
+        const initialHtml = (element as any).richHtml as string | undefined;
+        const initialText = (element.content ?? '');
+        editingTextRef.current = initialText;
+        if (initialHtml && initialHtml.trim() !== '') {
+          if (el.innerHTML !== initialHtml) el.innerHTML = initialHtml;
+        } else if (el.textContent !== initialText) {
+          el.textContent = initialText;
         }
         el.focus();
         try {
@@ -562,7 +576,7 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
         } catch {}
       }
     }
-  }, [isEditing, readOnly, element.content]);
+  }, [isEditing, readOnly, element.content, (element as any).richHtml]);
 
   const handleAlign = useCallback((alignment: string) => {
     if (!containerRef?.current) return;
@@ -1227,7 +1241,12 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
             draggable={false}
             data-element-type="text"
           >
-            {element.content || 'Texte'}
+            {(element as any).richHtml ? (
+              // Keep initial children empty; actual HTML is injected in effect to preserve cursor
+              null
+            ) : (
+              element.content || 'Texte'
+            )}
           </div>
         ) : (
           <div
@@ -1236,8 +1255,9 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
             }
             style={getTextStyle()}
             data-element-type="text"
+            {...(((element as any).richHtml && (element as any).richHtml.trim() !== '') ? { dangerouslySetInnerHTML: { __html: (element as any).richHtml } } : {})}
           >
-            {element.content || 'Texte'}
+            {(!(element as any).richHtml || (element as any).richHtml.trim() === '') ? (element.content || 'Texte') : null}
           </div>
         );
       }

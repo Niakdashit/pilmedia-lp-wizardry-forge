@@ -199,7 +199,6 @@ const ArticleSidebar: React.FC<ArticleSidebarProps> = ({
   // Panneau Bouton
   const renderButtonPanel = () => (
     <div className="space-y-6">
-      {/* Texte du bouton */}
       <div>
         <label className="block text-sm font-semibold text-gray-700 mb-2">Texte du bouton</label>
         <input
@@ -213,160 +212,36 @@ const ArticleSidebar: React.FC<ArticleSidebarProps> = ({
         />
       </div>
 
-      <div className="h-px bg-gray-200"></div>
-
-      {/* Couleurs du bouton */}
       <div>
-        <h3 className="text-sm font-semibold text-gray-700 mb-3">Couleurs</h3>
-        
-        <div className="space-y-3">
-          <div>
-            <label className="block text-xs text-gray-600 mb-1">Couleur de fond</label>
-            <div className="flex items-center gap-2">
-              <input
-                type="color"
-                value={articleConfig.cta?.backgroundColor || '#841b60'}
-                onChange={(e) => onArticleConfigChange({
-                  cta: { ...articleConfig.cta, backgroundColor: e.target.value },
-                })}
-                className="w-12 h-10 border border-gray-300 rounded-lg cursor-pointer"
-              />
-              <input
-                type="text"
-                value={articleConfig.cta?.backgroundColor || '#841b60'}
-                onChange={(e) => onArticleConfigChange({
-                  cta: { ...articleConfig.cta, backgroundColor: e.target.value },
-                })}
-                className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60]"
-                placeholder="#841b60"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-xs text-gray-600 mb-1">Couleur du texte</label>
-            <div className="flex items-center gap-2">
-              <input
-                type="color"
-                value={articleConfig.cta?.textColor || '#ffffff'}
-                onChange={(e) => onArticleConfigChange({
-                  cta: { ...articleConfig.cta, textColor: e.target.value },
-                })}
-                className="w-12 h-10 border border-gray-300 rounded-lg cursor-pointer"
-              />
-              <input
-                type="text"
-                value={articleConfig.cta?.textColor || '#ffffff'}
-                onChange={(e) => onArticleConfigChange({
-                  cta: { ...articleConfig.cta, textColor: e.target.value },
-                })}
-                className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60]"
-                placeholder="#ffffff"
-              />
-            </div>
-          </div>
-        </div>
+        <label className="block text-sm font-semibold text-gray-700 mb-2">Taille</label>
+        <select
+          value={articleConfig.cta?.size || 'large'}
+          onChange={(e) => onArticleConfigChange({
+            cta: { ...articleConfig.cta, size: e.target.value as 'small' | 'medium' | 'large' },
+          })}
+          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60]"
+        >
+          <option value="small">Petit</option>
+          <option value="medium">Moyen</option>
+          <option value="large">Grand</option>
+        </select>
       </div>
 
-      <div className="h-px bg-gray-200"></div>
-
-      {/* Forme du bouton */}
       <div>
-        <h3 className="text-sm font-semibold text-gray-700 mb-3">Forme</h3>
-        
-        <div className="space-y-3">
-          <div>
-            <label className="block text-xs text-gray-600 mb-1">Arrondi des angles</label>
-            <div className="flex items-center gap-3">
-              <input
-                type="range"
-                min="0"
-                max="50"
-                value={articleConfig.cta?.borderRadius || 8}
-                onChange={(e) => onArticleConfigChange({
-                  cta: { ...articleConfig.cta, borderRadius: parseInt(e.target.value) },
-                })}
-                className="flex-1"
-              />
-              <div className="w-12 text-right text-xs text-gray-700">
-                {articleConfig.cta?.borderRadius || 8}px
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-xs text-gray-600 mb-1">Taille</label>
-            <select
-              value={articleConfig.cta?.size || 'large'}
-              onChange={(e) => onArticleConfigChange({
-                cta: { ...articleConfig.cta, size: e.target.value as 'small' | 'medium' | 'large' },
-              })}
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60]"
-            >
-              <option value="small">Petit</option>
-              <option value="medium">Moyen</option>
-              <option value="large">Grand</option>
-            </select>
-          </div>
-        </div>
+        <label className="block text-sm font-semibold text-gray-700 mb-2">Style</label>
+        <select
+          value={articleConfig.cta?.variant || 'primary'}
+          onChange={(e) => onArticleConfigChange({
+            cta: { ...articleConfig.cta, variant: e.target.value as 'primary' | 'secondary' | 'outline' },
+          })}
+          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60]"
+        >
+          <option value="primary">Principal</option>
+          <option value="secondary">Secondaire</option>
+          <option value="outline">Contour</option>
+        </select>
       </div>
 
-      <div className="h-px bg-gray-200"></div>
-
-      {/* Contour du bouton */}
-      <div>
-        <h3 className="text-sm font-semibold text-gray-700 mb-3">Contour</h3>
-        
-        <div className="space-y-3">
-          <div>
-            <label className="block text-xs text-gray-600 mb-1">Épaisseur</label>
-            <div className="flex items-center gap-3">
-              <input
-                type="range"
-                min="0"
-                max="10"
-                value={articleConfig.cta?.borderWidth || 0}
-                onChange={(e) => onArticleConfigChange({
-                  cta: { ...articleConfig.cta, borderWidth: parseInt(e.target.value) },
-                })}
-                className="flex-1"
-              />
-              <div className="w-12 text-right text-xs text-gray-700">
-                {articleConfig.cta?.borderWidth || 0}px
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-xs text-gray-600 mb-1">Couleur du contour</label>
-            <div className="flex items-center gap-2">
-              <input
-                type="color"
-                value={articleConfig.cta?.borderColor || '#841b60'}
-                onChange={(e) => onArticleConfigChange({
-                  cta: { ...articleConfig.cta, borderColor: e.target.value },
-                })}
-                className="w-12 h-10 border border-gray-300 rounded-lg cursor-pointer"
-                disabled={!articleConfig.cta?.borderWidth}
-              />
-              <input
-                type="text"
-                value={articleConfig.cta?.borderColor || '#841b60'}
-                onChange={(e) => onArticleConfigChange({
-                  cta: { ...articleConfig.cta, borderColor: e.target.value },
-                })}
-                className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60] disabled:opacity-50 disabled:cursor-not-allowed"
-                placeholder="#841b60"
-                disabled={!articleConfig.cta?.borderWidth}
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="h-px bg-gray-200"></div>
-
-      {/* Icône */}
       <div>
         <label className="block text-sm font-semibold text-gray-700 mb-2">Icône</label>
         <select

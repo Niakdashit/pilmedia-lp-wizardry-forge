@@ -9,8 +9,7 @@ import {
   MessageSquare,
   Image,
   Type,
-  MousePointer,
-  List
+  MousePointer
 } from 'lucide-react';
 import { BackgroundPanel, CompositeElementsPanel, TextEffectsPanel } from '@/components/shared';
 import ImageModulePanel from '../QuizEditor/modules/ImageModulePanel';
@@ -31,7 +30,6 @@ import { useEditorStore } from '../../stores/editorStore';
 import { getEditorDeviceOverride } from '@/utils/deviceOverrides';
 import { quizTemplates } from '../../types/quizTemplates';
 import type { Module, BlocImage, BlocCarte, BlocLogo, BlocPiedDePage } from '@/types/modularEditor';
-import { useArticleBannerSync } from '@/hooks/useArticleBannerSync';
 
 // Lazy-loaded heavy panels
 const loadPositionPanel = () => import('../DesignEditor/panels/PositionPanel');
@@ -148,11 +146,9 @@ interface HybridSidebarProps extends React.HTMLAttributes<HTMLDivElement> {
   onWheelScaleChange?: (scale: number) => void;
   onWheelShowBulbsChange?: (show: boolean) => void;
   onWheelPositionChange?: (position: 'left' | 'right' | 'center') => void;
-  // When true, use the fullscreen tab set even if editorMode is 'article'
-  forceFullTabs?: boolean;
 }
 
-const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({ 
+const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
   onAddElement,
   onBackgroundChange,
   onExtractedColorsChange,
@@ -225,8 +221,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
   onWheelBorderWidthChange,
   onWheelScaleChange,
   onWheelShowBulbsChange,
-  onWheelPositionChange,
-  forceFullTabs = false
+  onWheelPositionChange
 }: HybridSidebarProps, ref) => {
   // Détection du mode Article via URL
   const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
@@ -280,20 +275,23 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
       setIsCollapsed(true);
     }
   }, [onForceElementsTab, isWindowMobile]);
-
-  // Synchroniser les uploads d'images avec la bannière article
-  useArticleBannerSync(editorMode);
-  const [internalActiveTab, setInternalActiveTab] = useState<string | null>('background');
+  // Initialiser l'onglet actif en fonction du mode : 'design' pour article, 'background' pour fullscreen
+  const [internalActiveTab, setInternalActiveTab] = useState<string | null>(
+    editorMode === 'article' ? 'design' : 'background'
+  );
   // Flag to indicate a deliberate user tab switch to avoid auto-switch overrides
   const isUserTabSwitchingRef = React.useRef(false);
   // Short-lived guard to ignore external setActiveTab calls (e.g. onOpenElementsTab) after manual tab switch
   const ignoreExternalUntilRef = React.useRef<number>(0);
 
+  // Sync external activeTab only when it truly changes, not on every render
+  const prevActiveTabRef = React.useRef(activeTab);
   React.useEffect(() => {
-    if (activeTab !== undefined && activeTab !== internalActiveTab) {
+    if (activeTab !== undefined && activeTab !== prevActiveTabRef.current) {
+      prevActiveTabRef.current = activeTab;
       setInternalActiveTab(activeTab);
     }
-  }, [activeTab, internalActiveTab]);
+  }, [activeTab]);
   
   // Exposer setActiveTab via ref
   useImperativeHandle(ref, () => ({
@@ -403,7 +401,8 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
       shouldUpdate = true;
     }
     // Si le panneau Design est activé, forcer l'onglet background (sauf si déjà sur background)
-    else if (showDesignPanel && !prev.showDesignPanel && internalActiveTab !== 'background') {
+    // En mode article, ne pas forcer le passage à 'background' car cet onglet n'existe pas
+    else if (showDesignPanel && !prev.showDesignPanel && internalActiveTab !== 'background' && editorMode !== 'article') {
       newActiveTab = 'background';
       shouldUpdate = true;
     } 
@@ -438,7 +437,8 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
     };
 
     // Notifier le parent des changements de l'onglet Design
-    if (onDesignPanelChange) {
+    // En mode article, ne pas notifier les changements du panneau Design
+    if (onDesignPanelChange && editorMode !== 'article') {
       const isDesignActive = newActiveTab === 'background' || showDesignPanel;
       if (isDesignActive !== prev.showDesignPanel) {
         onDesignPanelChange(isDesignActive);
@@ -452,7 +452,8 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
     showWheelPanel,
     showDesignPanel,
     activeTab,
-    onDesignPanelChange
+    onDesignPanelChange,
+    editorMode
   ]);
 
   // Fermer automatiquement le panneau d'effets si aucun élément texte n'est sélectionné
@@ -484,24 +485,42 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
     return () => cancel(id);
   }, [activeTab]);
 
-  // Tab definitions
-  const articleTabs = [
-    { id: 'banner', label: 'Bannière', icon: Image },
-    { id: 'text', label: 'Texte', icon: Type },
-    { id: 'button', label: 'Bouton', icon: MousePointer },
-    { id: 'funnel', label: 'Funnel', icon: List }
-  ] as const;
-  const fullscreenTabs = [
-    { id: 'background', label: 'Design', icon: Palette, debug: 'Onglet Design (background)' },
-    { id: 'elements', label: 'Éléments', icon: Plus },
-    { id: 'form', label: 'Formulaire', icon: FormInput },
-    { id: 'game', label: 'Jeu', icon: Gamepad2 },
-    { id: 'messages', label: 'Sortie', icon: MessageSquare }
-  ] as const;
-
-  // Choose tabs: allow forcing fullscreen even in article mode
-  const useArticleTabs = (editorMode === 'article') && !forceFullTabs;
-  const allTabs = useArticleTabs ? (articleTabs as any[]) : (fullscreenTabs as any[]);
+  // Onglets différents selon le mode (Article vs Fullscreen)
+  const allTabs = editorMode === 'article' 
+    ? [
+        { id: 'design', label: 'Design', icon: Palette },
+        { id: 'form', label: 'Formulaire', icon: FormInput },
+        { id: 'game', label: 'Jeu', icon: Gamepad2 },
+        { id: 'messages', label: 'Sortie', icon: MessageSquare }
+      ]
+    : [
+        { 
+          id: 'background', 
+          label: 'Design', 
+          icon: Palette,
+          debug: 'Onglet Design (background)'
+        },
+        { 
+          id: 'elements', 
+          label: 'Éléments', 
+          icon: Plus
+        },
+        { 
+          id: 'form', 
+          label: 'Formulaire', 
+          icon: FormInput
+        },
+        { 
+          id: 'game', 
+          label: 'Jeu', 
+          icon: Gamepad2
+        },
+        { 
+          id: 'messages', 
+          label: 'Sortie', 
+          icon: MessageSquare
+        }
+      ];
   
   // Vérifier si hiddenTabs est défini et est un tableau
   const safeHiddenTabs = Array.isArray(hiddenTabs) ? hiddenTabs : [];
@@ -598,6 +617,29 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
             onElementUpdate={onElementUpdate}
           />
         );
+      case 'design':
+        if (editorMode === 'article') {
+          return (
+            <ArticleModePanel
+              campaign={campaign}
+              onCampaignChange={(updates) => setCampaign((prev: any) => {
+                const next = { ...(prev || {}) } as any;
+                const upd: any = updates || {};
+                if (upd.articleConfig) {
+                  next.articleConfig = {
+                    ...(prev?.articleConfig || {}),
+                    ...upd.articleConfig,
+                  };
+                }
+                const { articleConfig, ...rest } = upd;
+                return { ...next, ...rest };
+              })}
+              activePanel={'banner'}
+              grouped
+            />
+          );
+        }
+        return null;
       case 'animations':
         return (
           <React.Suspense fallback={<div className="p-4 text-sm text-gray-500">Chargement des animations…</div>}>
@@ -720,13 +762,12 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
       case 'banner':
       case 'text':
       case 'button':
-      case 'funnel':
         if (editorMode === 'article') {
           return (
             <ArticleModePanel
               campaign={campaign}
               onCampaignChange={(updates) => setCampaign(updates as any)}
-              activePanel={tabId as 'banner' | 'text' | 'button' | 'funnel'}
+              activePanel={tabId as 'banner' | 'text' | 'button'}
             />
           );
         }

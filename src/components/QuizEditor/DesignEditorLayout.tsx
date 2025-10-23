@@ -7,6 +7,7 @@ import { Save, X } from 'lucide-react';
 const HybridSidebar = lazy(() => import('./HybridSidebar'));
 const DesignToolbar = lazy(() => import('./DesignToolbar'));
 import PreviewRenderer from '@/components/preview/PreviewRenderer';
+import ArticleCanvas from '@/components/ArticleEditor/ArticleCanvas';
 import type { ModularPage, ScreenId, BlocBouton, Module } from '@/types/modularEditor';
 import { createEmptyModularPage } from '@/types/modularEditor';
 
@@ -112,7 +113,7 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
   
   // Détection du mode Article via URL (?mode=article)
   const searchParams = new URLSearchParams(location.search);
-  const editorMode = searchParams.get('mode') === 'article' ? 'article' : 'fullscreen';
+  const editorMode: 'article' | 'fullscreen' = searchParams.get('mode') === 'article' ? 'article' : 'fullscreen';
   
   console.log('🎨 [QuizEditorLayout] Editor Mode:', editorMode);
   const getTemplateBaseWidths = useCallback((templateId?: string) => {
@@ -198,12 +199,10 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
 
   // Store centralisé pour l'optimisation
   const { 
-    campaign: storeCampaign,
     setCampaign,
     setPreviewDevice,
     setIsLoading,
-    setIsModified,
-    resetCampaign
+    setIsModified
   } = useEditorStore();
   
   // Hook de synchronisation preview
@@ -213,12 +212,6 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
 
   // Supabase campaigns API
   const { saveCampaign } = useCampaigns();
-
-  // Réinitialiser la campagne au montage de l'éditeur
-  useEffect(() => {
-    console.log('🎨 [QuizEditor] Mounting - resetting campaign state');
-    resetCampaign();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // État local pour la compatibilité existante
   const [selectedDevice, setSelectedDevice] = useState<'desktop' | 'tablet' | 'mobile'>(actualDevice);
@@ -517,8 +510,13 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
   // État pour l'élément sélectionné
   const [selectedElement, setSelectedElement] = useState<any>(null);
   const [selectedModuleId, setSelectedModuleId] = useState<string | null>(null);
-  const [activeSidebarTab, setActiveSidebarTab] = useState<string>('elements');
-  const [previousSidebarTab, setPreviousSidebarTab] = useState<string>('elements');
+  // Initialiser avec 'design' en mode article, 'elements' en mode fullscreen
+  const [activeSidebarTab, setActiveSidebarTab] = useState<string>(
+    editorMode === 'article' ? 'design' : 'elements'
+  );
+  const [previousSidebarTab, setPreviousSidebarTab] = useState<string>(
+    editorMode === 'article' ? 'design' : 'elements'
+  );
   
   // Debug wrapper pour setSelectedElement
   const debugSetSelectedElement = (element: any) => {
@@ -953,6 +951,7 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
   }, [canvasElements]);
   const [extractedColors, setExtractedColors] = useState<string[]>([]);
   const [showFunnel, setShowFunnel] = useState(false);
+  const [currentStep, setCurrentStep] = useState<'article' | 'form' | 'game' | 'result'>('article');
   const [previewButtonSide, setPreviewButtonSide] = useState<'left' | 'right'>(() =>
     (typeof window !== 'undefined' && localStorage.getItem('previewButtonSide') === 'left') ? 'left' : 'right'
   );
@@ -1594,7 +1593,8 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
       setPreviousSidebarTab(activeSidebarTab);
       // Si c'est un BlocTexte, ouvrir l'onglet Design (background) pour éditer le texte
       // Sinon, ouvrir l'onglet Elements pour les autres modules
-      if (selectedModule?.type === 'BlocTexte') {
+      // En mode article, ne pas forcer l'onglet background car il n'existe pas
+      if (selectedModule?.type === 'BlocTexte' && editorMode !== 'article') {
         setActiveSidebarTab('background');
       } else {
         setActiveSidebarTab('elements');
@@ -2030,9 +2030,7 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
         device: selectedDevice
       },
       // Ajouter modularPage pour compatibilité
-      modularPage: modularPage,
-      // Inclure articleConfig depuis le store pour le mode Article
-      articleConfig: (campaignState as any)?.articleConfig
+      modularPage: modularPage
     };
   }, [
     canvasElements,
@@ -2191,6 +2189,27 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
     }));
     
     setShowFunnel(!showFunnel);
+    // Reset to article step when entering preview
+    if (!showFunnel) {
+      setCurrentStep('article');
+    }
+  };
+
+  // Funnel progression handlers for Quiz
+  // Quiz flow: Article → Quiz (game) → Form → Result
+  const handleCTAClick = () => {
+    console.log('🎯 [QuizEditor] CTA clicked, starting quiz (game step)');
+    setCurrentStep('game'); // Quiz IS the game
+  };
+
+  const handleFormSubmit = (data: Record<string, string>) => {
+    console.log('📝 [QuizEditor] Form submitted:', data);
+    setCurrentStep('result'); // After form, go to result
+  };
+
+  const handleGameComplete = () => {
+    console.log('🎮 [QuizEditor] Quiz completed, moving to form');
+    setCurrentStep('form'); // After quiz, show form
   };
 
   // Save and continue: persist then navigate to settings page
@@ -2608,28 +2627,74 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
               /* Mobile Preview sur Desktop: Canvas centré avec fond #2c2c35 - Dimensions identiques au mode édition */
               <div className="flex items-center justify-center w-full h-full">
                 <div 
-                  className="relative overflow-hidden rounded-[32px] shadow-2xl"
+                  className="relative overflow-y-auto rounded-[32px] shadow-2xl"
                   style={{
                     width: '430px',
                     height: '932px',
                     maxHeight: '90vh'
                   }}
                 >
-                  <PreviewRenderer
-                    campaign={campaignData}
-                    previewMode="mobile"
-                    wheelModalConfig={wheelModalConfig}
-                    constrainedHeight={true}
-                  />
+                  {editorMode === 'article' ? (
+                    <ArticleCanvas
+                      articleConfig={(campaignState as any)?.articleConfig || {}}
+                      onBannerChange={() => {}}
+                      onBannerRemove={() => {}}
+                      onTitleChange={() => {}}
+                      onDescriptionChange={() => {}}
+                      onCTAClick={handleCTAClick}
+                      onFormSubmit={handleFormSubmit}
+                      onGameComplete={handleGameComplete}
+                      currentStep={currentStep}
+                      editable={false}
+                      maxWidth={810}
+                      campaignType={(campaignState as any)?.type || 'quiz'}
+                      formFields={(campaignState as any)?.formFields}
+                      campaign={campaignData}
+                      wheelModalConfig={wheelModalConfig}
+                      gameModalConfig={quizModalConfig}
+                      onStepChange={setCurrentStep}
+                    />
+                  ) : (
+                    <PreviewRenderer
+                      campaign={campaignData}
+                      previewMode="mobile"
+                      wheelModalConfig={wheelModalConfig}
+                      constrainedHeight={true}
+                    />
+                  )}
                 </div>
               </div>
             ) : (
               /* Desktop/Tablet Preview OU Mobile physique: Fullscreen sans cadre */
-              <PreviewRenderer
-                campaign={campaignData}
-                previewMode={actualDevice === 'desktop' && selectedDevice === 'desktop' ? 'desktop' : selectedDevice}
-                wheelModalConfig={wheelModalConfig}
-              />
+              editorMode === 'article' ? (
+                <div className="w-full h-full flex items-start justify-center bg-gray-100 overflow-y-auto py-8" style={{ backgroundColor: '#2c2c35' }}>
+                  <ArticleCanvas
+                    articleConfig={(campaignState as any)?.articleConfig || {}}
+                    onBannerChange={() => {}}
+                    onBannerRemove={() => {}}
+                    onTitleChange={() => {}}
+                    onDescriptionChange={() => {}}
+                    onCTAClick={handleCTAClick}
+                    onFormSubmit={handleFormSubmit}
+                    onGameComplete={handleGameComplete}
+                    currentStep={currentStep}
+                    editable={false}
+                    maxWidth={810}
+                    campaignType={(campaignState as any)?.type || 'quiz'}
+                    formFields={(campaignState as any)?.formFields}
+                    campaign={campaignData}
+                    wheelModalConfig={wheelModalConfig}
+                    gameModalConfig={quizModalConfig}
+                    onStepChange={setCurrentStep}
+                  />
+                </div>
+              ) : (
+                <PreviewRenderer
+                  campaign={campaignData}
+                  previewMode={actualDevice === 'desktop' && selectedDevice === 'desktop' ? 'desktop' : selectedDevice}
+                  wheelModalConfig={wheelModalConfig}
+                />
+              )
             )}
           </div>
         ) : (
@@ -2649,7 +2714,6 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
                 onElementsChange={setCanvasElements}
                 selectedElement={selectedElement}
                 onElementUpdate={handleElementUpdate}
-                forceFullTabs={editorMode === 'article'}
                 // Modular editor wiring
                 currentScreen={currentScreen}
                 onAddModule={handleAddModule}

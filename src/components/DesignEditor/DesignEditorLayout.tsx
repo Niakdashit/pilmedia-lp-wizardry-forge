@@ -7,6 +7,7 @@ import { Save, X } from 'lucide-react';
 const HybridSidebar = lazy(() => import('./HybridSidebar'));
 const DesignToolbar = lazy(() => import('./DesignToolbar'));
 import PreviewRenderer from '@/components/preview/PreviewRenderer';
+import ArticleCanvas from '@/components/ArticleEditor/ArticleCanvas';
 // import GradientBand from '../shared/GradientBand';
 import type { ModularPage, ScreenId, BlocBouton, Module } from '@/types/modularEditor';
 import { createEmptyModularPage } from '@/types/modularEditor';
@@ -40,7 +41,7 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
   
   // Détection du mode Article via URL (?mode=article)
   const searchParams = new URLSearchParams(location.search);
-  const editorMode = searchParams.get('mode') === 'article' ? 'article' : 'fullscreen';
+  const editorMode: 'article' | 'fullscreen' = searchParams.get('mode') === 'article' ? 'article' : 'fullscreen';
   
   console.log('🎨 [DesignEditorLayout] Editor Mode:', editorMode);
   
@@ -239,7 +240,10 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
   const [showPositionInSidebar, setShowPositionInSidebar] = useState(false);
   const [showDesignInSidebar, setShowDesignInSidebar] = useState(false);
   // État pour l'onglet actif dans HybridSidebar
-  const [activeTab, setActiveTab] = useState<string | null>('background');
+  // Initialiser avec 'banner' en mode article, 'background' en mode fullscreen
+  const [activeTab, setActiveTab] = useState<string | null>(
+    editorMode === 'article' ? 'banner' : 'background'
+  );
   // Référence pour contrôler l'onglet actif dans HybridSidebar
   const sidebarRef = useRef<{ setActiveTab: (tab: string) => void }>(null); // Nouvelle référence pour suivre la demande d'ouverture
   // Context de couleur demandé depuis la toolbar ('fill' | 'border' | 'text')
@@ -256,8 +260,6 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
 
   // Hook de synchronisation preview
   const { syncBackground } = useEditorPreviewSync();
-
-  // (handler defined later in file; see existing implementation around background history)
 
   // Détecter la position de scroll pour changer l'écran courant
   useEffect(() => {
@@ -676,7 +678,8 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
       
       // Si c'est un BlocTexte, ouvrir l'onglet Design (background) pour éditer le texte
       // Sinon, ouvrir l'onglet Elements pour les autres modules
-      if (module?.type === 'BlocTexte') {
+      // En mode article, ne pas forcer l'onglet background car il n'existe pas
+      if (module?.type === 'BlocTexte' && editorMode !== 'article') {
         console.log('📝 [DesignEditor] Opening Background tab for BlocTexte');
         // Ne changer l'onglet que si on n'est pas déjà sur background
         if (activeTab !== 'background') {
@@ -728,6 +731,7 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
   }, [canvasElements]);
   const [extractedColors, setExtractedColors] = useState<string[]>([]);
   const [showFunnel, setShowFunnel] = useState(false);
+  const [currentStep, setCurrentStep] = useState<'article' | 'form' | 'game' | 'result'>('article');
   const [previewButtonSide, setPreviewButtonSide] = useState<'left' | 'right'>(() =>
     (typeof window !== 'undefined' && localStorage.getItem('previewButtonSide') === 'left') ? 'left' : 'right'
   );
@@ -948,45 +952,6 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
       });
       setCanvasBackground(bg);
     }
-
-    // 🔗 Mode Article: refléter toute image de background vers la bannière de l'article pour feedback immédiat
-    try {
-      if (editorMode === 'article' && bg?.type === 'image' && typeof bg?.value === 'string') {
-        // Mettre à jour le store Zustand
-        setCampaign((prev: any) => {
-          const base = prev || {};
-          const baseArticle = base.articleConfig || {};
-          const baseBanner = baseArticle.banner || {};
-          return {
-            ...base,
-            articleConfig: {
-              ...baseArticle,
-              banner: {
-                ...baseBanner,
-                imageUrl: bg.value
-              }
-            }
-          };
-        });
-        // Mettre à jour aussi le state local pour que campaignData le reflète immédiatement
-        setCampaignConfig((prev: any) => {
-          const base = prev || {};
-          const baseArticle = base.articleConfig || {};
-          const baseBanner = baseArticle.banner || {};
-          return {
-            ...base,
-            articleConfig: {
-              ...baseArticle,
-              banner: {
-                ...baseBanner,
-                imageUrl: bg.value
-              }
-            }
-          };
-        });
-        try { setIsModified(true); } catch {}
-      }
-    } catch {}
     
     setTimeout(() => {
       addToHistory({
@@ -1209,11 +1174,113 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
     getGroupElements
   } = groupManager;
   
+  // Mise à jour de plusieurs éléments à la fois (pour multi-sélection)
+  const handleElementsUpdate = useCallback((elementIds: string[], updates: any) => {
+    setCanvasElements(prev => {
+      const newArr = prev.map(el => {
+        if (elementIds.includes(el.id)) {
+          return { ...el, ...updates };
+        }
+        return el;
+      });
+      setTimeout(() => {
+        addToHistory({
+          campaignConfig: { ...campaignConfig },
+          canvasElements: JSON.parse(JSON.stringify(newArr)),
+          canvasBackground: { ...canvasBackground }
+        }, 'elements_update');
+      }, 0);
+      return newArr;
+    });
+  }, [campaignConfig, canvasBackground, addToHistory]);
+  
   // Fonctions pour les raccourcis clavier d'éléments
+  const handleElementSelect = useCallback((element: any) => {
+    setSelectedElement(element);
+    setSelectedElements(element ? [element] : []);
+    console.log('🎯 Selected element:', element?.id);
+  }, []);
+  
+  const handleMultiSelect = useCallback((elements: any[]) => {
+    setSelectedElements(elements);
+    setSelectedElement(elements.length === 1 ? elements[0] : null);
+    console.log('🎯 Multi-selected elements:', elements.length);
+  }, []);
+  
+  const handleClearSelection = useCallback(() => {
+    setSelectedElement(null);
+    setSelectedElements([]);
+    console.log('🎯 Cleared selection');
+  }, []);
+  
   const handleDeselectAll = useCallback(() => {
     setSelectedElement(null);
     setSelectedElements([]);
     console.log('🎯 Deselected all elements');
+  }, []);
+  
+  // Fonctions pour la gestion des modules (mode modular)
+  const handleModuleSelect = useCallback((moduleId: string) => {
+    setSelectedModuleId(moduleId);
+    console.log('🎯 Selected module:', moduleId);
+  }, []);
+  
+  const handleModuleUpdate = useCallback((moduleId: string, updates: any) => {
+    setModularPage(prev => {
+      const updated = { ...prev };
+      // Mise à jour du module dans l'écran actuel
+      Object.keys(updated.screens).forEach(screenKey => {
+        const screen = updated.screens[screenKey as ScreenId];
+        if (Array.isArray(screen)) {
+          updated.screens[screenKey as ScreenId] = screen.map((mod: Module) =>
+            mod.id === moduleId ? { ...mod, ...updates } : mod
+          );
+        }
+      });
+      return updated;
+    });
+    console.log('🔄 Updated module:', moduleId);
+  }, []);
+  
+  const handleModuleDelete = useCallback((moduleId: string) => {
+    setModularPage(prev => {
+      const updated = { ...prev };
+      Object.keys(updated.screens).forEach(screenKey => {
+        const screen = updated.screens[screenKey as ScreenId];
+        if (Array.isArray(screen)) {
+          updated.screens[screenKey as ScreenId] = screen.filter((mod: Module) => mod.id !== moduleId);
+        }
+      });
+      return updated;
+    });
+    setSelectedModuleId(null);
+    console.log('🗑️ Deleted module:', moduleId);
+  }, []);
+  
+  const handleModuleDuplicate = useCallback((moduleId: string) => {
+    setModularPage(prev => {
+      const updated = { ...prev };
+      Object.keys(updated.screens).forEach(screenKey => {
+        const screen = updated.screens[screenKey as ScreenId];
+        if (Array.isArray(screen)) {
+          const moduleIndex = screen.findIndex((mod: Module) => mod.id === moduleId);
+          if (moduleIndex !== -1) {
+            const originalModule = screen[moduleIndex];
+            const duplicatedModule = {
+              ...originalModule,
+              id: `${originalModule.id}-copy-${Date.now()}`
+            };
+            updated.screens[screenKey as ScreenId] = [
+              ...screen.slice(0, moduleIndex + 1),
+              duplicatedModule,
+              ...screen.slice(moduleIndex + 1)
+            ];
+          }
+        }
+      });
+      return updated;
+    });
+    console.log('📋 Duplicated module:', moduleId);
   }, []);
   
   const handleElementDelete = useCallback((elementId?: string) => {
@@ -1384,6 +1451,7 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
     return {
       id: 'wheel-design-preview',
       type: 'wheel',
+      articleConfig: (campaignState as any)?.articleConfig,
       design: {
         background: canvasBackground,
         screenBackgrounds: screenBackgrounds, // Backgrounds par écran pour le preview
@@ -1428,8 +1496,6 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
             { id: 'nom', label: 'Nom', type: 'text', required: true },
             { id: 'email', label: 'Email', type: 'email', required: true }
           ],
-      // Article config pour le mode Article
-      articleConfig: (campaignState as any)?.articleConfig || campaignConfig?.articleConfig,
       // Garder la configuration canvas pour compatibilité
       canvasConfig: {
         elements: canvasElements,
@@ -1446,8 +1512,10 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
     // Ne pas synchroniser en mode preview pour éviter les boucles infinies
     if (!campaignData || showFunnel) return;
 
+    // Do not feed articleConfig back into the store here to avoid feedback loops in article mode
+    const { articleConfig: _skipArticleConfig, ...dataForSync } = campaignData as any;
     const transformedCampaign = {
-      ...campaignData,
+      ...dataForSync,
       name: 'Ma Campagne',
       type: (campaignData.type || 'wheel') as 'wheel' | 'scratch' | 'jackpot' | 'quiz' | 'dice' | 'form' | 'memory' | 'puzzle',
       design: {
@@ -1562,6 +1630,28 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
     
     // Tous les cas : toggle fullscreen preview
     setShowFunnel(!showFunnel);
+    // Reset to article step when entering preview
+    if (!showFunnel) {
+      setCurrentStep('article');
+    }
+  };
+
+  // Funnel progression handlers
+  const handleCTAClick = () => {
+    console.log('🎯 [DesignEditor] CTA clicked, moving to form step');
+    setCurrentStep('form');
+  };
+
+  const handleFormSubmit = (data: Record<string, string>) => {
+    console.log('📝 [DesignEditor] Form submitted:', data);
+    // For form-only campaigns, skip game and go directly to result
+    const isFormOnly = (campaignState as any)?.type === 'form';
+    setCurrentStep(isFormOnly ? 'result' : 'game');
+  };
+
+  const handleGameComplete = () => {
+    console.log('🎮 [DesignEditor] Game completed');
+    setCurrentStep('result');
   };
 
   // Save and continue: persist then navigate to settings page
@@ -1940,21 +2030,65 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
                     maxHeight: '90vh'
                   }}
                 >
-                  <PreviewRenderer
-                    campaign={campaignData}
-                    previewMode="mobile"
-                    wheelModalConfig={wheelModalConfig}
-                    constrainedHeight={true}
-                  />
+                  {editorMode === 'article' ? (
+                    <ArticleCanvas
+                      articleConfig={(campaignState as any)?.articleConfig || {}}
+                      onBannerChange={() => {}}
+                      onBannerRemove={() => {}}
+                      onTitleChange={() => {}}
+                      onDescriptionChange={() => {}}
+                      onCTAClick={handleCTAClick}
+                      onFormSubmit={handleFormSubmit}
+                      onGameComplete={handleGameComplete}
+                      currentStep={currentStep}
+                      editable={false}
+                      maxWidth={810}
+                      campaignType={(campaignState as any)?.type || 'wheel'}
+                      formFields={(campaignState as any)?.formFields}
+                      campaign={campaignData}
+                      wheelModalConfig={wheelModalConfig}
+                      gameModalConfig={wheelModalConfig}
+                    />
+                  ) : (
+                    <PreviewRenderer
+                      campaign={campaignData}
+                      previewMode="mobile"
+                      wheelModalConfig={wheelModalConfig}
+                      constrainedHeight={true}
+                    />
+                  )}
                 </div>
               </div>
             ) : (
               /* Desktop/Tablet Preview OU Mobile physique: Fullscreen sans cadre */
-              <PreviewRenderer
-                campaign={campaignData}
-                previewMode={actualDevice === 'desktop' && selectedDevice === 'desktop' ? 'desktop' : selectedDevice}
-                wheelModalConfig={wheelModalConfig}
-              />
+              editorMode === 'article' ? (
+                <div className="w-full h-full flex items-start justify-center bg-gray-100 overflow-y-auto py-8" style={{ backgroundColor: '#2c2c35' }}>
+                  <ArticleCanvas
+                    articleConfig={(campaignState as any)?.articleConfig || {}}
+                    onBannerChange={() => {}}
+                    onBannerRemove={() => {}}
+                    onTitleChange={() => {}}
+                    onDescriptionChange={() => {}}
+                    onCTAClick={handleCTAClick}
+                    onFormSubmit={handleFormSubmit}
+                    onGameComplete={handleGameComplete}
+                    currentStep={currentStep}
+                    editable={false}
+                    maxWidth={810}
+                    campaignType={(campaignState as any)?.type || 'wheel'}
+                    formFields={(campaignState as any)?.formFields}
+                    campaign={campaignData}
+                    wheelModalConfig={wheelModalConfig}
+                    gameModalConfig={wheelModalConfig}
+                  />
+                </div>
+              ) : (
+                <PreviewRenderer
+                  campaign={campaignData}
+                  previewMode={actualDevice === 'desktop' && selectedDevice === 'desktop' ? 'desktop' : selectedDevice}
+                  wheelModalConfig={wheelModalConfig}
+                />
+              )
             )}
           </div>
         ) : (
@@ -2032,7 +2166,6 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
                 onWheelShowBulbsChange={setShowBulbs}
                 onWheelPositionChange={setWheelPosition}
                 selectedDevice={selectedDevice}
-                forceFullTabs={editorMode === 'article'}
                 hiddenTabs={effectiveHiddenTabs}
                 colorEditingContext={designColorContext}
                 className={isWindowMobile ? "vertical-sidebar-drawer" : ""}
@@ -2065,33 +2198,98 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
               <div className="min-h-full flex flex-col">
                 {/* Premier Canvas - Screen 1 */}
                 <div data-screen-anchor="screen1" className="relative">
+                  <div className="flex-1 flex flex-col items-center justify-center overflow-hidden relative">
+                    {editorMode === 'article' ? (
+                      /* Article Mode: Show ArticleCanvas with funnel */
+                      <div className="w-full h-full flex items-start justify-center bg-gray-100 overflow-y-auto p-8">
+                        <ArticleCanvas
+                          articleConfig={(campaignState as any)?.articleConfig || {}}
+                          onBannerChange={(imageUrl) => {
+                            if (campaignState) {
+                              setCampaign({
+                                ...campaignState,
+                                articleConfig: {
+                                  ...(campaignState as any).articleConfig,
+                                  banner: {
+                                    ...(campaignState as any).articleConfig?.banner,
+                                    imageUrl,
+                                  },
+                                },
+                              });
+                            }
+                          }}
+                          onBannerRemove={() => {
+                            if (campaignState) {
+                              setCampaign({
+                                ...campaignState,
+                                articleConfig: {
+                                  ...(campaignState as any).articleConfig,
+                                  banner: {
+                                    ...(campaignState as any).articleConfig?.banner,
+                                    imageUrl: undefined,
+                                  },
+                                },
+                              });
+                            }
+                          }}
+                          onTitleChange={(title) => {
+                            if (campaignState) {
+                              setCampaign({
+                                ...campaignState,
+                                articleConfig: {
+                                  ...(campaignState as any).articleConfig,
+                                  content: {
+                                    ...(campaignState as any).articleConfig?.content,
+                                    title,
+                                  },
+                                },
+                              });
+                            }
+                          }}
+                          onDescriptionChange={(description) => {
+                            if (campaignState) {
+                              setCampaign({
+                                ...campaignState,
+                                articleConfig: {
+                                  ...(campaignState as any).articleConfig,
+                                  content: {
+                                    ...(campaignState as any).articleConfig?.content,
+                                    description,
+                                  },
+                                },
+                              });
+                            }
+                          }}
+                          onCTAClick={handleCTAClick}
+                          onFormSubmit={handleFormSubmit}
+                          onGameComplete={handleGameComplete}
+                          currentStep={currentStep}
+                          editable={true}
+                          maxWidth={810}
+                          campaignType={(campaignState as any)?.type || 'wheel'}
+                          formFields={(campaignState as any)?.formFields}
+                          campaign={campaignData}
+                          wheelModalConfig={wheelModalConfig}
+                          gameModalConfig={wheelModalConfig}
+                          onStepChange={setCurrentStep}
+                        />
+                      </div>
+                    ) : null}
+                  </div>
+                  {editorMode !== 'article' && (
                   <DesignCanvas
                     editorMode={editorMode}
                     screenId="screen1"
-                    ref={canvasRef}
                     selectedDevice={selectedDevice}
-                    elements={canvasElements}
-                    onElementsChange={setCanvasElements}
-                    background={screenBackgrounds.screen1?.devices?.[selectedDevice] || screenBackgrounds.screen1}
-                    campaign={campaignData}
-                    onCampaignChange={handleCampaignConfigChange}
                     zoom={canvasZoom}
-                    enableInternalAutoFit={true}
-                    onZoomChange={setCanvasZoom}
-                    selectedElement={selectedElement}
-                    onSelectedElementChange={setSelectedElement}
-                    selectedElements={selectedElements}
-                    onSelectedElementsChange={setSelectedElements}
-                    onElementUpdate={handleElementUpdate}
-                    // Wheel sync props
-                    wheelModalConfig={wheelModalConfig}
-                    extractedColors={extractedColors}
-                    containerClassName={mode === 'template' ? 'bg-gray-50' : undefined}
-                    elementFilter={(element: any) => {
-                      const role = typeof element?.role === 'string' ? element.role.toLowerCase() : '';
-                      return !role.includes('exit-message') && element?.screenId !== 'screen2' && element?.screenId !== 'screen3';
-                    }}
-                    // Sidebar panel triggers
+                    modularModules={modularPage.screens.screen1}
+                    onModuleUpdate={handleUpdateModule}
+                    onModuleDelete={handleDeleteModule}
+                    onModuleMove={handleMoveModule}
+                    onModuleDuplicate={handleDuplicateModule}
+                    selectedModuleId={selectedModuleId}
+                    selectedModule={selectedModule}
+                    onSelectedModuleChange={setSelectedModuleId}
                     onShowEffectsPanel={() => {
                       if (!isWindowMobile) {
                         setShowEffectsInSidebar(true);
@@ -2115,7 +2313,7 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
                       }
                     }}
                     onShowDesignPanel={(context?: 'fill' | 'border' | 'text') => {
-                      if (!isWindowMobile) {
+                      if (!isWindowMobile && editorMode !== 'article') {
                         if (context) {
                           setDesignColorContext(context);
                         }
@@ -2169,6 +2367,7 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
                     selectedModule={selectedModule}
                     onSelectedModuleChange={setSelectedModuleId}
                   />
+                  )}
                 </div>
                 
                 {/* Deuxième Canvas - Screen 2 (Wheel Game) - Seulement en mode Fullscreen */}
@@ -2232,15 +2431,17 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
                         }
                       }}
                       onShowDesignPanel={(context?: 'fill' | 'border' | 'text') => {
-                        if (context) {
-                          setDesignColorContext(context);
-                        }
-                        setShowDesignInSidebar(true);
-                        setShowEffectsInSidebar(false);
-                        setShowAnimationsInSidebar(false);
-                        setShowPositionInSidebar(false);
-                        if (sidebarRef.current) {
-                          sidebarRef.current.setActiveTab('background');
+                        if (editorMode !== 'article') {
+                          if (context) {
+                            setDesignColorContext(context);
+                          }
+                          setShowDesignInSidebar(true);
+                          setShowEffectsInSidebar(false);
+                          setShowAnimationsInSidebar(false);
+                          setShowPositionInSidebar(false);
+                          if (sidebarRef.current) {
+                            sidebarRef.current.setActiveTab('background');
+                          }
                         }
                       }}
                       onOpenElementsTab={() => {
@@ -2356,15 +2557,17 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
                         }
                       }}
                       onShowDesignPanel={(context?: 'fill' | 'border' | 'text') => {
-                        if (context) {
-                          setDesignColorContext(context);
-                        }
-                        setShowDesignInSidebar(true);
-                        setShowEffectsInSidebar(false);
-                        setShowAnimationsInSidebar(false);
-                        setShowPositionInSidebar(false);
-                        if (sidebarRef.current) {
-                          sidebarRef.current.setActiveTab('background');
+                        if (editorMode !== 'article') {
+                          if (context) {
+                            setDesignColorContext(context);
+                          }
+                          setShowDesignInSidebar(true);
+                          setShowEffectsInSidebar(false);
+                          setShowAnimationsInSidebar(false);
+                          setShowPositionInSidebar(false);
+                          if (sidebarRef.current) {
+                            sidebarRef.current.setActiveTab('background');
+                          }
                         }
                       }}
                       onOpenElementsTab={() => {

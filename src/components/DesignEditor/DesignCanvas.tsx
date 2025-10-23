@@ -308,7 +308,14 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
 
   // Taille du canvas memoized
   const canvasSize = useMemo(() => {
-    return DEVICE_DIMENSIONS[selectedDevice];
+    const base = DEVICE_DIMENSIONS?.[selectedDevice] as { width?: number; height?: number } | undefined;
+    if (base && typeof base.width === 'number' && typeof base.height === 'number') {
+      return base as { width: number; height: number };
+    }
+    // Fallbacks prudents si DEVICE_DIMENSIONS n'est pas disponible
+    if (selectedDevice === 'tablet') return { width: 768, height: 1024 };
+    if (selectedDevice === 'mobile') return { width: 360, height: 640 };
+    return { width: 1024, height: 576 };
   }, [selectedDevice, DEVICE_DIMENSIONS]);
 
   // Forcer un format mobile 9:16 sans bordures ni encoches
@@ -317,7 +324,11 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
       // 9:16 exact ratio
       return { width: 360, height: 640 };
     }
-    return canvasSize;
+    const base = canvasSize || { width: 1024, height: 576 };
+    if (typeof (base as any).width !== 'number' || typeof (base as any).height !== 'number') {
+      return { width: 1024, height: 576 };
+    }
+    return base as { width: number; height: number };
   }, [selectedDevice, canvasSize]);
 
   const safeZonePadding = useMemo(() => SAFE_ZONE_PADDING[selectedDevice] ?? SAFE_ZONE_PADDING.desktop, [selectedDevice]);
@@ -381,6 +392,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
 
   // Derive simplified alignment bounds preferring measured layout when available
   const alignmentElements = useMemo(() => {
+    if (!elements || !Array.isArray(elements)) return [];
     return elements.map((el: any) => {
       const mb = measuredBounds[el.id];
       const x = (mb?.x != null) ? mb.x : Number(el.x) || 0;
@@ -535,13 +547,17 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   // Memoized maps for fast lookups during interactions
   const elementById = useMemo(() => {
     const m = new Map<string, any>();
-    for (const el of elements) m.set(el.id, el);
+    if (elements && Array.isArray(elements)) {
+      for (const el of elements) m.set(el.id, el);
+    }
     return m;
   }, [elements]);
 
   const devicePropsById = useMemo(() => {
     const m = new Map<string, any>();
-    for (const el of elements) m.set(el.id, getPropertiesForDevice(el, selectedDevice));
+    if (elements && Array.isArray(elements)) {
+      for (const el of elements) m.set(el.id, getPropertiesForDevice(el, selectedDevice));
+    }
     return m;
   }, [elements, selectedDevice, getPropertiesForDevice]);
 
@@ -1761,6 +1777,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
 
   // Convertir les éléments en format compatible avec useAutoResponsive
   const responsiveElements = useMemo(() => {
+    if (!elements || !Array.isArray(elements)) return [];
     return elements.map(element => ({
       id: element.id,
       x: element.x || 0,

@@ -6,7 +6,11 @@ import {
   Gamepad2,
   Palette,
   FormInput,
-  MessageSquare
+  MessageSquare,
+  Image,
+  Type,
+  MousePointer,
+  List
 } from 'lucide-react';
 import { BackgroundPanel, CompositeElementsPanel, TextEffectsPanel } from '@/components/shared';
 import ImageModulePanel from '../QuizEditor/modules/ImageModulePanel';
@@ -20,8 +24,10 @@ import CartePanel from '../QuizEditor/panels/CartePanel';
 import QuizConfigPanel from '../QuizEditor/panels/QuizConfigPanel';
 import ModernFormTab from '../ModernEditor/ModernFormTab';
 import GameManagementPanel from './panels/GameManagementPanel';
+import QuizManagementPanel from './panels/QuizManagementPanel';
 import WheelConfigPanel from './panels/WheelConfigPanel';
 import MessagesPanel from './panels/MessagesPanel';
+import ArticleModePanel from '../DesignEditor/panels/ArticleModePanel';
 import { useEditorStore } from '../../stores/editorStore';
 import { useArticleBannerSync } from '@/hooks/useArticleBannerSync';
 import { getEditorDeviceOverride } from '@/utils/deviceOverrides';
@@ -272,7 +278,10 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
       setIsCollapsed(true);
     }
   }, [onForceElementsTab, isWindowMobile]);
-  const [internalActiveTab, setInternalActiveTab] = useState<string | null>('background');
+  // Initialiser l'onglet actif en fonction du mode : 'design' pour article, 'background' pour fullscreen
+  const [internalActiveTab, setInternalActiveTab] = useState<string | null>(
+    editorMode === 'article' ? 'design' : 'background'
+  );
   // Flag to indicate a deliberate user tab switch to avoid auto-switch overrides
   const isUserTabSwitchingRef = React.useRef(false);
   // Short-lived guard to ignore external setActiveTab calls (e.g. onOpenElementsTab) after manual tab switch
@@ -470,34 +479,42 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
     return () => cancel(id);
   }, [activeTab]);
 
-  const allTabs = [
-    { 
-      id: 'background', 
-      label: 'Design', 
-      icon: Palette,
-      debug: 'Onglet Design (background)'
-    },
-    { 
-      id: 'elements', 
-      label: 'Éléments', 
-      icon: Plus
-    },
-    { 
-      id: 'form', 
-      label: 'Formulaire', 
-      icon: FormInput
-    },
-    { 
-      id: 'game', 
-      label: 'Jeu', 
-      icon: Gamepad2
-    },
-    { 
-      id: 'messages', 
-      label: 'Sortie', 
-      icon: MessageSquare
-    }
-  ];
+  // Onglets différents selon le mode (Article vs Fullscreen)
+  const allTabs = editorMode === 'article' 
+    ? [
+        { id: 'design', label: 'Design', icon: Palette },
+        { id: 'form', label: 'Formulaire', icon: FormInput },
+        { id: 'game', label: 'Jeu', icon: Gamepad2 },
+        { id: 'messages', label: 'Sortie', icon: MessageSquare }
+      ]
+    : [
+        { 
+          id: 'background', 
+          label: 'Design', 
+          icon: Palette,
+          debug: 'Onglet Design (background)'
+        },
+        { 
+          id: 'elements', 
+          label: 'Éléments', 
+          icon: Plus
+        },
+        { 
+          id: 'form', 
+          label: 'Formulaire', 
+          icon: FormInput
+        },
+        { 
+          id: 'game', 
+          label: 'Jeu', 
+          icon: Gamepad2
+        },
+        { 
+          id: 'messages', 
+          label: 'Sortie', 
+          icon: MessageSquare
+        }
+      ];
   
   // Vérifier si hiddenTabs est défini et est un tableau
   const safeHiddenTabs = Array.isArray(hiddenTabs) ? hiddenTabs : [];
@@ -712,6 +729,18 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
             selectedDevice={selectedDevice}
           />
         );
+      case 'design':
+        if (editorMode === 'article') {
+          return (
+            <ArticleModePanel
+              campaign={campaign}
+              onCampaignChange={(updates) => setCampaign((prev: any) => ({ ...(prev || {}), ...updates }))}
+              activePanel={'banner'}
+              grouped
+            />
+          );
+        }
+        return null;
       case 'background':
         // Pour les modules texte, passer le module comme selectedElement
         const elementForBackground = selectedModule?.type === 'BlocTexte' ? selectedModule : selectedElement;
@@ -875,7 +904,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
         );
       case 'game':
         return (
-          <GameManagementPanel
+          <QuizManagementPanel
             campaign={campaign}
             setCampaign={setCampaign}
           />

@@ -13,12 +13,6 @@ interface ArticleCTAProps {
   disabled?: boolean;
   fullWidth?: boolean;
   maxWidth?: number;
-  // Nouvelles propriétés de personnalisation
-  backgroundColor?: string;
-  textColor?: string;
-  borderRadius?: number;
-  borderColor?: string;
-  borderWidth?: number;
 }
 
 /**
@@ -42,13 +36,8 @@ const ArticleCTA: React.FC<ArticleCTAProps> = ({
   disabled = false,
   fullWidth = false,
   maxWidth = 810,
-  backgroundColor,
-  textColor,
-  borderRadius,
-  borderColor,
-  borderWidth,
 }) => {
-  // Styles de base selon le variant (utilisés seulement si pas de personnalisation)
+  // Styles de base selon le variant
   const variantStyles = {
     primary: 'bg-gradient-to-br from-[#841b60] to-[#b41b60] text-white hover:from-[#841b60] hover:to-[#6d164f] shadow-lg shadow-[#841b60]/20 hover:shadow-xl hover:shadow-[#841b60]/30',
     secondary: 'bg-white text-[#841b60] border-2 border-[#841b60] hover:bg-[#841b60] hover:text-white',
@@ -70,33 +59,18 @@ const ArticleCTA: React.FC<ArticleCTAProps> = ({
     none: null,
   }[icon];
 
-  // Si des propriétés de personnalisation sont fournies, ne pas utiliser les classes variant
-  const hasCustomStyles = backgroundColor || textColor || borderRadius !== undefined || borderColor || borderWidth;
-
   const buttonClasses = `
     inline-flex items-center justify-center gap-2
-    font-bold
+    font-bold rounded-xl
     transition-all duration-300 transform
     hover:-translate-y-0.5
     disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none
     focus:outline-none focus:ring-2 focus:ring-[#841b60] focus:ring-opacity-50
-    ${!hasCustomStyles ? variantStyles[variant] : ''}
-    ${!hasCustomStyles ? 'rounded-xl' : ''}
+    ${variantStyles[variant]}
     ${sizeStyles[size]}
     ${fullWidth ? 'w-full' : ''}
     ${className}
   `;
-
-  // Styles inline personnalisés
-  const customStyles: React.CSSProperties = {
-    ...style,
-    ...(backgroundColor && { backgroundColor }),
-    ...(textColor && { color: textColor }),
-    ...(borderRadius !== undefined && { borderRadius: `${borderRadius}px` }),
-    ...(borderWidth && borderColor && {
-      border: `${borderWidth}px solid ${borderColor}`,
-    }),
-  };
 
   const containerClasses = `
     article-cta-container
@@ -122,7 +96,7 @@ const ArticleCTA: React.FC<ArticleCTAProps> = ({
           href={href}
           onClick={handleClick}
           className={buttonClasses}
-          style={customStyles}
+          style={style}
           target={href.startsWith('http') ? '_blank' : undefined}
           rel={href.startsWith('http') ? 'noopener noreferrer' : undefined}
         >
@@ -140,7 +114,7 @@ const ArticleCTA: React.FC<ArticleCTAProps> = ({
         onClick={handleClick}
         disabled={disabled}
         className={buttonClasses}
-        style={customStyles}
+        style={style}
         type="button"
       >
         <span>{text}</span>
