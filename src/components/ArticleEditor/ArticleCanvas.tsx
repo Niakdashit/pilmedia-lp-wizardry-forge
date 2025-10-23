@@ -126,7 +126,7 @@ const ArticleCanvas: React.FC<ArticleCanvasProps> = ({
         return (
           <div className="py-8 px-6" style={{ maxWidth: `${maxWidth}px`, margin: '0 auto' }}>
             <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold text-gray-800 mb-4">
+              <h2 className="form-title">
                 Contactez-nous
               </h2>
               <p className="text-lg text-gray-600 max-w-2xl mx-auto">
@@ -213,9 +213,9 @@ const ArticleCanvas: React.FC<ArticleCanvasProps> = ({
             <h2 className="text-2xl font-bold text-center mb-4">
               Merci d'avoir participé !
             </h2>
-            <p className="text-center text-gray-600">
-              Vous recevrez un email de confirmation avec les détails de votre participation.
-            </p>
+            <div className="text-center text-gray-600 whitespace-pre-line">
+              {articleConfig.theme?.exitMessage || "Merci d'avoir participé !\n\nVous recevrez un email de confirmation avec les détails de votre participation."}
+            </div>
           </div>
         );
       
@@ -224,14 +224,55 @@ const ArticleCanvas: React.FC<ArticleCanvasProps> = ({
     }
   };
 
+  // Fonction pour générer les styles CSS dynamiques
+  const generateDynamicStyles = () => `
+    .article-canvas {
+      font-family: ${articleConfig.theme?.fontFamily || 'Inter, system-ui, sans-serif'};
+    }
+    .article-canvas h1, .article-canvas h2, .article-canvas h3 {
+      font-family: ${articleConfig.theme?.headingFontFamily || 'Inter, system-ui, sans-serif'};
+    }
+    
+    /* Styles des boutons globaux */
+    .article-canvas button:not(.navigation-arrow) {
+      background-color: ${articleConfig.theme?.buttonStyle?.backgroundColor || '#841b60'} !important;
+      color: ${articleConfig.theme?.buttonStyle?.textColor || '#ffffff'} !important;
+      border: ${articleConfig.theme?.buttonStyle?.borderWidth || '0px'} solid ${articleConfig.theme?.buttonStyle?.borderColor || '#841b60'} !important;
+      border-radius: ${articleConfig.theme?.buttonStyle?.borderRadius || '8px'} !important;
+      font-size: ${articleConfig.theme?.buttonStyle?.fontSize || '16px'} !important;
+      font-weight: ${articleConfig.theme?.buttonStyle?.fontWeight || '600'} !important;
+      padding: ${articleConfig.theme?.buttonStyle?.padding || '12px 24px'} !important;
+      box-shadow: ${articleConfig.theme?.buttonStyle?.boxShadow || '0 2px 4px rgba(0,0,0,0.1)'} !important;
+      transition: all 0.2s ease !important;
+    }
+    .article-canvas button:not(.navigation-arrow):hover {
+      background-color: ${articleConfig.theme?.buttonStyle?.hoverBackgroundColor || '#6d164f'} !important;
+      color: ${articleConfig.theme?.buttonStyle?.hoverTextColor || '#ffffff'} !important;
+      box-shadow: ${articleConfig.theme?.buttonStyle?.hoverBoxShadow || articleConfig.theme?.buttonStyle?.boxShadow || '0 2px 4px rgba(0,0,0,0.1)'} !important;
+    }
+    
+    /* Styles du titre du formulaire */
+    .form-title {
+      font-size: ${articleConfig.theme?.formTitleStyle?.fontSize || '1.875rem'} !important;
+      font-weight: ${articleConfig.theme?.formTitleStyle?.fontWeight || 'bold'} !important;
+      color: ${articleConfig.theme?.formTitleStyle?.color || '#1f2937'} !important;
+      text-align: ${articleConfig.theme?.formTitleStyle?.textAlign || 'center'} !important;
+      margin-bottom: ${articleConfig.theme?.formTitleStyle?.marginBottom || '1rem'} !important;
+    }
+  `;
+
   return (
     <div 
       className="article-canvas mx-auto bg-white relative"
       style={{
         width: `${maxWidth}px`,
         minHeight: '1200px',
+        fontFamily: articleConfig.theme?.fontFamily || 'Inter, system-ui, sans-serif',
       }}
     >
+      {/* Styles CSS dynamiques pour le theme */}
+      <style dangerouslySetInnerHTML={{ __html: generateDynamicStyles() }} />
+
       {/* Flèches de navigation - Uniquement en mode preview */}
       {onStepChange && (
         <>
@@ -239,7 +280,7 @@ const ArticleCanvas: React.FC<ArticleCanvasProps> = ({
           {canGoBack && (
             <button
               onClick={handlePreviousStep}
-              className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-full ml-4 w-12 h-12 bg-white hover:bg-gray-100 border-2 border-gray-300 rounded-full flex items-center justify-center shadow-lg transition-all duration-200 hover:scale-110 z-10"
+              className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-full ml-4 w-12 h-12 bg-white hover:bg-gray-100 border-2 border-gray-300 rounded-full flex items-center justify-center shadow-lg transition-all duration-200 hover:scale-110 z-10 navigation-arrow"
               title="Étape précédente"
             >
               <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -252,7 +293,7 @@ const ArticleCanvas: React.FC<ArticleCanvasProps> = ({
           {canGoForward && (
             <button
               onClick={handleNextStep}
-              className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-full mr-4 w-12 h-12 bg-white hover:bg-gray-100 border-2 border-gray-300 rounded-full flex items-center justify-center shadow-lg transition-all duration-200 hover:scale-110 z-10"
+              className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-full mr-4 w-12 h-12 bg-white hover:bg-gray-100 border-2 border-gray-300 rounded-full flex items-center justify-center shadow-lg transition-all duration-200 hover:scale-110 z-10 navigation-arrow"
               title="Étape suivante"
             >
               <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
