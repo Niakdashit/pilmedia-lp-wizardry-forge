@@ -38,7 +38,6 @@ export interface ArticleContent {
     color?: string;
     fontFamily?: string;
     textAlign?: 'left' | 'center' | 'right';
-    lineHeight?: string;
   };
   
   descriptionStyle?: {
@@ -63,8 +62,9 @@ export interface ArticleCTA {
   // Styles personnalisés
   backgroundColor?: string;
   textColor?: string;
-  borderRadius?: string;
+  borderRadius?: string | number;
   borderColor?: string;
+  borderWidth?: number;
 }
 
 export interface ArticleFunnelFlow {
@@ -178,7 +178,6 @@ export const DEFAULT_ARTICLE_CONFIG: ArticleConfig = {
       fontWeight: 'bold',
       color: '#1f2937',
       textAlign: 'center',
-      lineHeight: '1.4',
     },
     descriptionStyle: {
       fontSize: '1rem',

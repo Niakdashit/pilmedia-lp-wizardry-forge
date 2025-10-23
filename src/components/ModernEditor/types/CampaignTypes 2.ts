@@ -350,7 +350,6 @@ export interface OptimizedCampaign {
         color?: string;
         fontFamily?: string;
         textAlign?: 'left' | 'center' | 'right';
-        lineHeight?: string;
       };
       descriptionStyle?: {
         fontSize?: string;
@@ -369,8 +368,9 @@ export interface OptimizedCampaign {
       href?: string;
       backgroundColor?: string;
       textColor?: string;
-      borderRadius?: string;
+      borderRadius?: string | number;
       borderColor?: string;
+      borderWidth?: number;
     };
     funnelFlow?: {
       steps?: ('article' | 'form' | 'game' | 'result')[];

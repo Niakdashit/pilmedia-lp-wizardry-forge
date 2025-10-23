@@ -106,6 +106,8 @@ const ArticleCanvas: React.FC<ArticleCanvasProps> = ({
               }}
               editable={editable}
               maxWidth={maxWidth}
+              titleStyle={articleConfig.content?.titleStyle}
+              descriptionStyle={articleConfig.content?.descriptionStyle}
             />
             
             <ArticleCTA
@@ -113,6 +115,11 @@ const ArticleCanvas: React.FC<ArticleCanvasProps> = ({
               variant={articleConfig.cta?.variant}
               size={articleConfig.cta?.size}
               icon={articleConfig.cta?.icon}
+              backgroundColor={articleConfig.cta?.backgroundColor}
+              textColor={articleConfig.cta?.textColor}
+              borderRadius={articleConfig.cta?.borderRadius}
+              borderWidth={articleConfig.cta?.borderWidth}
+              borderColor={articleConfig.cta?.borderColor}
               onClick={() => {
                 console.log('🔥 [ArticleCTA] Button clicked!');
                 onCTAClick?.();

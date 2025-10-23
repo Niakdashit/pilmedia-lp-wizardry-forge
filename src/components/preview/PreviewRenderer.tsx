@@ -18,6 +18,7 @@ interface PreviewRendererProps {
   previewMode: 'desktop' | 'tablet' | 'mobile';
   wheelModalConfig?: any;
   constrainedHeight?: boolean; // Pour mode mobile centré avec hauteur fixe
+  onModuleClick?: (moduleId: string) => void; // Callback pour éditer les modules en fullscreen
 }
 
 /**
@@ -37,7 +38,8 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
   campaign: campaignProp,
   previewMode,
   wheelModalConfig,
-  constrainedHeight = false
+  constrainedHeight = false,
+  onModuleClick
 }) => {
   const [currentScreen, setCurrentScreen] = useState<DesignScreenId>('screen1');
   const [gameResult, setGameResult] = useState<'win' | 'lose' | null>(null);
@@ -392,8 +394,9 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
                 <div className="w-full">
                   <ModuleRenderer
                     modules={logoModules1 as any}
-                    previewMode
+                    previewMode={!onModuleClick}
                     device={previewMode}
+                    onModuleClick={onModuleClick}
                   />
                 </div>
               )}
@@ -469,9 +472,10 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
                   >
                     <ModuleRenderer
                       modules={modules1 as any}
-                      previewMode={true}
+                      previewMode={!onModuleClick}
                       device={previewMode}
                       onButtonClick={handleParticipate}
+                      onModuleClick={onModuleClick}
                     />
                   </section>
                 ) : (
@@ -495,8 +499,9 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
                 <div className="w-full">
                   <ModuleRenderer
                     modules={footerModules1 as any}
-                    previewMode
+                    previewMode={!onModuleClick}
                     device={previewMode}
+                    onModuleClick={onModuleClick}
                   />
                 </div>
               )}
@@ -511,8 +516,9 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
                 <div className="w-full">
                   <ModuleRenderer
                     modules={logoModules2 as any}
-                    previewMode
+                    previewMode={!onModuleClick}
                     device={previewMode}
+                    onModuleClick={onModuleClick}
                   />
                 </div>
               )}

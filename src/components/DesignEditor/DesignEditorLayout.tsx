@@ -2055,6 +2055,34 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
                       previewMode="mobile"
                       wheelModalConfig={wheelModalConfig}
                       constrainedHeight={true}
+                      onModuleClick={(moduleId) => {
+                        console.log('🖱️ [DesignEditorLayout] Module clicked in preview:', moduleId);
+                        // Trouver le module dans modularPage
+                        const allModules = (Object.values(modularPage.screens) as Module[][]).flat();
+                        const module = allModules.find(m => m.id === moduleId);
+                        if (module) {
+                          // Créer un élément factice avec moduleId et role pour déclencher le useEffect
+                          const moduleTypeToRole: Record<string, string> = {
+                            'BlocTexte': 'module-text',
+                            'BlocBouton': 'module-button',
+                            'BlocImage': 'module-image',
+                            'BlocVideo': 'module-video',
+                            'BlocSocial': 'module-social',
+                            'BlocHTML': 'module-html',
+                            'BlocCarte': 'module-carte',
+                            'BlocLogo': 'module-logo',
+                            'BlocPiedDePage': 'module-footer'
+                          };
+                          setSelectedElement({
+                            id: `module-proxy-${moduleId}`,
+                            type: 'module-proxy',
+                            moduleId: moduleId,
+                            role: moduleTypeToRole[module.type] || 'module-text'
+                          });
+                          // Quitter le mode fullscreen pour afficher la sidebar
+                          setShowFunnel(false);
+                        }
+                      }}
                     />
                   )}
                 </div>
@@ -2087,6 +2115,34 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
                   campaign={campaignData}
                   previewMode={actualDevice === 'desktop' && selectedDevice === 'desktop' ? 'desktop' : selectedDevice}
                   wheelModalConfig={wheelModalConfig}
+                  onModuleClick={(moduleId) => {
+                    console.log('🖱️ [DesignEditorLayout] Module clicked in preview:', moduleId);
+                    // Trouver le module dans modularPage
+                    const allModules = (Object.values(modularPage.screens) as Module[][]).flat();
+                    const module = allModules.find(m => m.id === moduleId);
+                    if (module) {
+                      // Créer un élément factice avec moduleId et role pour déclencher le useEffect
+                      const moduleTypeToRole: Record<string, string> = {
+                        'BlocTexte': 'module-text',
+                        'BlocBouton': 'module-button',
+                        'BlocImage': 'module-image',
+                        'BlocVideo': 'module-video',
+                        'BlocSocial': 'module-social',
+                        'BlocHTML': 'module-html',
+                        'BlocCarte': 'module-carte',
+                        'BlocLogo': 'module-logo',
+                        'BlocPiedDePage': 'module-footer'
+                      };
+                      setSelectedElement({
+                        id: `module-proxy-${moduleId}`,
+                        type: 'module-proxy',
+                        moduleId: moduleId,
+                        role: moduleTypeToRole[module.type] || 'module-text'
+                      });
+                      // Quitter le mode fullscreen pour afficher la sidebar
+                      setShowFunnel(false);
+                    }
+                  }}
                 />
               )
             )}
@@ -2357,15 +2413,6 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
                     canRedo={canRedo}
                     showWheelPanel={showWheelPanel}
                     onWheelPanelChange={setShowWheelPanel}
-                    // Modular page (screen1)
-                    modularModules={modularPage.screens.screen1}
-                    onModuleUpdate={handleUpdateModule}
-                    onModuleDelete={handleDeleteModule}
-                    onModuleMove={handleMoveModule}
-                    onModuleDuplicate={handleDuplicateModule}
-                    selectedModuleId={selectedModuleId}
-                    selectedModule={selectedModule}
-                    onSelectedModuleChange={setSelectedModuleId}
                   />
                   )}
                 </div>

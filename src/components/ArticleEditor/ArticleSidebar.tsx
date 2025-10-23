@@ -80,36 +80,6 @@ const ArticleSidebar: React.FC<ArticleSidebarProps> = ({
   const renderTextPanel = () => (
     <div className="space-y-6">
       <div>
-        <h3 className="text-sm font-semibold text-gray-700 mb-3">Police globale du funnel</h3>
-        
-        <div className="space-y-3">
-          <div>
-            <label className="block text-xs text-gray-600 mb-1">Famille de police</label>
-            <select
-              value={articleConfig.content?.fontFamily || 'Inter, system-ui, sans-serif'}
-              onChange={(e) => onArticleConfigChange({
-                content: {
-                  ...articleConfig.content,
-                  fontFamily: e.target.value,
-                },
-              })}
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60]"
-            >
-              <option value="Inter, system-ui, sans-serif">Inter (Moderne)</option>
-              <option value="Arial, sans-serif">Arial (Classique)</option>
-              <option value="Georgia, serif">Georgia (Élégante)</option>
-              <option value="Times New Roman, serif">Times New Roman (Traditionnelle)</option>
-              <option value="Helvetica, sans-serif">Helvetica (Professionnelle)</option>
-              <option value="Oswald, sans-serif">Oswald (Audacieuse)</option>
-              <option value="Open Sans, sans-serif">Open Sans (Lisible)</option>
-            </select>
-          </div>
-        </div>
-      </div>
-
-      <div className="h-px bg-gray-200"></div>
-
-      <div>
         <h3 className="text-sm font-semibold text-gray-700 mb-3">Style du titre</h3>
         
         <div className="space-y-3">
@@ -213,97 +183,6 @@ const ArticleSidebar: React.FC<ArticleSidebarProps> = ({
                 },
               })}
               className="w-full h-10 border border-gray-300 rounded-lg cursor-pointer"
-            />
-          </div>
-        </div>
-      </div>
-
-      <div className="h-px bg-gray-200"></div>
-
-      <div>
-        <h3 className="text-sm font-semibold text-gray-700 mb-3">Titre du formulaire de contact</h3>
-        
-        <div className="space-y-3">
-          <div>
-            <label className="block text-xs text-gray-600 mb-1">Taille</label>
-            <input
-              type="text"
-              value={articleConfig.content?.formTitleStyle?.fontSize || '1.875rem'}
-              onChange={(e) => onArticleConfigChange({
-                content: {
-                  ...articleConfig.content,
-                  formTitleStyle: {
-                    ...articleConfig.content?.formTitleStyle,
-                    fontSize: e.target.value,
-                  },
-                },
-              })}
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60]"
-              placeholder="1.875rem"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs text-gray-600 mb-1">Couleur</label>
-            <input
-              type="color"
-              value={articleConfig.content?.formTitleStyle?.color || '#1f2937'}
-              onChange={(e) => onArticleConfigChange({
-                content: {
-                  ...articleConfig.content,
-                  formTitleStyle: {
-                    ...articleConfig.content?.formTitleStyle,
-                    color: e.target.value,
-                  },
-                },
-              })}
-              className="w-full h-10 border border-gray-300 rounded-lg cursor-pointer"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs text-gray-600 mb-1">Épaisseur</label>
-            <select
-              value={articleConfig.content?.formTitleStyle?.fontWeight || '700'}
-              onChange={(e) => onArticleConfigChange({
-                content: {
-                  ...articleConfig.content,
-                  formTitleStyle: {
-                    ...articleConfig.content?.formTitleStyle,
-                    fontWeight: e.target.value,
-                  },
-                },
-              })}
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60]"
-            >
-              <option value="400">Normal</option>
-              <option value="600">Semi-gras</option>
-              <option value="700">Gras</option>
-              <option value="900">Très gras</option>
-            </select>
-          </div>
-        </div>
-      </div>
-
-      <div className="h-px bg-gray-200"></div>
-
-      <div>
-        <h3 className="text-sm font-semibold text-gray-700 mb-3">Message de sortie</h3>
-        
-        <div className="space-y-3">
-          <div>
-            <label className="block text-xs text-gray-600 mb-1">Texte du message</label>
-            <textarea
-              value={articleConfig.content?.resultMessage || 'Merci d\'avoir participé ! Vous recevrez un email de confirmation avec les détails de votre participation.'}
-              onChange={(e) => onArticleConfigChange({
-                content: {
-                  ...articleConfig.content,
-                  resultMessage: e.target.value,
-                },
-              })}
-              rows={4}
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60] resize-vertical"
-              placeholder="Message affiché à la fin du funnel..."
             />
           </div>
         </div>
