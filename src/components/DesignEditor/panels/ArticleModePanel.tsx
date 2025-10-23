@@ -23,6 +23,27 @@ const ArticleModePanel: React.FC<ArticleModePanelProps> = ({
 }) => {
   const articleConfig = campaign?.articleConfig || {};
   const [groupTab, setGroupTab] = React.useState<'banner' | 'text' | 'button'>('banner');
+  const clampFontSize = React.useCallback((value: number) => {
+    return Math.min(120, Math.max(12, Math.round(value)));
+  }, []);
+
+  const parseFontSize = React.useCallback((value: string | undefined, fallback: number) => {
+    if (!value) return fallback;
+    const normalized = value.trim().toLowerCase();
+    if (!normalized) return fallback;
+    if (normalized.endsWith('rem')) {
+      const numeric = Number.parseFloat(normalized.replace('rem', ''));
+      return Number.isFinite(numeric) ? clampFontSize(numeric * 16) : fallback;
+    }
+    if (normalized.endsWith('px')) {
+      const numeric = Number.parseFloat(normalized.replace('px', ''));
+      return Number.isFinite(numeric) ? clampFontSize(numeric) : fallback;
+    }
+    const numeric = Number.parseFloat(normalized);
+    return Number.isFinite(numeric) ? clampFontSize(numeric) : fallback;
+  }, [clampFontSize]);
+
+  const titleFontSize = parseFontSize(articleConfig.content?.titleStyle?.fontSize, 32);
 
   // Sync with external activePanel only on mount or when explicitly changed
   React.useEffect(() => {
@@ -204,13 +225,20 @@ const ArticleModePanel: React.FC<ArticleModePanelProps> = ({
         <h3 className="text-sm font-semibold text-gray-700 mb-3">Style du titre</h3>
         <div className="space-y-3">
           <div>
-            <label className="block text-xs text-gray-600 mb-1">Taille</label>
+            <label className="block text-xs text-gray-600 mb-1">Taille (px)</label>
             <input
-              type="text"
-              value={articleConfig.content?.titleStyle?.fontSize || '2rem'}
-              onChange={(e) => handleTitleStyle({ fontSize: e.target.value })}
+              type="number"
+              min={12}
+              max={120}
+              value={titleFontSize}
+              onChange={(e) => {
+                const value = Number.parseInt(e.target.value, 10);
+                if (!Number.isFinite(value)) return;
+                const safeValue = clampFontSize(value);
+                handleTitleStyle({ fontSize: `${safeValue}px` });
+              }}
               className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60]"
-              placeholder="2rem"
+              placeholder="32"
             />
           </div>
 

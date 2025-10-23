@@ -125,11 +125,19 @@ const ArticleCanvas: React.FC<ArticleCanvasProps> = ({
       case 'form':
         return (
           <div className="py-8 px-6" style={{ maxWidth: `${maxWidth}px`, margin: '0 auto' }}>
-            <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold text-gray-800 mb-4">
+            <div className="mb-8" style={{ textAlign: articleConfig.content?.titleStyle?.textAlign || 'center' }}>
+              <h2 
+                className="font-bold mb-4"
+                style={{
+                  fontSize: articleConfig.content?.titleStyle?.fontSize || '32px',
+                  color: articleConfig.content?.titleStyle?.color || '#1f2937',
+                  textAlign: articleConfig.content?.titleStyle?.textAlign || 'center',
+                  lineHeight: articleConfig.content?.titleStyle?.lineHeight || '1.4',
+                }}
+              >
                 Contactez-nous
               </h2>
-              <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              <p className="text-lg text-gray-600 max-w-2xl" style={{ margin: '0 auto' }}>
                 Remplissez ce formulaire pour être recontacté(e) et recevoir plus d'informations.
               </p>
             </div>
@@ -210,10 +218,21 @@ const ArticleCanvas: React.FC<ArticleCanvasProps> = ({
       case 'result':
         return (
           <div className="py-8 px-6" style={{ maxWidth: `${maxWidth}px`, margin: '0 auto' }}>
-            <h2 className="text-2xl font-bold text-center mb-4">
+            <h2 
+              className="font-bold mb-4"
+              style={{
+                fontSize: articleConfig.content?.titleStyle?.fontSize || '32px',
+                color: articleConfig.content?.titleStyle?.color || '#1f2937',
+                textAlign: articleConfig.content?.titleStyle?.textAlign || 'center',
+                lineHeight: articleConfig.content?.titleStyle?.lineHeight || '1.4',
+              }}
+            >
               Merci d'avoir participé !
             </h2>
-            <p className="text-center text-gray-600">
+            <p 
+              className="text-gray-600"
+              style={{ textAlign: articleConfig.content?.titleStyle?.textAlign || 'center' }}
+            >
               Vous recevrez un email de confirmation avec les détails de votre participation.
             </p>
           </div>

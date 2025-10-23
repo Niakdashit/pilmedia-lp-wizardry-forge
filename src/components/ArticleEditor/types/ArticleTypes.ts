@@ -30,6 +30,7 @@ export interface ArticleBanner {
 export interface ArticleContent {
   title?: string;
   description?: string;
+  htmlContent?: string; // Contenu HTML enrichi
   
   // Styles de texte
   titleStyle?: {
@@ -174,7 +175,7 @@ export const DEFAULT_ARTICLE_CONFIG: ArticleConfig = {
     title: '',
     description: 'Décrivez votre contenu ici...',
     titleStyle: {
-      fontSize: '2rem',
+      fontSize: '32px',
       fontWeight: 'bold',
       color: '#1f2937',
       textAlign: 'center',

@@ -87,7 +87,7 @@ const ArticleSidebar: React.FC<ArticleSidebarProps> = ({
             <label className="block text-xs text-gray-600 mb-1">Taille</label>
             <input
               type="text"
-              value={articleConfig.content?.titleStyle?.fontSize || '2rem'}
+              value={articleConfig.content?.titleStyle?.fontSize || '32px'}
               onChange={(e) => onArticleConfigChange({
                 content: {
                   ...articleConfig.content,

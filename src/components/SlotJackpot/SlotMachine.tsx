@@ -3,6 +3,7 @@ import { useEditorStore } from '../../stores/editorStore';
 import './SlotMachine.css';
 
 interface SlotMachineProps {
+  campaign?: any; // Campaign data for configuration
   onWin?: (result: string[]) => void;
   onLose?: () => void;
   onOpenConfig?: () => void;

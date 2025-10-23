@@ -46,6 +46,7 @@ export interface SmartWheelProps {
   disablePointerAnimation?: boolean;
   onSpin?: () => void;
   onResult?: (segment: WheelSegment) => void;
+  onComplete?: (prize: string) => void; // Callback quand le jeu est terminé
   onShowParticipationModal?: () => void; // Callback pour ouvrir le modal de participation au niveau supérieur
   brandColors?: {
     primary: string;

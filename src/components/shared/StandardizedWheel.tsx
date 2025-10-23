@@ -11,6 +11,7 @@ interface StandardizedWheelProps {
   disabled?: boolean;
   onSpin?: () => void;
   onClick?: () => void;
+  onComplete?: (prize: string) => void;
   className?: string;
   style?: React.CSSProperties;
   // Spin controls
@@ -35,6 +36,7 @@ const StandardizedWheel: React.FC<StandardizedWheelProps> = ({
   disabled = false,
   onSpin,
   onClick,
+  onComplete,
   className = '',
   style = {},
   spinMode,
@@ -222,6 +224,7 @@ const StandardizedWheel: React.FC<StandardizedWheelProps> = ({
           disabled={disabled}
           disablePointerAnimation={true}
           onSpin={onSpin}
+          onComplete={onComplete}
           spinMode={resolvedSpinMode}
           speed={resolvedSpeed}
           winProbability={resolvedWinProbability}
