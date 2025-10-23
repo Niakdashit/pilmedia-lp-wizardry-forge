@@ -29,7 +29,7 @@ const CampaignSettingsLayout: React.FC = () => {
       <div 
         className="fixed z-20 bg-[hsl(var(--sidebar-surface))]"
         style={{
-          borderRadius: '28px',
+          borderRadius: '18px',
           margin: '0',
           top: 'calc(1.16cm - 1px)',
           bottom: '9px',
@@ -40,10 +40,10 @@ const CampaignSettingsLayout: React.FC = () => {
       />
       
       {/* Main layout container */}
-      <div className="relative z-30 h-[100dvh] flex flex-col" style={{ marginTop: '1.16cm', height: 'calc(100dvh - 1.16cm - 9px)', marginLeft: '9px', marginRight: '9px', borderRadius: '28px', overflow: 'hidden' }}>
+      <div className="relative z-30 h-[100dvh] flex flex-col" style={{ marginTop: '1.16cm', height: 'calc(100dvh - 1.16cm - 9px)', marginLeft: '9px', marginRight: '9px', borderRadius: '18px', overflow: 'hidden' }}>
         
         {/* Top toolbar matching DesignToolbar */}
-        <div className="bg-white border-b border-[hsl(var(--sidebar-border))] px-4 py-2 flex items-center justify-between shadow-sm rounded-tl-[28px] rounded-tr-[28px]">
+        <div className="bg-white border-b border-[hsl(var(--sidebar-border))] px-4 py-2 flex items-center justify-between shadow-sm rounded-tl-[18px] rounded-tr-[18px]">
           {/* Left: Back button */}
           <button
             type="button"

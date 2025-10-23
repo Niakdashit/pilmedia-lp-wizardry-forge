@@ -34,7 +34,7 @@ const Sidebar: React.FC = () => {
   return (
     <div
       className={`fixed md:static inset-y-0 left-0 z-40 flex flex-col bg-[#2c2c34] border-r border-gray-700/50 transform md:transform-none transition-transform duration-300 ease-in-out -translate-x-full md:translate-x-0 md:w-20 w-64`}
-      style={{ borderTopLeftRadius: '28px' }}
+      style={{ borderTopLeftRadius: '18px' }}
     >
       {/* Logo section */}
       <div className="flex items-center justify-between h-16 px-4 border-b border-gray-600/30">

@@ -2344,7 +2344,7 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
         boxSizing: 'border-box'
       }}
     >
-    <MobileStableEditor className={showFunnel ? "h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden" : `h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden ${shouldUseReducedPadding ? 'pt-[9px]' : 'pt-[1.25cm]'} pb-[6px] rounded-tl-[28px] rounded-tr-[28px] transform -translate-y-[0.4vh]`}>
+    <MobileStableEditor className={showFunnel ? "h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden" : `h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden ${shouldUseReducedPadding ? 'pt-[9px]' : 'pt-[1.25cm]'} pb-[6px] rounded-tl-[18px] rounded-tr-[18px] transform -translate-y-[0.4vh]`}>
 
       {/* Top Toolbar - Hidden only in preview mode */}
       {!showFunnel && (
@@ -2713,7 +2713,7 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
                 className={isWindowMobile ? "vertical-sidebar-drawer" : ""}
               />
             {/* Canvas Scrollable Area */}
-            <div className="flex-1 canvas-scroll-area relative z-20 rounded-br-[28px] rounded-bl-none" style={{ borderBottomLeftRadius: '0 !important' }}>
+            <div className="flex-1 canvas-scroll-area relative z-20 rounded-br-[18px] rounded-bl-none" style={{ borderBottomLeftRadius: '0 !important' }}>
               <div className="min-h-full flex flex-col">
                 {/* Premier Canvas */}
                 <div data-screen-anchor="screen1" className="relative">
