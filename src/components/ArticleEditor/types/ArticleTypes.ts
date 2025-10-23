@@ -47,6 +47,19 @@ export interface ArticleContent {
     textAlign?: 'left' | 'center' | 'right';
     lineHeight?: string;
   };
+
+  // Police globale du funnel
+  fontFamily?: string;
+
+  // Styles du formulaire de contact
+  formTitleStyle?: {
+    fontSize?: string;
+    color?: string;
+    fontWeight?: string;
+  };
+
+  // Message de sortie
+  resultMessage?: string;
 }
 
 export interface ArticleCTA {
@@ -112,46 +125,6 @@ export interface ArticleTheme {
   // Arrière-plan
   backgroundColor?: string;
   backgroundImage?: string;
-  
-  // Styles des boutons globaux
-  buttonStyle?: ArticleButtonStyle;
-  
-  // Styles du formulaire
-  formTitleStyle?: ArticleFormTitleStyle;
-  
-  // Messages
-  exitMessage?: string;
-}
-
-export interface ArticleButtonStyle {
-  // Apparence
-  backgroundColor?: string;
-  textColor?: string;
-  borderColor?: string;
-  borderWidth?: string;
-  borderRadius?: string;
-  
-  // Typographie
-  fontSize?: string;
-  fontWeight?: string;
-  fontFamily?: string;
-  
-  // Espacement
-  padding?: string;
-  
-  // Effets
-  boxShadow?: string;
-  hoverBackgroundColor?: string;
-  hoverTextColor?: string;
-  hoverBoxShadow?: string;
-}
-
-export interface ArticleFormTitleStyle {
-  fontSize?: string;
-  fontWeight?: string;
-  color?: string;
-  textAlign?: 'left' | 'center' | 'right';
-  marginBottom?: string;
 }
 
 /**
@@ -212,6 +185,7 @@ export const DEFAULT_ARTICLE_CONFIG: ArticleConfig = {
   content: {
     title: '',
     description: 'Décrivez votre contenu ici...',
+    fontFamily: 'Inter, system-ui, sans-serif',
     titleStyle: {
       fontSize: '2rem',
       fontWeight: 'bold',
@@ -224,6 +198,12 @@ export const DEFAULT_ARTICLE_CONFIG: ArticleConfig = {
       textAlign: 'center',
       lineHeight: '1.75',
     },
+    formTitleStyle: {
+      fontSize: '1.875rem',
+      color: '#1f2937',
+      fontWeight: '700',
+    },
+    resultMessage: 'Merci d\'avoir participé ! Vous recevrez un email de confirmation avec les détails de votre participation.',
   },
   cta: {
     text: 'PARTICIPER !',
@@ -255,34 +235,6 @@ export const DEFAULT_ARTICLE_CONFIG: ArticleConfig = {
     sectionSpacing: '2rem',
     borderRadius: '0.75rem',
     backgroundColor: '#ffffff',
-    
-    // Styles des boutons globaux
-    buttonStyle: {
-      backgroundColor: '#841b60',
-      textColor: '#ffffff',
-      borderColor: '#841b60',
-      borderWidth: '0px',
-      borderRadius: '8px',
-      fontSize: '16px',
-      fontWeight: '600',
-      padding: '12px 24px',
-      boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-      hoverBackgroundColor: '#6d164f',
-      hoverTextColor: '#ffffff',
-      hoverBoxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-    },
-    
-    // Styles du titre du formulaire
-    formTitleStyle: {
-      fontSize: '1.875rem',
-      fontWeight: 'bold',
-      color: '#1f2937',
-      textAlign: 'center',
-      marginBottom: '1rem',
-    },
-    
-    // Message de sortie
-    exitMessage: "Merci d'avoir participé !\n\nVous recevrez un email de confirmation avec les détails de votre participation.",
   },
 };
 
