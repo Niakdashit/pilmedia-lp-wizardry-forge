@@ -20,26 +20,9 @@ export const createSaveHandler = (
         }
       }
       
-      // Normalize form fields: remove placeholder keys to avoid persisting them
-      const normalizedFormFields = Array.isArray(campaign.formFields)
-        ? campaign.formFields.map((f: any) => {
-            const { placeholder, ...rest } = f || {};
-            return rest;
-          })
-        : campaign.formFields;
-
-      const campaignData = {
-        ...campaign,
-        // Map camelCase to snake_case for DB compatibility
-        game_config: (campaign as any).game_config || (campaign as any).gameConfig || {},
-        config: (campaign as any).config || {},
-        design: (campaign as any).design || {},
-        form_fields: normalizedFormFields
-      };
+      // Use saveCampaignToDB to ensure proper data mapping
+      const savedCampaign = await saveCampaignToDB(campaign, saveCampaign);
       
-      console.log('Saving campaign with data:', campaignData);
-      
-      const savedCampaign = await saveCampaign(campaignData);
       if (savedCampaign && !continueEditing) {
         navigate('/gamification');
       } else if (savedCampaign) {
@@ -62,10 +45,31 @@ export const saveCampaignToDB = async (
 ) => {
   const normalizedFormFields = Array.isArray(campaign?.formFields)
     ? campaign.formFields.map((f: any) => {
-        const { placeholder, ...rest } = f || {};
+        const { placeholder, ...rest} = f || {};
         return rest;
       })
     : campaign?.form_fields || [];
+
+  // Merge config with canvasConfig to preserve background images and elements
+  const mergedConfig = (() => {
+    const base = campaign?.config || {};
+    const canvasCfg = (campaign as any)?.canvasConfig || (base as any)?.canvasConfig || {};
+    
+    // Preserve canvas elements and backgrounds
+    const result = { ...base };
+    if (canvasCfg && Object.keys(canvasCfg).length > 0) {
+      result.canvasConfig = canvasCfg;
+    }
+    return result;
+  })();
+
+  // Merge design to preserve background images and other design properties
+  const mergedDesign = {
+    ...(campaign?.design || {}),
+    // Preserve background images from both design and canvasConfig
+    backgroundImage: campaign?.design?.backgroundImage || (campaign as any)?.canvasConfig?.background?.value,
+    mobileBackgroundImage: campaign?.design?.mobileBackgroundImage || (campaign as any)?.canvasConfig?.mobileBackground?.value,
+  };
 
   const payload: any = {
     id: campaign?.id,
@@ -74,17 +78,9 @@ export const saveCampaignToDB = async (
     slug: campaign?.slug,
     type: campaign?.type || 'wheel',
     status: campaign?.status || 'draft',
-    // Merge config and include canvasConfig so backgrounds/uploads persist
-    config: (() => {
-      const base = campaign?.config || {};
-      const canvasCfg = (campaign as any)?.canvasConfig || (base as any)?.canvasConfig || undefined;
-      if (canvasCfg) {
-        return { ...base, canvasConfig: canvasCfg };
-      }
-      return base;
-    })(),
+    config: mergedConfig,
     game_config: campaign?.game_config || campaign?.gameConfig || {},
-    design: campaign?.design || {},
+    design: mergedDesign,
     form_fields: normalizedFormFields,
     start_date: campaign?.start_date,
     end_date: campaign?.end_date,

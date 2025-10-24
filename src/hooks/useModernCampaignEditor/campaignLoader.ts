@@ -87,9 +87,14 @@ export const loadCampaign = async (
       
       const existingCampaignType = (existingCampaign.type as CampaignType) || campaignType;
       
+      // Restore canvasConfig from config if it exists
+      const canvasConfig = existingCampaign.config?.canvasConfig || {};
+      
       const mergedCampaign = {
         ...getDefaultCampaign(existingCampaignType, false),
         ...existingCampaign,
+        // Restore canvasConfig for background images and elements
+        canvasConfig,
         formFields: existingCampaign.form_fields || existingCampaign.formFields || getDefaultCampaign(existingCampaignType, false).formFields,
         design: {
           ...getDefaultCampaign(existingCampaignType, false).design,
@@ -98,7 +103,7 @@ export const loadCampaign = async (
         },
         gameConfig: {
           ...getDefaultCampaign(existingCampaignType, false).gameConfig,
-          ...existingCampaign.gameConfig
+          ...existingCampaign.game_config || existingCampaign.gameConfig
         },
         buttonConfig: {
           ...getDefaultCampaign(existingCampaignType, false).buttonConfig,
