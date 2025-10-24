@@ -74,7 +74,15 @@ export const saveCampaignToDB = async (
     slug: campaign?.slug,
     type: campaign?.type || 'wheel',
     status: campaign?.status || 'draft',
-    config: campaign?.config || {},
+    // Merge config and include canvasConfig so backgrounds/uploads persist
+    config: (() => {
+      const base = campaign?.config || {};
+      const canvasCfg = (campaign as any)?.canvasConfig || (base as any)?.canvasConfig || undefined;
+      if (canvasCfg) {
+        return { ...base, canvasConfig: canvasCfg };
+      }
+      return base;
+    })(),
     game_config: campaign?.game_config || campaign?.gameConfig || {},
     design: campaign?.design || {},
     form_fields: normalizedFormFields,

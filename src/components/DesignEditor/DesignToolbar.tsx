@@ -1,8 +1,11 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from '@/lib/router-adapter';
-import { Monitor, Smartphone, Save, Eye, X, Undo, Redo, Layers, RefreshCw } from 'lucide-react';
+import { Monitor, Smartphone, Save, Eye, X, Undo, Redo, Layers, RefreshCw, Settings } from 'lucide-react';
+import CampaignSettingsModal from './modals/CampaignSettingsModal';
+import CampaignValidationModal from '@/components/shared/CampaignValidationModal';
+import { useCampaignValidation } from '@/hooks/useCampaignValidation';
 
 interface DesignToolbarProps {
   selectedDevice: 'desktop' | 'tablet' | 'mobile';
@@ -19,14 +22,14 @@ interface DesignToolbarProps {
   onPreviewButtonSideChange?: (side: 'left' | 'right') => void;
   // Mode de l'éditeur: influence le libellé du bouton d'enregistrement
   mode?: 'template' | 'campaign';
-  // Action à exécuter lors du clic sur "Sauvegarder et continuer"
+  // Action à exécuter lors du clic sur "Sauvegarder et quitter"
   onSave?: () => void;
-  // Permet de masquer les boutons Fermer / Sauvegarder et continuer dans la barre du haut
+  // Permet de masquer les boutons Fermer / Sauvegarder et quitter dans la barre du haut
   showSaveCloseButtons?: boolean;
-  // Navigation directe vers l'écran Paramétrage (même chemin que "Sauvegarder et continuer")
-  onNavigateToSettings?: () => void;
   // Callback pour recalculer le scaling mobile des modules existants
   onRecalculateMobileScaling?: () => void;
+  // Campaign ID for settings modal
+  campaignId?: string;
 }
 
 const DesignToolbar: React.FC<DesignToolbarProps> = React.memo(({
@@ -43,13 +46,78 @@ const DesignToolbar: React.FC<DesignToolbarProps> = React.memo(({
   mode = 'campaign',
   onSave,
   showSaveCloseButtons = true,
-  onNavigateToSettings,
-  onRecalculateMobileScaling
+  onRecalculateMobileScaling,
+  campaignId
 }) => {
   const navigate = useNavigate();
-  const saveDesktopLabel = mode === 'template' ? 'Enregistrer template' : 'Sauvegarder et continuer';
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+  const [isValidationModalOpen, setIsValidationModalOpen] = useState(false);
+  const [pendingSaveAfterSettings, setPendingSaveAfterSettings] = useState(false);
+  const { validateCampaign } = useCampaignValidation();
+  
+  const saveDesktopLabel = mode === 'template' ? 'Enregistrer template' : 'Sauvegarder et quitter';
   const saveMobileLabel = mode === 'template' ? 'Enregistrer' : 'Sauvegarder';
+  
+  // Handler pour "Sauvegarder et quitter" -> Valide, sauvegarde puis redirige vers dashboard
+  const handleSaveAndQuit = async () => {
+    // Valider les paramètres obligatoires
+    const validation = validateCampaign();
+    
+    if (!validation.isValid) {
+      // Afficher la modale d'erreur
+      setIsValidationModalOpen(true);
+      // Ouvrir directement les paramètres pour guider l'utilisateur et marquer la sauvegarde à relancer
+      setIsSettingsModalOpen(true);
+      setPendingSaveAfterSettings(true);
+      return;
+    }
+    
+    // Sauvegarder
+    if (onSave) {
+      await onSave();
+    }
+    
+    // Rediriger vers le dashboard
+    navigate('/dashboard');
+  };
+  
+  // Récupérer les erreurs de validation pour la modale
+  const validation = validateCampaign();
+
+  // Ouvre la modale Paramètres si un autre composant émet l'événement global
+  useEffect(() => {
+    const handler = () => setIsSettingsModalOpen(true);
+    window.addEventListener('openCampaignSettingsModal', handler as any);
+    return () => window.removeEventListener('openCampaignSettingsModal', handler as any);
+  }, []);
+
+  // Re-run save flow after settings are saved successfully
+  useEffect(() => {
+    const onSettingsSaved = () => {
+      if (!pendingSaveAfterSettings) return;
+      // Fermer les modales puis relancer la sauvegarde après que le store a été mis à jour
+      setIsSettingsModalOpen(false);
+      setIsValidationModalOpen(false);
+      setPendingSaveAfterSettings(false);
+      setTimeout(() => { void handleSaveAndQuit(); }, 0);
+    };
+    window.addEventListener('campaign:settings:saved', onSettingsSaved as any);
+    return () => window.removeEventListener('campaign:settings:saved', onSettingsSaved as any);
+  }, [pendingSaveAfterSettings]);
+  
   return (
+    <>
+      <CampaignSettingsModal 
+        isOpen={isSettingsModalOpen}
+        onClose={() => setIsSettingsModalOpen(false)}
+        campaignId={campaignId}
+      />
+      <CampaignValidationModal
+        isOpen={isValidationModalOpen}
+        onClose={() => setIsValidationModalOpen(false)}
+        errors={validation.errors}
+        onOpenSettings={() => setIsSettingsModalOpen(true)}
+      />
     <div className="bg-white border-b border-gray-200 px-4 py-2 flex items-center justify-between shadow-sm rounded-tl-[28px] rounded-tr-[28px]">
       {/* Left Section - Logo/Title */}
       <div className="flex items-center space-x-3">
@@ -166,10 +234,17 @@ const DesignToolbar: React.FC<DesignToolbarProps> = React.memo(({
           {isPreviewMode ? 'Mode Édition' : 'Aperçu'}
         </button>
         <button
-          onClick={onNavigateToSettings}
-          className="flex items-center px-2.5 py-1.5 text-xs sm:text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+          onClick={() => setIsSettingsModalOpen(true)}
+          disabled={!campaignId}
+          className={`flex items-center px-2.5 py-1.5 text-xs sm:text-sm border rounded-lg transition-colors ${
+            campaignId
+              ? 'border-gray-300 hover:bg-gray-50 cursor-pointer'
+              : 'border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed'
+          }`}
+          title={campaignId ? "Paramètres de la campagne" : "Veuillez d'abord sauvegarder la campagne"}
         >
-          Paramétrage
+          <Settings className="w-4 h-4 mr-1" />
+          Paramètres
         </button>
         {showSaveCloseButtons && (
           <>
@@ -181,8 +256,14 @@ const DesignToolbar: React.FC<DesignToolbarProps> = React.memo(({
               Fermer
             </button>
             <button 
-              onClick={onSave}
-              className="flex items-center px-3 py-1.5 text-xs sm:text-sm bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white rounded-lg hover:bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] transition-colors"
+              onClick={handleSaveAndQuit}
+              disabled={!campaignId}
+              className={`flex items-center px-3 py-1.5 text-xs sm:text-sm rounded-lg transition-colors ${
+                campaignId
+                  ? 'bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white hover:opacity-95'
+                  : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+              }`}
+              title={campaignId ? saveDesktopLabel : "Veuillez d'abord créer la campagne"}
             >
               <Save className="w-4 h-4 mr-1" />
               <span className="hidden sm:inline">{saveDesktopLabel}</span>
@@ -192,6 +273,7 @@ const DesignToolbar: React.FC<DesignToolbarProps> = React.memo(({
         )}
       </div>
     </div>
+    </>
   );
 });
 

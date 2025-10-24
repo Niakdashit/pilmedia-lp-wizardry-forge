@@ -1,23 +1,23 @@
 import React from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useNavigate } from 'react-router-dom';
 import Sidebar from '../Sidebar/Sidebar';
 import { User, LogOut } from 'lucide-react';
+import { useAuthContext } from '../../contexts/AuthContext';
 const headerLogo = '/logos/prosplay-header-logo.svg';
 
 const Layout: React.FC = () => {
-  
-  const handleLogout = () => {
-    // TODO: Implémenter la logique de déconnexion
-    console.log('Déconnexion');
-    // Exemple de redirection après déconnexion
-    // navigate('/login');
+  const navigate = useNavigate();
+  const { signOut } = useAuthContext();
+
+  const handleLogout = async () => {
+    const { error } = await signOut();
+    if (!error) {
+      navigate('/auth');
+    }
   };
 
   const handleAccount = () => {
-    // TODO: Implémenter la navigation vers le compte
-    console.log('Accéder au compte');
-    // Exemple de redirection vers le compte
-    // navigate('/mon-compte');
+    navigate('/profile');
   };
 
   // Sidebar is permanently collapsed; no body scroll lock is needed

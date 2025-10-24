@@ -2,14 +2,24 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useCampaignSettings, CampaignSettings } from '@/hooks/useCampaignSettings';
 
-const ChannelsStep: React.FC = () => {
+type ControlledProps = {
+  form?: Partial<CampaignSettings>;
+  setForm?: React.Dispatch<React.SetStateAction<Partial<CampaignSettings>>>;
+  campaignId?: string;
+};
+
+const ChannelsStep: React.FC<ControlledProps> = (props) => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { getSettings, upsertSettings, error, saveDraft } = useCampaignSettings();
-  const [form, setForm] = useState<Partial<CampaignSettings>>({});
-  const campaignId = id || '';
+  const isControlled = !!props.form && !!props.setForm && !!props.campaignId;
+  const [uncontrolledForm, setUncontrolledForm] = useState<Partial<CampaignSettings>>({});
+  const form = (isControlled ? props.form! : uncontrolledForm);
+  const setForm = (isControlled ? props.setForm! : setUncontrolledForm);
+  const campaignId = (isControlled ? props.campaignId! : (id || ''));
 
   useEffect(() => {
+    if (isControlled) return; // modal controls loading
     let mounted = true;
     (async () => {
       if (!campaignId) return;
@@ -17,10 +27,8 @@ const ChannelsStep: React.FC = () => {
       if (mounted) {
         const next: any = data ? { ...data } : { campaign_id: campaignId };
         const pub = (next.publication ?? {}) as any;
-        // Split existing datetime strings into date/time inputs if present
         const splitDt = (dt?: string) => {
           if (!dt) return { date: '', time: '' };
-          // Accept ISO or local datetime-local format
           const [date, timeWithZone] = dt.split('T');
           const time = (timeWithZone || '').replace('Z', '').slice(0,5);
           return { date: date || '', time: time || '' };
@@ -38,7 +46,7 @@ const ChannelsStep: React.FC = () => {
       }
     })();
     return () => { mounted = false; };
-  }, [campaignId, getSettings]);
+  }, [campaignId, getSettings, isControlled, setForm]);
 
   const handleChange = (path: string, value: any) => {
     setForm(prev => {
@@ -56,8 +64,11 @@ const ChannelsStep: React.FC = () => {
   };
 
   const handleSave = async (goNext = false) => {
+    if (isControlled) {
+      // In controlled mode, saving is handled by the modal. No-op here.
+      return;
+    }
     if (!campaignId) return;
-    // Combine date & time fields into start/end strings for persistence
     const pub: any = { ...(form.publication || {}) };
     const combine = (d?: string, t?: string) =>
       d && t ? `${d}T${t}` : (d ? `${d}T00:00` : (t ? `${new Date().toISOString().slice(0,10)}T${t}` : ''));
@@ -66,7 +77,7 @@ const ChannelsStep: React.FC = () => {
 
     const saved = await upsertSettings(campaignId, {
       publication: pub,
-      campaign_url: form.campaign_url ?? {},
+      campaign_url: (form as any).campaign_url ?? {},
     });
     if (saved) {
       if (goNext) navigate('home');
@@ -78,8 +89,8 @@ const ChannelsStep: React.FC = () => {
 
   // Listen to global save-and-close action from layout
   useEffect(() => {
+    if (isControlled) return; // modal handles global save
     const onSaveAndClose = (_e: Event) => {
-      // Persist without navigating; layout handles navigation after dispatch
       handleSave(false);
     };
     window.addEventListener('campaign:saveAndClose', onSaveAndClose as EventListener);
@@ -87,7 +98,7 @@ const ChannelsStep: React.FC = () => {
       window.removeEventListener('campaign:saveAndClose', onSaveAndClose as EventListener);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [campaignId, form]);
+  }, [campaignId, form, isControlled]);
 
   return (
     <div className="space-y-4">

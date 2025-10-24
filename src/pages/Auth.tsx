@@ -1,0 +1,74 @@
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { AuthModal } from '../components/Auth/AuthModal';
+import { useAuthContext } from '../contexts/AuthContext';
+
+const Auth: React.FC = () => {
+  const [isModalOpen, setIsModalOpen] = useState(true);
+  const { user, loading } = useAuthContext();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Rediriger automatiquement si l'utilisateur est déjà connecté
+  useEffect(() => {
+    if (!loading && user) {
+      console.log('🔄 Utilisateur déjà connecté, redirection vers le dashboard');
+      const from = location.state?.from?.pathname || '/dashboard';
+      navigate(from, { replace: true });
+    }
+  }, [user, loading, navigate, location]);
+
+  // Afficher un loader pendant la vérification
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-[#841b60] via-[#9a5ca9] to-[#3d2e72] flex items-center justify-center p-4">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+          <p className="text-white">Vérification de la connexion...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Si l'utilisateur est connecté, ne rien afficher (il sera redirigé)
+  if (user) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-[#841b60] via-[#9a5ca9] to-[#3d2e72] flex items-center justify-center p-4">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+          <p className="text-white">Redirection en cours...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const handleClose = () => {
+    setIsModalOpen(false);
+    // Si on ferme sans être connecté, rester sur la page d'auth
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-[#841b60] via-[#9a5ca9] to-[#3d2e72] flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        {/* Logo */}
+        <div className="text-center mb-8">
+          <img
+            src="/logos/prosplay-header-logo.svg"
+            alt="Prosplay Logo"
+            className="h-16 mx-auto mb-4 filter brightness-0 invert"
+          />
+          <h1 className="text-4xl font-bold text-white mb-2">Prosplay</h1>
+          <p className="text-white/80">Plateforme de marketing digital</p>
+        </div>
+
+        <AuthModal
+          isOpen={isModalOpen}
+          onClose={handleClose}
+          initialMode="login"
+        />
+      </div>
+    </div>
+  );
+};
+
+export default Auth;

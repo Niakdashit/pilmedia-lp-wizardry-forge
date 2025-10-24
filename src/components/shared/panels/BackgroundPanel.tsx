@@ -2,6 +2,8 @@ import React, { useMemo, useRef, useState } from 'react';
 import { Upload, Pipette, RotateCw } from 'lucide-react';
 import ColorThief from 'colorthief';
 import { fontCategories } from './TextPanel';
+import { supabase } from '@/integrations/supabase/client';
+import { useEditorStore } from '@/stores/editorStore';
 
 type QuickFx = { id: string; name: string; style: React.CSSProperties; category?: 'style' | 'shape' };
 const QUICK_TEXT_EFFECTS: QuickFx[] = [
@@ -60,6 +62,7 @@ const BackgroundPanel: React.FC<BackgroundPanelProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const colorInputRef = useRef<HTMLInputElement>(null);
   const [customColor, setCustomColor] = useState('#FF0000');
+  const campaignId = useEditorStore((s) => (s.campaign as any)?.id as string | undefined);
   const availableFontCategories = useMemo(() => fontCategories, []);
   const [selectedFontCategory, setSelectedFontCategory] = useState(() => availableFontCategories[0]);
   // Sous-onglets: Style (par défaut) et Effets
@@ -454,55 +457,65 @@ const BackgroundPanel: React.FC<BackgroundPanelProps> = ({
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file) {
+    if (!file) return;
+
+    // Prefer persistent upload to Supabase Storage
+    let finalUrl: string | null = null;
+    try {
+      const ext = file.name.split('.').pop() || 'png';
+      const safeName = file.name.replace(/[^a-zA-Z0-9_.-]/g, '_');
+      const path = `${campaignId || 'draft'}/${selectedDevice || 'desktop'}/${currentScreen || 'screen1'}/${Date.now()}-${safeName}`;
+
+      const { error } = await supabase.storage
+        .from('campaign-assets')
+        .upload(path, file, { cacheControl: '3600', upsert: false, contentType: file.type || `image/${ext}` });
+      if (error) throw error;
+
+      const { data: pub } = supabase.storage.from('campaign-assets').getPublicUrl(path);
+      finalUrl = pub.publicUrl;
+      console.log('✅ [BackgroundPanel] Uploaded to storage:', finalUrl);
+    } catch (err) {
+      console.warn('⚠️ [BackgroundPanel] Storage upload failed, falling back to base64', err);
+      // Fallback to base64 for immediate feedback
       const reader = new FileReader();
-      reader.onload = async (e) => {
-        const imageUrl = e.target?.result as string;
-        console.log('🎨 [BackgroundPanel] Uploading image:', {
-          applyToAllScreens,
-          currentScreen,
-          selectedDevice,
-          imageUrlLength: imageUrl?.length
+      finalUrl = await new Promise<string>((resolve) => {
+        reader.onload = (e) => resolve((e.target?.result as string) || '');
+        reader.readAsDataURL(file);
+      });
+    }
+
+    if (!finalUrl) return;
+
+    // Apply background with final URL
+    onBackgroundChange(
+      { type: 'image', value: finalUrl },
+      {
+        screenId: currentScreen,
+        applyToAllScreens: applyToAllScreens,
+        device: selectedDevice
+      }
+    );
+
+    // Sync article mode listeners
+    try {
+      const evtCurrent = new CustomEvent('applyBackgroundCurrentScreen', {
+        detail: { url: finalUrl, screenId: currentScreen, device: selectedDevice }
+      });
+      window.dispatchEvent(evtCurrent);
+      if (applyToAllScreens) {
+        const evtAll = new CustomEvent('applyBackgroundAllScreens', {
+          detail: { url: finalUrl, device: selectedDevice }
         });
-        // Appliquer l'image via le callback avec les options appropriées
-        onBackgroundChange(
-          { type: 'image', value: imageUrl },
-          {
-            screenId: currentScreen,
-            applyToAllScreens: applyToAllScreens,
-            device: selectedDevice
-          }
-        );
-        // Émettre des événements pour synchroniser le mode Article (ArticleEditorLayout écoute ces événements)
-        try {
-          const evtCurrent = new CustomEvent('applyBackgroundCurrentScreen', {
-            detail: {
-              url: imageUrl,
-              screenId: currentScreen,
-              device: selectedDevice
-            }
-          });
-          window.dispatchEvent(evtCurrent);
-          if (applyToAllScreens) {
-            const evtAll = new CustomEvent('applyBackgroundAllScreens', {
-              detail: {
-                url: imageUrl,
-                device: selectedDevice
-              }
-            });
-            window.dispatchEvent(evtAll);
-          }
-        } catch (err) {
-          console.warn('⚠️ Failed to dispatch article background sync events:', err);
-        }
-        
-        // Extract colors from the uploaded image
-        const extractedColors = await extractColorsFromImage(imageUrl);
-        if (onExtractedColorsChange && extractedColors.length > 0) {
-          onExtractedColorsChange(extractedColors);
-        }
-      };
-      reader.readAsDataURL(file);
+        window.dispatchEvent(evtAll);
+      }
+    } catch (err) {
+      console.warn('⚠️ Failed to dispatch article background sync events:', err);
+    }
+
+    // Extract colors from the persisted image URL
+    const colors = await extractColorsFromImage(finalUrl);
+    if (onExtractedColorsChange && colors.length > 0) {
+      onExtractedColorsChange(colors);
     }
   };
 

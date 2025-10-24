@@ -1,6 +1,6 @@
 # Guide d'Intégration Undo/Redo
 
-Ce guide vous explique comment intégrer rapidement la fonctionnalité undo/redo dans votre application Leadya.
+Ce guide vous explique comment intégrer rapidement la fonctionnalité undo/redo dans votre application Prosplay.
 
 ## 📁 Fichiers Créés
 

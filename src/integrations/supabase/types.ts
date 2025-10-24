@@ -25,6 +25,147 @@ export type Database = {
           updated_at: string | null
           views: number | null
         }
+      media_partners: {
+        Row: {
+          id: string
+          user_id: string | null
+          name: string
+          website: string | null
+          description: string | null
+          logo_url: string | null
+          contact_email: string | null
+          contact_phone: string | null
+          category: string | null
+          audience_size: number | null
+          monthly_visitors: number | null
+          status: string | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          user_id?: string | null
+          name: string
+          website?: string | null
+          description?: string | null
+          logo_url?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          category?: string | null
+          audience_size?: number | null
+          monthly_visitors?: number | null
+          status?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string | null
+          name?: string
+          website?: string | null
+          description?: string | null
+          logo_url?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          category?: string | null
+          audience_size?: number | null
+          monthly_visitors?: number | null
+          status?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      partnership_requests: {
+        Row: {
+          id: string
+          campaign_id: string | null
+          media_id: string | null
+          requester_id: string | null
+          status: string | null
+          message: string | null
+          response_message: string | null
+          requested_at: string | null
+          responded_at: string | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          campaign_id?: string | null
+          media_id?: string | null
+          requester_id?: string | null
+          status?: string | null
+          message?: string | null
+          response_message?: string | null
+          requested_at?: string | null
+          responded_at?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          campaign_id?: string | null
+          media_id?: string | null
+          requester_id?: string | null
+          status?: string | null
+          message?: string | null
+          response_message?: string | null
+          requested_at?: string | null
+          responded_at?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      media_campaigns: {
+        Row: {
+          id: string
+          campaign_id: string | null
+          media_id: string | null
+          partnership_request_id: string | null
+          status: string | null
+          start_date: string | null
+          end_date: string | null
+          views: number | null
+          clicks: number | null
+          conversions: number | null
+          revenue: number | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          campaign_id?: string | null
+          media_id?: string | null
+          partnership_request_id?: string | null
+          status?: string | null
+          start_date?: string | null
+          end_date?: string | null
+          views?: number | null
+          clicks?: number | null
+          conversions?: number | null
+          revenue?: number | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          campaign_id?: string | null
+          media_id?: string | null
+          partnership_request_id?: string | null
+          status?: string | null
+          start_date?: string | null
+          end_date?: string | null
+          views?: number | null
+          clicks?: number | null
+          conversions?: number | null
+          revenue?: number | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
         Insert: {
           campaign_id: string
           completion_rate?: number | null
@@ -165,6 +306,36 @@ export type Database = {
           total_views?: number | null
           type?: Database["public"]["Enums"]["game_type"]
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          id: string
+          email: string | null
+          first_name: string | null
+          last_name: string | null
+          role: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id: string
+          email?: string | null
+          first_name?: string | null
+          last_name?: string | null
+          role?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          email?: string | null
+          first_name?: string | null
+          last_name?: string | null
+          role?: string
+          created_at?: string
+          updated_at?: string
         }
         Relationships: []
       }

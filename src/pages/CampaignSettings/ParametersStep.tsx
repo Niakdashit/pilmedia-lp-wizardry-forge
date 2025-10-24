@@ -3,15 +3,25 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useCampaignSettings, CampaignSettings } from '@/hooks/useCampaignSettings';
 import RichTextEditor from '@/components/shared/RichTextEditor';
 
-const ParametersStep: React.FC = () => {
+type ControlledProps = {
+  form?: Partial<CampaignSettings>;
+  setForm?: React.Dispatch<React.SetStateAction<Partial<CampaignSettings>>>;
+  campaignId?: string;
+};
+
+const ParametersStep: React.FC<ControlledProps> = (props) => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { getSettings, upsertSettings, error, saveDraft } = useCampaignSettings();
 
-  const [form, setForm] = useState<Partial<CampaignSettings>>({});
-  const campaignId = id || '';
+  const isControlled = !!props.form && !!props.setForm && !!props.campaignId;
+  const [uncontrolledForm, setUncontrolledForm] = useState<Partial<CampaignSettings>>({});
+  const form = (isControlled ? props.form! : uncontrolledForm);
+  const setForm = (isControlled ? props.setForm! : setUncontrolledForm);
+  const campaignId = (isControlled ? props.campaignId! : (id || ''));
 
   useEffect(() => {
+    if (isControlled) return; // modal handles load
     let mounted = true;
     (async () => {
       if (!campaignId) return;
@@ -21,7 +31,7 @@ const ParametersStep: React.FC = () => {
       }
     })();
     return () => { mounted = false; };
-  }, [campaignId, getSettings]);
+  }, [campaignId, getSettings, isControlled, setForm]);
 
   const handleChange = (path: string, value: any) => {
     setForm(prev => {
@@ -41,15 +51,16 @@ const ParametersStep: React.FC = () => {
   // No tags on this page anymore
 
   const handleSave = async (goNext = false) => {
+    if (isControlled) return; // modal saves
     if (!campaignId) return;
     const saved = await upsertSettings(campaignId, {
       publication: form.publication ?? {},
       campaign_url: form.campaign_url ?? {},
       soft_gate: form.soft_gate ?? {},
-      limits: form.limits ?? {},
+      limits: (form as any).limits ?? {},
       email_verification: form.email_verification ?? {},
-      legal: form.legal ?? {},
-      winners: form.winners ?? {},
+      legal: (form as any).legal ?? {},
+      winners: (form as any).winners ?? {},
       data_push: form.data_push ?? {},
       advanced: form.advanced ?? {},
       opt_in: form.opt_in ?? {},
@@ -65,8 +76,8 @@ const ParametersStep: React.FC = () => {
 
   // Listen to global save-and-close action from layout
   useEffect(() => {
+    if (isControlled) return; // modal handles global save
     const onSaveAndClose = (_e: Event) => {
-      // Persist without navigating; layout handles navigation
       handleSave(false);
     };
     window.addEventListener('campaign:saveAndClose', onSaveAndClose as EventListener);
@@ -74,7 +85,7 @@ const ParametersStep: React.FC = () => {
       window.removeEventListener('campaign:saveAndClose', onSaveAndClose as EventListener);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [campaignId, form]);
+  }, [campaignId, form, isControlled]);
 
   // Accordion state/component
   const [open, setOpen] = useState<Record<string, boolean>>({

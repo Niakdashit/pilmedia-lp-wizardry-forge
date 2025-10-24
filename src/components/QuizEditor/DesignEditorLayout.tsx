@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useState, useMemo, useEffect, useRef, useCallback, lazy } from 'react';
+import CampaignValidationModal from '@/components/shared/CampaignValidationModal';
+import { useCampaignValidation } from '@/hooks/useCampaignValidation';
 import { useLocation, useNavigate } from '@/lib/router-adapter';
 import { Save, X } from 'lucide-react';
 
@@ -28,6 +30,7 @@ import type { ScreenBackgrounds, DeviceSpecificBackground } from '@/types/backgr
 import { useCampaigns } from '@/hooks/useCampaigns';
 import { createSaveAndContinueHandler, saveCampaignToDB } from '@/hooks/useModernCampaignEditor/saveHandler';
 import { quizTemplates } from '../../types/quizTemplates';
+import { supabase } from '@/integrations/supabase/client';
 
 const KeyboardShortcutsHelp = lazy(() => import('../shared/KeyboardShortcutsHelp'));
 const MobileStableEditor = lazy(() => import('./components/MobileStableEditor'));
@@ -1019,6 +1022,94 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
     document.addEventListener('dblclick', handleDblClick, true);
     return () => document.removeEventListener('dblclick', handleDblClick, true);
   }, []);
+
+  // Chargement d'une campagne existante depuis l'URL (?campaign=id)
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const campaignId = searchParams.get('campaign');
+    
+    if (campaignId) {
+      console.log('📂 [QuizEditor] Loading existing campaign:', campaignId);
+      setIsLoading(true);
+      
+      (async () => {
+        try {
+          const { data, error } = await supabase
+            .from('campaigns')
+            .select('*')
+            .eq('id', campaignId)
+            .single();
+          
+          if (error) throw error;
+          if (!data) {
+            console.warn('⚠️ Campaign not found:', campaignId);
+            return;
+          }
+          
+          console.log('✅ Campaign loaded:', data);
+          
+          // Restore canvas elements
+          const canvasConfig = data.config?.canvasConfig || data.canvasConfig || {};
+          if (Array.isArray(canvasConfig.elements)) {
+            setCanvasElements(canvasConfig.elements);
+          }
+          
+          // Restore background
+          const bg = canvasConfig.background || data.design?.background || { type: 'color', value: '#ffffff' };
+          setCanvasBackground(typeof bg === 'string' ? { type: 'color', value: bg } : bg);
+          
+          // Restore screen backgrounds if available
+          if (canvasConfig.screenBackgrounds) {
+            setScreenBackgrounds(canvasConfig.screenBackgrounds);
+          }
+          
+          // Restore extracted colors
+          if (data.design?.extractedColors && Array.isArray(data.design.extractedColors)) {
+            setExtractedColors(data.design.extractedColors);
+          }
+          
+          // Restore campaign config
+          setCampaignConfig({
+            ...data,
+            design: {
+              ...(data.design || {}),
+              quizConfig: data.design?.quizConfig || {},
+              quizModules: data.design?.quizModules || data.modularPage || modularPage
+            }
+          });
+          
+          // Restore modular page (modules)
+          if (data.design?.quizModules) {
+            setModularPage(data.design.quizModules);
+          } else if (data.modularPage) {
+            setModularPage(data.modularPage);
+          }
+          
+          // Restore quiz config
+          if (data.design?.quizConfig) {
+            setQuizConfig(prev => ({
+              ...prev,
+              ...data.design.quizConfig
+            }));
+          }
+          
+          // Restore device if saved
+          if (canvasConfig.device && ['desktop', 'tablet', 'mobile'].includes(canvasConfig.device)) {
+            setSelectedDevice(canvasConfig.device);
+            setCanvasZoom(getDefaultZoom(canvasConfig.device));
+          }
+          
+          // Update editor store
+          setCampaign(data as any);
+          
+        } catch (err) {
+          console.error('❌ Failed to load campaign:', err);
+        } finally {
+          setIsLoading(false);
+        }
+      })();
+    }
+  }, [location.search]);
 
   // Chargement d'un modèle transmis via navigation state
   useEffect(() => {
@@ -2161,7 +2252,22 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
   const handleSave = async () => {
     setIsLoading(true);
     try {
-      const saved = await saveCampaignToDB(campaignState, saveCampaign);
+      // Inject canvasConfig so backgrounds/images and elements are persisted in DB
+      const payload = {
+        ...campaignState,
+        // Persist modules inside design.quizModules for DB
+        design: {
+          ...((campaignState as any)?.design || {}),
+          quizModules: modularPage
+        },
+        canvasConfig: {
+          elements: canvasElements,
+          background: canvasBackground,
+          screenBackgrounds,
+          device: selectedDevice
+        }
+      };
+      const saved = await saveCampaignToDB(payload, saveCampaign);
       if (saved?.id && !(campaignState as any)?.id) {
         setCampaign((prev: any) => ({ ...prev, id: saved.id }));
       }
@@ -2212,16 +2318,20 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
     setCurrentStep('form'); // After quiz, show form
   };
 
-  // Save and continue: persist then navigate to settings page
-  const handleSaveAndContinue = useCallback(() => {
-    const fn = createSaveAndContinueHandler(
-      campaignState,
-      saveCampaign,
-      navigate,
-      setCampaign
-    );
-    return fn();
-  }, [campaignState, saveCampaign, navigate, setCampaign]);
+  // Save & Quit with validation modal
+  const [isValidationModalOpen, setIsValidationModalOpen] = useState(false);
+  const { validateCampaign } = useCampaignValidation();
+  const validation = validateCampaign();
+
+  const handleSaveAndQuit = useCallback(async () => {
+    const result = validateCampaign();
+    if (!result.isValid) {
+      setIsValidationModalOpen(true);
+      return;
+    }
+    await handleSave();
+    navigate('/dashboard');
+  }, [validateCampaign, handleSave, navigate]);
 
   // Navigate to settings without saving (same destination as Save & Continue)
   const handleNavigateToSettings = useCallback(() => {
@@ -2599,9 +2709,10 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
             previewButtonSide={previewButtonSide}
             onPreviewButtonSideChange={setPreviewButtonSide}
             mode={mode}
-            onSave={handleSaveAndContinue}
+            onSave={handleSaveAndQuit}
             showSaveCloseButtons={false}
             onNavigateToSettings={handleNavigateToSettings}
+            campaignId={(campaignState as any)?.id || new URLSearchParams(location.search).get('campaign') || undefined}
           />
 
           {/* Bouton d'aide des raccourcis clavier */}
@@ -3388,16 +3499,23 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
             Fermer
           </button>
           <button
-            onClick={handleSaveAndContinue}
+            onClick={handleSaveAndQuit}
             className="flex items-center px-3 py-2 text-xs sm:text-sm rounded-lg text-white bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] hover:opacity-95 transition-colors shadow-sm"
-            title="Sauvegarder et continuer"
+            title="Sauvegarder et quitter"
           >
             <Save className="w-4 h-4 mr-1" />
-            <span className="hidden sm:inline">Sauvegarder et continuer</span>
+            <span className="hidden sm:inline">Sauvegarder et quitter</span>
             <span className="sm:hidden">Sauvegarder</span>
           </button>
         </div>
       )}
+      {/* Validation modal */}
+      <CampaignValidationModal
+        isOpen={isValidationModalOpen}
+        onClose={() => setIsValidationModalOpen(false)}
+        errors={validation.errors}
+        onOpenSettings={() => window.dispatchEvent(new Event('openCampaignSettingsModal'))}
+      />
     </MobileStableEditor>
     </div>
   );

@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useState, useMemo, useEffect, useRef, useCallback, lazy } from 'react';
+import CampaignValidationModal from '@/components/shared/CampaignValidationModal';
+import { useCampaignValidation } from '@/hooks/useCampaignValidation';
 import { useLocation, useNavigate } from '@/lib/router-adapter';
 import { Save, X } from 'lucide-react';
 
@@ -2163,16 +2165,20 @@ const FormEditorLayout: React.FC<FormEditorLayoutProps> = ({ mode = 'campaign', 
     setCurrentStep('result');
   };
 
-  // Save and continue: persist then navigate to settings page
-  const handleSaveAndContinue = useCallback(() => {
-    const fn = createSaveAndContinueHandler(
-      campaignState,
-      saveCampaign,
-      navigate,
-      setCampaign
-    );
-    return fn();
-  }, [campaignState, saveCampaign, navigate, setCampaign]);
+  // Save & Quit with validation modal
+  const [isValidationModalOpen, setIsValidationModalOpen] = useState(false);
+  const { validateCampaign } = useCampaignValidation();
+  const validation = validateCampaign();
+
+  const handleSaveAndQuit = useCallback(async () => {
+    const result = validateCampaign();
+    if (!result.isValid) {
+      setIsValidationModalOpen(true);
+      return;
+    }
+    await handleSave();
+    navigate('/dashboard');
+  }, [validateCampaign, handleSave, navigate]);
 
   // Navigate to settings without saving (same destination as Save & Continue)
   const handleNavigateToSettings = useCallback(() => {
@@ -2550,9 +2556,9 @@ const FormEditorLayout: React.FC<FormEditorLayoutProps> = ({ mode = 'campaign', 
             previewButtonSide={previewButtonSide}
             onPreviewButtonSideChange={setPreviewButtonSide}
             mode={mode}
-            onSave={handleSaveAndContinue}
+            onSave={handleSaveAndQuit}
             showSaveCloseButtons={false}
-            onNavigateToSettings={handleNavigateToSettings}
+            campaignId={(campaignState as any)?.id || new URLSearchParams(location.search).get('campaign') || undefined}
           />
 
           {/* Bouton d'aide des raccourcis clavier */}
@@ -3290,16 +3296,23 @@ const FormEditorLayout: React.FC<FormEditorLayoutProps> = ({ mode = 'campaign', 
             Fermer
           </button>
           <button
-            onClick={handleSaveAndContinue}
+            onClick={handleSaveAndQuit}
             className="flex items-center px-3 py-2 text-xs sm:text-sm rounded-lg text-white bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] hover:opacity-95 transition-colors shadow-sm"
-            title="Sauvegarder et continuer"
+            title="Sauvegarder et quitter"
           >
             <Save className="w-4 h-4 mr-1" />
-            <span className="hidden sm:inline">Sauvegarder et continuer</span>
+            <span className="hidden sm:inline">Sauvegarder et quitter</span>
             <span className="sm:hidden">Sauvegarder</span>
           </button>
         </div>
       )}
+      {/* Validation modal */}
+      <CampaignValidationModal
+        isOpen={isValidationModalOpen}
+        onClose={() => setIsValidationModalOpen(false)}
+        errors={validation.errors}
+        onOpenSettings={() => window.dispatchEvent(new Event('openCampaignSettingsModal'))}
+      />
     </MobileStableEditor>
     </div>
   );

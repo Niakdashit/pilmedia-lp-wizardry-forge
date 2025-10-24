@@ -1,8 +1,11 @@
 'use client';
 
-import React from 'react';
-import { useNavigate } from '@/lib/router-adapter';
-import { Monitor, Smartphone, Save, Eye, X, Undo, Redo, Layers } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Monitor, Smartphone, Save, Eye, X, Undo, Redo, Layers, Settings } from 'lucide-react';
+import CampaignSettingsModal from '@/components/DesignEditor/modals/CampaignSettingsModal';
+import CampaignValidationModal from '@/components/shared/CampaignValidationModal';
+import { useCampaignValidation } from '@/hooks/useCampaignValidation';
 
 interface QuizToolbarProps {
   selectedDevice: 'desktop' | 'tablet' | 'mobile';
@@ -19,12 +22,12 @@ interface QuizToolbarProps {
   onPreviewButtonSideChange?: (side: 'left' | 'right') => void;
   // Mode de l'éditeur: influence le libellé du bouton d'enregistrement
   mode?: 'template' | 'campaign';
-  // Action à exécuter lors du clic sur "Sauvegarder et continuer"
+  // Action à exécuter lors du clic sur "Sauvegarder et quitter"
   onSave?: () => void;
-  // Permet de masquer les boutons Fermer / Sauvegarder et continuer dans la barre du haut
+  // Permet de masquer les boutons Fermer / Sauvegarder et quitter dans la barre du haut
   showSaveCloseButtons?: boolean;
-  // Navigation directe vers l'écran Paramétrage (même chemin que "Sauvegarder et continuer")
-  onNavigateToSettings?: () => void;
+  // Campaign ID for settings modal
+  campaignId?: string;
 }
 
 const QuizToolbar: React.FC<QuizToolbarProps> = React.memo(({
@@ -41,12 +44,59 @@ const QuizToolbar: React.FC<QuizToolbarProps> = React.memo(({
   mode = 'campaign',
   onSave,
   showSaveCloseButtons = true,
-  onNavigateToSettings
+  campaignId
 }) => {
   const navigate = useNavigate();
-  const saveDesktopLabel = mode === 'template' ? 'Enregistrer template' : 'Sauvegarder et continuer';
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+  const [isValidationModalOpen, setIsValidationModalOpen] = useState(false);
+  const { validateCampaign } = useCampaignValidation();
+  
+  const saveDesktopLabel = mode === 'template' ? 'Enregistrer template' : 'Sauvegarder et quitter';
   const saveMobileLabel = mode === 'template' ? 'Enregistrer' : 'Sauvegarder';
+
+  // Ouvre la modale Paramètres si un autre composant émet l'événement global
+  useEffect(() => {
+    const handler = () => setIsSettingsModalOpen(true);
+    window.addEventListener('openCampaignSettingsModal', handler as any);
+    return () => window.removeEventListener('openCampaignSettingsModal', handler as any);
+  }, []);
+
+  // Handler pour "Sauvegarder et quitter" -> Valide, sauvegarde puis redirige vers dashboard
+  const handleSaveAndQuit = async () => {
+    // Valider les paramètres obligatoires
+    const validation = validateCampaign();
+    
+    if (!validation.isValid) {
+      // Afficher la modale d'erreur
+      setIsValidationModalOpen(true);
+      return;
+    }
+    
+    // Sauvegarder
+    if (onSave) {
+      await onSave();
+    }
+    
+    // Rediriger vers le dashboard
+    navigate('/dashboard');
+  };
+  
+  // Récupérer les erreurs de validation pour la modale
+  const validation = validateCampaign();
+  
   return (
+    <>
+      <CampaignSettingsModal 
+        isOpen={isSettingsModalOpen}
+        onClose={() => setIsSettingsModalOpen(false)}
+        campaignId={campaignId}
+      />
+      <CampaignValidationModal
+        isOpen={isValidationModalOpen}
+        onClose={() => setIsValidationModalOpen(false)}
+        errors={validation.errors}
+        onOpenSettings={() => setIsSettingsModalOpen(true)}
+      />
     <div className="bg-white border-b border-gray-200 px-4 py-2 flex items-center justify-between shadow-sm rounded-tl-[28px] rounded-tr-[28px]">
       {/* Left Section - Logo/Title */}
       <div className="flex items-center space-x-3">
@@ -154,10 +204,17 @@ const QuizToolbar: React.FC<QuizToolbarProps> = React.memo(({
           {isPreviewMode ? 'Mode Édition' : 'Aperçu'}
         </button>
         <button
-          onClick={onNavigateToSettings}
-          className="flex items-center px-2.5 py-1.5 text-xs sm:text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+          onClick={() => setIsSettingsModalOpen(true)}
+          disabled={!campaignId}
+          className={`flex items-center px-2.5 py-1.5 text-xs sm:text-sm border rounded-lg transition-colors ${
+            campaignId
+              ? 'border-gray-300 hover:bg-gray-50 cursor-pointer'
+              : 'border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed'
+          }`}
+          title={campaignId ? "Paramètres de la campagne" : "Veuillez d'abord sauvegarder la campagne"}
         >
-          Paramétrage
+          <Settings className="w-4 h-4 mr-1" />
+          Paramètres
         </button>
         {showSaveCloseButtons && (
           <>
@@ -169,8 +226,14 @@ const QuizToolbar: React.FC<QuizToolbarProps> = React.memo(({
               Fermer
             </button>
             <button 
-              onClick={onSave}
-              className="flex items-center px-3 py-1.5 text-xs sm:text-sm bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white rounded-lg hover:bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] transition-colors"
+              onClick={handleSaveAndQuit}
+              disabled={!campaignId}
+              className={`flex items-center px-3 py-1.5 text-xs sm:text-sm rounded-lg transition-colors ${
+                campaignId
+                  ? 'bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white hover:opacity-95'
+                  : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+              }`}
+              title={campaignId ? saveDesktopLabel : "Veuillez d'abord créer la campagne"}
             >
               <Save className="w-4 h-4 mr-1" />
               <span className="hidden sm:inline">{saveDesktopLabel}</span>
@@ -180,6 +243,7 @@ const QuizToolbar: React.FC<QuizToolbarProps> = React.memo(({
         )}
       </div>
     </div>
+    </>
   );
 });
 

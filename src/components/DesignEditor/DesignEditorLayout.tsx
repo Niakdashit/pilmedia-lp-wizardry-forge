@@ -1,6 +1,8 @@
 'use client';
 
-import React, { useState, useMemo, useEffect, useRef, useCallback, lazy } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState, lazy } from 'react';
+import CampaignValidationModal from '@/components/shared/CampaignValidationModal';
+import { useCampaignValidation } from '@/hooks/useCampaignValidation';
 // Align routing with QuizEditor via router adapter
 import { useLocation, useNavigate } from '@/lib/router-adapter';
 import { Save, X } from 'lucide-react';
@@ -22,6 +24,9 @@ import { useGroupManager } from '../../hooks/useGroupManager';
 import { getEditorDeviceOverride } from '@/utils/deviceOverrides';
 import { recalculateAllElements } from '../../utils/recalculateAllModules';
 import { useEditorPreviewSync } from '@/hooks/useEditorPreviewSync';
+
+
+import { useCampaignFromUrl } from '@/hooks/useCampaignFromUrl';
 
 
 import { useCampaigns } from '@/hooks/useCampaigns';
@@ -97,6 +102,103 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
 
   // Supabase campaigns API
   const { saveCampaign } = useCampaigns();
+
+  // Charger campagne depuis URL si présente
+  const { campaign: urlCampaign, loading: urlLoading, error: urlError } = useCampaignFromUrl();
+
+  // Créer une campagne vide UNIQUEMENT si aucun UUID valide dans l'URL
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const campaignId = searchParams.get('campaign');
+
+    // Valider que c'est un UUID valide
+    const isValidUuid = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id);
+
+    // Si UUID valide présent, ne rien faire (sera chargé par useCampaignFromUrl)
+    if (campaignId && isValidUuid(campaignId)) {
+      console.log('✅ [DesignEditor] Valid UUID in URL, will load campaign:', campaignId);
+      return;
+    }
+
+    // Sinon, créer une nouvelle campagne UNE SEULE FOIS
+    const createCampaign = async () => {
+      console.log('🆕 [DesignEditor] Creating new campaign (no valid ID in URL)...');
+      
+      const newCampaign = {
+        name: 'Nouvelle Roue de la Fortune',
+        description: '',
+        type: 'wheel' as const,
+        status: 'draft' as const,
+        config: {},
+        design: {},
+        game_config: {},
+        form_fields: []
+      };
+
+      const savedCampaign = await saveCampaign(newCampaign);
+      
+      if (savedCampaign) {
+        console.log('✅ [DesignEditor] Campaign created:', savedCampaign.id);
+        setCampaign({
+          ...savedCampaign,
+          gameConfig: savedCampaign.game_config || {},
+          buttonConfig: {}
+        } as any);
+        setIsLoading(false);
+        
+        // Mettre à jour l'URL avec l'ID de la campagne ET préserver le mode
+        const currentMode = searchParams.get('mode');
+        const newUrl = currentMode 
+          ? `${location.pathname}?campaign=${savedCampaign.id}&mode=${currentMode}`
+          : `${location.pathname}?campaign=${savedCampaign.id}`;
+        navigate(newUrl, { replace: true });
+      }
+    };
+
+    createCampaign();
+  }, [location.search]); // Se déclenche si l'URL change
+
+  // Charger la campagne dans l'éditeur si elle vient de l'URL
+  useEffect(() => {
+    if (urlCampaign && !urlLoading && !urlError) {
+      console.log('📥 [DesignEditor] Loading campaign from URL:', urlCampaign);
+      
+      // Restaurer la campagne dans le store (design inclus)
+      setCampaign({
+        ...urlCampaign,
+        gameConfig: urlCampaign.game_config || {},
+        buttonConfig: {}
+      } as any);
+      
+      // Restaurer le canvas local depuis config.canvasConfig
+      try {
+        const canvasCfg = (urlCampaign as any)?.config?.canvasConfig || (urlCampaign as any)?.canvasConfig || {};
+        if (Array.isArray(canvasCfg.elements)) {
+          setCanvasElements(canvasCfg.elements);
+        }
+        const bg = canvasCfg.background || (urlCampaign as any)?.design?.background || { type: 'color', value: '#ffffff' };
+        setCanvasBackground(typeof bg === 'string' ? { type: 'color', value: bg } : bg);
+        if (canvasCfg.screenBackgrounds) {
+          setScreenBackgrounds(canvasCfg.screenBackgrounds);
+        }
+        if (canvasCfg.device && ['desktop','tablet','mobile'].includes(canvasCfg.device)) {
+          setSelectedDevice(canvasCfg.device);
+          setCanvasZoom(getDefaultZoom(canvasCfg.device));
+        }
+      } catch (e) {
+        console.warn('[DesignEditor] Failed to restore canvasConfig from campaign', e);
+      }
+
+      setIsLoading(false);
+      
+      // Nettoyer les brouillons locaux obsolètes
+      try {
+        Object.keys(localStorage)
+          .filter(k => k.startsWith('campaign:settings:draft:'))
+          .forEach(k => localStorage.removeItem(k));
+      } catch {}
+    }
+  }, [urlCampaign, urlLoading, urlError, setCampaign, setIsLoading]);
 
   // État local pour la compatibilité existante
   const [selectedDevice, setSelectedDevice] = useState<'desktop' | 'tablet' | 'mobile'>(actualDevice);
@@ -1598,7 +1700,17 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
   const handleSave = async () => {
     setIsLoading(true);
     try {
-      const saved = await saveCampaignToDB(campaignState, saveCampaign);
+      // Injecter canvasConfig pour persister les images de fond et les éléments
+      const payload = {
+        ...campaignState,
+        canvasConfig: {
+          elements: canvasElements,
+          background: canvasBackground,
+          screenBackgrounds,
+          device: selectedDevice
+        }
+      };
+      const saved = await saveCampaignToDB(payload, saveCampaign);
       if (saved?.id && !(campaignState as any)?.id) {
         setCampaign((prev: any) => ({ ...prev, id: saved.id }));
       }
@@ -1654,16 +1766,46 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
     setCurrentStep('result');
   };
 
-  // Save and continue: persist then navigate to settings page
-  const handleSaveAndContinue = useCallback(() => {
-    const fn = createSaveAndContinueHandler(
-      campaignState,
-      saveCampaign,
-      navigate,
-      setCampaign
-    );
-    return fn();
-  }, [campaignState, saveCampaign, navigate, setCampaign]);
+  // Save and quit: validate, persist then return to dashboard
+  const [isValidationModalOpen, setIsValidationModalOpen] = useState(false);
+  const { validateCampaign } = useCampaignValidation();
+  const validation = validateCampaign();
+
+  const handleSaveAndQuit = useCallback(async () => {
+    // 1) Validation
+    const result = validateCampaign();
+    if (!result.isValid) {
+      setIsValidationModalOpen(true);
+      return;
+    }
+    try {
+      // Récupérer l'ID depuis l'URL en priorité (UUID garanti)
+      const params = new URLSearchParams(location.search);
+      const urlId = params.get('campaign') || undefined;
+
+      // Collecter TOUT l'état de l'éditeur
+      const fullCampaignData = {
+        ...(campaignState || {}),
+        id: urlId || (campaignState as any)?.id,
+        design: campaignState?.design || {},
+        config: campaignState?.config || {},
+        game_config: campaignState?.gameConfig || {},
+        form_fields: campaignState?.formFields || []
+      };
+
+      console.log('💾 [DesignEditor] Saving full campaign data (Save & Quit):', fullCampaignData);
+      const saved = await saveCampaign(fullCampaignData);
+      const finalId = urlId || saved?.id;
+      if (finalId) {
+        setCampaign((prev: any) => ({ ...prev, id: finalId }));
+      }
+      // 3) Quitter vers dashboard
+      navigate('/dashboard');
+    } catch (error) {
+      console.error('❌ [DesignEditor] Error saving campaign (Save & Quit):', error);
+      alert('Erreur lors de la sauvegarde');
+    }
+  }, [campaignState, saveCampaign, navigate, setCampaign, location.search, validateCampaign]);
 
   // Navigate to settings without saving (same destination as Save & Continue)
   const handleNavigateToSettings = useCallback(() => {
@@ -1990,9 +2132,9 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
             previewButtonSide={previewButtonSide}
             onPreviewButtonSideChange={setPreviewButtonSide}
             mode={mode}
-            onSave={handleSaveAndContinue}
+            onSave={handleSaveAndQuit}
             showSaveCloseButtons={false}
-            onNavigateToSettings={handleNavigateToSettings}
+            campaignId={(campaignState as any)?.id || new URLSearchParams(location.search).get('campaign') || undefined}
           />
 
           {/* Bouton d'aide des raccourcis clavier */}
@@ -2700,16 +2842,23 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
             Fermer
           </button>
           <button
-            onClick={handleSaveAndContinue}
+            onClick={handleSaveAndQuit}
             className="inline-flex items-center px-4 py-2 text-sm rounded-xl bg-gradient-to-br from-[#841b60] to-[#b41b60] backdrop-blur-sm text-white font-medium border border-white/20 shadow-lg shadow-[#841b60]/20 hover:from-[#841b60] hover:to-[#6d164f] hover:shadow-xl hover:shadow-[#841b60]/30 transition-all duration-300 transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-[#841b60]/20"
-            title="Sauvegarder et continuer"
+            title="Sauvegarder et quitter"
           >
             <Save className="w-4 h-4 mr-1" />
-            <span className="hidden sm:inline">Sauvegarder et continuer</span>
+            <span className="hidden sm:inline">Sauvegarder et quitter</span>
             <span className="sm:hidden">Sauvegarder</span>
           </button>
         </div>
       )}
+      {/* Validation modal */}
+      <CampaignValidationModal
+        isOpen={isValidationModalOpen}
+        onClose={() => setIsValidationModalOpen(false)}
+        errors={validation.errors}
+        onOpenSettings={() => window.dispatchEvent(new Event('openCampaignSettingsModal'))}
+      />
     </MobileStableEditor>
     </div>
   );
