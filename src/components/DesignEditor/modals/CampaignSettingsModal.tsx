@@ -39,7 +39,12 @@ const CampaignSettingsModal: React.FC<CampaignSettingsModalProps> = ({ isOpen, o
   }, [isOpen, effectiveCampaignId, getSettings]);
 
   const handleSaveAndClose = async () => {
-    if (!effectiveCampaignId) return;
+    console.log('[CampaignSettingsModal] handleSaveAndClose - effectiveCampaignId:', effectiveCampaignId);
+    
+    if (!effectiveCampaignId) {
+      console.error('[CampaignSettingsModal] ERROR: effectiveCampaignId is empty!');
+      return;
+    }
     
     // Normalize publication: combine startDate/startTime and endDate/endTime if present
     const pub: any = { ...(form.publication || {}) };
@@ -48,6 +53,7 @@ const CampaignSettingsModal: React.FC<CampaignSettingsModalProps> = ({ isOpen, o
     pub.start = pub.start || combine(pub.startDate, pub.startTime);
     pub.end = pub.end || combine(pub.endDate, pub.endTime);
 
+    console.log('[CampaignSettingsModal] Calling upsertSettings with ID:', effectiveCampaignId);
     const saved = await upsertSettings(effectiveCampaignId, {
       publication: pub,
       campaign_url: form.campaign_url ?? {},
@@ -86,35 +92,9 @@ const CampaignSettingsModal: React.FC<CampaignSettingsModalProps> = ({ isOpen, o
 
   if (!isOpen) return null;
 
-  // Validation du campaignId
+  // Si pas de campaignId, ne rien afficher (la toolbar doit créer la campagne d'abord)
   if (!effectiveCampaignId) {
-    return (
-      <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm">
-        <div className="bg-white rounded-2xl shadow-2xl w-[95vw] max-w-md p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-gray-900">Erreur</h2>
-            <button
-              onClick={onClose}
-              className="p-2 rounded-lg transition-all duration-200 hover:bg-[hsl(var(--sidebar-hover))] text-gray-600 hover:text-black"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-          <p className="text-gray-700 mb-4">
-            Impossible d'ouvrir les paramètres : aucune campagne n'est actuellement chargée.
-          </p>
-          <p className="text-sm text-gray-500 mb-4">
-            Veuillez d'abord sauvegarder votre campagne avant d'accéder aux paramètres.
-          </p>
-          <button
-            onClick={onClose}
-            className="w-full px-4 py-2 bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white rounded-lg hover:opacity-95 transition-opacity"
-          >
-            Fermer
-          </button>
-        </div>
-      </div>
-    );
+    return null;
   }
 
   const ActiveStepComponent = steps.find(s => s.id === activeTab)?.component;

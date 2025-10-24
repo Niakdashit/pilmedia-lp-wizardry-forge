@@ -1,11 +1,14 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Monitor, Smartphone, Save, Eye, X, Undo, Redo, Layers, Settings } from 'lucide-react';
 import CampaignSettingsModal from '@/components/DesignEditor/modals/CampaignSettingsModal';
 import CampaignValidationModal from '@/components/shared/CampaignValidationModal';
 import { useCampaignValidation } from '@/hooks/useCampaignValidation';
+import { useCampaigns } from '@/hooks/useCampaigns';
+import { saveCampaignToDB } from '@/hooks/useModernCampaignEditor/saveHandler';
+import { useEditorStore } from '@/stores/editorStore';
 
 interface QuizToolbarProps {
   selectedDevice: 'desktop' | 'tablet' | 'mobile';
@@ -50,6 +53,25 @@ const QuizToolbar: React.FC<QuizToolbarProps> = React.memo(({
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [isValidationModalOpen, setIsValidationModalOpen] = useState(false);
   const { validateCampaign } = useCampaignValidation();
+  const saveCampaign = useCampaigns();
+  const campaignState = useEditorStore((s) => s.campaign);
+  const setCampaign = useEditorStore((s) => s.setCampaign);
+  
+  // Helper: vérifier si c'est un UUID valide (pas un ID de preview)
+  const isValidUuid = useCallback((id?: string) => {
+    if (!id) return false;
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id);
+  }, []);
+  
+  // Récupérer l'ID réel (UUID) depuis le store ou la prop
+  const getRealCampaignId = useCallback(() => {
+    const storeId = (campaignState as any)?.id;
+    if (isValidUuid(storeId)) return storeId;
+    if (isValidUuid(campaignId)) return campaignId;
+    return undefined;
+  }, [campaignState, campaignId, isValidUuid]);
+  
+  const realCampaignId = getRealCampaignId();
   
   const saveDesktopLabel = mode === 'template' ? 'Enregistrer template' : 'Sauvegarder et quitter';
   const saveMobileLabel = mode === 'template' ? 'Enregistrer' : 'Sauvegarder';
@@ -61,6 +83,45 @@ const QuizToolbar: React.FC<QuizToolbarProps> = React.memo(({
     return () => window.removeEventListener('openCampaignSettingsModal', handler as any);
   }, []);
 
+  // Ensure a campaign exists before opening settings
+  const handleOpenSettings = useCallback(async () => {
+    try {
+      // Recalculer l'ID en temps réel
+      const currentRealId = getRealCampaignId();
+      
+      // Vérifier si on a déjà un UUID valide
+      if (currentRealId) {
+        setIsSettingsModalOpen(true);
+        return;
+      }
+
+      console.log('[QuizToolbar] No valid UUID, creating campaign...');
+      const payload: any = {
+        ...(campaignState || {}),
+        name: (campaignState as any)?.name || 'Nouvelle campagne quiz',
+        type: 'quiz',
+        status: (campaignState as any)?.status || 'draft',
+        design: (campaignState as any)?.design || {},
+        config: (campaignState as any)?.config || {},
+        game_config: (campaignState as any)?.game_config || (campaignState as any)?.gameConfig || {},
+        form_fields: (campaignState as any)?.form_fields || (campaignState as any)?.formFields || [],
+      };
+
+      const saved = await saveCampaignToDB(payload, saveCampaign.saveCampaign);
+      if (saved?.id) {
+        console.log('[QuizToolbar] Campaign created with ID:', saved.id);
+        setCampaign((prev: any) => ({ ...prev, id: saved.id }));
+        // Attendre que le store soit mis à jour
+        setTimeout(() => setIsSettingsModalOpen(true), 100);
+      } else {
+        alert("Impossible de créer la campagne. Veuillez réessayer.");
+      }
+    } catch (e) {
+      console.error('[QuizToolbar] Failed to ensure campaign before opening settings', e);
+      alert('Erreur lors de la création de la campagne');
+    }
+  }, [getRealCampaignId, campaignState, saveCampaign, setCampaign]);
+  
   // Handler pour "Sauvegarder et quitter" -> Valide, sauvegarde puis redirige vers dashboard
   const handleSaveAndQuit = async () => {
     // Valider les paramètres obligatoires
@@ -89,7 +150,7 @@ const QuizToolbar: React.FC<QuizToolbarProps> = React.memo(({
       <CampaignSettingsModal 
         isOpen={isSettingsModalOpen}
         onClose={() => setIsSettingsModalOpen(false)}
-        campaignId={campaignId}
+        campaignId={realCampaignId}
       />
       <CampaignValidationModal
         isOpen={isValidationModalOpen}
@@ -204,14 +265,9 @@ const QuizToolbar: React.FC<QuizToolbarProps> = React.memo(({
           {isPreviewMode ? 'Mode Édition' : 'Aperçu'}
         </button>
         <button
-          onClick={() => setIsSettingsModalOpen(true)}
-          disabled={!campaignId}
-          className={`flex items-center px-2.5 py-1.5 text-xs sm:text-sm border rounded-lg transition-colors ${
-            campaignId
-              ? 'border-gray-300 hover:bg-gray-50 cursor-pointer'
-              : 'border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed'
-          }`}
-          title={campaignId ? "Paramètres de la campagne" : "Veuillez d'abord sauvegarder la campagne"}
+          onClick={handleOpenSettings}
+          className={`flex items-center px-2.5 py-1.5 text-xs sm:text-sm border rounded-lg transition-colors border-gray-300 hover:bg-gray-50`}
+          title={campaignId ? "Paramètres de la campagne" : "Créer et ouvrir les paramètres"}
         >
           <Settings className="w-4 h-4 mr-1" />
           Paramètres

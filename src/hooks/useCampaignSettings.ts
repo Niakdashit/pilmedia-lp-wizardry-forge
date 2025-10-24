@@ -126,11 +126,18 @@ export const useCampaignSettings = () => {
     setLoading(true);
     setError(null);
     try {
+      console.log('[useCampaignSettings.upsertSettings] START - campaignId:', campaignId);
+      
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Utilisateur non authentifié');
 
       const realId = await resolveCampaignId(campaignId);
-      if (!realId) throw new Error('Campagne introuvable (id/slug invalide)');
+      console.log('[useCampaignSettings.upsertSettings] realId after resolve:', realId);
+      
+      if (!realId) {
+        console.error('[useCampaignSettings.upsertSettings] ERROR: realId is null/undefined');
+        throw new Error('Campagne introuvable (id/slug invalide)');
+      }
 
       const payload: any = {
         campaign_id: realId,

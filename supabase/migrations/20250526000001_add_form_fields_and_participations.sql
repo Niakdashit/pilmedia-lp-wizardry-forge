@@ -27,7 +27,13 @@ CREATE TABLE IF NOT EXISTS participations (
 
 -- 3. Créer des index pour optimiser les requêtes
 CREATE INDEX IF NOT EXISTS idx_participations_campaign_id ON participations(campaign_id);
-CREATE INDEX IF NOT EXISTS idx_participations_user_id ON participations(user_id);
+-- Note: user_id column may not exist in all schemas, only create index if column exists
+DO $$ 
+BEGIN 
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'participations' AND column_name = 'user_id') THEN
+        CREATE INDEX IF NOT EXISTS idx_participations_user_id ON participations(user_id);
+    END IF;
+END $$;
 CREATE INDEX IF NOT EXISTS idx_participations_created_at ON participations(created_at);
 CREATE INDEX IF NOT EXISTS idx_participations_user_email ON participations(user_email);
 
@@ -52,6 +58,7 @@ ALTER TABLE participations ENABLE ROW LEVEL SECURITY;
 
 -- 7. Créer les politiques RLS
 -- Permettre la lecture pour les propriétaires de campagne
+DROP POLICY IF EXISTS "Campaign owners can read participations" ON participations;
 CREATE POLICY "Campaign owners can read participations"
   ON participations
   FOR SELECT
@@ -60,11 +67,12 @@ CREATE POLICY "Campaign owners can read participations"
     EXISTS (
       SELECT 1 FROM campaigns 
       WHERE campaigns.id = participations.campaign_id 
-      AND campaigns.user_id = auth.uid()
+      AND campaigns.created_by = auth.uid()
     )
   );
 
 -- Permettre l'insertion pour tous (utilisateurs anonymes et authentifiés)
+DROP POLICY IF EXISTS "Anyone can create participations" ON participations;
 CREATE POLICY "Anyone can create participations"
   ON participations
   FOR INSERT
@@ -72,6 +80,7 @@ CREATE POLICY "Anyone can create participations"
   WITH CHECK (true);
 
 -- Permettre la mise à jour pour les propriétaires de campagne
+DROP POLICY IF EXISTS "Campaign owners can update participations" ON participations;
 CREATE POLICY "Campaign owners can update participations"
   ON participations
   FOR UPDATE
@@ -80,29 +89,36 @@ CREATE POLICY "Campaign owners can update participations"
     EXISTS (
       SELECT 1 FROM campaigns 
       WHERE campaigns.id = participations.campaign_id 
-      AND campaigns.user_id = auth.uid()
+      AND campaigns.created_by = auth.uid()
     )
   );
 
--- Permettre la suppression pour les propriétaires de campagne
-CREATE POLICY "Campaign owners can delete participations"
-  ON participations
-  FOR DELETE
-  TO authenticated
-  USING (
-    EXISTS (
-      SELECT 1 FROM campaigns 
-      WHERE campaigns.id = participations.campaign_id 
-      AND campaigns.user_id = auth.uid()
-    )
-  );
+-- Permettre la suppression pour les propriétaires de campagne (gérée dans 20251024111500)
+-- DROP POLICY IF EXISTS "Campaign owners can delete participations" ON participations;
 
--- 8. Commentaires pour documentation
+-- 8. Commentaires pour documentation (conditionnels selon les colonnes existantes)
 COMMENT ON TABLE participations IS 'Stockage des participations utilisateur aux campagnes avec formulaires dynamiques';
-COMMENT ON COLUMN participations.form_data IS 'Données soumises par l''utilisateur selon le formulaire dynamique';
-COMMENT ON COLUMN participations.user_email IS 'Email de l''utilisateur (déduit des form_data si présent)';
-COMMENT ON COLUMN participations.user_ip IS 'Adresse IP de l''utilisateur pour tracking';
-COMMENT ON COLUMN participations.user_agent IS 'User agent du navigateur';
-COMMENT ON COLUMN participations.utm_source IS 'Source UTM pour tracking marketing';
-COMMENT ON COLUMN participations.utm_medium IS 'Medium UTM pour tracking marketing';
-COMMENT ON COLUMN participations.utm_campaign IS 'Campagne UTM pour tracking marketing';
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'participations' AND column_name = 'form_data') THEN
+        COMMENT ON COLUMN participations.form_data IS 'Données soumises par l''utilisateur selon le formulaire dynamique';
+    END IF;
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'participations' AND column_name = 'user_email') THEN
+        COMMENT ON COLUMN participations.user_email IS 'Email de l''utilisateur (déduit des form_data si présent)';
+    END IF;
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'participations' AND column_name = 'user_ip') THEN
+        EXECUTE 'COMMENT ON COLUMN participations.user_ip IS ''Adresse IP de l''''utilisateur pour tracking''';
+    END IF;
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'participations' AND column_name = 'user_agent') THEN
+        COMMENT ON COLUMN participations.user_agent IS 'User agent du navigateur';
+    END IF;
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'participations' AND column_name = 'utm_source') THEN
+        COMMENT ON COLUMN participations.utm_source IS 'Source UTM pour tracking marketing';
+    END IF;
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'participations' AND column_name = 'utm_medium') THEN
+        COMMENT ON COLUMN participations.utm_medium IS 'Medium UTM pour tracking marketing';
+    END IF;
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'participations' AND column_name = 'utm_campaign') THEN
+        COMMENT ON COLUMN participations.utm_campaign IS 'Campagne UTM pour tracking marketing';
+    END IF;
+END $$;
