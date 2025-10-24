@@ -433,7 +433,7 @@ const JackpotEditorLayout: React.FC<JackpotEditorLayoutProps> = ({ mode = 'campa
     }
   }, [campaignState?.id, campaignState?.name]);
 
-  const { upsertSettings } = useCampaignSettings();
+  const { upsertSettings, getSettings } = useCampaignSettings();
 
   const handleSaveCampaignName = useCallback(async () => {
     const currentId = (campaignState as any)?.id as string | undefined;
@@ -447,15 +447,26 @@ const JackpotEditorLayout: React.FC<JackpotEditorLayoutProps> = ({ mode = 'campa
       if (updated) {
         setCampaign({
           ...(campaignState as any),
-          ...updated
+          ...updated,
+          name // Ensure name is explicitly set
         } as any);
         
         const cid = (updated as any)?.id || currentId;
-        window.dispatchEvent(new CustomEvent('campaign:name:update', { detail: { campaignId: cid, name } }));
         
+        // Update campaign_settings with the new name
         if (cid) {
-          await upsertSettings(cid, { publication: { name } });
+          // Load existing settings first to preserve other publication data
+          const existingSettings = await getSettings(cid);
+          await upsertSettings(cid, { 
+            publication: { 
+              ...(existingSettings?.publication || {}),
+              name 
+            } 
+          });
         }
+        
+        // Dispatch event for immediate UI update if modal is open
+        window.dispatchEvent(new CustomEvent('campaign:name:update', { detail: { campaignId: cid, name } }));
         
         localStorage.setItem(`campaign:name:prompted:${cid || 'new:jackpot'}`, '1');
       }
@@ -465,7 +476,7 @@ const JackpotEditorLayout: React.FC<JackpotEditorLayoutProps> = ({ mode = 'campa
       // Always close modal, even if save fails
       setIsNameModalOpen(false);
     }
-  }, [campaignState, newCampaignName, saveCampaign, setCampaign, upsertSettings]);
+  }, [campaignState, newCampaignName, saveCampaign, setCampaign, upsertSettings, getSettings]);
   
   const [quizConfig, setQuizConfig] = useState({
     questionCount: 5,
