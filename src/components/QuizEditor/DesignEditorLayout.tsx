@@ -24,6 +24,7 @@ import { useGroupManager } from '../../hooks/useGroupManager';
 import { getDeviceDimensions } from '../../utils/deviceDimensions';
 import { getEditorDeviceOverride } from '@/utils/deviceOverrides';
 import { useEditorPreviewSync } from '@/hooks/useEditorPreviewSync';
+import { useCampaignSettings } from '@/hooks/useCampaignSettings';
 import type { ScreenBackgrounds, DeviceSpecificBackground } from '@/types/background';
 
 
@@ -138,6 +139,27 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
           screens.forEach((s) => {
             try { localStorage.removeItem(`quiz-bg-${d}-${s}`); } catch {}
           });
+
+  // --- Save Design: floating action + throttled autosave ---
+  const autosaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const scheduleSaveDesign = useCallback(() => {
+    if (autosaveTimer.current) clearTimeout(autosaveTimer.current);
+    autosaveTimer.current = setTimeout(async () => {
+      const id = (campaignState as any)?.id as string | undefined;
+      if (!id) return;
+      try {
+        await saveCampaign({
+          id,
+          design: {
+            background: canvasBackground,
+            extractedColors,
+          },
+          config: campaignConfig,
+          game_config: {},
+        } as any);
+      } catch (e) { console.warn('[QuizEditor] autosave design skipped', e); }
+    }, 1200);
+  }, [campaignState, canvasBackground, extractedColors, campaignConfig, saveCampaign]);
         });
         w.__quizBgSessionInitialized = true;
       }
@@ -477,6 +499,53 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
       }
     }
   });
+  // Prompt for campaign name on first arrival
+  const [isNameModalOpen, setIsNameModalOpen] = useState(false);
+  const [newCampaignName, setNewCampaignName] = useState('');
+
+  // Always open name modal on arrival (both modes), independent of previous prompts or name value
+  useEffect(() => {
+    const name = (campaignState as any)?.name as string | undefined;
+    const forceOpen = new URLSearchParams(location.search).get('forceNameModal') === '1';
+    setNewCampaignName((name || '').trim());
+    if (forceOpen) {
+      try { requestAnimationFrame(() => setIsNameModalOpen(true)); } catch { setIsNameModalOpen(true); }
+      return;
+    }
+    // Always open on entry, regardless of mode or prior view
+    try { requestAnimationFrame(() => setIsNameModalOpen(true)); } catch { setIsNameModalOpen(true); }
+    return () => {
+      // Reset when leaving or switching mode/path so next entry re-opens deterministically
+      setIsNameModalOpen(false);
+    };
+  }, [editorMode, location.search, location.pathname]);
+
+  const { upsertSettings } = useCampaignSettings();
+
+  const handleSaveCampaignName = useCallback(async () => {
+    const currentId = (campaignState as any)?.id as string | undefined;
+    const name = (newCampaignName || '').trim();
+    if (!name) return;
+    const payload: any = currentId ? { id: currentId, name } : { name };
+    let updated: any = null;
+    try { updated = await saveCampaign(payload); } catch (e) { console.warn('saveCampaign failed', e); }
+    if (updated) {
+      setCampaign({
+        ...(campaignState as any),
+        ...updated
+      } as any);
+      try {
+        const cid = (updated as any)?.id || currentId;
+        window.dispatchEvent(new CustomEvent('campaign:name:update', { detail: { campaignId: cid, name } }));
+      } catch {}
+      try {
+        const cid = (updated as any)?.id || currentId;
+        if (cid) await upsertSettings(cid, { publication: { name } });
+      } catch {}
+      try { localStorage.setItem(`campaign:name:prompted:${(updated as any)?.id || currentId || 'new:quiz'}`, '1'); } catch {}
+      setIsNameModalOpen(false);
+    }
+  }, [campaignState, newCampaignName, saveCampaign, setCampaign, upsertSettings]);
   // Quiz config state
   const [quizConfig, setQuizConfig] = useState({
     questionCount: 5,
@@ -3516,9 +3585,47 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
         errors={validation.errors}
         onOpenSettings={() => window.dispatchEvent(new Event('openCampaignSettingsModal'))}
       />
+      {/* First-time campaign name modal */}
+      {isNameModalOpen && (
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setIsNameModalOpen(false)} />
+          <div className="relative z-10 w-full max-w-md mx-4 rounded-xl bg-white shadow-2xl border border-gray-200">
+            <div className="px-5 py-4 border-b border-gray-200">
+              <h3 className="text-base font-semibold text-gray-900">Nommer votre campagne</h3>
+              <p className="mt-1 text-sm text-gray-500">Donnez un nom clair pour identifier ce projet.</p>
+            </div>
+            <div className="px-5 py-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Nom de la campagne</label>
+              <input
+                type="text"
+                value={newCampaignName}
+                onChange={(e) => setNewCampaignName(e.target.value)}
+                placeholder="Ex: Quiz Black Friday"
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#841b60]"
+                autoFocus
+              />
+            </div>
+            <div className="px-5 py-4 flex items-center justify-end gap-2 border-t border-gray-100 bg-gray-50 rounded-b-xl">
+              <button
+                onClick={() => setIsNameModalOpen(false)}
+                className="inline-flex items-center px-3 py-1.5 text-sm rounded-xl bg-white text-gray-700 border border-gray-200 hover:bg-gray-50 transition-colors shadow-sm"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={handleSaveCampaignName}
+                disabled={!newCampaignName.trim()}
+                className="inline-flex items-center px-4 py-2 text-sm rounded-xl bg-gradient-to-br from-[#841b60] to-[#b41b60] backdrop-blur-sm text-white font-medium border border-white/20 shadow-lg shadow-[#841b60]/20 hover:from-[#841b60] hover:to-[#6d164f] hover:shadow-xl hover:shadow-[#841b60]/30 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Enregistrer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </MobileStableEditor>
-    </div>
-  );
+  </div>
+);
 };
-
+/* ... */
 export default QuizEditorLayout;

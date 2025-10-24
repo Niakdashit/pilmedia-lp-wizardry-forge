@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback, lazy } from 'react';
 import CampaignValidationModal from '@/components/shared/CampaignValidationModal';
 import { useCampaignValidation } from '@/hooks/useCampaignValidation';
 // Align routing with QuizEditor via router adapter
@@ -191,6 +191,48 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
       }
     }
   });
+  // Prompt for campaign name on first arrival
+  const [isNameModalOpen, setIsNameModalOpen] = useState(false);
+  const [newCampaignName, setNewCampaignName] = useState('');
+
+  // Open name modal if campaign has default/empty name and hasn't been prompted yet
+  useEffect(() => {
+    const id = (campaignState as any)?.id as string | undefined;
+    const name = (campaignState as any)?.name as string | undefined;
+    if (!id) return;
+    const promptedKey = `campaign:name:prompted:${id}`;
+    const alreadyPrompted = typeof window !== 'undefined' ? localStorage.getItem(promptedKey) === '1' : true;
+    const defaultNames = new Set([
+      'Nouvelle campagne',
+      'Nouvelle Roue de la Fortune',
+      '',
+      undefined as unknown as string
+    ]);
+    const needsName = !name || defaultNames.has((name || '').trim());
+    if (needsName && !alreadyPrompted) {
+      setNewCampaignName(name || '');
+      setIsNameModalOpen(true);
+    }
+  }, [campaignState?.id, campaignState?.name]);
+
+  const handleSaveCampaignName = useCallback(async () => {
+    const id = (campaignState as any)?.id as string | undefined;
+    const name = (newCampaignName || '').trim();
+    if (!id || !name) return;
+    let updated: any = null;
+    try { updated = await saveCampaign({ id, name }); } catch (e) { console.warn('saveCampaign failed', e); }
+    if (updated) {
+      setCampaign({
+        ...(campaignState as any),
+        name: updated.name
+      } as any);
+      try {
+        window.dispatchEvent(new CustomEvent('campaign:name:update', { detail: { campaignId: (updated as any).id, name: updated.name } }));
+      } catch {}
+      try { localStorage.setItem(`campaign:name:prompted:${id}`, '1'); } catch {}
+      setIsNameModalOpen(false);
+    }
+  }, [campaignState, newCampaignName, saveCampaign, setCampaign]);
   // Quiz config state
   const [quizConfig, setQuizConfig] = useState({
     questionCount: 5,
@@ -2047,6 +2089,44 @@ onShowPositionPanel={() => {
         errors={validation.errors}
         onOpenSettings={() => window.dispatchEvent(new Event('openCampaignSettingsModal'))}
       />
+      {/* First-time campaign name modal */}
+      {isNameModalOpen && (
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setIsNameModalOpen(false)} />
+          <div className="relative z-10 w-full max-w-md mx-4 rounded-xl bg-white shadow-2xl border border-gray-200">
+            <div className="px-5 py-4 border-b border-gray-200">
+              <h3 className="text-base font-semibold text-gray-900">Nommer votre campagne</h3>
+              <p className="mt-1 text-sm text-gray-500">Donnez un nom clair pour identifier ce projet.</p>
+            </div>
+            <div className="px-5 py-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Nom de la campagne</label>
+              <input
+                type="text"
+                value={newCampaignName}
+                onChange={(e) => setNewCampaignName(e.target.value)}
+                placeholder="Ex: Modèle standard A/B"
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#841b60]"
+                autoFocus
+              />
+            </div>
+            <div className="px-5 py-4 flex items-center justify-end gap-2 border-t border-gray-100 bg-gray-50 rounded-b-xl">
+              <button
+                onClick={() => setIsNameModalOpen(false)}
+                className="inline-flex items-center px-3 py-1.5 text-sm rounded-xl bg-white text-gray-700 border border-gray-200 hover:bg-gray-50 transition-colors shadow-sm"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={handleSaveCampaignName}
+                disabled={!newCampaignName.trim()}
+                className="inline-flex items-center px-4 py-2 text-sm rounded-xl bg-gradient-to-br from-[#841b60] to-[#b41b60] backdrop-blur-sm text-white font-medium border border-white/20 shadow-lg shadow-[#841b60]/20 hover:from-[#841b60] hover:to-[#6d164f] hover:shadow-xl hover:shadow-[#841b60]/30 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Enregistrer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </MobileStableEditor>
     </div>
   );

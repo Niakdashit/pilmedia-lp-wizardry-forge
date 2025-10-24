@@ -126,17 +126,13 @@ export const useCampaignSettings = () => {
     setLoading(true);
     setError(null);
     try {
-      console.log('[useCampaignSettings.upsertSettings] START - campaignId:', campaignId);
-      
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Utilisateur non authentifié');
-
       const realId = await resolveCampaignId(campaignId);
-      console.log('[useCampaignSettings.upsertSettings] realId after resolve:', realId);
-      
-      if (!realId) {
-        console.error('[useCampaignSettings.upsertSettings] ERROR: realId is null/undefined');
-        throw new Error('Campagne introuvable (id/slug invalide)');
+      if (!user || !realId) {
+        // Early state (unauthenticated or unresolved id): keep a local draft and exit quietly
+        try { saveDraft(campaignId, values); } catch {}
+        console.warn('[useCampaignSettings.upsertSettings] Skipped (unauthenticated or unresolved id)', { hasUser: !!user, campaignId, realId });
+        return null;
       }
 
       const payload: any = {
@@ -275,7 +271,7 @@ export const useCampaignSettings = () => {
 
       return result as CampaignSettings;
     } catch (err: any) {
-      console.error('[useCampaignSettings.upsertSettings] Error', err);
+      console.error('[useCampaignSettings.upsertSettings] Error', err?.message || err);
       setError(err.message || 'Erreur lors de la sauvegarde des paramètres');
       // Save a draft for fallback
       saveDraft(campaignId, values);

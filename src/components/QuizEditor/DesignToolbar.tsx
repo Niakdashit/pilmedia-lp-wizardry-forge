@@ -53,25 +53,9 @@ const QuizToolbar: React.FC<QuizToolbarProps> = React.memo(({
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [isValidationModalOpen, setIsValidationModalOpen] = useState(false);
   const { validateCampaign } = useCampaignValidation();
-  const saveCampaign = useCampaigns();
+  const { saveCampaign } = useCampaigns();
   const campaignState = useEditorStore((s) => s.campaign);
   const setCampaign = useEditorStore((s) => s.setCampaign);
-  
-  // Helper: vérifier si c'est un UUID valide (pas un ID de preview)
-  const isValidUuid = useCallback((id?: string) => {
-    if (!id) return false;
-    return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id);
-  }, []);
-  
-  // Récupérer l'ID réel (UUID) depuis le store ou la prop
-  const getRealCampaignId = useCallback(() => {
-    const storeId = (campaignState as any)?.id;
-    if (isValidUuid(storeId)) return storeId;
-    if (isValidUuid(campaignId)) return campaignId;
-    return undefined;
-  }, [campaignState, campaignId, isValidUuid]);
-  
-  const realCampaignId = getRealCampaignId();
   
   const saveDesktopLabel = mode === 'template' ? 'Enregistrer template' : 'Sauvegarder et quitter';
   const saveMobileLabel = mode === 'template' ? 'Enregistrer' : 'Sauvegarder';
@@ -86,16 +70,11 @@ const QuizToolbar: React.FC<QuizToolbarProps> = React.memo(({
   // Ensure a campaign exists before opening settings
   const handleOpenSettings = useCallback(async () => {
     try {
-      // Recalculer l'ID en temps réel
-      const currentRealId = getRealCampaignId();
-      
-      // Vérifier si on a déjà un UUID valide
-      if (currentRealId) {
+      if (campaignId) {
         setIsSettingsModalOpen(true);
         return;
       }
 
-      console.log('[QuizToolbar] No valid UUID, creating campaign...');
       const payload: any = {
         ...(campaignState || {}),
         name: (campaignState as any)?.name || 'Nouvelle campagne quiz',
@@ -107,12 +86,10 @@ const QuizToolbar: React.FC<QuizToolbarProps> = React.memo(({
         form_fields: (campaignState as any)?.form_fields || (campaignState as any)?.formFields || [],
       };
 
-      const saved = await saveCampaignToDB(payload, saveCampaign.saveCampaign);
+      const saved = await saveCampaignToDB(payload, saveCampaign);
       if (saved?.id) {
-        console.log('[QuizToolbar] Campaign created with ID:', saved.id);
         setCampaign((prev: any) => ({ ...prev, id: saved.id }));
-        // Attendre que le store soit mis à jour
-        setTimeout(() => setIsSettingsModalOpen(true), 100);
+        setIsSettingsModalOpen(true);
       } else {
         alert("Impossible de créer la campagne. Veuillez réessayer.");
       }
@@ -120,7 +97,7 @@ const QuizToolbar: React.FC<QuizToolbarProps> = React.memo(({
       console.error('[QuizToolbar] Failed to ensure campaign before opening settings', e);
       alert('Erreur lors de la création de la campagne');
     }
-  }, [getRealCampaignId, campaignState, saveCampaign, setCampaign]);
+  }, [campaignId, campaignState, saveCampaign, setCampaign]);
   
   // Handler pour "Sauvegarder et quitter" -> Valide, sauvegarde puis redirige vers dashboard
   const handleSaveAndQuit = async () => {
@@ -150,7 +127,7 @@ const QuizToolbar: React.FC<QuizToolbarProps> = React.memo(({
       <CampaignSettingsModal 
         isOpen={isSettingsModalOpen}
         onClose={() => setIsSettingsModalOpen(false)}
-        campaignId={realCampaignId}
+        campaignId={(campaignState as any)?.id || campaignId}
       />
       <CampaignValidationModal
         isOpen={isValidationModalOpen}

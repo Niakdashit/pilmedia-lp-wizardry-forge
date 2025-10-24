@@ -55,20 +55,6 @@ const ScratchToolbar: React.FC<ScratchToolbarProps> = React.memo(({
   const campaignState = useEditorStore((s) => s.campaign);
   const setCampaign = useEditorStore((s) => s.setCampaign);
   
-  const isValidUuid = useCallback((id?: string) => {
-    if (!id) return false;
-    return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id);
-  }, []);
-  
-  const getRealCampaignId = useCallback(() => {
-    const storeId = (campaignState as any)?.id;
-    if (isValidUuid(storeId)) return storeId;
-    if (isValidUuid(campaignId)) return campaignId;
-    return undefined;
-  }, [campaignState, campaignId, isValidUuid]);
-  
-  const realCampaignId = getRealCampaignId();
-  
   const saveDesktopLabel = mode === 'template' ? 'Enregistrer template' : 'Sauvegarder et quitter';
   const saveMobileLabel = mode === 'template' ? 'Enregistrer' : 'Sauvegarder';
 
@@ -79,14 +65,13 @@ const ScratchToolbar: React.FC<ScratchToolbarProps> = React.memo(({
     return () => window.removeEventListener('openCampaignSettingsModal', handler as any);
   }, []);
   
+  // Ensure a campaign exists before opening settings
   const handleOpenSettings = useCallback(async () => {
     try {
-      const currentRealId = getRealCampaignId();
-      if (currentRealId) {
+      if (campaignId) {
         setIsSettingsModalOpen(true);
         return;
       }
-      console.log('[JackpotToolbar] No valid UUID, creating campaign...');
       const payload: any = {
         ...(campaignState || {}),
         name: (campaignState as any)?.name || 'Nouvelle campagne jackpot',
@@ -99,9 +84,8 @@ const ScratchToolbar: React.FC<ScratchToolbarProps> = React.memo(({
       };
       const saved = await saveCampaignToDB(payload, saveCampaign);
       if (saved?.id) {
-        console.log('[JackpotToolbar] Campaign created with ID:', saved.id);
         setCampaign((prev: any) => ({ ...prev, id: saved.id }));
-        setTimeout(() => setIsSettingsModalOpen(true), 100);
+        setIsSettingsModalOpen(true);
       } else {
         alert('Impossible de créer la campagne. Veuillez réessayer.');
       }
@@ -109,7 +93,7 @@ const ScratchToolbar: React.FC<ScratchToolbarProps> = React.memo(({
       console.error('[JackpotToolbar] Failed to ensure campaign before opening settings', e);
       alert('Erreur lors de la création de la campagne');
     }
-  }, [getRealCampaignId, campaignState, saveCampaign, setCampaign]);
+  }, [campaignId, campaignState, saveCampaign, setCampaign]);
 
   // Handler pour "Sauvegarder et quitter" -> Valide, sauvegarde puis redirige vers dashboard
   const handleSaveAndQuit = async () => {
@@ -134,7 +118,7 @@ const ScratchToolbar: React.FC<ScratchToolbarProps> = React.memo(({
       <CampaignSettingsModal 
         isOpen={isSettingsModalOpen}
         onClose={() => setIsSettingsModalOpen(false)}
-        campaignId={realCampaignId}
+        campaignId={(campaignState as any)?.id || campaignId}
       />
       <CampaignValidationModal
         isOpen={isValidationModalOpen}
