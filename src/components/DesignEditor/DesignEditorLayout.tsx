@@ -31,7 +31,7 @@ import { useCampaignFromUrl } from '@/hooks/useCampaignFromUrl';
 
 
 import { useCampaigns } from '@/hooks/useCampaigns';
-import { saveCampaignToDB } from '@/hooks/useModernCampaignEditor/saveHandler';
+import { createSaveAndContinueHandler, saveCampaignToDB } from '@/hooks/useModernCampaignEditor/saveHandler';
 
 const KeyboardShortcutsHelp = lazy(() => import('../shared/KeyboardShortcutsHelp'));
 const MobileStableEditor = lazy(() => import('./components/MobileStableEditor'));
@@ -427,7 +427,7 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
     }
   }, [campaignState?.id, campaignState?.name]);
 
-  const { upsertSettings, getSettings } = useCampaignSettings();
+  const { upsertSettings } = useCampaignSettings();
 
   const handleSaveCampaignName = useCallback(async () => {
     const currentId = (campaignState as any)?.id as string | undefined;
@@ -441,26 +441,15 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
       if (updated) {
         setCampaign({
           ...campaignState,
-          ...updated,
-          name // Ensure name is explicitly set
+          ...updated
         } as any);
         
         const cid = (updated as any)?.id || currentId;
-        
-        // Update campaign_settings with the new name
-        if (cid) {
-          // Load existing settings first to preserve other publication data
-          const existingSettings = await getSettings(cid);
-          await upsertSettings(cid, { 
-            publication: { 
-              ...(existingSettings?.publication || {}),
-              name 
-            } 
-          });
-        }
-        
-        // Dispatch event for immediate UI update if modal is open
         window.dispatchEvent(new CustomEvent('campaign:name:update', { detail: { campaignId: cid, name } }));
+        
+        if (cid) {
+          await upsertSettings(cid, { publication: { name } });
+        }
         
         localStorage.setItem(`campaign:name:prompted:${cid || 'new:design'}`, '1');
       }
@@ -470,10 +459,10 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
       // Always close modal, even if save fails
       setIsNameModalOpen(false);
     }
-  }, [campaignState, newCampaignName, saveCampaign, setCampaign, upsertSettings, getSettings]);
+  }, [campaignState, newCampaignName, saveCampaign, setCampaign, upsertSettings]);
 
   // Hook de synchronisation preview
-  const { syncBackground: _syncBackground } = useEditorPreviewSync();
+  const { syncBackground } = useEditorPreviewSync();
 
   // Détecter la position de scroll pour changer l'écran courant
   useEffect(() => {
@@ -2591,8 +2580,6 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
                     editorMode={editorMode}
                     screenId="screen1"
                     selectedDevice={selectedDevice}
-                    elements={canvasElements}
-                    onElementsChange={setCanvasElements}
                     zoom={canvasZoom}
                     modularModules={modularPage.screens.screen1}
                     onModuleUpdate={handleUpdateModule}
@@ -2699,7 +2686,7 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
                       selectedDevice={selectedDevice}
                       elements={canvasElements}
                       onElementsChange={setCanvasElements}
-                      background={(screenBackgrounds.screen2 as any)?.devices?.[selectedDevice] || screenBackgrounds.screen2}
+                      background={screenBackgrounds.screen2?.devices?.[selectedDevice] || screenBackgrounds.screen2}
                       campaign={campaignData}
                       onCampaignChange={handleCampaignConfigChange}
                       zoom={canvasZoom}
@@ -2817,7 +2804,7 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
                       selectedDevice={selectedDevice}
                       elements={canvasElements}
                       onElementsChange={setCanvasElements}
-                      background={(screenBackgrounds.screen3 as any)?.devices?.[selectedDevice] || screenBackgrounds.screen3}
+                      background={screenBackgrounds.screen3?.devices?.[selectedDevice] || screenBackgrounds.screen3}
                       campaign={campaignData}
                       onCampaignChange={handleCampaignConfigChange}
                       zoom={canvasZoom}

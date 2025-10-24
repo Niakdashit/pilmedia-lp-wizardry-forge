@@ -412,21 +412,28 @@ const JackpotEditorLayout: React.FC<JackpotEditorLayoutProps> = ({ mode = 'campa
   const [isNameModalOpen, setIsNameModalOpen] = useState(false);
   const [newCampaignName, setNewCampaignName] = useState('');
 
+  // Open name modal if campaign has default/empty name and hasn't been prompted yet
   useEffect(() => {
     const id = (campaignState as any)?.id as string | undefined;
     const name = (campaignState as any)?.name as string | undefined;
-
-    // Nouveau comportement: modale OBLIGATOIRE pour toute nouvelle campagne (pas d'ID)
-    if (!id) {
-      setNewCampaignName((name || '').trim());
+    const promptedKey = id ? `campaign:name:prompted:${id}` : `campaign:name:prompted:new:jackpot`;
+    const alreadyPrompted = typeof window !== 'undefined' ? localStorage.getItem(promptedKey) === '1' : true;
+    const defaultNames = new Set([
+      'Nouvelle campagne',
+      'Nouvelle Roue de la Fortune',
+      '',
+      undefined as unknown as string
+    ]);
+    const n = (name || '').trim();
+    const looksDefault = /^nouve(lle|au)/i.test(n);
+    const needsName = !n || defaultNames.has(n) || looksDefault;
+    if (needsName && !alreadyPrompted) {
+      setNewCampaignName(name || '');
       setIsNameModalOpen(true);
-      return;
     }
-    // Campagnes existantes: ne pas rouvrir automatiquement
-    setIsNameModalOpen(false);
   }, [campaignState?.id, campaignState?.name]);
 
-  const { upsertSettings, getSettings } = useCampaignSettings();
+  const { upsertSettings } = useCampaignSettings();
 
   const handleSaveCampaignName = useCallback(async () => {
     const currentId = (campaignState as any)?.id as string | undefined;
@@ -440,26 +447,15 @@ const JackpotEditorLayout: React.FC<JackpotEditorLayoutProps> = ({ mode = 'campa
       if (updated) {
         setCampaign({
           ...(campaignState as any),
-          ...updated,
-          name // Ensure name is explicitly set
+          ...updated
         } as any);
         
         const cid = (updated as any)?.id || currentId;
-        
-        // Update campaign_settings with the new name
-        if (cid) {
-          // Load existing settings first to preserve other publication data
-          const existingSettings = await getSettings(cid);
-          await upsertSettings(cid, { 
-            publication: { 
-              ...(existingSettings?.publication || {}),
-              name 
-            } 
-          });
-        }
-        
-        // Dispatch event for immediate UI update if modal is open
         window.dispatchEvent(new CustomEvent('campaign:name:update', { detail: { campaignId: cid, name } }));
+        
+        if (cid) {
+          await upsertSettings(cid, { publication: { name } });
+        }
         
         localStorage.setItem(`campaign:name:prompted:${cid || 'new:jackpot'}`, '1');
       }
@@ -469,7 +465,7 @@ const JackpotEditorLayout: React.FC<JackpotEditorLayoutProps> = ({ mode = 'campa
       // Always close modal, even if save fails
       setIsNameModalOpen(false);
     }
-  }, [campaignState, newCampaignName, saveCampaign, setCampaign, upsertSettings, getSettings]);
+  }, [campaignState, newCampaignName, saveCampaign, setCampaign, upsertSettings]);
   
   const [quizConfig, setQuizConfig] = useState({
     questionCount: 5,

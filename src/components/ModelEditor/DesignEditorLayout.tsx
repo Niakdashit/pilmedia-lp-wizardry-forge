@@ -23,7 +23,6 @@ import EditorStateCleanup from '../EditorStateCleanup';
 
 
 import { useCampaigns } from '@/hooks/useCampaigns';
-import { useCampaignSettings } from '@/hooks/useCampaignSettings';
 import { createSaveAndContinueHandler, saveCampaignToDB } from '@/hooks/useModernCampaignEditor/saveHandler';
 import { quizTemplates } from '../../types/quizTemplates';
 
@@ -200,61 +199,40 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
   useEffect(() => {
     const id = (campaignState as any)?.id as string | undefined;
     const name = (campaignState as any)?.name as string | undefined;
-
-    // Nouveau comportement: modale OBLIGATOIRE pour toute nouvelle campagne (pas d'ID)
-    if (!id) {
-      setNewCampaignName((name || '').trim());
+    if (!id) return;
+    const promptedKey = `campaign:name:prompted:${id}`;
+    const alreadyPrompted = typeof window !== 'undefined' ? localStorage.getItem(promptedKey) === '1' : true;
+    const defaultNames = new Set([
+      'Nouvelle campagne',
+      'Nouvelle Roue de la Fortune',
+      '',
+      undefined as unknown as string
+    ]);
+    const needsName = !name || defaultNames.has((name || '').trim());
+    if (needsName && !alreadyPrompted) {
+      setNewCampaignName(name || '');
       setIsNameModalOpen(true);
-      return;
     }
-    // Campagnes existantes: ne pas rouvrir automatiquement
-    setIsNameModalOpen(false);
   }, [campaignState?.id, campaignState?.name]);
 
-  const { upsertSettings, getSettings } = useCampaignSettings();
-
   const handleSaveCampaignName = useCallback(async () => {
-    const currentId = (campaignState as any)?.id as string | undefined;
+    const id = (campaignState as any)?.id as string | undefined;
     const name = (newCampaignName || '').trim();
-    if (!name) return;
-    
-    try {
-      const payload: any = currentId ? { id: currentId, name } : { name };
-      const updated = await saveCampaign(payload);
-      
-      if (updated) {
-        setCampaign({
-          ...campaignState,
-          ...updated,
-          name // Ensure name is explicitly set
-        } as any);
-        
-        const cid = (updated as any)?.id || currentId;
-        
-        // Update campaign_settings with the new name
-        if (cid) {
-          // Load existing settings first to preserve other publication data
-          const existingSettings = await getSettings(cid);
-          await upsertSettings(cid, { 
-            publication: { 
-              ...(existingSettings?.publication || {}),
-              name 
-            } 
-          });
-        }
-        
-        // Dispatch event for immediate UI update if modal is open
-        window.dispatchEvent(new CustomEvent('campaign:name:update', { detail: { campaignId: cid, name } }));
-        
-        localStorage.setItem(`campaign:name:prompted:${cid || 'new:model'}`, '1');
-      }
-    } catch (e) {
-      console.error('Failed to save campaign name:', e);
-    } finally {
-      // Always close modal, even if save fails
+    if (!id || !name) return;
+    let updated: any = null;
+    try { updated = await saveCampaign({ id, name }); } catch (e) { console.warn('saveCampaign failed', e); }
+    if (updated) {
+      setCampaign({
+        ...(campaignState as any),
+        name: updated.name
+      } as any);
+      try {
+        window.dispatchEvent(new CustomEvent('campaign:name:update', { detail: { campaignId: (updated as any).id, name: updated.name } }));
+      } catch {}
+      try { localStorage.setItem(`campaign:name:prompted:${id}`, '1'); } catch {}
       setIsNameModalOpen(false);
     }
-  }, [campaignState, newCampaignName, saveCampaign, setCampaign, upsertSettings, getSettings]);
+  }, [campaignState, newCampaignName, saveCampaign, setCampaign]);
   // Quiz config state
   const [quizConfig, setQuizConfig] = useState({
     questionCount: 5,

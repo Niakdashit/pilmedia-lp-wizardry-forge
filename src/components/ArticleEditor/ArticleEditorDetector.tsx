@@ -28,7 +28,7 @@ const ArticleEditorDetector: React.FC<ArticleEditorDetectorProps> = ({
   fullscreenLayout,
 }) => {
   const [searchParams] = useSearchParams();
-  
+  const mode = searchParams.get('mode') as 'fullscreen' | 'article' | null;
 
   // Le DesignEditorLayout gère désormais directement le mode Article via la prop editorMode
   // On réutilise donc le même layout quelle que soit la valeur du mode

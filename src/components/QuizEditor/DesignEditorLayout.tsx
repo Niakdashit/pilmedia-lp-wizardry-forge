@@ -503,22 +503,24 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
   const [isNameModalOpen, setIsNameModalOpen] = useState(false);
   const [newCampaignName, setNewCampaignName] = useState('');
 
-  // Open name modal if campaign has default/empty name and hasn't been prompted yet
+  // Always open name modal on arrival (both modes), independent of previous prompts or name value
   useEffect(() => {
-    const id = (campaignState as any)?.id as string | undefined;
     const name = (campaignState as any)?.name as string | undefined;
-    
-    // Nouveau comportement: modale OBLIGATOIRE pour toute nouvelle campagne (pas d'ID)
-    if (!id) {
-      setNewCampaignName((name || '').trim());
-      setIsNameModalOpen(true);
+    const forceOpen = new URLSearchParams(location.search).get('forceNameModal') === '1';
+    setNewCampaignName((name || '').trim());
+    if (forceOpen) {
+      try { requestAnimationFrame(() => setIsNameModalOpen(true)); } catch { setIsNameModalOpen(true); }
       return;
     }
-    // Campagnes existantes: ne pas rouvrir automatiquement
-    setIsNameModalOpen(false);
-  }, [campaignState?.id, campaignState?.name]);
+    // Always open on entry, regardless of mode or prior view
+    try { requestAnimationFrame(() => setIsNameModalOpen(true)); } catch { setIsNameModalOpen(true); }
+    return () => {
+      // Reset when leaving or switching mode/path so next entry re-opens deterministically
+      setIsNameModalOpen(false);
+    };
+  }, [editorMode, location.search, location.pathname]);
 
-  const { upsertSettings, getSettings } = useCampaignSettings();
+  const { upsertSettings } = useCampaignSettings();
 
   const handleSaveCampaignName = useCallback(async () => {
     const currentId = (campaignState as any)?.id as string | undefined;
@@ -532,26 +534,15 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
       if (updated) {
         setCampaign({
           ...(campaignState as any),
-          ...updated,
-          name // Ensure name is explicitly set
+          ...updated
         } as any);
         
         const cid = (updated as any)?.id || currentId;
-        
-        // Update campaign_settings with the new name
-        if (cid) {
-          // Load existing settings first to preserve other publication data
-          const existingSettings = await getSettings(cid);
-          await upsertSettings(cid, { 
-            publication: { 
-              ...(existingSettings?.publication || {}),
-              name 
-            } 
-          });
-        }
-        
-        // Dispatch event for immediate UI update if modal is open
         window.dispatchEvent(new CustomEvent('campaign:name:update', { detail: { campaignId: cid, name } }));
+        
+        if (cid) {
+          await upsertSettings(cid, { publication: { name } });
+        }
         
         localStorage.setItem(`campaign:name:prompted:${cid || 'new:quiz'}`, '1');
       }
@@ -561,7 +552,7 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
       // Always close modal, even if save fails
       setIsNameModalOpen(false);
     }
-  }, [campaignState, newCampaignName, saveCampaign, setCampaign, upsertSettings, getSettings]);
+  }, [campaignState, newCampaignName, saveCampaign, setCampaign, upsertSettings]);
   // Quiz config state
   const [quizConfig, setQuizConfig] = useState({
     questionCount: 5,

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Image, Type, MousePointer, List, Palette, Plus, FormInput, Gamepad2, MessageSquare } from 'lucide-react';
-import type { ArticleConfig } from '../ArticleEditor/types/ArticleTypes';
+import type { ArticleConfig } from './types/ArticleTypes';
 import { BackgroundPanel, CompositeElementsPanel } from '@/components/shared';
 import ModernFormTab from '../ModernEditor/ModernFormTab';
 import GameManagementPanel from '../DesignEditor/panels/GameManagementPanel';
