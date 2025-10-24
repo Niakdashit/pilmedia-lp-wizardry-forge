@@ -71,6 +71,13 @@ export const saveCampaignToDB = async (
     mobileBackgroundImage: campaign?.design?.mobileBackgroundImage || (campaign as any)?.canvasConfig?.mobileBackground?.value,
   };
 
+  console.log('💾 [saveHandler] Saving design with backgrounds:', {
+    hasBackgroundImage: !!mergedDesign.backgroundImage,
+    hasMobileBackgroundImage: !!mergedDesign.mobileBackgroundImage,
+    backgroundImageUrl: mergedDesign.backgroundImage,
+    mobileBackgroundImageUrl: mergedDesign.mobileBackgroundImage
+  });
+
   const payload: any = {
     id: campaign?.id,
     name: campaign?.name || 'Nouvelle campagne',
