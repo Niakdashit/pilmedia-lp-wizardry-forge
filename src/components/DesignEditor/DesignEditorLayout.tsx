@@ -433,24 +433,27 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
     const currentId = (campaignState as any)?.id as string | undefined;
     const name = (newCampaignName || '').trim();
     if (!name) return;
-    
+
     try {
       const payload: any = currentId ? { id: currentId, name } : { name };
       const updated = await saveCampaign(payload);
-      
+
       if (updated) {
         setCampaign({
           ...campaignState,
           ...updated
         } as any);
-        
+
         const cid = (updated as any)?.id || currentId;
         window.dispatchEvent(new CustomEvent('campaign:name:update', { detail: { campaignId: cid, name } }));
-        
+
         if (cid) {
-          await upsertSettings(cid, { publication: { name } });
+          const settingsResult = await upsertSettings(cid, { publication: { name } });
+          if (!settingsResult) {
+            console.warn('Failed to save campaign name to settings, but name is saved in campaigns table');
+          }
         }
-        
+
         localStorage.setItem(`campaign:name:prompted:${cid || 'new:design'}`, '1');
       }
     } catch (e) {
