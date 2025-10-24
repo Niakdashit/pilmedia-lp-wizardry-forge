@@ -110,17 +110,7 @@ export const createSaveAndContinueHandler = (
       let campaignId = saved?.id as string | undefined;
 
       if (!campaignId) {
-        // Fallback to localStorage draft if DB not available
-        campaignId = (typeof crypto !== 'undefined' && 'randomUUID' in crypto)
-          ? (crypto as any).randomUUID()
-          : `draft-${Date.now()}`;
-        try {
-          const draft = { ...(campaign || {}), id: campaignId, _source: 'localStorage' };
-          localStorage.setItem(`campaign:draft:${campaignId}`, JSON.stringify(draft));
-          console.warn('[createSaveAndContinueHandler] Saved draft to localStorage due to DB failure');
-        } catch (e) {
-          console.error('Failed to persist draft locally', e);
-        }
+        throw new Error('Impossible de sauvegarder la campagne');
       }
 
       if (campaignId) {
