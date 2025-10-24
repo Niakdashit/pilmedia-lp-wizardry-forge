@@ -31,7 +31,7 @@ import { useCampaignFromUrl } from '@/hooks/useCampaignFromUrl';
 
 
 import { useCampaigns } from '@/hooks/useCampaigns';
-import { createSaveAndContinueHandler, saveCampaignToDB } from '@/hooks/useModernCampaignEditor/saveHandler';
+import { saveCampaignToDB } from '@/hooks/useModernCampaignEditor/saveHandler';
 
 const KeyboardShortcutsHelp = lazy(() => import('../shared/KeyboardShortcutsHelp'));
 const MobileStableEditor = lazy(() => import('./components/MobileStableEditor'));
@@ -473,7 +473,7 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
   }, [campaignState, newCampaignName, saveCampaign, setCampaign, upsertSettings, getSettings]);
 
   // Hook de synchronisation preview
-  const { syncBackground } = useEditorPreviewSync();
+  const { syncBackground: _syncBackground } = useEditorPreviewSync();
 
   // Détecter la position de scroll pour changer l'écran courant
   useEffect(() => {
@@ -2591,6 +2591,8 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
                     editorMode={editorMode}
                     screenId="screen1"
                     selectedDevice={selectedDevice}
+                    elements={canvasElements}
+                    onElementsChange={setCanvasElements}
                     zoom={canvasZoom}
                     modularModules={modularPage.screens.screen1}
                     onModuleUpdate={handleUpdateModule}
@@ -2697,7 +2699,7 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
                       selectedDevice={selectedDevice}
                       elements={canvasElements}
                       onElementsChange={setCanvasElements}
-                      background={screenBackgrounds.screen2?.devices?.[selectedDevice] || screenBackgrounds.screen2}
+                      background={(screenBackgrounds.screen2 as any)?.devices?.[selectedDevice] || screenBackgrounds.screen2}
                       campaign={campaignData}
                       onCampaignChange={handleCampaignConfigChange}
                       zoom={canvasZoom}
@@ -2815,7 +2817,7 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
                       selectedDevice={selectedDevice}
                       elements={canvasElements}
                       onElementsChange={setCanvasElements}
-                      background={screenBackgrounds.screen3?.devices?.[selectedDevice] || screenBackgrounds.screen3}
+                      background={(screenBackgrounds.screen3 as any)?.devices?.[selectedDevice] || screenBackgrounds.screen3}
                       campaign={campaignData}
                       onCampaignChange={handleCampaignConfigChange}
                       zoom={canvasZoom}

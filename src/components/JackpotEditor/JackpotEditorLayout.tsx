@@ -412,25 +412,18 @@ const JackpotEditorLayout: React.FC<JackpotEditorLayoutProps> = ({ mode = 'campa
   const [isNameModalOpen, setIsNameModalOpen] = useState(false);
   const [newCampaignName, setNewCampaignName] = useState('');
 
-  // Open name modal if campaign has default/empty name and hasn't been prompted yet
   useEffect(() => {
     const id = (campaignState as any)?.id as string | undefined;
     const name = (campaignState as any)?.name as string | undefined;
-    const promptedKey = id ? `campaign:name:prompted:${id}` : `campaign:name:prompted:new:jackpot`;
-    const alreadyPrompted = typeof window !== 'undefined' ? localStorage.getItem(promptedKey) === '1' : true;
-    const defaultNames = new Set([
-      'Nouvelle campagne',
-      'Nouvelle Roue de la Fortune',
-      '',
-      undefined as unknown as string
-    ]);
-    const n = (name || '').trim();
-    const looksDefault = /^nouve(lle|au)/i.test(n);
-    const needsName = !n || defaultNames.has(n) || looksDefault;
-    if (needsName && !alreadyPrompted) {
-      setNewCampaignName(name || '');
+
+    // Nouveau comportement: modale OBLIGATOIRE pour toute nouvelle campagne (pas d'ID)
+    if (!id) {
+      setNewCampaignName((name || '').trim());
       setIsNameModalOpen(true);
+      return;
     }
+    // Campagnes existantes: ne pas rouvrir automatiquement
+    setIsNameModalOpen(false);
   }, [campaignState?.id, campaignState?.name]);
 
   const { upsertSettings, getSettings } = useCampaignSettings();
