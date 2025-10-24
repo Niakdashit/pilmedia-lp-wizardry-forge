@@ -99,7 +99,18 @@ export const loadCampaign = async (
         design: {
           ...getDefaultCampaign(existingCampaignType, false).design,
           ...existingCampaign.design,
-          customColors: validateColors(existingCampaign.design?.customColors)
+          // Restore background images from multiple possible sources
+          backgroundImage: existingCampaign.design?.backgroundImage 
+            || existingCampaign.design?.background 
+            || existingCampaign.design?.screenBackgrounds?.screen1?.value
+            || canvasConfig?.background?.value,
+          mobileBackgroundImage: existingCampaign.design?.mobileBackgroundImage
+            || existingCampaign.design?.mobileBackground
+            || existingCampaign.design?.screenBackgrounds?.screen1?.mobileValue,
+          customColors: validateColors(existingCampaign.design?.customColors),
+          // Preserve design modules (text blocks, buttons, etc.)
+          designModules: existingCampaign.design?.designModules,
+          screenBackgrounds: existingCampaign.design?.screenBackgrounds
         },
         gameConfig: {
           ...getDefaultCampaign(existingCampaignType, false).gameConfig,
