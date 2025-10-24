@@ -503,22 +503,25 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
   const [isNameModalOpen, setIsNameModalOpen] = useState(false);
   const [newCampaignName, setNewCampaignName] = useState('');
 
-  // Always open name modal on arrival (both modes), independent of previous prompts or name value
+  // Open name modal if campaign has default/empty name and hasn't been prompted yet
   useEffect(() => {
+    const id = (campaignState as any)?.id as string | undefined;
     const name = (campaignState as any)?.name as string | undefined;
-    const forceOpen = new URLSearchParams(location.search).get('forceNameModal') === '1';
-    setNewCampaignName((name || '').trim());
-    if (forceOpen) {
-      try { requestAnimationFrame(() => setIsNameModalOpen(true)); } catch { setIsNameModalOpen(true); }
-      return;
+    
+    const promptedKey = id ? `campaign:name:prompted:${id}` : `campaign:name:prompted:new:quiz`;
+    const alreadyPrompted = typeof window !== 'undefined' ? localStorage.getItem(promptedKey) === '1' : true;
+    const defaultNames = new Set([
+      'Nouvelle campagne',
+      'Nouvelle Roue de la Fortune',
+      '',
+      undefined as unknown as string
+    ]);
+    const needsName = !name || defaultNames.has((name || '').trim());
+    if (needsName && !alreadyPrompted) {
+      setNewCampaignName(name || '');
+      setIsNameModalOpen(true);
     }
-    // Always open on entry, regardless of mode or prior view
-    try { requestAnimationFrame(() => setIsNameModalOpen(true)); } catch { setIsNameModalOpen(true); }
-    return () => {
-      // Reset when leaving or switching mode/path so next entry re-opens deterministically
-      setIsNameModalOpen(false);
-    };
-  }, [editorMode, location.search, location.pathname]);
+  }, [campaignState?.id, campaignState?.name]);
 
   const { upsertSettings } = useCampaignSettings();
 

@@ -219,17 +219,23 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
     const id = (campaignState as any)?.id as string | undefined;
     const name = (newCampaignName || '').trim();
     if (!id || !name) return;
-    let updated: any = null;
-    try { updated = await saveCampaign({ id, name }); } catch (e) { console.warn('saveCampaign failed', e); }
-    if (updated) {
-      setCampaign({
-        ...(campaignState as any),
-        name: updated.name
-      } as any);
-      try {
+    
+    try {
+      const updated = await saveCampaign({ id, name });
+      
+      if (updated) {
+        setCampaign({
+          ...(campaignState as any),
+          name: updated.name
+        } as any);
+        
         window.dispatchEvent(new CustomEvent('campaign:name:update', { detail: { campaignId: (updated as any).id, name: updated.name } }));
-      } catch {}
-      try { localStorage.setItem(`campaign:name:prompted:${id}`, '1'); } catch {}
+        localStorage.setItem(`campaign:name:prompted:${id}`, '1');
+      }
+    } catch (e) {
+      console.error('Failed to save campaign name:', e);
+    } finally {
+      // Always close modal, even if save fails
       setIsNameModalOpen(false);
     }
   }, [campaignState, newCampaignName, saveCampaign, setCampaign]);
