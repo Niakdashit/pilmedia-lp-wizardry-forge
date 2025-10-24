@@ -79,11 +79,18 @@ export const loadCampaign = async (
       }
     }
 
-    console.log('Loading standard campaign from API');
+      console.log('Loading standard campaign from API');
     const existingCampaign = await getCampaign(campaignId);
     
     if (existingCampaign) {
-      console.log('Loaded campaign from API:', existingCampaign);
+      console.log('✅ [campaignLoader] Loaded campaign from DB:', {
+        id: existingCampaign.id,
+        name: existingCampaign.name,
+        hasDesign: !!existingCampaign.design,
+        hasConfig: !!existingCampaign.config,
+        designKeys: Object.keys(existingCampaign.design || {}),
+        configKeys: Object.keys(existingCampaign.config || {})
+      });
       
       const existingCampaignType = (existingCampaign.type as CampaignType) || campaignType;
       
@@ -126,7 +133,14 @@ export const loadCampaign = async (
         }
       };
       
-      console.log('Merged standard campaign:', mergedCampaign);
+      console.log('✅ [campaignLoader] Final merged campaign:', {
+        id: mergedCampaign.id,
+        name: mergedCampaign.name,
+        hasBackgroundImage: !!mergedCampaign.design?.backgroundImage,
+        hasDesignModules: !!mergedCampaign.design?.designModules,
+        backgroundImageUrl: mergedCampaign.design?.backgroundImage,
+        designModulesKeys: Object.keys(mergedCampaign.design?.designModules || {})
+      });
       return mergedCampaign;
     } else {
       console.log('No campaign found, using default');

@@ -162,14 +162,27 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
   // Charger la campagne dans l'éditeur si elle vient de l'URL
   useEffect(() => {
     if (urlCampaign && !urlLoading && !urlError) {
-      console.log('📥 [DesignEditor] Loading campaign from URL:', urlCampaign);
+      console.log('📥 [DesignEditor] Loading campaign from URL:', {
+        id: urlCampaign.id,
+        name: urlCampaign.name,
+        hasDesign: !!urlCampaign.design,
+        designModules: urlCampaign.design?.designModules
+      });
       
       // Restaurer la campagne dans le store (design inclus)
-      setCampaign({
+      const campaignToSet = {
         ...urlCampaign,
+        name: urlCampaign.name, // Ensure name is explicitly set
         gameConfig: urlCampaign.game_config || {},
         buttonConfig: {}
-      } as any);
+      } as any;
+      
+      console.log('📥 [DesignEditor] Setting campaign in store:', {
+        id: campaignToSet.id,
+        name: campaignToSet.name
+      });
+      
+      setCampaign(campaignToSet);
       
       // Restaurer le canvas local depuis config.canvasConfig
       try {
@@ -363,6 +376,27 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
     }
   });
 
+  // Synchroniser campaignConfig avec urlCampaign après le chargement
+  useEffect(() => {
+    if (urlCampaign && !urlLoading) {
+      console.log('🔄 [DesignEditor] Synchronizing campaignConfig with urlCampaign:', {
+        hasDesignModules: !!urlCampaign.design?.designModules,
+        designModulesKeys: Object.keys(urlCampaign.design?.designModules || {})
+      });
+      
+      setCampaignConfig({
+        ...urlCampaign,
+        design: {
+          ...urlCampaign.design,
+          wheelConfig: {
+            scale: 2,
+            ...urlCampaign.design?.wheelConfig
+          }
+        }
+      });
+    }
+  }, [urlCampaign, urlLoading]);
+
   // Prompt for campaign name on first arrival
   const [isNameModalOpen, setIsNameModalOpen] = useState(false);
   const [newCampaignName, setNewCampaignName] = useState('');
@@ -371,6 +405,13 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
   useEffect(() => {
     const id = (campaignState as any)?.id as string | undefined;
     const name = (campaignState as any)?.name as string | undefined;
+    
+    console.log('🔍 [DesignEditor] Name modal check:', {
+      campaignId: id,
+      campaignName: name,
+      campaignStateKeys: Object.keys(campaignState || {})
+    });
+    
     const promptedKey = id ? `campaign:name:prompted:${id}` : `campaign:name:prompted:new:design`;
     const alreadyPrompted = typeof window !== 'undefined' ? localStorage.getItem(promptedKey) === '1' : true;
     const defaultNames = new Set([
