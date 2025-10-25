@@ -308,7 +308,56 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
         console.error('❌ [DesignEditor] Auto-save background failed:', e);
       }
     }, 400);
-  }, [campaignState, saveCampaign, screenBackgrounds, selectedDevice, setIsModified]);
+}, [campaignState, saveCampaign, screenBackgrounds, selectedDevice, setIsModified]);
+
+// 🔗 Miroir local → store: conserve les éléments dans campaign.config.canvasConfig afin d'éviter toute perte
+useEffect(() => {
+  setCampaign((prev: any) => {
+    if (!prev) return prev;
+    const next = {
+      ...prev,
+      config: {
+        ...(prev.config || {}),
+        canvasConfig: {
+          ...(prev.config?.canvasConfig || {}),
+          elements: canvasElements,
+          screenBackgrounds,
+          device: selectedDevice,
+          zoom: canvasZoom
+        },
+        // compatibilité avec anciens loaders
+        elements: canvasElements
+      }
+    };
+    return next as any;
+  });
+}, [canvasElements, screenBackgrounds, selectedDevice, canvasZoom, setCampaign]);
+
+// 💾 Autosave léger et non intrusif des éléments du canvas
+useEffect(() => {
+  const id = (campaignState as any)?.id as string | undefined;
+  if (!id) return;
+  const t = window.setTimeout(async () => {
+    try {
+      const payload: any = {
+        ...(campaignState || {}),
+        canvasConfig: {
+          ...(campaignState as any)?.canvasConfig,
+          elements: canvasElements,
+          screenBackgrounds,
+          device: selectedDevice
+        }
+      };
+      console.log('💾 [DesignEditor] Autosave canvas elements → DB', canvasElements.length);
+      await saveCampaignToDB(payload, saveCampaign);
+      setIsModified(false);
+    } catch (e) {
+      console.warn('⚠️ Autosave canvas failed', e);
+    }
+  }, 1000);
+  return () => clearTimeout(t);
+}, [campaignState?.id, canvasElements, screenBackgrounds, selectedDevice]);
+
 
   // État pour tracker la position de scroll (quel écran est visible)
   const [currentScreen, setCurrentScreen] = useState<'screen1' | 'screen2' | 'screen3'>('screen1');

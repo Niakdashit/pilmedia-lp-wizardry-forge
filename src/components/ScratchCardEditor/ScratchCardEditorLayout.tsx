@@ -394,36 +394,83 @@ useEffect(() => {
     }
   }, [selectedDevice, campaignState?.design]);
 
-  // ✅ Hydrater les éléments/modularPage/backgrounds depuis la DB à l'ouverture
-  useEffect(() => {
-    const cfg = (campaignState as any)?.config?.canvasConfig || (campaignState as any)?.canvasConfig;
-    const mp = (campaignState as any)?.config?.modularPage || (campaignState as any)?.design?.quizModules;
-    const topLevelElements = (campaignState as any)?.config?.elements;
+// ✅ Hydrater les éléments/modularPage/backgrounds depuis la DB à l'ouverture
+useEffect(() => {
+  const cfg = (campaignState as any)?.config?.canvasConfig || (campaignState as any)?.canvasConfig;
+  const mp = (campaignState as any)?.config?.modularPage || (campaignState as any)?.design?.quizModules;
+  const topLevelElements = (campaignState as any)?.config?.elements;
 
-    // N'hydrate que si on a des données utiles ET que le local est vide pour éviter l'écrasement après 1s
-    if (Array.isArray(cfg?.elements) && cfg.elements.length > 0 && canvasElements.length === 0) {
-      console.log('🧩 Hydration: applying canvas elements from DB (canvasConfig)', cfg.elements.length);
-      setCanvasElements(cfg.elements);
-    } else if (Array.isArray(topLevelElements) && topLevelElements.length > 0 && canvasElements.length === 0) {
-      console.log('🧩 Hydration: applying canvas elements from DB (config.elements)', topLevelElements.length);
-      setCanvasElements(topLevelElements);
-    }
+  // N'hydrate que si on a des données utiles ET que le local est vide pour éviter l'écrasement après 1s
+  if (Array.isArray(cfg?.elements) && cfg.elements.length > 0 && canvasElements.length === 0) {
+    console.log('🧩 Hydration: applying canvas elements from DB (canvasConfig)', cfg.elements.length);
+    setCanvasElements(cfg.elements);
+  } else if (Array.isArray(topLevelElements) && topLevelElements.length > 0 && canvasElements.length === 0) {
+    console.log('🧩 Hydration: applying canvas elements from DB (config.elements)', topLevelElements.length);
+    setCanvasElements(topLevelElements);
+  }
 
-    if (cfg?.screenBackgrounds) {
-      setScreenBackgrounds(cfg.screenBackgrounds);
-    }
-    if (cfg?.device) {
-      setSelectedDevice(cfg.device as any);
-    }
+  if (cfg?.screenBackgrounds) {
+    setScreenBackgrounds(cfg.screenBackgrounds);
+  }
+  if (cfg?.device) {
+    setSelectedDevice(cfg.device as any);
+  }
 
-    if (mp && mp.screens) {
-      const total = Object.values(mp.screens || {}).reduce((n: number, arr: any) => n + (Array.isArray(arr) ? arr.length : 0), 0);
-      if (total > 0) {
-        console.log('🧩 Hydration: applying modularPage from DB', total);
-        setModularPage(mp);
+  if (mp && mp.screens) {
+    const total = Object.values(mp.screens || {}).reduce((n: number, arr: any) => n + (Array.isArray(arr) ? arr.length : 0), 0);
+    if (total > 0) {
+      console.log('🧩 Hydration: applying modularPage from DB', total);
+      setModularPage(mp);
+    }
+  }
+}, [campaignState]);
+
+// 🔗 Miroir local → store: conserve les éléments dans campaign.config.canvasConfig afin d'éviter toute perte
+useEffect(() => {
+  setCampaign((prev: any) => {
+    if (!prev) return prev;
+    const next = {
+      ...prev,
+      config: {
+        ...(prev.config || {}),
+        canvasConfig: {
+          ...(prev.config?.canvasConfig || {}),
+          elements: canvasElements,
+          screenBackgrounds,
+          device: selectedDevice
+        },
+        // compatibilité avec anciens loaders
+        elements: canvasElements
       }
+    };
+    return next as any;
+  });
+}, [canvasElements, screenBackgrounds, selectedDevice, setCampaign]);
+
+// 💾 Autosave léger et non intrusif des éléments du canvas
+useEffect(() => {
+  const id = (campaignState as any)?.id as string | undefined;
+  if (!id) return;
+  const t = window.setTimeout(async () => {
+    try {
+      const payload: any = {
+        ...(campaignState || {}),
+        canvasConfig: {
+          ...(campaignState as any)?.canvasConfig,
+          elements: canvasElements,
+          screenBackgrounds,
+          device: selectedDevice
+        }
+      };
+      console.log('💾 [ScratchEditor] Autosave canvas elements → DB', canvasElements.length);
+      await saveCampaignToDB(payload, saveCampaign);
+      setIsModified(false);
+    } catch (e) {
+      console.warn('⚠️ Autosave canvas failed', e);
     }
-  }, [campaignState]);
+  }, 1000);
+  return () => clearTimeout(t);
+}, [campaignState?.id, canvasElements, screenBackgrounds, selectedDevice]);
 
   // Écoute l'évènement global pour appliquer l'image de fond à tous les écrans par device (desktop/tablette/mobile distinct)
   useEffect(() => {
