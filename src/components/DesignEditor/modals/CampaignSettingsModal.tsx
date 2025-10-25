@@ -40,6 +40,13 @@ const CampaignSettingsModal: React.FC<CampaignSettingsModalProps> = ({ isOpen, o
         if (!next?.publication?.name && editorCampaignName) {
           next.publication = { ...(next.publication || {}), name: editorCampaignName };
         }
+        // Fallback supplémentaire: récupérer le dernier nom saisi en localStorage si disponible
+        try {
+          const cached = localStorage.getItem(`campaign:last-name:${effectiveCampaignId}`) || localStorage.getItem('campaign:last-name:new');
+          if (!next?.publication?.name && cached && cached.trim().length > 0) {
+            next.publication = { ...(next.publication || {}), name: cached };
+          }
+        } catch {}
         setForm(next);
       }
     })();
@@ -53,6 +60,8 @@ const CampaignSettingsModal: React.FC<CampaignSettingsModalProps> = ({ isOpen, o
       if (!isOpen) return;
       if (!detail?.name) return;
       if (detail?.campaignId && detail.campaignId !== effectiveCampaignId) return;
+      // Stocker aussi en localStorage pour les cas où l'événement a été émis avant ouverture
+      try { localStorage.setItem(`campaign:last-name:${detail?.campaignId || effectiveCampaignId || 'new'}`, detail.name); } catch {}
       setForm(prev => ({
         ...(prev || {}),
         publication: {

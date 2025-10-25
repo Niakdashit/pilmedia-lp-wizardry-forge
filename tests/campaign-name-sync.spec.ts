@@ -9,11 +9,13 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Synchronisation Nom de Campagne', () => {
 
+  const BASE = process.env.BASE_URL || 'http://localhost:8080';
+
   async function testCampaignNameSync(page, editorPath: string, editorName: string) {
     console.log(`\n🧪 Test synchronisation nom campagne - ${editorName}...`);
 
     // 1. Aller sur l'éditeur (nouvelle campagne)
-    await page.goto(editorPath);
+    await page.goto(`${BASE}${editorPath}`);
     console.log(`✓ Navigation ${editorPath}`);
 
     // 2. Attendre le chargement complet
