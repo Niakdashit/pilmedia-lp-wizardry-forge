@@ -388,13 +388,28 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
   // ✅ Hydrater les éléments/modularPage/backgrounds depuis la DB à l'ouverture
   useEffect(() => {
     const cfg = (campaignState as any)?.config?.canvasConfig || (campaignState as any)?.canvasConfig;
-    if (cfg) {
-      if (Array.isArray(cfg.elements)) setCanvasElements(cfg.elements);
-      if (cfg.screenBackgrounds) setScreenBackgrounds(cfg.screenBackgrounds);
-      if (cfg.device) setSelectedDevice(cfg.device);
-    }
     const mp = (campaignState as any)?.config?.modularPage || (campaignState as any)?.design?.quizModules;
-    if (mp && mp.screens) setModularPage(mp);
+
+    // N'hydrate que si on a des données utiles ET que le local est vide pour éviter l'écrasement après 1s
+    if (cfg?.elements && Array.isArray(cfg.elements) && cfg.elements.length > 0 && canvasElements.length === 0) {
+      console.log('🧩 Hydration: applying canvas elements from DB', cfg.elements.length);
+      setCanvasElements(cfg.elements);
+    }
+
+    if (cfg?.screenBackgrounds) {
+      setScreenBackgrounds(cfg.screenBackgrounds);
+    }
+    if (cfg?.device) {
+      setSelectedDevice(cfg.device as any);
+    }
+
+    if (mp && mp.screens) {
+      const total = Object.values(mp.screens || {}).reduce((n: number, arr: any) => n + (Array.isArray(arr) ? arr.length : 0), 0);
+      if (total > 0) {
+        console.log('🧩 Hydration: applying modularPage from DB', total);
+        setModularPage(mp);
+      }
+    }
   }, [campaignState]);
 
   // Écoute l'évènement global pour appliquer l'image de fond à tous les écrans par device (desktop/tablette/mobile distinct)
