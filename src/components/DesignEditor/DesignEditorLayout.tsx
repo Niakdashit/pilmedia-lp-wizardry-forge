@@ -191,9 +191,10 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
           setCanvasElements(canvasCfg.elements);
         }
         const designObj = (urlCampaign as any)?.design || {};
-        const bg = canvasCfg.background 
-          || (designObj?.backgroundImage ? { type: 'image', value: designObj.backgroundImage } : undefined)
+        // Prioritize design.backgroundImage/mobileBackgroundImage (DB source of truth) over canvasConfig.background
+        const bg = (designObj?.backgroundImage ? { type: 'image', value: designObj.backgroundImage } : undefined)
           || (designObj?.mobileBackgroundImage ? { type: 'image', value: designObj.mobileBackgroundImage } : undefined)
+          || canvasCfg.background
           || designObj?.background 
           || { type: 'color', value: '#ffffff' };
         setCanvasBackground(typeof bg === 'string' ? { type: 'color', value: bg } : bg);
