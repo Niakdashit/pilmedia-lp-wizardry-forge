@@ -5,6 +5,7 @@ import ChannelsStep from '@/pages/CampaignSettings/ChannelsStep';
 import ParametersStep from '@/pages/CampaignSettings/ParametersStep';
 import OutputStep from '@/pages/CampaignSettings/OutputStep';
 import ViralityStep from '@/pages/CampaignSettings/ViralityStep';
+import { useEditorStore } from '@/stores/editorStore';
 
 interface CampaignSettingsModalProps {
   isOpen: boolean;
@@ -24,19 +25,25 @@ const CampaignSettingsModal: React.FC<CampaignSettingsModalProps> = ({ isOpen, o
   const { getSettings, upsertSettings, loading, error, saveDraft } = useCampaignSettings();
   const [form, setForm] = useState<Partial<CampaignSettings>>({});
   const effectiveCampaignId = campaignId || '';
+  const campaignStoreName = useEditorStore((s) => (s.campaign as any)?.name as string | undefined);
 
-  // Load settings when modal opens
-  useEffect(() => {
-    if (!isOpen || !effectiveCampaignId) return;
-    let mounted = true;
-    (async () => {
-      const data = await getSettings(effectiveCampaignId);
-      if (mounted) {
-        setForm(data || { campaign_id: effectiveCampaignId });
+// Load settings when modal opens
+useEffect(() => {
+  if (!isOpen || !effectiveCampaignId) return;
+  let mounted = true;
+  (async () => {
+    const data = await getSettings(effectiveCampaignId);
+    if (mounted) {
+      const incoming: any = data || { campaign_id: effectiveCampaignId };
+      // Prefill name from editor store if missing
+      if (!incoming?.publication?.name && campaignStoreName) {
+        incoming.publication = { ...(incoming.publication || {}), name: campaignStoreName };
       }
-    })();
-    return () => { mounted = false; };
-  }, [isOpen, effectiveCampaignId, getSettings]);
+      setForm(incoming);
+    }
+  })();
+  return () => { mounted = false; };
+}, [isOpen, effectiveCampaignId, getSettings, campaignStoreName]);
 
   // React to external campaign name updates from editor naming modal
   useEffect(() => {
