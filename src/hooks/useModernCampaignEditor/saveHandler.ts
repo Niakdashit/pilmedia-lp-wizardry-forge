@@ -69,6 +69,8 @@ export const saveCampaignToDB = async (
     // Preserve background images from both design and canvasConfig
     backgroundImage: campaign?.design?.backgroundImage || (campaign as any)?.canvasConfig?.background?.value,
     mobileBackgroundImage: campaign?.design?.mobileBackgroundImage || (campaign as any)?.canvasConfig?.mobileBackground?.value,
+    // Preserve screenBackgrounds for multi-screen campaigns
+    screenBackgrounds: campaign?.design?.screenBackgrounds,
   };
 
   const payload: any = {
@@ -88,8 +90,16 @@ export const saveCampaignToDB = async (
     banner_url: campaign?.banner_url,
   };
 
-  console.debug('[saveCampaignToDB] payload', payload);
+  console.debug('[saveCampaignToDB] payload with background images:', {
+    ...payload,
+    design: {
+      ...payload.design,
+      backgroundImage: payload.design?.backgroundImage,
+      mobileBackgroundImage: payload.design?.mobileBackgroundImage
+    }
+  });
   const saved = await saveCampaignFn(payload);
+  console.debug('[saveCampaignToDB] saved result:', saved);
   return saved;
 };
 

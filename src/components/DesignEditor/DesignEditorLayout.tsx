@@ -192,11 +192,19 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
         }
         // Prioritize design.backgroundImage/mobileBackgroundImage (DB source of truth) over canvasConfig.background
         const designObj = (urlCampaign as any)?.design || {};
+        console.log('📥 [DesignEditor] Loading backgrounds from campaign:', {
+          designBackgroundImage: designObj?.backgroundImage,
+          designMobileBackgroundImage: designObj?.mobileBackgroundImage,
+          canvasBackground: canvasCfg.background
+        });
+        
         const bg = (designObj?.backgroundImage ? { type: 'image', value: designObj.backgroundImage } : undefined)
           || (designObj?.mobileBackgroundImage ? { type: 'image', value: designObj.mobileBackgroundImage } : undefined)
           || canvasCfg.background
           || designObj?.background
           || { type: 'color', value: '#ffffff' };
+        
+        console.log('📥 [DesignEditor] Final background applied:', bg);
         setCanvasBackground(typeof bg === 'string' ? { type: 'color', value: bg } : bg);
         if (canvasCfg.screenBackgrounds) {
           setScreenBackgrounds(canvasCfg.screenBackgrounds);
