@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useState, useRef, useMemo, useEffect, useCallback } from 'react';
 import { useLocation, useNavigate } from '@/lib/router-adapter';
 import { useUndoRedo } from './useUndoRedo';

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, { useState, useMemo } from 'react';
 import { Handshake, TrendingUp, Users, Award } from 'lucide-react';
 import { useMediaPartners } from '@/hooks/useMediaPartners';

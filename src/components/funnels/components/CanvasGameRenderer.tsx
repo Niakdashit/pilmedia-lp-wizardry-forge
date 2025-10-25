@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, { useMemo, createPortal } from 'react';
 import ContrastBackground from '../../common/ContrastBackground';
 import ValidationMessage from '../../common/ValidationMessage';

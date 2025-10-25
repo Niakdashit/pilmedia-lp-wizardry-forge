@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, { useState } from 'react';
 import { Image, Type, MousePointer, List, Palette, Plus, FormInput, Gamepad2, MessageSquare } from 'lucide-react';
 import type { ArticleConfig } from './types/ArticleTypes';

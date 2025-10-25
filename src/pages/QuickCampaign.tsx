@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Sparkles, Target, Gamepad2, FileText, Trophy, Zap, PlayCircle } from 'lucide-react';

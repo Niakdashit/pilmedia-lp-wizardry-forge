@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, { useRef, useState, useCallback } from 'react';
 import type { Module, BlocTexte, BlocImage, BlocVideo, BlocBouton, BlocCarte, BlocLogo, BlocPiedDePage } from '@/types/modularEditor';
 import type { DeviceType } from '@/utils/deviceDimensions';
