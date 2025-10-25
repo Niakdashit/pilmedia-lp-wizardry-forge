@@ -190,13 +190,7 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
         if (Array.isArray(canvasCfg.elements)) {
           setCanvasElements(canvasCfg.elements);
         }
-        const designObj = (urlCampaign as any)?.design || {};
-        // Prioritize design.backgroundImage/mobileBackgroundImage (DB source of truth) over canvasConfig.background
-        const bg = (designObj?.backgroundImage ? { type: 'image', value: designObj.backgroundImage } : undefined)
-          || (designObj?.mobileBackgroundImage ? { type: 'image', value: designObj.mobileBackgroundImage } : undefined)
-          || canvasCfg.background
-          || designObj?.background 
-          || { type: 'color', value: '#ffffff' };
+        const bg = canvasCfg.background || (urlCampaign as any)?.design?.background || { type: 'color', value: '#ffffff' };
         setCanvasBackground(typeof bg === 'string' ? { type: 'color', value: bg } : bg);
         if (canvasCfg.screenBackgrounds) {
           setScreenBackgrounds(canvasCfg.screenBackgrounds);
@@ -1167,28 +1161,6 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
         screen3: bg
       });
       setCanvasBackground(bg);
-    }
-    
-    // 💾 Persist background image to campaign state for database save
-    if (bg?.type === 'image' && bg?.value) {
-      const device = options?.device || selectedDevice;
-      setCampaign((prev: any) => {
-        if (!prev) return prev;
-        const updatedDesign = { ...(prev.design || {}) };
-        
-        // Mobile gets its own field, desktop/tablet share backgroundImage
-        if (device === 'mobile') {
-          updatedDesign.mobileBackgroundImage = bg.value;
-        } else {
-          updatedDesign.backgroundImage = bg.value;
-        }
-        
-        console.log('💾 Persisting background to campaign.design:', { device, value: bg.value?.substring(0, 50) + '...' });
-        return {
-          ...prev,
-          design: updatedDesign
-        };
-      });
     }
     
     setTimeout(() => {

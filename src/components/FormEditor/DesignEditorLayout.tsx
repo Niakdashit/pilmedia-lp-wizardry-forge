@@ -1153,28 +1153,6 @@ const FormEditorLayout: React.FC<FormEditorLayoutProps> = ({ mode = 'campaign', 
       setCanvasBackground(bg);
     }
     
-    // 💾 Persist background image to campaign state for database save
-    if (bg?.type === 'image' && bg?.value) {
-      const device = options?.device || selectedDevice;
-      setCampaign((prev: any) => {
-        if (!prev) return prev;
-        const updatedDesign = { ...(prev.design || {}) };
-        
-        // Mobile gets its own field, desktop/tablet share backgroundImage
-        if (device === 'mobile') {
-          updatedDesign.mobileBackgroundImage = bg.value;
-        } else {
-          updatedDesign.backgroundImage = bg.value;
-        }
-        
-        console.log('💾 [FormEditor] Persisting background to campaign.design:', { device, value: bg.value?.substring(0, 50) + '...' });
-        return {
-          ...prev,
-          design: updatedDesign
-        };
-      });
-    }
-    
     setTimeout(() => {
       addToHistory({
         campaignConfig: { ...campaignConfig },
