@@ -1,5 +1,5 @@
 import React from 'react';
-import { Upload, Type, MousePointer, List } from 'lucide-react';
+import { Upload, Type, MousePointer } from 'lucide-react';
 import type { OptimizedCampaign } from '../../ModernEditor/types/CampaignTypes';
 
 interface ArticleModePanelProps {

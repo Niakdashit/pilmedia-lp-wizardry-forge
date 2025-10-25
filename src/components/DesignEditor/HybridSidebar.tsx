@@ -6,10 +6,7 @@ import {
   Gamepad2,
   Palette,
   FormInput,
-  MessageSquare,
-  Image,
-  Type,
-  MousePointer
+  MessageSquare
 } from 'lucide-react';
 import { BackgroundPanel, CompositeElementsPanel, TextEffectsPanel } from '@/components/shared';
 import ImageModulePanel from '../QuizEditor/modules/ImageModulePanel';

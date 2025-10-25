@@ -1983,8 +1983,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                   base: toolbarElement,
                   device: selectedDevice,
                   fullDeviceProps,
-                  fontSize: fullDeviceProps.fontSize,
-                  fontFamily: fullDeviceProps.fontFamily
+                  fontSize: fullDeviceProps.fontSize
                 });
                 
                 return fullDeviceProps;
