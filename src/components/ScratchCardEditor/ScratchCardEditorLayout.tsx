@@ -389,11 +389,15 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
   useEffect(() => {
     const cfg = (campaignState as any)?.config?.canvasConfig || (campaignState as any)?.canvasConfig;
     const mp = (campaignState as any)?.config?.modularPage || (campaignState as any)?.design?.quizModules;
+    const topLevelElements = (campaignState as any)?.config?.elements;
 
     // N'hydrate que si on a des données utiles ET que le local est vide pour éviter l'écrasement après 1s
-    if (cfg?.elements && Array.isArray(cfg.elements) && cfg.elements.length > 0 && canvasElements.length === 0) {
-      console.log('🧩 Hydration: applying canvas elements from DB', cfg.elements.length);
+    if (Array.isArray(cfg?.elements) && cfg.elements.length > 0 && canvasElements.length === 0) {
+      console.log('🧩 Hydration: applying canvas elements from DB (canvasConfig)', cfg.elements.length);
       setCanvasElements(cfg.elements);
+    } else if (Array.isArray(topLevelElements) && topLevelElements.length > 0 && canvasElements.length === 0) {
+      console.log('🧩 Hydration: applying canvas elements from DB (config.elements)', topLevelElements.length);
+      setCanvasElements(topLevelElements);
     }
 
     if (cfg?.screenBackgrounds) {

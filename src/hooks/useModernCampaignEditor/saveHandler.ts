@@ -88,6 +88,9 @@ export const saveCampaignToDB = async (
     // Canvas configuration (elements, backgrounds, etc.)
     canvasConfig,
     
+    // Duplicate elements at top-level config for compatibility with older loaders
+    elements: (campaign?.canvasElements || campaign?.canvasConfig?.elements || campaign?.config?.elements || []),
+    
     // Modular page structure (modules par écran)
     modularPage: campaign?.modularPage || campaign?.config?.modularPage || {
       screens: { screen1: [], screen2: [], screen3: [] },

@@ -99,7 +99,9 @@ export const loadCampaign = async (
       
       // Restore complete canvasConfig with all editor states
       const canvasConfig = existingCampaign.config?.canvasConfig || {};
-      const canvasElements = canvasConfig.elements || [];
+      const canvasElements = (canvasConfig.elements && Array.isArray(canvasConfig.elements) && canvasConfig.elements.length > 0)
+        ? canvasConfig.elements
+        : (Array.isArray((existingCampaign.config as any)?.elements) ? (existingCampaign.config as any).elements : []);
       const screenBackgrounds = canvasConfig.screenBackgrounds || existingCampaign.design?.screenBackgrounds || {};
       
       // Restore modularPage structure
