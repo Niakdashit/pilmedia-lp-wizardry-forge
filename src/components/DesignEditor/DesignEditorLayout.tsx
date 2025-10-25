@@ -184,39 +184,51 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
       
       setCampaign(campaignToSet);
       
-      // Restaurer le canvas local depuis config.canvasConfig
+      // Restaurer le canvas local depuis config.canvasConfig ET design
       try {
         const canvasCfg = (urlCampaign as any)?.config?.canvasConfig || (urlCampaign as any)?.canvasConfig || {};
+        const designObj = (urlCampaign as any)?.design || {};
+        
         if (Array.isArray(canvasCfg.elements)) {
           setCanvasElements(canvasCfg.elements);
         }
-        // Prioritize design.backgroundImage/mobileBackgroundImage (DB source of truth) over canvasConfig.background
-        const designObj = (urlCampaign as any)?.design || {};
-        console.log('📥 [DesignEditor] Loading backgrounds from campaign:', {
-          designBackground: designObj?.background,
-          designBackgroundImage: designObj?.backgroundImage,
-          designMobileBackgroundImage: designObj?.mobileBackgroundImage,
+        
+        // NOUVELLE LOGIQUE SIMPLE: Vérifier d'abord design.backgroundImage, puis design.background
+        console.log('📥 [DesignEditor] Loading background - Design object:', {
+          backgroundImage: designObj?.backgroundImage,
+          background: designObj?.background,
           canvasBackground: canvasCfg.background
         });
         
-        // Detect if design.background is an image URL
-        const isImageUrl = (url: string) => {
-          return url && (
-            url.startsWith('http') || 
-            url.startsWith('/') || 
-            url.includes('supabase.co/storage')
-          );
-        };
+        let finalBackground: { type: 'color' | 'image'; value: string } = { type: 'color', value: '#ffffff' };
         
-        const bg = (designObj?.backgroundImage ? { type: 'image', value: designObj.backgroundImage } : undefined)
-          || (designObj?.mobileBackgroundImage ? { type: 'image', value: designObj.mobileBackgroundImage } : undefined)
-          || (designObj?.background && isImageUrl(designObj.background) ? { type: 'image', value: designObj.background } : undefined)
-          || canvasCfg.background
-          || (designObj?.background ? { type: 'color', value: designObj.background } : undefined)
-          || { type: 'color', value: '#ffffff' };
+        // Priorité 1: design.backgroundImage
+        if (designObj?.backgroundImage) {
+          finalBackground = { type: 'image', value: designObj.backgroundImage };
+          console.log('✅ [DesignEditor] Using design.backgroundImage:', designObj.backgroundImage);
+        }
+        // Priorité 2: design.background (si c'est une URL d'image)
+        else if (designObj?.background && (
+          designObj.background.startsWith('http') || 
+          designObj.background.startsWith('/') ||
+          designObj.background.includes('supabase.co')
+        )) {
+          finalBackground = { type: 'image', value: designObj.background };
+          console.log('✅ [DesignEditor] Using design.background as image:', designObj.background);
+        }
+        // Priorité 3: design.background (couleur)
+        else if (designObj?.background) {
+          finalBackground = { type: 'color', value: designObj.background };
+          console.log('✅ [DesignEditor] Using design.background as color:', designObj.background);
+        }
+        // Priorité 4: canvasConfig.background
+        else if (canvasCfg.background) {
+          finalBackground = canvasCfg.background;
+          console.log('✅ [DesignEditor] Using canvasConfig.background:', canvasCfg.background);
+        }
         
-        console.log('📥 [DesignEditor] Final background applied:', bg);
-        setCanvasBackground(typeof bg === 'string' ? { type: 'color', value: bg } : bg);
+        setCanvasBackground(finalBackground);
+        console.log('📥 [DesignEditor] Final background applied:', finalBackground);
         if (canvasCfg.screenBackgrounds) {
           setScreenBackgrounds(canvasCfg.screenBackgrounds);
         }
