@@ -385,6 +385,18 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
     }
   }, [selectedDevice, campaignState?.design]);
 
+  // ✅ Hydrater les éléments/modularPage/backgrounds depuis la DB à l'ouverture
+  useEffect(() => {
+    const cfg = (campaignState as any)?.config?.canvasConfig || (campaignState as any)?.canvasConfig;
+    if (cfg) {
+      if (Array.isArray(cfg.elements)) setCanvasElements(cfg.elements);
+      if (cfg.screenBackgrounds) setScreenBackgrounds(cfg.screenBackgrounds);
+      if (cfg.device) setSelectedDevice(cfg.device);
+    }
+    const mp = (campaignState as any)?.config?.modularPage || (campaignState as any)?.design?.quizModules;
+    if (mp && mp.screens) setModularPage(mp);
+  }, [campaignState]);
+
   // Écoute l'évènement global pour appliquer l'image de fond à tous les écrans par device (desktop/tablette/mobile distinct)
   useEffect(() => {
     const handler = (e: Event) => {
