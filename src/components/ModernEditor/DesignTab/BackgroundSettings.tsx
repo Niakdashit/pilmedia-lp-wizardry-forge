@@ -21,12 +21,6 @@ const BackgroundSettings: React.FC<BackgroundSettingsProps> = ({
       ? { mobileBackgroundImage: imageUrl }
       : { backgroundImage: imageUrl };
     
-    console.log('🖼️ [BackgroundSettings] Changing background:', {
-      device,
-      imageUrl,
-      updates
-    });
-    
     // Mise à jour du state local
     setCampaign({
       ...campaign,
@@ -57,19 +51,9 @@ const BackgroundSettings: React.FC<BackgroundSettingsProps> = ({
 
   // Charger les fonds depuis localStorage au montage
   useEffect(() => {
-    console.log('🖼️ [BackgroundSettings] Current design backgrounds:', {
-      backgroundImage: design.backgroundImage,
-      mobileBackgroundImage: design.mobileBackgroundImage
-    });
-    
     try {
       const desktopBg = localStorage.getItem('modern-bg-desktop');
       const mobileBg = localStorage.getItem('modern-bg-mobile');
-      
-      console.log('🖼️ [BackgroundSettings] localStorage backgrounds:', {
-        desktopBg,
-        mobileBg
-      });
       
       if (desktopBg || mobileBg) {
         const updates: any = {};
@@ -77,7 +61,6 @@ const BackgroundSettings: React.FC<BackgroundSettingsProps> = ({
         if (mobileBg && !design.mobileBackgroundImage) updates.mobileBackgroundImage = mobileBg;
         
         if (Object.keys(updates).length > 0) {
-          console.log('🖼️ [BackgroundSettings] Applying localStorage backgrounds:', updates);
           setCampaign((prev: any) => ({
             ...prev,
             design: {

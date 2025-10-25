@@ -105,34 +105,12 @@ export const useCampaignSettings = () => {
 
       if (resp.error) throw resp.error;
 
-      let settingsData = resp.data;
-
-      // If no settings data, or no publication name, try to get name from campaigns table
-      if (!settingsData?.publication?.name) {
-        try {
-          const campaignResp: any = await (supabase as any)
-            .from('campaigns')
-            .select('name')
-            .eq('id', realId)
-            .maybeSingle();
-
-          if (campaignResp.data?.name) {
-            settingsData = settingsData || { campaign_id: realId };
-            settingsData.publication = settingsData.publication || {};
-            settingsData.publication.name = campaignResp.data.name;
-            console.log('[useCampaignSettings.getSettings] Retrieved name from campaigns table:', campaignResp.data.name);
-          }
-        } catch (e) {
-          console.warn('[useCampaignSettings.getSettings] Failed to get name from campaigns table:', e);
-        }
-      }
-
-      if (!settingsData) {
+      if (!resp.data) {
         // fallback to draft
         const draft = loadDraft(keyId);
         return draft ? ({ campaign_id: keyId, ...draft } as CampaignSettings) : null;
       }
-      return (settingsData as unknown) as CampaignSettings;
+      return (resp.data as unknown) as CampaignSettings;
     } catch (err: any) {
       console.error('[useCampaignSettings.getSettings] Error', err);
       setError(err.message || 'Erreur lors du chargement des paramètres');

@@ -507,30 +507,23 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
     const currentId = (campaignState as any)?.id as string | undefined;
     const name = (newCampaignName || '').trim();
     if (!name) return;
-    
-    try {
-      const payload: any = currentId ? { id: currentId, name } : { name };
-      const updated = await saveCampaign(payload);
-      
-      if (updated) {
-        setCampaign({
-          ...(campaignState as any),
-          ...updated
-        } as any);
-        
+    const payload: any = currentId ? { id: currentId, name } : { name };
+    let updated: any = null;
+    try { updated = await saveCampaign(payload); } catch (e) { console.warn('saveCampaign failed', e); }
+    if (updated) {
+      setCampaign({
+        ...(campaignState as any),
+        ...updated
+      } as any);
+      try {
         const cid = (updated as any)?.id || currentId;
         window.dispatchEvent(new CustomEvent('campaign:name:update', { detail: { campaignId: cid, name } }));
-        
-        if (cid) {
-          await upsertSettings(cid, { publication: { name } });
-        }
-        
-        localStorage.setItem(`campaign:name:prompted:${cid || 'new:scratch'}`, '1');
-      }
-    } catch (e) {
-      console.error('Failed to save campaign name:', e);
-    } finally {
-      // Always close modal, even if save fails
+      } catch {}
+      try {
+        const cid = (updated as any)?.id || currentId;
+        if (cid) await upsertSettings(cid, { publication: { name } });
+      } catch {}
+      try { localStorage.setItem(`campaign:name:prompted:${(updated as any)?.id || currentId || 'new:scratch'}`, '1'); } catch {}
       setIsNameModalOpen(false);
     }
   }, [campaignState, newCampaignName, saveCampaign, setCampaign, upsertSettings]);
