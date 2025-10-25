@@ -193,15 +193,26 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
         // Prioritize design.backgroundImage/mobileBackgroundImage (DB source of truth) over canvasConfig.background
         const designObj = (urlCampaign as any)?.design || {};
         console.log('📥 [DesignEditor] Loading backgrounds from campaign:', {
+          designBackground: designObj?.background,
           designBackgroundImage: designObj?.backgroundImage,
           designMobileBackgroundImage: designObj?.mobileBackgroundImage,
           canvasBackground: canvasCfg.background
         });
         
+        // Detect if design.background is an image URL
+        const isImageUrl = (url: string) => {
+          return url && (
+            url.startsWith('http') || 
+            url.startsWith('/') || 
+            url.includes('supabase.co/storage')
+          );
+        };
+        
         const bg = (designObj?.backgroundImage ? { type: 'image', value: designObj.backgroundImage } : undefined)
           || (designObj?.mobileBackgroundImage ? { type: 'image', value: designObj.mobileBackgroundImage } : undefined)
+          || (designObj?.background && isImageUrl(designObj.background) ? { type: 'image', value: designObj.background } : undefined)
           || canvasCfg.background
-          || designObj?.background
+          || (designObj?.background ? { type: 'color', value: designObj.background } : undefined)
           || { type: 'color', value: '#ffffff' };
         
         console.log('📥 [DesignEditor] Final background applied:', bg);

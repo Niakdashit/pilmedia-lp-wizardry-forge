@@ -69,6 +69,10 @@ export const saveCampaignToDB = async (
     // Preserve background images from both design and canvasConfig
     backgroundImage: campaign?.design?.backgroundImage || (campaign as any)?.canvasConfig?.background?.value,
     mobileBackgroundImage: campaign?.design?.mobileBackgroundImage || (campaign as any)?.canvasConfig?.mobileBackground?.value,
+    // For compatibility, also save background image in the 'background' field if it's an image
+    background: campaign?.design?.background || 
+      (campaign?.design?.backgroundImage || (campaign as any)?.canvasConfig?.background?.value) ||
+      campaign?.design?.backgroundImage,
     // Preserve screenBackgrounds for multi-screen campaigns
     screenBackgrounds: campaign?.design?.screenBackgrounds,
   };
