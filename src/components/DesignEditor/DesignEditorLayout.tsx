@@ -2722,6 +2722,7 @@ useEffect(() => {
                     screenId="screen1"
                     selectedDevice={selectedDevice}
                     zoom={canvasZoom}
+                    background={screenBackgrounds.screen1?.devices?.[selectedDevice] || screenBackgrounds.screen1}
                     modularModules={modularPage.screens.screen1}
                     onModuleUpdate={handleUpdateModule}
                     onModuleDelete={handleDeleteModule}
