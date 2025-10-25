@@ -39,6 +39,7 @@ import { quizTemplates } from '../../types/quizTemplates';
 import { useScratchCardStore } from './state/scratchcard.store';
 import type { GameModalConfig } from '@/types/gameConfig';
 import { createGameConfigFromQuiz } from '@/types/gameConfig';
+import { useCampaignFromUrl } from '@/hooks/useCampaignFromUrl';
 
 const KeyboardShortcutsHelp = lazy(() => import('../shared/KeyboardShortcutsHelp'));
 const MobileStableEditor = lazy(() => import('./components/MobileStableEditor'));
@@ -268,14 +269,22 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
   // Supabase campaigns API
   const { saveCampaign } = useCampaigns();
   
-  // Campaign state synchronization hook
-  const { syncAllStates } = useCampaignStateSync();
+// Campaign state synchronization hook
+const { syncAllStates } = useCampaignStateSync();
+// Charger campagne depuis l'URL si présente
+const { campaign: urlCampaign, loading: urlLoading, error: urlError } = useCampaignFromUrl();
 
-  // Réinitialiser la campagne au montage de l'éditeur
-  useEffect(() => {
-    console.log('🎨 [ScratchEditor] Mounting - resetting campaign state');
+// Réinitialiser la campagne au montage de l'éditeur SEULEMENT si aucune ID n'est présente dans l'URL
+useEffect(() => {
+  const params = new URLSearchParams(location.search);
+  const hasId = params.get('campaign');
+  if (!hasId) {
+    console.log('🎨 [ScratchEditor] Mount: no campaign id → resetting store');
     resetCampaign();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  } else {
+    console.log('🎨 [ScratchEditor] Mount: campaign id detected, skipping reset');
+  }
+}, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // État local pour la compatibilité existante
   const [selectedDevice, setSelectedDevice] = useState<'desktop' | 'tablet' | 'mobile'>(actualDevice);
