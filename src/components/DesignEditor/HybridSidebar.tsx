@@ -11,8 +11,7 @@ import {
   Type,
   MousePointer
 } from 'lucide-react';
-import { CompositeElementsPanel, TextEffectsPanel } from '@/components/shared';
-import SimpleBackgroundSettings from './SimpleBackgroundSettings';
+import { BackgroundPanel, CompositeElementsPanel, TextEffectsPanel } from '@/components/shared';
 import ImageModulePanel from '../QuizEditor/modules/ImageModulePanel';
 import LogoModulePanel from '../QuizEditor/modules/LogoModulePanel';
 import FooterModulePanel from '../QuizEditor/modules/FooterModulePanel';
@@ -775,19 +774,24 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
         return null;
       
       case 'background':
-        return (
-          <SimpleBackgroundSettings
-            campaign={campaign}
-            canvasBackground={currentBackground || { type: 'color', value: '#ffffff' }}
-            onBackgroundChange={onBackgroundChange || (() => {})}
-          />
-        );
+        // Pour les modules texte, passer le module comme selectedElement
+        const elementForBackground = selectedModule?.type === 'BlocTexte' ? selectedModule : selectedElement;
+        const updateForBackground = selectedModule?.type === 'BlocTexte' && onModuleUpdate 
+          ? (updates: any) => onModuleUpdate(selectedModule.id, updates)
+          : onElementUpdate;
         
         return (
-          <SimpleBackgroundSettings
-            campaign={campaign}
-            canvasBackground={currentBackground || { type: 'color', value: '#ffffff' }}
-            onBackgroundChange={onBackgroundChange || (() => {})}
+          <BackgroundPanel 
+            onBackgroundChange={onBackgroundChange || (() => {})} 
+            onExtractedColorsChange={onExtractedColorsChange}
+            currentBackground={currentBackground}
+            extractedColors={extractedColors}
+            selectedElement={elementForBackground}
+            onElementUpdate={updateForBackground}
+            onModuleUpdate={onModuleUpdate}
+            colorEditingContext={colorEditingContext}
+            currentScreen={currentScreen}
+            selectedDevice={selectedDevice}
           />
         );
       case 'elements':
