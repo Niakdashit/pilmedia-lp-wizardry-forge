@@ -258,7 +258,8 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
     ? { type: 'color' as const, value: '#4ECDC4' }
     : { type: 'color' as const, value: 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)' };
   
-  const [screenBackgrounds, setScreenBackgrounds] = useState<Record<'screen1' | 'screen2' | 'screen3', { type: 'color' | 'image'; value: string }>>({
+  type BackgroundValue = { type: 'color' | 'image'; value: string; devices?: Partial<Record<'desktop' | 'tablet' | 'mobile', { type: 'color' | 'image'; value: string }>> };
+  const [screenBackgrounds, setScreenBackgrounds] = useState<Record<'screen1' | 'screen2' | 'screen3', BackgroundValue>>({
     screen1: defaultBackground,
     screen2: defaultBackground,
     screen3: defaultBackground
@@ -268,6 +269,41 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
   const [canvasBackground, setCanvasBackground] = useState<{ type: 'color' | 'image'; value: string }>(defaultBackground);
   
   const [canvasZoom, setCanvasZoom] = useState(getDefaultZoom(selectedDevice));
+
+  // Persistant autosave (debounced) du background pour fiabiliser la sauvegarde sans changer l'UI
+  const saveBgTimeoutRef = useRef<number | null>(null);
+  const persistBackground = useCallback((bg: { type: 'color' | 'image'; value: string }, nextScreens?: Record<'screen1' | 'screen2' | 'screen3', BackgroundValue>) => {
+    if (!campaignState?.id) return;
+    if (saveBgTimeoutRef.current) {
+      clearTimeout(saveBgTimeoutRef.current);
+    }
+    saveBgTimeoutRef.current = window.setTimeout(async () => {
+      const currentScreens = nextScreens || screenBackgrounds;
+      const payload: any = {
+        ...campaignState,
+        design: {
+          ...(campaignState?.design || {}),
+          // Double écriture pour compatibilité
+          background: bg.type === 'color' ? bg.value : (campaignState?.design as any)?.background,
+          backgroundImage: bg.type === 'image' ? bg.value : (campaignState?.design as any)?.backgroundImage,
+        },
+        // canvasConfig est fusionné dans saveHandler → config.canvasConfig côté DB
+        canvasConfig: {
+          ...(campaignState as any)?.canvasConfig,
+          background: bg,
+          screenBackgrounds: currentScreens,
+          device: selectedDevice,
+        },
+      };
+      try {
+        console.log('💾 [DesignEditor] Auto-save background → DB');
+        await saveCampaignToDB(payload, saveCampaign);
+        setIsModified(false);
+      } catch (e) {
+        console.error('❌ [DesignEditor] Auto-save background failed:', e);
+      }
+    }, 400);
+  }, [campaignState, saveCampaign, screenBackgrounds, selectedDevice, setIsModified]);
 
   // État pour tracker la position de scroll (quel écran est visible)
   const [currentScreen, setCurrentScreen] = useState<'screen1' | 'screen2' | 'screen3'>('screen1');
@@ -1128,76 +1164,68 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
     setSelectedElement(enrichedElement);
   };
 
-  // Ajoute à l'historique lors du changement de background (granulaire)
-  const handleBackgroundChange = (bg: any, options?: { screenId?: 'screen1' | 'screen2' | 'screen3'; applyToAllScreens?: boolean; device?: 'desktop' | 'tablet' | 'mobile' }) => {
+  // Ajoute à l'historique + auto-persist lors du changement de background (invisible côté UI)
+  const handleBackgroundChange = (bg: { type: 'color' | 'image'; value: string }, options?: { screenId?: 'screen1' | 'screen2' | 'screen3'; applyToAllScreens?: boolean; device?: 'desktop' | 'tablet' | 'mobile' }) => {
     console.log('🎨 [DesignEditor] handleBackgroundChange:', { bg, options });
-    
+
+    // Synchroniser le preview + store (source canonique)
+    try {
+      syncBackground(bg, (options?.device as any) || selectedDevice);
+    } catch {}
+
+    // Calculer l'état suivant pour screenBackgrounds sans attendre setState
+    let nextScreens = { ...screenBackgrounds } as Record<'screen1' | 'screen2' | 'screen3', BackgroundValue>;
+
     if (options?.applyToAllScreens) {
       // Appliquer à tous les écrans
       console.log('✅ Applying background to ALL screens');
-      setScreenBackgrounds({
-        screen1: bg,
-        screen2: bg,
-        screen3: bg
-      });
+      nextScreens = { screen1: bg, screen2: bg, screen3: bg } as any;
+      setScreenBackgrounds(nextScreens);
       setCanvasBackground(bg); // Fallback global
     } else if (options?.screenId && options?.device) {
       // 📱 Appliquer uniquement à l'écran ET appareil spécifiés
       console.log(`✅ Applying background to ${options.screenId} on ${options.device} ONLY`);
-      setScreenBackgrounds(prev => {
-        const screenKey = options.screenId!;
-        const deviceKey = options.device!;
-        const currentScreenBg = prev[screenKey];
-        
-        // Structure: { type, value, devices: { desktop: {...}, mobile: {...}, tablet: {...} } }
-        const newScreenBg = {
+      const screenKey = options.screenId;
+      const deviceKey = options.device;
+      const currentScreenBg = nextScreens[screenKey];
+      nextScreens = {
+        ...nextScreens,
+        [screenKey]: {
           ...currentScreenBg,
           devices: {
             ...(currentScreenBg?.devices || {}),
-            [deviceKey]: bg
-          }
-        };
-        
-        console.log('📱 Updated screen background with device-specific data:', {
-          screenKey,
-          deviceKey,
-          newScreenBg
-        });
-        
-        return {
-          ...prev,
-          [screenKey]: newScreenBg
-        };
-      });
+            [deviceKey]: bg,
+          },
+        } as any,
+      };
+      setScreenBackgrounds(nextScreens);
     } else if (options?.screenId) {
       // Appliquer uniquement à l'écran spécifié (tous devices)
       console.log(`✅ Applying background to ${options.screenId} ONLY`);
-      setScreenBackgrounds(prev => ({
-        ...prev,
-        [options.screenId!]: bg
-      }));
+      nextScreens = { ...nextScreens, [options.screenId]: bg } as any;
+      setScreenBackgrounds(nextScreens);
       // Ne pas modifier canvasBackground global
     } else {
       // Pas d'options : comportement par défaut (appliquer globalement)
       console.log('⚠️ No options provided, applying globally (fallback)');
-      setScreenBackgrounds({
-        screen1: bg,
-        screen2: bg,
-        screen3: bg
-      });
+      nextScreens = { screen1: bg, screen2: bg, screen3: bg } as any;
+      setScreenBackgrounds(nextScreens);
       setCanvasBackground(bg);
     }
-    
+
     setTimeout(() => {
       addToHistory({
         campaignConfig: { ...campaignConfig },
         canvasElements: JSON.parse(JSON.stringify(canvasElements)),
         canvasBackground: { ...bg },
-        screenBackgrounds: { ...screenBackgrounds }
+        screenBackgrounds: { ...nextScreens },
       }, 'background_update');
     }, 0);
 
-    // Auto-theme wheel based on solid background color
+    // Auto-persist vers la base
+    persistBackground(bg, nextScreens);
+
+    // Auto-theme wheel based on solid background color (existante)
     try {
       if (bg?.type === 'color' && typeof bg.value === 'string') {
         const base = bg.value as string;

@@ -1,5 +1,4 @@
 import React from 'react';
-import { useSearchParams } from 'react-router-dom';
 
 interface ArticleEditorDetectorProps {
   campaignType: 'wheel' | 'quiz' | 'scratch' | 'jackpot' | 'form' | 'dice' | 'memory' | 'puzzle';
@@ -27,11 +26,7 @@ const ArticleEditorDetector: React.FC<ArticleEditorDetectorProps> = ({
   campaignType,
   fullscreenLayout,
 }) => {
-  const [searchParams] = useSearchParams();
-  const mode = searchParams.get('mode') as 'fullscreen' | 'article' | null;
-
-  // Le DesignEditorLayout gère désormais directement le mode Article via la prop editorMode
-  // On réutilise donc le même layout quelle que soit la valeur du mode
+  // Le DesignEditorLayout gère désormais directement le mode via l'URL (?mode)
   return <>{fullscreenLayout}</>;
 };
 
