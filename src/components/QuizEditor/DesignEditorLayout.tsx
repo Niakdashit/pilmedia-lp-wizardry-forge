@@ -241,8 +241,8 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
   // Supabase campaigns API
   const { saveCampaign } = useCampaigns();
   
-  // Campaign state synchronization hook
-  const { syncAllStates } = useCampaignStateSync();
+// Campaign state synchronization hook
+const { syncAllStates } = useCampaignStateSync();
 
   // État local pour la compatibilité existante
   const [selectedDevice, setSelectedDevice] = useState<'desktop' | 'tablet' | 'mobile'>(actualDevice);
@@ -310,13 +310,87 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
     } catch {}
   }, [canvasZoom, selectedDevice]);
 
-  // Synchronise l'état de l'appareil réel et sélectionné après le montage (corrige les différences entre Lovable et Safari)
-  useEffect(() => {
-    const device = detectDevice();
-    setActualDevice(device);
-    setSelectedDevice(device);
-    setCanvasZoom(getDefaultZoom(device));
-  }, []);
+// Synchronise l'état de l'appareil réel et sélectionné après le montage (corrige les différences entre Lovable et Safari)
+useEffect(() => {
+  const device = detectDevice();
+  setActualDevice(device);
+  setSelectedDevice(device);
+  setCanvasZoom(getDefaultZoom(device));
+}, []);
+
+// ✅ Hydrater les éléments/modularPage/backgrounds depuis la DB à l'ouverture
+useEffect(() => {
+  const cfg = (campaignState as any)?.config?.canvasConfig || (campaignState as any)?.canvasConfig;
+  const mp = (campaignState as any)?.config?.modularPage || (campaignState as any)?.design?.quizModules;
+  const topLevelElements = (campaignState as any)?.config?.elements;
+
+  // N'hydrate que si on a des données utiles ET que le local est vide
+  if (Array.isArray(cfg?.elements) && cfg.elements.length > 0 && canvasElements.length === 0) {
+    console.log('🧩 [QuizEditor] Hydration: applying canvas elements (canvasConfig)', cfg.elements.length);
+    setCanvasElements(cfg.elements);
+  } else if (Array.isArray(topLevelElements) && topLevelElements.length > 0 && canvasElements.length === 0) {
+    console.log('🧩 [QuizEditor] Hydration: applying canvas elements (config.elements)', topLevelElements.length);
+    setCanvasElements(topLevelElements);
+  }
+
+  if (cfg?.screenBackgrounds) setScreenBackgrounds(cfg.screenBackgrounds);
+  if (cfg?.device) setSelectedDevice(cfg.device as any);
+
+  if (mp && mp.screens) {
+    const total = Object.values(mp.screens || {}).reduce((n: number, arr: any) => n + (Array.isArray(arr) ? arr.length : 0), 0);
+    if (total > 0) {
+      console.log('🧩 [QuizEditor] Hydration: applying modularPage', total);
+      setModularPage(mp);
+    }
+  }
+}, [campaignState]);
+
+// 🔗 Miroir local → store: conserve les éléments dans campaign.config.canvasConfig
+useEffect(() => {
+  setCampaign((prev: any) => {
+    if (!prev) return prev;
+    const next = {
+      ...prev,
+      config: {
+        ...(prev.config || {}),
+        canvasConfig: {
+          ...(prev.config?.canvasConfig || {}),
+          elements: canvasElements,
+          screenBackgrounds,
+          device: selectedDevice,
+          zoom: canvasZoom
+        },
+        elements: canvasElements
+      }
+    };
+    return next as any;
+  });
+}, [canvasElements, screenBackgrounds, selectedDevice, canvasZoom, setCampaign]);
+
+// 💾 Autosave léger des éléments du canvas
+useEffect(() => {
+  const id = (campaignState as any)?.id as string | undefined;
+  if (!id) return;
+  const t = window.setTimeout(async () => {
+    try {
+      const payload: any = {
+        ...(campaignState || {}),
+        canvasConfig: {
+          ...(campaignState as any)?.canvasConfig,
+          elements: canvasElements,
+          screenBackgrounds,
+          device: selectedDevice
+        }
+      };
+      console.log('💾 [QuizEditor] Autosave canvas elements → DB', canvasElements.length);
+      await saveCampaignToDB(payload, saveCampaign);
+      setIsModified(false);
+    } catch (e) {
+      console.warn('⚠️ [QuizEditor] Autosave failed', e);
+    }
+  }, 1000);
+  return () => clearTimeout(t);
+}, [campaignState?.id, canvasElements, screenBackgrounds, selectedDevice]);
 
   // Détection de la taille de fenêtre
   useEffect(() => {
