@@ -40,6 +40,17 @@ export const saveCampaignToDB = async (
   campaign: any,
   saveCampaignFn: (data: any) => Promise<any>
 ) => {
+  console.log('💾 [saveCampaignToDB] Saving campaign with complete state:', {
+    id: campaign?.id,
+    name: campaign?.name,
+    type: campaign?.type,
+    hasCanvasElements: !!campaign?.canvasElements,
+    hasModularPage: !!campaign?.modularPage,
+    hasScreenBackgrounds: !!campaign?.screenBackgrounds,
+    hasExtractedColors: !!campaign?.extractedColors
+  });
+
+  // Normalize form fields
   const normalizedFormFields = Array.isArray(campaign?.formFields)
     ? campaign.formFields.map((f: any) => {
         const { placeholder, ...rest} = f || {};
@@ -47,33 +58,100 @@ export const saveCampaignToDB = async (
       })
     : campaign?.form_fields || [];
 
-  // Merge config with canvasConfig to preserve background images and elements
-  const mergedConfig = (() => {
-    const base = campaign?.config || {};
-    const canvasCfg = (campaign as any)?.canvasConfig || (base as any)?.canvasConfig || {};
+  // Build comprehensive canvasConfig with ALL editor states
+  const canvasConfig = {
+    // Preserve existing canvasConfig
+    ...(campaign?.config?.canvasConfig || {}),
+    ...(campaign?.canvasConfig || {}),
     
-    // Preserve canvas elements and backgrounds
-    const result = { ...base };
-    if (canvasCfg && Object.keys(canvasCfg).length > 0) {
-      result.canvasConfig = canvasCfg;
-    }
-    return result;
-  })();
-
-  // Merge design to preserve background images and other design properties
-  const mergedDesign = {
-    ...(campaign?.design || {}),
-    // Preserve background images from both design and canvasConfig
-    backgroundImage: campaign?.design?.backgroundImage || (campaign as any)?.canvasConfig?.background?.value,
-    mobileBackgroundImage: campaign?.design?.mobileBackgroundImage || (campaign as any)?.canvasConfig?.mobileBackground?.value,
-    // For compatibility, also save background image in the 'background' field if it's an image
-    background: campaign?.design?.background || 
-      (campaign?.design?.backgroundImage || (campaign as any)?.canvasConfig?.background?.value) ||
-      campaign?.design?.backgroundImage,
-    // Preserve screenBackgrounds for multi-screen campaigns
-    screenBackgrounds: campaign?.design?.screenBackgrounds,
+    // Canvas elements (éléments dessinés sur le canvas)
+    elements: campaign?.canvasElements || campaign?.canvasConfig?.elements || [],
+    
+    // Background configuration
+    background: campaign?.canvasConfig?.background || 
+      (campaign?.design?.backgroundImage ? { type: 'image', value: campaign.design.backgroundImage } : undefined),
+    mobileBackground: campaign?.canvasConfig?.mobileBackground ||
+      (campaign?.design?.mobileBackgroundImage ? { type: 'image', value: campaign.design.mobileBackgroundImage } : undefined),
+    
+    // Screen-specific backgrounds
+    screenBackgrounds: campaign?.screenBackgrounds || campaign?.design?.screenBackgrounds || {},
+    
+    // Current device and zoom state
+    device: campaign?.selectedDevice || 'desktop',
+    zoom: campaign?.canvasZoom
   };
 
+  // Build comprehensive config with modularPage and all editor data
+  const mergedConfig = {
+    ...(campaign?.config || {}),
+    
+    // Canvas configuration (elements, backgrounds, etc.)
+    canvasConfig,
+    
+    // Modular page structure (modules par écran)
+    modularPage: campaign?.modularPage || campaign?.config?.modularPage || {
+      screens: { screen1: [], screen2: [], screen3: [] },
+      _updatedAt: Date.now()
+    },
+    
+    // Campaign-specific settings
+    campaignConfig: campaign?.campaignConfig || campaign?.config?.campaignConfig || {},
+    
+    // Button configuration
+    buttonConfig: campaign?.buttonConfig || campaign?.config?.buttonConfig || {},
+    
+    // Screen configuration
+    screens: campaign?.screens || campaign?.config?.screens || {}
+  };
+
+  // Build comprehensive design object
+  const mergedDesign = {
+    ...(campaign?.design || {}),
+    
+    // Background images (prioritize explicit design values)
+    backgroundImage: campaign?.design?.backgroundImage || 
+      (campaign?.canvasConfig?.background?.type === 'image' ? campaign.canvasConfig.background.value : undefined),
+    mobileBackgroundImage: campaign?.design?.mobileBackgroundImage || 
+      (campaign?.canvasConfig?.mobileBackground?.type === 'image' ? campaign.canvasConfig.mobileBackground.value : undefined),
+    
+    // Background color/gradient (fallback)
+    background: campaign?.design?.background || 
+      (campaign?.canvasConfig?.background?.type === 'color' ? campaign.canvasConfig.background.value : undefined),
+    
+    // Screen-specific backgrounds
+    screenBackgrounds: campaign?.screenBackgrounds || campaign?.design?.screenBackgrounds || {},
+    
+    // Extracted colors from images
+    extractedColors: campaign?.extractedColors || campaign?.design?.extractedColors || [],
+    
+    // Custom colors configuration
+    customColors: campaign?.design?.customColors || {},
+    
+    // Design modules (for modular editor compatibility)
+    designModules: campaign?.modularPage || campaign?.design?.designModules,
+    
+    // Custom texts and images
+    customTexts: campaign?.design?.customTexts || [],
+    customImages: campaign?.design?.customImages || [],
+    
+    // Border and style settings
+    borderStyle: campaign?.design?.borderStyle,
+    wheelBorderStyle: campaign?.design?.wheelBorderStyle
+  };
+
+  // Build comprehensive game_config
+  const mergedGameConfig = {
+    ...(campaign?.game_config || {}),
+    ...(campaign?.gameConfig || {}),
+    
+    // Type-specific game configurations
+    ...(campaign?.type === 'wheel' && campaign?.wheelConfig ? { wheel: campaign.wheelConfig } : {}),
+    ...(campaign?.type === 'quiz' && campaign?.quizConfig ? { quiz: campaign.quizConfig } : {}),
+    ...(campaign?.type === 'scratch' && campaign?.scratchConfig ? { scratch: campaign.scratchConfig } : {}),
+    ...(campaign?.type === 'jackpot' && campaign?.jackpotConfig ? { jackpot: campaign.jackpotConfig } : {})
+  };
+
+  // Build final payload with ALL campaign data
   const payload: any = {
     id: campaign?.id,
     name: campaign?.name || 'Nouvelle campagne',
@@ -81,26 +159,48 @@ export const saveCampaignToDB = async (
     slug: campaign?.slug,
     type: campaign?.type || 'wheel',
     status: campaign?.status || 'draft',
+    
+    // Complete configuration
     config: mergedConfig,
-    game_config: campaign?.game_config || campaign?.gameConfig || {},
+    
+    // Game-specific configuration
+    game_config: mergedGameConfig,
+    
+    // Complete design with all visual elements
     design: mergedDesign,
+    
+    // Form fields
     form_fields: normalizedFormFields,
+    
+    // Campaign timing
     start_date: campaign?.start_date,
     end_date: campaign?.end_date,
+    
+    // Media assets
     thumbnail_url: campaign?.thumbnail_url,
     banner_url: campaign?.banner_url,
   };
 
-  console.debug('[saveCampaignToDB] payload with background images:', {
-    ...payload,
-    design: {
-      ...payload.design,
-      backgroundImage: payload.design?.backgroundImage,
-      mobileBackgroundImage: payload.design?.mobileBackgroundImage
-    }
+  console.log('💾 [saveCampaignToDB] Complete payload structure:', {
+    id: payload.id,
+    name: payload.name,
+    type: payload.type,
+    configKeys: Object.keys(payload.config || {}),
+    designKeys: Object.keys(payload.design || {}),
+    gameConfigKeys: Object.keys(payload.game_config || {}),
+    canvasElements: payload.config?.canvasConfig?.elements?.length || 0,
+    modularPageScreens: Object.keys(payload.config?.modularPage?.screens || {}).length,
+    formFieldsCount: payload.form_fields?.length || 0
   });
+
   const saved = await saveCampaignFn(payload);
-  console.debug('[saveCampaignToDB] saved result:', saved);
+  
+  console.log('✅ [saveCampaignToDB] Campaign saved successfully:', {
+    id: saved?.id,
+    name: saved?.name,
+    type: saved?.type
+  });
+  
   return saved;
 };
 

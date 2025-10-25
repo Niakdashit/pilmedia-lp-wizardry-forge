@@ -6,6 +6,7 @@ import { CampaignType } from '../utils/campaignTypes';
 import { useCampaigns } from './useCampaigns';
 import { getDefaultCampaign } from '../components/ModernEditor/utils/defaultCampaign';
 import { loadCampaign } from './useModernCampaignEditor/campaignLoader';
+import { saveCampaignToDB } from './useModernCampaignEditor/saveHandler';
 import { useOptimizedCampaignState } from '../components/ModernEditor/hooks/useOptimizedCampaignState';
 import { usePreviewOptimization } from '../components/ModernEditor/hooks/usePreviewOptimization';
 
@@ -45,10 +46,14 @@ export const useModernCampaignEditor = () => {
     autosaveDelay: 3000,
     onSave: async (campaignToSave) => {
       if (isNewCampaign) return;
-      await saveCampaign(campaignToSave);
+      
+      // Use saveCampaignToDB for exhaustive save
+      console.log('💾 [useModernCampaignEditor] Auto-saving campaign...');
+      await saveCampaignToDB(campaignToSave, saveCampaign);
+      console.log('✅ [useModernCampaignEditor] Auto-save complete');
     },
     onError: (error) => {
-      console.error('Auto-save error:', error);
+      console.error('❌ [useModernCampaignEditor] Auto-save error:', error);
     }
   });
 
@@ -105,12 +110,14 @@ export const useModernCampaignEditor = () => {
     isNewCampaign,
     handleSave: async (showToast = true) => {
       try {
+        console.log('💾 [useModernCampaignEditor] Manual save triggered...');
         await forceSave();
+        console.log('✅ [useModernCampaignEditor] Manual save complete');
         if (showToast) {
           // Show success feedback
         }
       } catch (error) {
-        console.error('Save error:', error);
+        console.error('❌ [useModernCampaignEditor] Save error:', error);
         throw error;
       }
     },

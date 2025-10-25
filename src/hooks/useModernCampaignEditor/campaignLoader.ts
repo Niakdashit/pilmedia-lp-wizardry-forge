@@ -86,61 +86,108 @@ export const loadCampaign = async (
       console.log('✅ [campaignLoader] Loaded campaign from DB:', {
         id: existingCampaign.id,
         name: existingCampaign.name,
+        type: existingCampaign.type,
         hasDesign: !!existingCampaign.design,
         hasConfig: !!existingCampaign.config,
+        hasGameConfig: !!existingCampaign.game_config,
         designKeys: Object.keys(existingCampaign.design || {}),
         configKeys: Object.keys(existingCampaign.config || {})
       });
       
       const existingCampaignType = (existingCampaign.type as CampaignType) || campaignType;
+      const defaultCampaign = getDefaultCampaign(existingCampaignType, false);
       
-      // Restore canvasConfig from config if it exists
+      // Restore complete canvasConfig with all editor states
       const canvasConfig = existingCampaign.config?.canvasConfig || {};
+      const canvasElements = canvasConfig.elements || [];
+      const screenBackgrounds = canvasConfig.screenBackgrounds || existingCampaign.design?.screenBackgrounds || {};
       
+      // Restore modularPage structure
+      const modularPage = existingCampaign.config?.modularPage || existingCampaign.design?.designModules || {
+        screens: { screen1: [], screen2: [], screen3: [] },
+        _updatedAt: Date.now()
+      };
+      
+      // Restore extracted colors
+      const extractedColors = existingCampaign.design?.extractedColors || [];
+      
+      // Build comprehensive restored campaign
       const mergedCampaign = {
-        ...getDefaultCampaign(existingCampaignType, false),
+        ...defaultCampaign,
         ...existingCampaign,
-        // Restore canvasConfig for background images and elements
+        
+        // Restore canvas configuration
         canvasConfig,
-        formFields: existingCampaign.form_fields || existingCampaign.formFields || getDefaultCampaign(existingCampaignType, false).formFields,
-        design: {
-          ...getDefaultCampaign(existingCampaignType, false).design,
-          ...existingCampaign.design,
-          // Restore background images from multiple possible sources
-          backgroundImage: existingCampaign.design?.backgroundImage 
-            || existingCampaign.design?.background 
-            || existingCampaign.design?.screenBackgrounds?.screen1?.value
-            || canvasConfig?.background?.value,
-          mobileBackgroundImage: existingCampaign.design?.mobileBackgroundImage
-            || existingCampaign.design?.mobileBackground
-            || existingCampaign.design?.screenBackgrounds?.screen1?.mobileValue,
-          customColors: validateColors(existingCampaign.design?.customColors),
-          // Preserve design modules (text blocks, buttons, etc.)
-          designModules: existingCampaign.design?.designModules,
-          screenBackgrounds: existingCampaign.design?.screenBackgrounds
-        },
-        gameConfig: {
-          ...getDefaultCampaign(existingCampaignType, false).gameConfig,
-          ...existingCampaign.game_config || existingCampaign.gameConfig
-        },
+        canvasElements,
+        screenBackgrounds,
+        modularPage,
+        extractedColors,
+        
+        // Restore button and screen configs
         buttonConfig: {
-          ...getDefaultCampaign(existingCampaignType, false).buttonConfig,
-          ...existingCampaign.buttonConfig
+          ...defaultCampaign.buttonConfig,
+          ...(existingCampaign.config?.buttonConfig || existingCampaign.buttonConfig || {})
         },
         screens: {
-          ...getDefaultCampaign(existingCampaignType, false).screens,
-          ...existingCampaign.screens
+          ...defaultCampaign.screens,
+          ...(existingCampaign.config?.screens || existingCampaign.screens || {})
+        },
+        campaignConfig: existingCampaign.config?.campaignConfig || {},
+        
+        // Restore form fields
+        formFields: existingCampaign.form_fields || existingCampaign.formFields || defaultCampaign.formFields,
+        
+        // Restore complete design object
+        design: {
+          ...defaultCampaign.design,
+          ...existingCampaign.design,
+          
+          // Background images (priority: design > canvasConfig)
+          backgroundImage: existingCampaign.design?.backgroundImage 
+            || (canvasConfig.background?.type === 'image' ? canvasConfig.background.value : undefined)
+            || existingCampaign.design?.background,
+          mobileBackgroundImage: existingCampaign.design?.mobileBackgroundImage
+            || (canvasConfig.mobileBackground?.type === 'image' ? canvasConfig.mobileBackground.value : undefined),
+          
+          // Preserve all design properties
+          background: existingCampaign.design?.background,
+          customColors: validateColors(existingCampaign.design?.customColors),
+          extractedColors,
+          screenBackgrounds,
+          designModules: modularPage,
+          customTexts: existingCampaign.design?.customTexts || [],
+          customImages: existingCampaign.design?.customImages || [],
+          borderStyle: existingCampaign.design?.borderStyle,
+          wheelBorderStyle: existingCampaign.design?.wheelBorderStyle
+        },
+        
+        // Restore complete game configuration
+        gameConfig: {
+          ...defaultCampaign.gameConfig,
+          ...(existingCampaign.game_config || existingCampaign.gameConfig || {}),
+          
+          // Type-specific game configs
+          ...(existingCampaignType === 'wheel' && existingCampaign.game_config?.wheel ? { wheel: existingCampaign.game_config.wheel } : {}),
+          ...(existingCampaignType === 'quiz' && existingCampaign.game_config?.quiz ? { quiz: existingCampaign.game_config.quiz } : {}),
+          ...(existingCampaignType === 'scratch' && existingCampaign.game_config?.scratch ? { scratch: existingCampaign.game_config.scratch } : {}),
+          ...(existingCampaignType === 'jackpot' && existingCampaign.game_config?.jackpot ? { jackpot: existingCampaign.game_config.jackpot } : {})
         }
       };
       
-      console.log('✅ [campaignLoader] Final merged campaign:', {
+      console.log('✅ [campaignLoader] Complete restored campaign:', {
         id: mergedCampaign.id,
         name: mergedCampaign.name,
+        type: mergedCampaign.type,
         hasBackgroundImage: !!mergedCampaign.design?.backgroundImage,
+        hasMobileBackgroundImage: !!mergedCampaign.design?.mobileBackgroundImage,
         hasDesignModules: !!mergedCampaign.design?.designModules,
-        backgroundImageUrl: mergedCampaign.design?.backgroundImage,
-        designModulesKeys: Object.keys(mergedCampaign.design?.designModules || {})
+        canvasElementsCount: mergedCampaign.canvasElements?.length || 0,
+        modularPageScreens: Object.keys(mergedCampaign.modularPage?.screens || {}).length,
+        screenBackgroundsCount: Object.keys(mergedCampaign.screenBackgrounds || {}).length,
+        formFieldsCount: mergedCampaign.formFields?.length || 0,
+        extractedColorsCount: mergedCampaign.extractedColors?.length || 0
       });
+      
       return mergedCampaign;
     } else {
       console.log('No campaign found, using default');
