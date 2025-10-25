@@ -34,6 +34,7 @@ import type { ScreenBackgrounds, DeviceSpecificBackground } from '@/types/backgr
 
 import { useCampaigns } from '@/hooks/useCampaigns';
 import { createSaveAndContinueHandler, saveCampaignToDB } from '@/hooks/useModernCampaignEditor/saveHandler';
+import { useCampaignStateSync } from '@/hooks/useCampaignStateSync';
 import { quizTemplates } from '../../types/quizTemplates';
 import { useScratchCardStore } from './state/scratchcard.store';
 import type { GameModalConfig } from '@/types/gameConfig';
@@ -266,6 +267,9 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
 
   // Supabase campaigns API
   const { saveCampaign } = useCampaigns();
+  
+  // Campaign state synchronization hook
+  const { syncAllStates } = useCampaignStateSync();
 
   // Réinitialiser la campagne au montage de l'éditeur
   useEffect(() => {
@@ -2207,7 +2211,20 @@ const handleSaveCampaignName = useCallback(async () => {
   const handleSave = async () => {
     setIsLoading(true);
     try {
-      const saved = await saveCampaignToDB(campaignState, saveCampaign);
+      // 🔄 Synchroniser tous les états locaux avec le campaign avant la sauvegarde
+      syncAllStates({
+        canvasElements,
+        modularPage,
+        screenBackgrounds,
+        extractedColors,
+        selectedDevice,
+        canvasZoom
+      });
+      
+      // Récupérer le campaign mis à jour après synchronisation
+      const updatedCampaign = useEditorStore.getState().campaign;
+      
+      const saved = await saveCampaignToDB(updatedCampaign, saveCampaign);
       if (saved?.id && !(campaignState as any)?.id) {
         setCampaign((prev: any) => ({ ...prev, id: saved.id }));
       }
@@ -2254,9 +2271,20 @@ const handleSaveCampaignName = useCallback(async () => {
       setIsValidationModalOpen(true);
       return;
     }
+    
+    // 🔄 Synchroniser tous les états locaux avec le campaign avant la sauvegarde
+    syncAllStates({
+      canvasElements,
+      modularPage,
+      screenBackgrounds,
+      extractedColors,
+      selectedDevice,
+      canvasZoom
+    });
+    
     await handleSave();
     navigate('/dashboard');
-  }, [validateCampaign, handleSave, navigate]);
+  }, [validateCampaign, handleSave, navigate, syncAllStates, canvasElements, modularPage, screenBackgrounds, extractedColors, selectedDevice, canvasZoom]);
 
   // Navigate to settings without saving (same destination as Save & Continue)
   const handleNavigateToSettings = useCallback(() => {

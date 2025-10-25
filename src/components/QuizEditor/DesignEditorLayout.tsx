@@ -31,6 +31,7 @@ import type { ScreenBackgrounds } from '@/types/background';
 
 import { useCampaigns } from '@/hooks/useCampaigns';
 import { saveCampaignToDB } from '@/hooks/useModernCampaignEditor/saveHandler';
+import { useCampaignStateSync } from '@/hooks/useCampaignStateSync';
 import { quizTemplates } from '../../types/quizTemplates';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -239,6 +240,9 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
 
   // Supabase campaigns API
   const { saveCampaign } = useCampaigns();
+  
+  // Campaign state synchronization hook
+  const { syncAllStates } = useCampaignStateSync();
 
   // État local pour la compatibilité existante
   const [selectedDevice, setSelectedDevice] = useState<'desktop' | 'tablet' | 'mobile'>(actualDevice);
@@ -2361,12 +2365,25 @@ const handleSaveCampaignName = useCallback(async () => {
   const handleSave = async () => {
     setIsLoading(true);
     try {
+      // 🔄 Synchroniser tous les états locaux avec le campaign avant la sauvegarde
+      syncAllStates({
+        canvasElements,
+        modularPage,
+        screenBackgrounds,
+        extractedColors,
+        selectedDevice,
+        canvasZoom
+      });
+      
+      // Récupérer le campaign mis à jour après synchronisation
+      const updatedCampaign = useEditorStore.getState().campaign;
+      
       // Inject canvasConfig so backgrounds/images and elements are persisted in DB
       const payload = {
-        ...campaignState,
+        ...updatedCampaign,
         // Persist modules inside design.quizModules for DB
         design: {
-          ...((campaignState as any)?.design || {}),
+          ...((updatedCampaign as any)?.design || {}),
           quizModules: modularPage
         },
         canvasConfig: {
@@ -2438,9 +2455,20 @@ const handleSaveCampaignName = useCallback(async () => {
       setIsValidationModalOpen(true);
       return;
     }
+    
+    // 🔄 Synchroniser tous les états locaux avec le campaign avant la sauvegarde
+    syncAllStates({
+      canvasElements,
+      modularPage,
+      screenBackgrounds,
+      extractedColors,
+      selectedDevice,
+      canvasZoom
+    });
+    
     await handleSave();
     navigate('/dashboard');
-  }, [validateCampaign, handleSave, navigate]);
+  }, [validateCampaign, handleSave, navigate, syncAllStates, canvasElements, modularPage, screenBackgrounds, extractedColors, selectedDevice, canvasZoom]);
 
   // Navigate to settings without saving (same destination as Save & Continue)
   // @ts-expect-error - Fonction de navigation, peut être ignorée

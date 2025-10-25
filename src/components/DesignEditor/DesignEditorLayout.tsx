@@ -33,6 +33,7 @@ import { useCampaignFromUrl } from '@/hooks/useCampaignFromUrl';
 
 import { useCampaigns } from '@/hooks/useCampaigns';
 import { saveCampaignToDB } from '@/hooks/useModernCampaignEditor/saveHandler';
+import { useCampaignStateSync } from '@/hooks/useCampaignStateSync';
 
 const KeyboardShortcutsHelp = lazy(() => import('../shared/KeyboardShortcutsHelp'));
 const MobileStableEditor = lazy(() => import('./components/MobileStableEditor'));
@@ -104,6 +105,9 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
 
   // Supabase campaigns API
   const { saveCampaign } = useCampaigns();
+  
+  // Campaign state synchronization hook
+  const { syncAllStates } = useCampaignStateSync();
 
   // Charger campagne depuis URL si présente
   const { campaign: urlCampaign, loading: urlLoading, error: urlError } = useCampaignFromUrl();
@@ -1862,9 +1866,22 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
   const handleSave = async () => {
     setIsLoading(true);
     try {
+      // 🔄 Synchroniser tous les états locaux avec le campaign avant la sauvegarde
+      syncAllStates({
+        canvasElements,
+        modularPage,
+        screenBackgrounds,
+        extractedColors,
+        selectedDevice,
+        canvasZoom
+      });
+      
+      // Récupérer le campaign mis à jour après synchronisation
+      const updatedCampaign = useEditorStore.getState().campaign;
+      
       // Injecter canvasConfig pour persister les images de fond et les éléments
       const payload = {
-        ...campaignState,
+        ...updatedCampaign,
         canvasConfig: {
           elements: canvasElements,
           background: canvasBackground,
@@ -1940,19 +1957,33 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
       setIsValidationModalOpen(true);
       return;
     }
+    
+    // 🔄 Synchroniser tous les états locaux avec le campaign avant la sauvegarde
+    syncAllStates({
+      canvasElements,
+      modularPage,
+      screenBackgrounds,
+      extractedColors,
+      selectedDevice,
+      canvasZoom
+    });
+    
     try {
       // Récupérer l'ID depuis l'URL en priorité (UUID garanti)
       const params = new URLSearchParams(location.search);
       const urlId = params.get('campaign') || undefined;
+      
+      // Récupérer le campaign mis à jour après synchronisation
+      const updatedCampaign = useEditorStore.getState().campaign;
 
       // Collecter TOUT l'état de l'éditeur
       const fullCampaignData = {
-        ...(campaignState || {}),
-        id: urlId || (campaignState as any)?.id,
-        design: campaignState?.design || {},
-        config: campaignState?.config || {},
-        game_config: campaignState?.gameConfig || {},
-        form_fields: campaignState?.formFields || []
+        ...(updatedCampaign || {}),
+        id: urlId || (updatedCampaign as any)?.id,
+        design: updatedCampaign?.design || {},
+        config: updatedCampaign?.config || {},
+        game_config: updatedCampaign?.gameConfig || {},
+        form_fields: updatedCampaign?.formFields || []
       };
 
       console.log('💾 [DesignEditor] Saving full campaign data (Save & Quit):', fullCampaignData);
@@ -1967,7 +1998,7 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
       console.error('❌ [DesignEditor] Error saving campaign (Save & Quit):', error);
       alert('Erreur lors de la sauvegarde');
     }
-  }, [campaignState, saveCampaign, navigate, setCampaign, location.search, validateCampaign]);
+  }, [campaignState, saveCampaign, navigate, setCampaign, location.search, validateCampaign, syncAllStates, canvasElements, modularPage, screenBackgrounds, extractedColors, selectedDevice, canvasZoom]);
 
   // Navigate to settings without saving (same destination as Save & Continue)
   const handleNavigateToSettings = useCallback(() => {
