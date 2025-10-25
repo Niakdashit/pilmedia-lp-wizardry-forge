@@ -1,6 +1,8 @@
 import React from 'react';
 import { NavLink, Outlet, useNavigate, useParams } from 'react-router-dom';
 import GradientBand from '../../components/shared/GradientBand';
+import { useCampaignsList } from '@/hooks/useCampaignsList';
+import { getEditorUrl } from '@/utils/editorRouting';
 
 const steps = [
   { path: '', label: 'Canaux' },
@@ -12,7 +14,11 @@ const steps = [
 const CampaignSettingsLayout: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
-  const editorUrl = id ? `/design-editor?id=${id}` : '/design-editor';
+  const { campaigns } = useCampaignsList();
+  
+  // Get campaign to determine its type
+  const campaign = campaigns.find((c: any) => c.id === id);
+  const editorUrl = id && campaign ? getEditorUrl(campaign.type, id).replace('?campaign=', '?id=') : '/design-editor';
 
   const handleSaveAndClose = () => {
     // Let pages listen and persist

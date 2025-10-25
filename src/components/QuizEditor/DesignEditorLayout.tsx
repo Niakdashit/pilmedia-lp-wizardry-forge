@@ -26,11 +26,11 @@ import { getDeviceDimensions } from '../../utils/deviceDimensions';
 import { getEditorDeviceOverride } from '@/utils/deviceOverrides';
 import { useEditorPreviewSync } from '@/hooks/useEditorPreviewSync';
 import { useCampaignSettings } from '@/hooks/useCampaignSettings';
-import type { ScreenBackgrounds, DeviceSpecificBackground } from '@/types/background';
+import type { ScreenBackgrounds } from '@/types/background';
 
 
 import { useCampaigns } from '@/hooks/useCampaigns';
-import { createSaveAndContinueHandler, saveCampaignToDB } from '@/hooks/useModernCampaignEditor/saveHandler';
+import { saveCampaignToDB } from '@/hooks/useModernCampaignEditor/saveHandler';
 import { quizTemplates } from '../../types/quizTemplates';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -1133,47 +1133,71 @@ const handleSaveCampaignName = useCallback(async () => {
           console.log('✅ Campaign loaded:', data);
           
           // Restore canvas elements
-          const canvasConfig = data.config?.canvasConfig || data.canvasConfig || {};
-          if (Array.isArray(canvasConfig.elements)) {
-            setCanvasElements(canvasConfig.elements);
+          const mergedCanvasConfig = (data?.config as any)?.canvasConfig ?? (data as any)?.canvasConfig ?? {};
+          if (Array.isArray(mergedCanvasConfig.elements)) {
+            setCanvasElements(mergedCanvasConfig.elements);
           }
           
           // Restore background
-          const bg = canvasConfig.background || data.design?.background || { type: 'color', value: '#ffffff' };
+          const initialBg = (mergedCanvasConfig as any)?.background?.value;
+          if (initialBg) {
+            const extractedColors = (data?.config as any)?.extractedColors ?? (data?.design as any)?.extractedColors ?? (data as any)?.extractedColors;
+            const colorArray = (Array.isArray(extractedColors) ? extractedColors : (extractedColors as any)?.colors ?? [])
+              .filter((c: string) => /^#[0-9A-Fa-f]{6}$/.test(c));
+            setBrandColors(colorArray);
+          }
+          
+          const bg = mergedCanvasConfig.background || (data?.design as any)?.background || { type: 'color', value: '#ffffff' };
           setCanvasBackground(typeof bg === 'string' ? { type: 'color', value: bg } : bg);
           
           // Restore screen backgrounds if available
-          if (canvasConfig.screenBackgrounds) {
-            setScreenBackgrounds(canvasConfig.screenBackgrounds);
+          if (mergedCanvasConfig.screenBackgrounds) {
+            setScreenBackgrounds(mergedCanvasConfig.screenBackgrounds);
           }
           
-          // Restore extracted colors
-          if (data.design?.extractedColors && Array.isArray(data.design.extractedColors)) {
-            setExtractedColors(data.design.extractedColors);
+          // Initialize config
+          const quizFromConfig = {
+            ...(data?.config || {}),
+            quizConfig: (data?.config as any)?.quizConfig ?? (data as any)?.modularPage,
+            quizModules: (data?.config as any)?.quizModules || [],
+            modularPage: (data as any)?.modularPage || [],
+          };
+          if ((data?.config as any)?.quizModules) {
+            quizFromConfig.quizModules = (data.config as any).quizModules;
+          } else if ((data as any)?.modularPage) {
+            quizFromConfig.modularPage = (data as any).modularPage;
           }
-          
+          if (!quizFromConfig.quizConfig) {
+            const qC = (
+              (data?.design as any)?.quizConfig ||
+              (quizFromConfig as any)?.quizConfig ||
+              {}
+            );
+            quizFromConfig.quizConfig = qC;
+          }
+
           // Restore campaign config
           setCampaignConfig({
             ...data,
             design: {
-              ...(data.design || {}),
-              quizConfig: data.design?.quizConfig || {},
-              quizModules: data.design?.quizModules || data.modularPage || modularPage
+              ...(data?.design || {}),
+              quizConfig: quizFromConfig.quizConfig || {},
+              quizModules: quizFromConfig.quizModules || quizFromConfig.modularPage || modularPage
             }
           });
           
           // Restore modular page (modules)
-          if (data.design?.quizModules) {
-            setModularPage(data.design.quizModules);
-          } else if (data.modularPage) {
-            setModularPage(data.modularPage);
+          if (quizFromConfig.quizModules && quizFromConfig.quizModules.length > 0) {
+            setModularPage(quizFromConfig.quizModules);
+          } else if (quizFromConfig.modularPage && quizFromConfig.modularPage.length > 0) {
+            setModularPage(quizFromConfig.modularPage);
           }
           
           // Restore quiz config
-          if (data.design?.quizConfig) {
-            setQuizConfig(prev => ({
+          if (quizFromConfig.quizConfig) {
+            setQuizConfig((prev: any) => ({
               ...prev,
-              ...data.design.quizConfig
+              ...quizFromConfig.quizConfig
             }));
           }
           
@@ -2795,7 +2819,6 @@ const handleSaveCampaignName = useCallback(async () => {
             mode={mode}
             onSave={handleSaveAndQuit}
             showSaveCloseButtons={false}
-            onNavigateToSettings={handleNavigateToSettings}
             campaignId={(campaignState as any)?.id || new URLSearchParams(location.search).get('campaign') || undefined}
           />
 

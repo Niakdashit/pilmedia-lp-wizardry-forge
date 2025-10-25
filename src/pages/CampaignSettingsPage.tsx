@@ -1,14 +1,20 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useCampaignSettings, CampaignSettings } from '@/hooks/useCampaignSettings';
+import { useCampaignsList } from '@/hooks/useCampaignsList';
+import { getEditorUrl } from '@/utils/editorRouting';
 
 const CampaignSettingsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { getSettings, upsertSettings, loading, error, saveDraft } = useCampaignSettings();
+  const { campaigns } = useCampaignsList();
 
   const [form, setForm] = useState<Partial<CampaignSettings>>({});
   const campaignId = id || '';
+  
+  // Get campaign to determine its type
+  const campaign = campaigns.find((c: any) => c.id === campaignId);
 
   // Load existing settings (or local draft via hook fallback)
   useEffect(() => {
@@ -65,8 +71,9 @@ const CampaignSettingsPage: React.FC = () => {
       tags: form.tags ?? [],
     });
     if (saved) {
-      // Navigate back to editor with explicit campaign context
-      navigate(`/design-editor?id=${campaignId}`);
+      // Navigate back to the correct editor based on campaign type
+      const editorUrl = getEditorUrl(campaign?.type, campaignId);
+      navigate(editorUrl.replace('?campaign=', '?id='));
     } else {
       // Save a draft locally to avoid data loss
       try { saveDraft(campaignId, form); } catch {}
@@ -119,7 +126,10 @@ const CampaignSettingsPage: React.FC = () => {
         <h1 className="text-2xl font-bold">Paramètres de la campagne</h1>
         <div className="flex gap-2">
           <button
-            onClick={() => navigate(`/design-editor?id=${campaignId}`)}
+            onClick={() => {
+              const editorUrl = getEditorUrl(campaign?.type, campaignId);
+              navigate(editorUrl.replace('?campaign=', '?id='));
+            }}
             className="px-3 py-1.5 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm"
           >
             Retour à l'éditeur

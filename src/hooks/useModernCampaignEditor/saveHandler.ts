@@ -1,6 +1,3 @@
-
-// import { useNavigate } from 'react-router-dom'; // Not used in Next.js
-
 export const createSaveHandler = (
   campaign: any,
   saveCampaign: (data: any) => Promise<any>,

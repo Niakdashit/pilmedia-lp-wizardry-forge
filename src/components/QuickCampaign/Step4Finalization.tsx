@@ -4,6 +4,7 @@ import { Settings, Rocket, Eye } from 'lucide-react';
 import { useQuickCampaignStore } from '../../stores/quickCampaignStore';
 import { useNavigate } from 'react-router-dom';
 import { useCampaigns } from '../../hooks/useCampaigns';
+import { getEditorRoute } from '../../utils/editorRouting';
 
 const Step4Finalization: React.FC = () => {
   const [isPublishing, setIsPublishing] = useState(false);
@@ -98,8 +99,9 @@ const Step4Finalization: React.FC = () => {
       
       console.log('Editor config created:', editorConfig);
       
-      // Navigate to design editor
-      navigate('/design-editor');
+      // Navigate to the correct editor based on campaign type
+      const editorRoute = getEditorRoute(quickCampaign.type);
+      navigate(editorRoute);
     } catch (error) {
       console.error('Erreur lors du transfert vers l\'éditeur:', error);
     }
