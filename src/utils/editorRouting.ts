@@ -7,6 +7,7 @@ export const EDITOR_ROUTES = {
   form: '/form-editor',
   jackpot: '/jackpot-editor',
   scratch: '/scratch-editor',
+  dice: '/scratch-editor', // alias legacy type → scratch editor
 } as const;
 
 export type CampaignType = keyof typeof EDITOR_ROUTES;
