@@ -31,9 +31,12 @@ export const useProfile = () => {
             .from('profiles')
             .insert({
               id: user.id,
-              email: user.email,
-              first_name: user.user_metadata?.first_name || null,
-              last_name: user.user_metadata?.last_name || null,
+              email: user.email || '',
+              full_name: user.user_metadata?.full_name || 
+                         [user.user_metadata?.first_name, user.user_metadata?.last_name]
+                           .filter(Boolean)
+                           .join(' ') || 
+                         null,
             })
             .select()
             .single();
@@ -59,7 +62,7 @@ export const useProfile = () => {
     }
   };
 
-  const updateProfile = async (updates: Partial<Pick<Profile, 'first_name' | 'last_name'>>) => {
+  const updateProfile = async (updates: Partial<Pick<Profile, 'full_name' | 'company' | 'avatar_url'>>) => {
     if (!profile) return { error: 'No profile loaded' };
 
     try {
@@ -149,9 +152,7 @@ export const useProfile = () => {
 const transformProfile = (profile: Profile): UserWithProfile => {
   return {
     ...profile,
-    full_name: [profile.first_name, profile.last_name]
-      .filter(Boolean)
-      .join(' ') || profile.email || 'Utilisateur',
+    full_name: profile.full_name || profile.email || 'Utilisateur',
     is_admin: profile.role === 'admin',
     is_moderator: profile.role === 'moderator' || profile.role === 'admin',
     is_media: profile.role === 'media',

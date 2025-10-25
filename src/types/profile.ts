@@ -1,12 +1,13 @@
 // User profile types
 export interface Profile {
   id: string;
-  email: string | null;
-  first_name: string | null;
-  last_name: string | null;
-  role: string;
-  created_at: string;
-  updated_at: string;
+  email: string;
+  full_name: string | null;
+  avatar_url: string | null;
+  company: string | null;
+  role: string | null;
+  created_at: string | null;
+  updated_at: string | null;
 }
 
 export interface UserWithProfile extends Profile {

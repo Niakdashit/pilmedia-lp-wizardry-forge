@@ -7,13 +7,149 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
   }
   public: {
     Tables: {
+      campaign_integrations: {
+        Row: {
+          campaign_id: string
+          config: Json | null
+          created_at: string | null
+          deployment_url: string
+          embed_code: string | null
+          id: string
+          integration_type: string
+          is_active: boolean | null
+          updated_at: string | null
+        }
+        Insert: {
+          campaign_id: string
+          config?: Json | null
+          created_at?: string | null
+          deployment_url: string
+          embed_code?: string | null
+          id?: string
+          integration_type: string
+          is_active?: boolean | null
+          updated_at?: string | null
+        }
+        Update: {
+          campaign_id?: string
+          config?: Json | null
+          created_at?: string | null
+          deployment_url?: string
+          embed_code?: string | null
+          id?: string
+          integration_type?: string
+          is_active?: boolean | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_integrations_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campaign_settings: {
+        Row: {
+          advanced: Json | null
+          campaign_id: string
+          campaign_url: string | null
+          created_at: string | null
+          data_push: Json | null
+          email_verification: Json | null
+          end_date: string | null
+          end_time: string | null
+          id: string
+          integration_html: string | null
+          integration_javascript: string | null
+          integration_oembed: string | null
+          integration_smart_url: string | null
+          integration_webview: string | null
+          legal: Json | null
+          limits: Json | null
+          opt_in: Json | null
+          output: Json | null
+          publication: Json | null
+          soft_gate: Json | null
+          start_date: string | null
+          start_time: string | null
+          tags: string[] | null
+          updated_at: string | null
+          winners: Json | null
+        }
+        Insert: {
+          advanced?: Json | null
+          campaign_id: string
+          campaign_url?: string | null
+          created_at?: string | null
+          data_push?: Json | null
+          email_verification?: Json | null
+          end_date?: string | null
+          end_time?: string | null
+          id?: string
+          integration_html?: string | null
+          integration_javascript?: string | null
+          integration_oembed?: string | null
+          integration_smart_url?: string | null
+          integration_webview?: string | null
+          legal?: Json | null
+          limits?: Json | null
+          opt_in?: Json | null
+          output?: Json | null
+          publication?: Json | null
+          soft_gate?: Json | null
+          start_date?: string | null
+          start_time?: string | null
+          tags?: string[] | null
+          updated_at?: string | null
+          winners?: Json | null
+        }
+        Update: {
+          advanced?: Json | null
+          campaign_id?: string
+          campaign_url?: string | null
+          created_at?: string | null
+          data_push?: Json | null
+          email_verification?: Json | null
+          end_date?: string | null
+          end_time?: string | null
+          id?: string
+          integration_html?: string | null
+          integration_javascript?: string | null
+          integration_oembed?: string | null
+          integration_smart_url?: string | null
+          integration_webview?: string | null
+          legal?: Json | null
+          limits?: Json | null
+          opt_in?: Json | null
+          output?: Json | null
+          publication?: Json | null
+          soft_gate?: Json | null
+          start_date?: string | null
+          start_time?: string | null
+          tags?: string[] | null
+          updated_at?: string | null
+          winners?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_settings_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: true
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       campaign_stats: {
         Row: {
           campaign_id: string
@@ -25,147 +161,6 @@ export type Database = {
           updated_at: string | null
           views: number | null
         }
-      media_partners: {
-        Row: {
-          id: string
-          user_id: string | null
-          name: string
-          website: string | null
-          description: string | null
-          logo_url: string | null
-          contact_email: string | null
-          contact_phone: string | null
-          category: string | null
-          audience_size: number | null
-          monthly_visitors: number | null
-          status: string | null
-          created_at: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          id?: string
-          user_id?: string | null
-          name: string
-          website?: string | null
-          description?: string | null
-          logo_url?: string | null
-          contact_email?: string | null
-          contact_phone?: string | null
-          category?: string | null
-          audience_size?: number | null
-          monthly_visitors?: number | null
-          status?: string | null
-          created_at?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          id?: string
-          user_id?: string | null
-          name?: string
-          website?: string | null
-          description?: string | null
-          logo_url?: string | null
-          contact_email?: string | null
-          contact_phone?: string | null
-          category?: string | null
-          audience_size?: number | null
-          monthly_visitors?: number | null
-          status?: string | null
-          created_at?: string | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      partnership_requests: {
-        Row: {
-          id: string
-          campaign_id: string | null
-          media_id: string | null
-          requester_id: string | null
-          status: string | null
-          message: string | null
-          response_message: string | null
-          requested_at: string | null
-          responded_at: string | null
-          created_at: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          id?: string
-          campaign_id?: string | null
-          media_id?: string | null
-          requester_id?: string | null
-          status?: string | null
-          message?: string | null
-          response_message?: string | null
-          requested_at?: string | null
-          responded_at?: string | null
-          created_at?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          id?: string
-          campaign_id?: string | null
-          media_id?: string | null
-          requester_id?: string | null
-          status?: string | null
-          message?: string | null
-          response_message?: string | null
-          requested_at?: string | null
-          responded_at?: string | null
-          created_at?: string | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      media_campaigns: {
-        Row: {
-          id: string
-          campaign_id: string | null
-          media_id: string | null
-          partnership_request_id: string | null
-          status: string | null
-          start_date: string | null
-          end_date: string | null
-          views: number | null
-          clicks: number | null
-          conversions: number | null
-          revenue: number | null
-          created_at: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          id?: string
-          campaign_id?: string | null
-          media_id?: string | null
-          partnership_request_id?: string | null
-          status?: string | null
-          start_date?: string | null
-          end_date?: string | null
-          views?: number | null
-          clicks?: number | null
-          conversions?: number | null
-          revenue?: number | null
-          created_at?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          id?: string
-          campaign_id?: string | null
-          media_id?: string | null
-          partnership_request_id?: string | null
-          status?: string | null
-          start_date?: string | null
-          end_date?: string | null
-          views?: number | null
-          clicks?: number | null
-          conversions?: number | null
-          revenue?: number | null
-          created_at?: string | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
         Insert: {
           campaign_id: string
           completion_rate?: number | null
@@ -200,7 +195,7 @@ export type Database = {
         Row: {
           campaign_id: string
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           referrer: string | null
           user_agent: string | null
           utm_campaign: string | null
@@ -211,7 +206,7 @@ export type Database = {
         Insert: {
           campaign_id: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           referrer?: string | null
           user_agent?: string | null
           utm_campaign?: string | null
@@ -222,7 +217,7 @@ export type Database = {
         Update: {
           campaign_id?: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           referrer?: string | null
           user_agent?: string | null
           utm_campaign?: string | null
@@ -307,37 +302,59 @@ export type Database = {
           type?: Database["public"]["Enums"]["game_type"]
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "campaigns_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
-      profiles: {
+      game_results: {
         Row: {
+          campaign_id: string
+          created_at: string | null
+          duration: number | null
+          game_type: string
           id: string
-          email: string | null
-          first_name: string | null
-          last_name: string | null
-          role: string
-          created_at: string
-          updated_at: string
+          is_winner: boolean | null
+          result: Json
+          score: number | null
+          user_id: string
         }
         Insert: {
-          id: string
-          email?: string | null
-          first_name?: string | null
-          last_name?: string | null
-          role?: string
-          created_at?: string
-          updated_at?: string
+          campaign_id: string
+          created_at?: string | null
+          duration?: number | null
+          game_type: string
+          id?: string
+          is_winner?: boolean | null
+          result?: Json
+          score?: number | null
+          user_id: string
         }
         Update: {
+          campaign_id?: string
+          created_at?: string | null
+          duration?: number | null
+          game_type?: string
           id?: string
-          email?: string | null
-          first_name?: string | null
-          last_name?: string | null
-          role?: string
-          created_at?: string
-          updated_at?: string
+          is_winner?: boolean | null
+          result?: Json
+          score?: number | null
+          user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "game_results_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       participations: {
         Row: {
@@ -346,7 +363,7 @@ export type Database = {
           form_data: Json
           game_result: Json | null
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           is_winner: boolean | null
           user_agent: string | null
           user_email: string
@@ -360,7 +377,7 @@ export type Database = {
           form_data?: Json
           game_result?: Json | null
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           is_winner?: boolean | null
           user_agent?: string | null
           user_email: string
@@ -374,7 +391,7 @@ export type Database = {
           form_data?: Json
           game_result?: Json | null
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           is_winner?: boolean | null
           user_agent?: string | null
           user_email?: string
@@ -392,6 +409,68 @@ export type Database = {
           },
         ]
       }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          company: string | null
+          created_at: string | null
+          email: string
+          full_name: string | null
+          id: string
+          role: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          company?: string | null
+          created_at?: string | null
+          email: string
+          full_name?: string | null
+          id: string
+          role?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          company?: string | null
+          created_at?: string | null
+          email?: string
+          full_name?: string | null
+          id?: string
+          role?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_roles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -401,8 +480,20 @@ export type Database = {
         Args: { campaign_name: string }
         Returns: string
       }
+      generate_integration_url: {
+        Args: { _campaign_id: string; _integration_type: string }
+        Returns: string
+      }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
+      app_role: "admin" | "user" | "viewer"
       campaign_status:
         | "draft"
         | "scheduled"
@@ -410,7 +501,15 @@ export type Database = {
         | "paused"
         | "ended"
         | "archived"
-      game_type: "wheel" | "quiz" | "contest" | "survey" | "jackpot" | "dice"
+      game_type:
+        | "wheel"
+        | "quiz"
+        | "contest"
+        | "survey"
+        | "jackpot"
+        | "dice"
+        | "scratch"
+        | "form"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -538,6 +637,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      app_role: ["admin", "user", "viewer"],
       campaign_status: [
         "draft",
         "scheduled",
@@ -546,7 +646,16 @@ export const Constants = {
         "ended",
         "archived",
       ],
-      game_type: ["wheel", "quiz", "contest", "survey", "jackpot", "dice"],
+      game_type: [
+        "wheel",
+        "quiz",
+        "contest",
+        "survey",
+        "jackpot",
+        "dice",
+        "scratch",
+        "form",
+      ],
     },
   },
 } as const

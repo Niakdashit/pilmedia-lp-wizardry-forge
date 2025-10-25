@@ -153,7 +153,7 @@ const UserManagement: React.FC = () => {
                     <div className="flex-shrink-0 w-10 h-10">
                       <div className="w-10 h-10 rounded-full bg-[#841b60] flex items-center justify-center">
                         <span className="text-white font-medium text-sm">
-                          {(user.first_name?.[0] || user.email?.[0] || '?').toUpperCase()}
+                          {(user.full_name?.[0] || user.email?.[0] || '?').toUpperCase()}
                         </span>
                       </div>
                     </div>
@@ -174,15 +174,15 @@ const UserManagement: React.FC = () => {
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getRoleColor(user.role)}`}>
-                    {getRoleIcon(user.role)}
-                    <span className="ml-1 capitalize">{user.role}</span>
+                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getRoleColor(user.role || 'user')}`}>
+                    {getRoleIcon(user.role || 'user')}
+                    <span className="ml-1 capitalize">{user.role || 'user'}</span>
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   <div className="flex items-center">
                     <Calendar className="w-4 h-4 text-gray-400 mr-2" />
-                    {formatDate(user.created_at)}
+                    {formatDate(user.created_at || new Date().toISOString())}
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -190,7 +190,7 @@ const UserManagement: React.FC = () => {
                     <div className="flex space-x-2">
                       <select
                         className="text-xs border border-gray-300 rounded px-2 py-1"
-                        defaultValue={user.role}
+                        defaultValue={user.role || 'user'}
                         onChange={(e) => handleRoleChange(user.id, e.target.value as 'user' | 'admin' | 'moderator')}
                       >
                         <option value="user">Utilisateur</option>
