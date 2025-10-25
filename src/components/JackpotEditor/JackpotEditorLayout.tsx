@@ -1169,6 +1169,28 @@ const JackpotEditorLayout: React.FC<JackpotEditorLayoutProps> = ({ mode = 'campa
       setCanvasBackground(bg);
     }
     
+    // 💾 Persist background image to campaign state for database save
+    if (bg?.type === 'image' && bg?.value) {
+      const device = options?.device || selectedDevice;
+      setCampaign((prev: any) => {
+        if (!prev) return prev;
+        const updatedDesign = { ...(prev.design || {}) };
+        
+        // Mobile gets its own field, desktop/tablet share backgroundImage
+        if (device === 'mobile') {
+          updatedDesign.mobileBackgroundImage = bg.value;
+        } else {
+          updatedDesign.backgroundImage = bg.value;
+        }
+        
+        console.log('💾 [JackpotEditor] Persisting background to campaign.design:', { device, value: bg.value?.substring(0, 50) + '...' });
+        return {
+          ...prev,
+          design: updatedDesign
+        };
+      });
+    }
+    
     setTimeout(() => {
       addToHistory({
         campaignConfig: { ...campaignConfig },
