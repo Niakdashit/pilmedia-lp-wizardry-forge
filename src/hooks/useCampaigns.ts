@@ -35,45 +35,62 @@ export const useCampaigns = () => {
         slug = slugData;
       }
 
-      // Prepare data for database
-      const campaignData: any = {
+      // Prepare data for database (insert case)
+      const baseData: any = {
         name: campaign.name || 'Nouvelle campagne',
         description: campaign.description,
         slug,
-        type: campaign.type || 'wheel',
         status: campaign.status || 'draft',
-        config: campaign.config || {},
-        game_config: campaign.game_config || {},
-        design: campaign.design || {},
-        form_fields: campaign.form_fields || [],
+        config: campaign.config,
+        game_config: campaign.game_config,
+        design: campaign.design,
+        form_fields: campaign.form_fields,
         start_date: campaign.start_date,
         end_date: campaign.end_date,
         thumbnail_url: campaign.thumbnail_url,
         banner_url: campaign.banner_url,
-        created_by: user.id,
         updated_at: new Date().toISOString()
       };
 
       let result;
       if (campaign.id) {
-        // Update existing campaign
+        // Update existing campaign with only provided fields (no destructive defaults)
+        const updateData: any = { updated_at: new Date().toISOString() };
+        const maybeSet = (key: string, val: any) => { if (val !== undefined) updateData[key] = val; };
+        maybeSet('name', campaign.name);
+        maybeSet('description', campaign.description);
+        if (slug !== undefined) updateData.slug = slug; // slug may be generated above
+        maybeSet('type', campaign.type);
+        maybeSet('status', campaign.status);
+        maybeSet('config', campaign.config);
+        maybeSet('game_config', campaign.game_config);
+        maybeSet('design', campaign.design);
+        maybeSet('form_fields', campaign.form_fields);
+        maybeSet('start_date', campaign.start_date);
+        maybeSet('end_date', campaign.end_date);
+        maybeSet('thumbnail_url', campaign.thumbnail_url);
+        maybeSet('banner_url', campaign.banner_url);
+
         const { data, error } = await supabase
           .from('campaigns')
-          .update(campaignData)
+          .update(updateData)
           .eq('id', campaign.id)
           .select()
           .single();
-        
         if (error) throw error;
         result = data;
       } else {
-        // Create new campaign
+        // Create new campaign (require or default type)
+        const insertData = {
+          ...baseData,
+          type: campaign.type ?? 'wheel',
+          created_by: user.id
+        };
         const { data, error } = await supabase
           .from('campaigns')
-          .insert(campaignData)
+          .insert(insertData)
           .select()
           .single();
-        
         if (error) throw error;
         result = data;
       }

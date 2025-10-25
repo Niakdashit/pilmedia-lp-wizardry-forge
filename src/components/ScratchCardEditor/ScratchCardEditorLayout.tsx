@@ -510,7 +510,7 @@ const handleSaveCampaignName = useCallback(async () => {
   if (!name) return;
 
   const isUuid = (v?: string) => !!v && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v);
-  const payload: any = isUuid(currentId) ? { id: currentId, name } : { name };
+  const payload: any = isUuid(currentId) ? { id: currentId, name } : { name, type: 'scratch' };
 
   let updated: any = null;
   try { updated = await saveCampaign(payload); } catch (e) { console.warn('saveCampaign failed', e); }

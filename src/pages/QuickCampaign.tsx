@@ -51,7 +51,7 @@ const campaignTemplates: CampaignTemplate[] = [
     id: 'scratch-card',
     name: 'Carte à Gratter',
     description: 'Découvrez instantanément vos gains',
-    type: 'dice',
+    type: 'scratch',
     icon: <Zap className="w-8 h-8 text-[#841b60]" />,
     editorRoute: '/scratch-editor',
     defaultConfig: {
