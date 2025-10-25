@@ -41,6 +41,7 @@ import { createGameConfigFromQuiz } from '@/types/gameConfig';
 
 const KeyboardShortcutsHelp = lazy(() => import('../shared/KeyboardShortcutsHelp'));
 const MobileStableEditor = lazy(() => import('./components/MobileStableEditor'));
+import { useCampaignFromUrl } from '@/hooks/useCampaignFromUrl';
 
 const LAUNCH_BUTTON_FALLBACK_GRADIENT = '#000000';
 const LAUNCH_BUTTON_DEFAULT_TEXT_COLOR = '#ffffff';
@@ -198,11 +199,17 @@ const JackpotEditorLayout: React.FC<JackpotEditorLayoutProps> = ({ mode = 'campa
   // Campaign state synchronization hook
   const { syncAllStates } = useCampaignStateSync();
 
-  // Réinitialiser la campagne au montage de l'éditeur
-  useEffect(() => {
-    console.log('🎨 [JackpotEditor] Mounting - resetting campaign state');
+// Réinitialiser la campagne au montage de l'éditeur SEULEMENT si aucune ID n'est présente dans l'URL
+useEffect(() => {
+  const params = new URLSearchParams(location.search);
+  const hasId = params.get('campaign');
+  if (!hasId) {
+    console.log('🎨 [JackpotEditor] Mount: no campaign id → resetting store');
     resetCampaign();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  } else {
+    console.log('🎨 [JackpotEditor] Mount: campaign id detected, skipping reset');
+  }
+}, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // État local pour la compatibilité existante
   const [selectedDevice, setSelectedDevice] = useState<'desktop' | 'tablet' | 'mobile'>(actualDevice);
@@ -298,20 +305,95 @@ const JackpotEditorLayout: React.FC<JackpotEditorLayoutProps> = ({ mode = 'campa
     prevPathRef.current = currentPath;
   }, [location.pathname, mode, canvasBackground.type]); // Se déclenche au changement de route
 
-  // Recharger l'image de fond correcte depuis la campaign quand on change de device
-  useEffect(() => {
-    if (campaignState?.design) {
-      const design = campaignState.design as any;
-      const bgImage = selectedDevice === 'mobile' 
-        ? design.mobileBackgroundImage 
-        : design.backgroundImage;
-      
-      if (bgImage) {
-        console.log(`🔄 Switching to ${selectedDevice}, loading background:`, bgImage.substring(0, 50) + '...');
-        setCanvasBackground({ type: 'image', value: bgImage });
-      }
+// Recharger l'image de fond correcte depuis la campaign quand on change de device
+useEffect(() => {
+  if (campaignState?.design) {
+    const design = campaignState.design as any;
+    const bgImage = selectedDevice === 'mobile' 
+      ? design.mobileBackgroundImage 
+      : design.backgroundImage;
+    
+    if (bgImage) {
+      console.log(`🔄 Switching to ${selectedDevice}, loading background:`, bgImage.substring(0, 50) + '...');
+      setCanvasBackground({ type: 'image', value: bgImage });
     }
-  }, [selectedDevice, campaignState?.design]);
+  }
+}, [selectedDevice, campaignState?.design]);
+
+// ✅ Hydrater les éléments/modularPage/backgrounds depuis la DB à l'ouverture
+useEffect(() => {
+  const cfg = (campaignState as any)?.config?.canvasConfig || (campaignState as any)?.canvasConfig;
+  const mp = (campaignState as any)?.config?.modularPage || (campaignState as any)?.design?.quizModules;
+  const topLevelElements = (campaignState as any)?.config?.elements;
+
+  // N'hydrate que si on a des données utiles ET que le local est vide pour éviter l'écrasement
+  if (Array.isArray(cfg?.elements) && cfg.elements.length > 0 && canvasElements.length === 0) {
+    console.log('🧩 [Jackpot] Hydration: applying canvas elements (canvasConfig)', cfg.elements.length);
+    setCanvasElements(cfg.elements);
+  } else if (Array.isArray(topLevelElements) && topLevelElements.length > 0 && canvasElements.length === 0) {
+    console.log('🧩 [Jackpot] Hydration: applying canvas elements (config.elements)', topLevelElements.length);
+    setCanvasElements(topLevelElements);
+  }
+
+  if (cfg?.screenBackgrounds) setScreenBackgrounds(cfg.screenBackgrounds);
+  if (cfg?.device) setSelectedDevice(cfg.device as any);
+
+  if (mp && mp.screens) {
+    const total = Object.values(mp.screens || {}).reduce((n: number, arr: any) => n + (Array.isArray(arr) ? arr.length : 0), 0);
+    if (total > 0) {
+      console.log('🧩 [Jackpot] Hydration: applying modularPage', total);
+      setModularPage(mp);
+    }
+  }
+}, [campaignState]);
+
+// 🔗 Miroir local → store: conserve les éléments dans campaign.config.canvasConfig afin d'éviter toute perte
+useEffect(() => {
+  setCampaign((prev: any) => {
+    if (!prev) return prev;
+    const next = {
+      ...prev,
+      config: {
+        ...(prev.config || {}),
+        canvasConfig: {
+          ...(prev.config?.canvasConfig || {}),
+          elements: canvasElements,
+          screenBackgrounds,
+          device: selectedDevice,
+          zoom: canvasZoom
+        },
+        // compat avec anciens loaders
+        elements: canvasElements
+      }
+    };
+    return next as any;
+  });
+}, [canvasElements, screenBackgrounds, selectedDevice, canvasZoom, setCampaign]);
+
+// 💾 Autosave léger des éléments du canvas
+useEffect(() => {
+  const id = (campaignState as any)?.id as string | undefined;
+  if (!id) return;
+  const t = window.setTimeout(async () => {
+    try {
+      const payload: any = {
+        ...(campaignState || {}),
+        canvasConfig: {
+          ...(campaignState as any)?.canvasConfig,
+          elements: canvasElements,
+          screenBackgrounds,
+          device: selectedDevice
+        }
+      };
+      console.log('💾 [JackpotEditor] Autosave canvas elements → DB', canvasElements.length);
+      await saveCampaignToDB(payload, saveCampaign);
+      setIsModified(false);
+    } catch (e) {
+      console.warn('⚠️ [JackpotEditor] Autosave failed', e);
+    }
+  }, 1000);
+  return () => clearTimeout(t);
+}, [campaignState?.id, canvasElements, screenBackgrounds, selectedDevice]);
 
   // Écoute l'évènement global pour appliquer l'image de fond à tous les écrans par device (desktop/tablette/mobile distinct)
   useEffect(() => {
