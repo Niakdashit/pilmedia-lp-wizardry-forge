@@ -6,6 +6,7 @@ import { getCampaignTypeIcon, CampaignType } from '../utils/campaignTypes';
 import { useCampaignsList } from '../hooks/useCampaignsList';
 import { supabase } from '@/integrations/supabase/client';
 import ConfirmModal from '@/components/shared/ConfirmModal';
+import { getEditorUrl } from '@/utils/editorRouting';
 
 interface ActionModalProps {
   isOpen: boolean;
@@ -334,25 +335,13 @@ const Campaigns: React.FC = () => {
                   {filteredCampaigns.map((campaign) => {
                     const CampaignIcon = getCampaignTypeIcon(campaign.type as CampaignType);
                     
-                    // Map campaign type to editor route
-                    const getEditorRoute = (type: string) => {
-                      const typeMap: Record<string, string> = {
-                        'wheel': '/design-editor',
-                        'quiz': '/quiz-editor',
-                        'jackpot': '/jackpot-editor',
-                        'scratch': '/scratch-editor',
-                        'form': '/form-editor',
-                      };
-                      return typeMap[type] || '/design-editor';
-                    };
-                    
                     const handleRowClick = (e: React.MouseEvent) => {
                       // Ignore clicks on interactive elements (toggle, action button)
                       const target = e.target as HTMLElement;
                       if (target.closest('input, button, a')) return;
                       
-                      const editorRoute = getEditorRoute(campaign.type);
-                      navigate(`${editorRoute}?campaign=${campaign.id}`);
+                      const editorUrl = getEditorUrl(campaign.type, campaign.id);
+                      navigate(editorUrl);
                     };
                     
                     return (
