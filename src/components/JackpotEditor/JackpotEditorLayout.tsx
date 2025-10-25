@@ -439,26 +439,40 @@ const JackpotEditorLayout: React.FC<JackpotEditorLayoutProps> = ({ mode = 'campa
     const currentId = (campaignState as any)?.id as string | undefined;
     const name = (newCampaignName || '').trim();
     if (!name) return;
-    const payload: any = currentId ? { id: currentId, name } : { name };
+
+    const isUuid = (v?: string) => !!v && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v);
+    const payload: any = isUuid(currentId) ? { id: currentId, name } : { name };
+
     let updated: any = null;
     try { updated = await saveCampaign(payload); } catch (e) { console.warn('saveCampaign failed', e); }
     if (updated) {
       setCampaign({
-        ...(campaignState as any),
+        ...campaignState,
         ...updated
       } as any);
+
+      // Ensure URL contains the real campaign UUID so next saves work
+      try {
+        const cid = (updated as any)?.id || currentId;
+        if (cid && !isUuid(currentId)) {
+          const sp = new URLSearchParams(location.search);
+          const modeParam = sp.get('mode');
+          const newUrl = modeParam ? `${location.pathname}?campaign=${cid}&mode=${modeParam}` : `${location.pathname}?campaign=${cid}`;
+          navigate(newUrl, { replace: true });
+        }
+      } catch {}
+
+      // Notify settings modal and persist to campaign_settings
       try {
         const cid = (updated as any)?.id || currentId;
         window.dispatchEvent(new CustomEvent('campaign:name:update', { detail: { campaignId: cid, name } }));
-      } catch {}
-      try {
-        const cid = (updated as any)?.id || currentId;
         if (cid) await upsertSettings(cid, { publication: { name } });
       } catch {}
+
       try { localStorage.setItem(`campaign:name:prompted:${(updated as any)?.id || currentId || 'new:jackpot'}`, '1'); } catch {}
       setIsNameModalOpen(false);
     }
-  }, [campaignState, newCampaignName, saveCampaign, setCampaign, upsertSettings]);
+  }, [campaignState, newCampaignName, saveCampaign, setCampaign, upsertSettings, location.pathname, location.search, navigate]);
   
   const [quizConfig, setQuizConfig] = useState({
     questionCount: 5,
