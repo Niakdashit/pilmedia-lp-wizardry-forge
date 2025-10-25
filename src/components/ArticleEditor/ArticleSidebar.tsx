@@ -286,6 +286,7 @@ const ArticleSidebar: React.FC<ArticleSidebarProps> = ({
                   formStep: {
                     ...articleConfig.funnelFlow?.formStep,
                     enabled: e.target.checked,
+                    position: articleConfig.funnelFlow?.formStep?.position || 'before-game',
                   },
                 },
               })}
@@ -343,6 +344,7 @@ const ArticleSidebar: React.FC<ArticleSidebarProps> = ({
               formStep: {
                 ...articleConfig.funnelFlow?.formStep,
                 position: e.target.value as 'before-game' | 'after-game',
+                enabled: articleConfig.funnelFlow?.formStep?.enabled ?? true,
               },
             },
           })}
