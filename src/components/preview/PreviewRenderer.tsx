@@ -1,5 +1,7 @@
 'use client';
 
+'use client';
+
 import React, { useState, useEffect, useMemo } from 'react';
 import StandardizedWheel from '../shared/StandardizedWheel';
 import TemplatedQuiz from '../shared/TemplatedQuiz';
@@ -12,6 +14,7 @@ import { useButtonStyleCSS } from '@/stores/buttonStore';
 import { DesignModuleRenderer } from '@/components/DesignEditor/DesignRenderer';
 import { QuizModuleRenderer } from '@/components/QuizEditor/QuizRenderer';
 import type { DesignScreenId } from '@/types/designEditorModular';
+import { isTempCampaignId } from '@/utils/tempCampaignId';
 
 interface PreviewRendererProps {
   campaign: any;
@@ -125,10 +128,15 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
   // Choix robuste: pour tout type ≠ 'quiz', privilégier designModules même si modularPage existe
   const isDesignModular = (campaign?.type !== 'quiz' && hasDesignModules) || (!hasQuizModularPage && hasDesignModules);
   
+  // CRITICAL: For temporary campaigns (not yet saved), force empty modules and neutral background
+  const isTempCampaign = isTempCampaignId(campaign?.id);
+  
   // Source des modules
-  const modularPage = isDesignModular 
-    ? (campaign?.design?.designModules || canonicalData.modularPage)
-    : ((campaign as any)?.modularPage?.screens ? (campaign as any).modularPage : (campaign?.design?.designModules || canonicalData.modularPage));
+  const modularPage = isTempCampaign 
+    ? { screens: { screen1: [], screen2: [], screen3: [] } }
+    : isDesignModular 
+      ? (campaign?.design?.designModules || canonicalData.modularPage)
+      : ((campaign as any)?.modularPage?.screens ? (campaign as any).modularPage : (campaign?.design?.designModules || canonicalData.modularPage));
   
   console.log('📦 [PreviewRenderer] Loading modules from:', {
     isDesignModular,
@@ -180,19 +188,26 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
       'campaign.design.screenBackgrounds': campaign?.design?.screenBackgrounds,
       'campaign.design.background': campaign?.design?.background,
       'currentScreen': currentScreen,
-      'forceUpdate': forceUpdate
+      'forceUpdate': forceUpdate,
+      'isTempCampaign': isTempCampaign
     });
     
+    // CRITICAL: For temporary campaigns, force neutral white background
+    if (isTempCampaign) {
+      console.log('🛡️ [PreviewRenderer] Temp campaign detected - forcing blank background');
+      return { background: '#ffffff' };
+    }
+    
     // Priorité 1: image de fond par écran stockée en session (localStorage) – la plus robuste entre Editor/Preview
-    // Using new CampaignStorage namespaced keys
+    // Using campaign-namespaced keys
     let perScreenImage: string | null = null;
     try {
       const campaignId = campaign?.id;
       const deviceKey = previewMode === 'mobile' ? 'mobile' : (previewMode === 'tablet' ? 'tablet' : 'desktop');
       
       if (campaignId) {
-        // Use CampaignStorage namespace format: campaign_<uuid>:bg-<device>-<screen>
-        const namespacedKey = `campaign_${campaignId}:bg-${deviceKey}-${currentScreen}`;
+        // Try new namespaced format first: quiz-bg-<campaignId>-<device>-<screen>
+        const namespacedKey = `quiz-bg-${campaignId}-${deviceKey}-${currentScreen}`;
         perScreenImage = typeof window !== 'undefined' ? (localStorage.getItem(namespacedKey) || null) : null;
         
         console.log(`🔍 [PreviewRenderer] Checking localStorage for ${currentScreen}:`, {

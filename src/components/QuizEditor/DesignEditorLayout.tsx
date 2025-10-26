@@ -226,7 +226,8 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
     setIsLoading,
     setIsModified,
     saveToCampaignCache,
-    loadFromCampaignCache
+    loadFromCampaignCache,
+    initializeNewCampaignWithId
   } = useEditorStore();
   const isNewCampaignGlobal = useEditorStore((s) => s.isNewCampaignGlobal);
   const beginNewCampaign = useEditorStore((s) => s.beginNewCampaign);
@@ -362,16 +363,26 @@ const { syncAllStates } = useCampaignStateSync();
       // Générer un ID temporaire unique
       const tempId = generateTempCampaignId('quiz');
       
-      // Nettoyer toutes les données pour garantir une campagne vierge
+      // CRITICAL: Nettoyer TOUTES les données d'abord pour garantir une campagne vierge
       clearTempCampaignData(tempId);
       
-      // Assigner l'ID temporaire
-      try { 
-        selectCampaign(tempId, 'quiz');
-        
-        // Mettre à jour l'URL pour inclure le temp ID
-        navigate(`${location.pathname}?campaign=${tempId}${searchParams.get('mode') ? `&mode=${searchParams.get('mode')}` : ''}`, { replace: true });
+      // Purge additionnelle des clés legacy non-namespacées
+      try {
+        const devices: Array<'desktop' | 'tablet' | 'mobile'> = ['desktop', 'tablet', 'mobile'];
+        const screens: Array<'screen1' | 'screen2' | 'screen3'> = ['screen1', 'screen2', 'screen3'];
+        devices.forEach((d) => screens.forEach((s) => {
+          try { localStorage.removeItem(`quiz-modules-${d}-${s}`); } catch {}
+          try { localStorage.removeItem(`quiz-bg-${d}-${s}`); } catch {}
+          try { localStorage.removeItem(`design-bg-${d}-${s}`); } catch {}
+        }));
       } catch {}
+      
+      // CRITICAL: Initialiser la campagne avec l'ID temporaire dans le store
+      // pour que campaign.id soit défini immédiatement et évite les fallback 'global'
+      initializeNewCampaignWithId('quiz', tempId);
+      
+      // Mettre à jour l'URL pour inclure le temp ID
+      navigate(`${location.pathname}?campaign=${tempId}${searchParams.get('mode') ? `&mode=${searchParams.get('mode')}` : ''}`, { replace: true });
       
       requestAnimationFrame(() => clearNewCampaignFlag());
     } else {
