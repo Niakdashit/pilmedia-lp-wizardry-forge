@@ -351,10 +351,17 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
   const templateDesktopWidth = React.useMemo(() => `${activeTemplate?.style?.containerWidth ?? 450}px`, [activeTemplate]);
   const templateMobileWidth = React.useMemo(() => `${activeTemplate?.style?.containerWidth ?? 450}px`, [activeTemplate]);
 
-  // Fonction interne pour gérer le changement d'onglet
-  const setActiveTab = (tab: string | null) => {
-    setInternalActiveTab(tab);
-    onActiveTabChange?.(tab);
+  // Fonction interne pour gérer le changement d'onglet (supporte valeur ou updater fonctionnel)
+  const setActiveTab = (
+    nextOrUpdater: string | null | ((prev: string | null) => string | null)
+  ) => {
+    setInternalActiveTab((prev) => {
+      const next = typeof nextOrUpdater === 'function' ? (nextOrUpdater as any)(prev) : nextOrUpdater;
+      if (next !== prev) {
+        onActiveTabChange?.(next);
+      }
+      return next;
+    });
   };
   
   // État pour le menu déroulant des écrans
@@ -448,7 +455,6 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
     showQuizPanel,
     showWheelPanel,
     showDesignPanel,
-    activeTab,
     onDesignPanelChange,
     editorMode
   ]);
