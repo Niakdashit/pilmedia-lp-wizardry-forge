@@ -240,6 +240,7 @@ const { syncAllStates } = useCampaignStateSync();
   
   // CRITICAL: Reset all local state when campaign ID changes to ensure complete isolation
   const prevCampaignIdRef = useRef<string | undefined>(undefined);
+  const dataHydratedRef = useRef(false);
   useEffect(() => {
     const currentCampaignId = (campaignState as any)?.id;
     const prevCampaignId = prevCampaignIdRef.current;
@@ -259,6 +260,7 @@ const { syncAllStates } = useCampaignStateSync();
       });
       setCanvasBackground(defaultBackground);
       bgHydratedRef.current = false;
+      dataHydratedRef.current = false;
       bgAppliedRef.current = {};
       
       // Reset modular page
@@ -273,6 +275,7 @@ const { syncAllStates } = useCampaignStateSync();
           try { localStorage.removeItem(`quiz-bg-${newId}-${d}-${s}`); } catch {}
           try { localStorage.removeItem(`quiz-bg-${d}-${s}`); } catch {}
         }));
+        try { if (currentCampaignId) localStorage.setItem('quiz-bg-owner', String(currentCampaignId)); } catch {}
       } catch {}
     }
     
@@ -922,6 +925,7 @@ const handleSaveCampaignName = useCallback(async () => {
     const id = (campaignState as any)?.id as string | undefined;
     if (!id) return;
     if (!bgHydratedRef.current) return; // avoid saving defaults over persisted data
+    if (!dataHydratedRef.current) return; // ensure modularPage/elements are hydrated for this campaign
     
     // Guard: only autosave if campaign has valid UUID
     const isUuid = (v?: string) => !!v && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v);
@@ -963,7 +967,7 @@ const handleSaveCampaignName = useCallback(async () => {
       } catch (e) {
         console.warn('⚠️ [QuizEditor] Autosave failed', e);
       }
-    }, 1000);
+    }, 1500);
     return () => clearTimeout(t);
   }, [campaignState?.id, canvasElements, screenBackgrounds, selectedDevice, modularPage]);
 
