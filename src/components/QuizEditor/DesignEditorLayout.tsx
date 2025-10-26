@@ -246,6 +246,8 @@ useEffect(() => {
 }, [campaignState?.id]);
 
 // 🔄 Load campaign data from Supabase when campaign ID is in URL
+const lastLoadedCampaignIdRef = useRef<string | null>(null);
+
 useEffect(() => {
   const sp = new URLSearchParams(location.search);
   const campaignId = sp.get('campaign');
@@ -253,24 +255,23 @@ useEffect(() => {
   
   if (!campaignId || !isUuid(campaignId)) return;
   
-  const currentCampaignId = (campaignState as any)?.id;
+  // Skip if this campaign was already loaded
+  if (lastLoadedCampaignIdRef.current === campaignId) {
+    console.log('✅ [QuizEditor] Campaign already loaded:', campaignId);
+    return;
+  }
   
   // If switching to a different campaign, reset everything first
-  if (currentCampaignId && currentCampaignId !== campaignId) {
+  if (lastLoadedCampaignIdRef.current && lastLoadedCampaignIdRef.current !== campaignId) {
     console.log('🔄 [QuizEditor] Switching campaigns, resetting state:', {
-      from: currentCampaignId,
+      from: lastLoadedCampaignIdRef.current,
       to: campaignId
     });
     useEditorStore.getState().resetCampaign();
   }
   
-  // Skip if this campaign is already loaded
-  if (currentCampaignId === campaignId) {
-    console.log('✅ [QuizEditor] Campaign already loaded:', campaignId);
-    return;
-  }
-  
   console.log('🔄 [QuizEditor] Loading campaign from Supabase:', campaignId);
+  lastLoadedCampaignIdRef.current = campaignId;
   
   const loadCampaignData = async () => {
     try {
@@ -311,11 +312,12 @@ useEffect(() => {
       }
     } catch (error) {
       console.error('❌ [QuizEditor] Failed to load campaign:', error);
+      lastLoadedCampaignIdRef.current = null; // Reset on error to allow retry
     }
   };
   
   loadCampaignData();
-}, [location.search, campaignState, setCampaign]);
+}, [location.search]); // Only depend on URL changes
   
 // Campaign state synchronization hook
 const { syncAllStates } = useCampaignStateSync();
