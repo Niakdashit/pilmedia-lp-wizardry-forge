@@ -227,7 +227,31 @@ const { syncAllStates } = useCampaignStateSync();
     const params = new URLSearchParams(location.search);
     const cid = params.get('campaign');
     if (!cid) {
+      console.log('🆕 [QuizEditor] New campaign detected - resetting all state');
       beginNewCampaign('quiz');
+      
+      // Reset all local state for new campaign
+      setCanvasElements([]);
+      setModularPage(createEmptyModularPage());
+      modularPageHydratedRef.current = false;
+      setScreenBackgrounds({
+        screen1: defaultBackground,
+        screen2: defaultBackground,
+        screen3: defaultBackground
+      });
+      setCanvasBackground(defaultBackground);
+      bgHydratedRef.current = false;
+      bgAppliedRef.current = {};
+      
+      // Clear localStorage for clean slate
+      try {
+        const screens: Array<'screen1' | 'screen2' | 'screen3'> = ['screen1','screen2','screen3'];
+        const devices: Array<'desktop' | 'tablet' | 'mobile'> = ['desktop','tablet','mobile'];
+        screens.forEach((s) => devices.forEach((d) => {
+          try { localStorage.removeItem(`quiz-bg-${d}-${s}`); } catch {}
+        }));
+      } catch {}
+      
       // Assigner un selectedCampaignId temporaire (pour garde éventuelle) sans sauvegarde DB
       const tempId = `temp-quiz-${Date.now()}`;
       try { selectCampaign(tempId, 'quiz'); } catch {}
@@ -244,8 +268,10 @@ const { syncAllStates } = useCampaignStateSync();
     const currentCampaignId = (campaignState as any)?.id;
     const prevCampaignId = prevCampaignIdRef.current;
     
-    // If campaign ID changed, reset all local states to prevent data mixing
-    if (prevCampaignId && currentCampaignId && prevCampaignId !== currentCampaignId) {
+    console.log('🔍 [QuizEditor] Campaign ID check:', { prevCampaignId, currentCampaignId });
+    
+    // If campaign ID changed (including from undefined to an ID or vice versa), reset all local states
+    if (currentCampaignId !== prevCampaignId && (prevCampaignId !== undefined || currentCampaignId)) {
       console.log('🔄 [QuizEditor] Campaign changed from', prevCampaignId, 'to', currentCampaignId, '→ Resetting all local state');
       
       // Reset canvas elements
@@ -261,21 +287,25 @@ const { syncAllStates } = useCampaignStateSync();
       bgHydratedRef.current = false;
       bgAppliedRef.current = {};
       
-      // Reset modular page
+      // Reset modular page with explicit empty state
+      console.log('🧹 [QuizEditor] Clearing modularPage');
       setModularPage(createEmptyModularPage());
+      modularPageHydratedRef.current = false;
       
       // Clear localStorage backgrounds for clean slate
       try {
         const screens: Array<'screen1' | 'screen2' | 'screen3'> = ['screen1','screen2','screen3'];
         const devices: Array<'desktop' | 'tablet' | 'mobile'> = ['desktop','tablet','mobile'];
         screens.forEach((s) => devices.forEach((d) => {
-          try { localStorage.removeItem(`quiz-bg-${d}-${s}`); } catch {}
+          try { 
+            localStorage.removeItem(`quiz-bg-${d}-${s}`);
+          } catch {}
         }));
       } catch {}
     }
     
     prevCampaignIdRef.current = currentCampaignId;
-  }, [campaignState?.id]);
+  }, [(campaignState as any)?.id]);
 
   // État local pour la compatibilité existante
   const [selectedDevice, setSelectedDevice] = useState<'desktop' | 'tablet' | 'mobile'>(actualDevice);
@@ -302,6 +332,7 @@ const { syncAllStates } = useCampaignStateSync();
   });
   // Hydration flag to avoid overwriting DB with defaults before campaign data is applied
   const bgHydratedRef = useRef(false);
+  const modularPageHydratedRef = useRef(false);
   
   // Background global (fallback pour compatibilité)
   const [canvasBackground, setCanvasBackground] = useState<{ type: 'color' | 'image'; value: string }>(defaultBackground);
@@ -392,11 +423,13 @@ useEffect(() => {
 
   // (projection top-level retirée pour éviter des boucles de mise à jour)
 
-  if (mp && mp.screens) {
-    const total = Object.values(mp.screens || {}).reduce((n: number, arr: any) => n + (Array.isArray(arr) ? arr.length : 0), 0);
-    if (total > 0) {
-      console.log('🧩 [QuizEditor] Hydration: applying modularPage', total);
+  // CRITICAL: Only hydrate modularPage once, if we have data from DB and haven't hydrated yet
+  if (mp && mp.screens && !modularPageHydratedRef.current) {
+    const dbModuleCount = Object.values(mp.screens || {}).reduce((n: number, arr: any) => n + (Array.isArray(arr) ? arr.length : 0), 0);
+    if (dbModuleCount > 0) {
+      console.log('🧩 [QuizEditor] Hydration: applying modularPage', dbModuleCount);
       setModularPage(mp);
+      modularPageHydratedRef.current = true;
     }
   }
 }, [campaignState]);
