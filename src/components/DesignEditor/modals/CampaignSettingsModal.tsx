@@ -1,11 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { X } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useCampaignSettings, CampaignSettings } from '@/hooks/useCampaignSettings';
 import ChannelsStep from '@/pages/CampaignSettings/ChannelsStep';
 import ParametersStep from '@/pages/CampaignSettings/ParametersStep';
 import OutputStep from '@/pages/CampaignSettings/OutputStep';
 import ViralityStep from '@/pages/CampaignSettings/ViralityStep';
 import { useEditorStore } from '@/stores/editorStore';
+import { useCampaigns } from '@/hooks/useCampaigns';
+import { saveCampaignToDB } from '@/hooks/useModernCampaignEditor/saveHandler';
+import { getEditorUrl } from '@/utils/editorRouting';
 
 interface CampaignSettingsModalProps {
   isOpen: boolean;
@@ -21,11 +25,15 @@ const steps = [
 ];
 
 const CampaignSettingsModal: React.FC<CampaignSettingsModalProps> = ({ isOpen, onClose, campaignId }) => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('channels');
   const { getSettings, upsertSettings, loading, error, saveDraft } = useCampaignSettings();
   const [form, setForm] = useState<Partial<CampaignSettings>>({});
   const effectiveCampaignId = campaignId || '';
   const campaignStoreName = useEditorStore((s) => (s.campaign as any)?.name as string | undefined);
+  const campaign = useEditorStore((s) => s.campaign);
+  const setCampaign = useEditorStore((s) => s.setCampaign);
+  const { saveCampaign } = useCampaigns();
 
 // Load settings when modal opens
 useEffect(() => {
@@ -65,36 +73,76 @@ useEffect(() => {
   }, [isOpen, effectiveCampaignId]);
 
   const handleSaveAndClose = async () => {
-    if (!effectiveCampaignId) return;
-    
-    // Normalize publication: combine startDate/startTime and endDate/endTime if present
-    const pub: any = { ...(form.publication || {}) };
-    const combine = (d?: string, t?: string) =>
-      d && t ? `${d}T${t}` : (d ? `${d}T00:00` : (t ? `${new Date().toISOString().slice(0,10)}T${t}` : ''));
-    pub.start = pub.start || combine(pub.startDate, pub.startTime);
-    pub.end = pub.end || combine(pub.endDate, pub.endTime);
+    try {
+      // Step 1: Save the campaign itself (with all design, config, etc.)
+      let savedCampaignId = effectiveCampaignId;
+      
+      // If no campaign ID yet, save campaign to DB first to get ID
+      if (!effectiveCampaignId || effectiveCampaignId === 'new' || effectiveCampaignId === 'preview') {
+        if (!campaign) {
+          alert('Aucune campagne à sauvegarder');
+          return;
+        }
+        
+        console.log('💾 [CampaignSettingsModal] Saving new campaign to DB...');
+        const savedCampaign = await saveCampaignToDB(campaign, saveCampaign);
+        
+        if (!savedCampaign?.id) {
+          alert('Erreur lors de la sauvegarde de la campagne');
+          return;
+        }
+        
+        savedCampaignId = savedCampaign.id;
+        
+        // Update campaign state with new ID
+        setCampaign({ ...campaign, id: savedCampaignId } as any);
+        console.log('✅ [CampaignSettingsModal] Campaign saved with ID:', savedCampaignId);
+      }
+      
+      // Step 2: Save campaign settings
+      console.log('💾 [CampaignSettingsModal] Saving campaign settings...');
+      const pub: any = { ...(form.publication || {}) };
+      const combine = (d?: string, t?: string) =>
+        d && t ? `${d}T${t}` : (d ? `${d}T00:00` : (t ? `${new Date().toISOString().slice(0,10)}T${t}` : ''));
+      pub.start = pub.start || combine(pub.startDate, pub.startTime);
+      pub.end = pub.end || combine(pub.endDate, pub.endTime);
 
-    const saved = await upsertSettings(effectiveCampaignId, {
-      publication: pub,
-      campaign_url: form.campaign_url ?? {},
-      soft_gate: form.soft_gate ?? {},
-      limits: form.limits ?? {},
-      email_verification: form.email_verification ?? {},
-      legal: form.legal ?? {},
-      winners: form.winners ?? {},
-      output: form.output ?? {},
-      data_push: form.data_push ?? {},
-      advanced: form.advanced ?? {},
-      opt_in: form.opt_in ?? {},
-      tags: form.tags ?? [],
-    });
+      const saved = await upsertSettings(savedCampaignId, {
+        publication: pub,
+        campaign_url: form.campaign_url ?? {},
+        soft_gate: form.soft_gate ?? {},
+        limits: form.limits ?? {},
+        email_verification: form.email_verification ?? {},
+        legal: form.legal ?? {},
+        winners: form.winners ?? {},
+        output: form.output ?? {},
+        data_push: form.data_push ?? {},
+        advanced: form.advanced ?? {},
+        opt_in: form.opt_in ?? {},
+        tags: form.tags ?? [],
+      });
 
-    if (saved) {
-      try { window.dispatchEvent(new CustomEvent('campaign:settings:saved')); } catch {}
-      onClose();
-    } else {
-      try { saveDraft(effectiveCampaignId, form); } catch {}
-      alert('Sauvegarde distante échouée, un brouillon local a été enregistré.');
+      if (saved) {
+        console.log('✅ [CampaignSettingsModal] Settings saved successfully');
+        try { window.dispatchEvent(new CustomEvent('campaign:settings:saved')); } catch {}
+        
+        // Step 3: Redirect to editor with campaign ID
+        if (campaign?.type) {
+          const editorUrl = getEditorUrl(campaign.type, savedCampaignId);
+          console.log('🔄 [CampaignSettingsModal] Redirecting to:', editorUrl);
+          
+          onClose();
+          navigate(editorUrl);
+        } else {
+          onClose();
+        }
+      } else {
+        try { saveDraft(savedCampaignId, form); } catch {}
+        alert('Sauvegarde distante échouée, un brouillon local a été enregistré.');
+      }
+    } catch (error) {
+      console.error('❌ [CampaignSettingsModal] Error saving:', error);
+      alert('Erreur lors de la sauvegarde');
     }
   };
 

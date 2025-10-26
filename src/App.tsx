@@ -29,6 +29,7 @@ const Auth = lazy(() => import('./pages/Auth'));
 const Profile = lazy(() => import('./pages/Profile'));
 const Admin = lazy(() => import('./pages/Admin'));
 const MediaPortal = lazy(() => import('./pages/MediaPortal'));
+const CampaignSettings = lazy(() => import('./pages/CampaignSettings'));
 
 function App() {
   // Idle prefetch heavy editor routes to smooth first navigation without impacting TTI
@@ -96,6 +97,9 @@ function App() {
               <Route path="/template-editor" element={<TemplateEditor />} />
               <Route path="/mobile-test" element={<MobileTestPage />} />
               <Route path="/mobile-complete-test" element={<MobileCompleteTestPage />} />
+              
+              {/* Campaign Settings - Standalone page */}
+              <Route path="/campaign/:id/settings" element={<CampaignSettings />} />
             </Routes>
           </Suspense>
         </Router>

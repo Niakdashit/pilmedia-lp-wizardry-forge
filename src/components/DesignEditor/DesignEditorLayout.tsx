@@ -3,6 +3,7 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState, lazy } from 'react';
 import CampaignValidationModal from '@/components/shared/CampaignValidationModal';
+import CampaignModeSelectionModal from '@/components/shared/CampaignModeSelectionModal';
 import { useCampaignValidation } from '@/hooks/useCampaignValidation';
 // Align routing with QuizEditor via router adapter
 import { useLocation, useNavigate } from '@/lib/router-adapter';
@@ -50,6 +51,9 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
   // Détection du mode Article via URL (?mode=article)
   const searchParams = new URLSearchParams(location.search);
   const editorMode: 'article' | 'fullscreen' = searchParams.get('mode') === 'article' ? 'article' : 'fullscreen';
+  
+  // Mode selection modal state
+  const [showModeSelection, setShowModeSelection] = useState(false);
   
   console.log('🎨 [DesignEditorLayout] Editor Mode:', editorMode);
   
@@ -111,6 +115,40 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
 
   // Charger campagne depuis URL si présente
   const { campaign: urlCampaign, loading: urlLoading, error: urlError } = useCampaignFromUrl();
+
+  // Check if we need to show mode selection on initial load
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const campaignId = searchParams.get('campaign');
+    const modeParam = searchParams.get('mode');
+    
+    // Valider que c'est un UUID valide
+    const isValidUuid = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id);
+    
+    // Show mode selection if: no campaign ID AND no mode specified
+    if (!campaignId || !isValidUuid(campaignId)) {
+      if (!modeParam) {
+        console.log('🎯 [DesignEditor] No campaign ID and no mode → showing mode selection');
+        setShowModeSelection(true);
+      } else {
+        console.log('🎯 [DesignEditor] Mode already selected:', modeParam);
+        setShowModeSelection(false);
+      }
+    }
+  }, [location.search]);
+  
+  // Handle mode selection
+  const handleModeSelect = (selectedMode: 'fullscreen' | 'article') => {
+    console.log('🎯 [DesignEditor] Mode selected:', selectedMode);
+    setShowModeSelection(false);
+    
+    // Update URL with selected mode
+    const searchParams = new URLSearchParams(location.search);
+    searchParams.set('mode', selectedMode);
+    navigate(`${location.pathname}?${searchParams.toString()}`, { replace: true });
+    
+    // The name modal will be shown automatically by existing logic
+  };
 
   // Créer une campagne vide UNIQUEMENT si aucun UUID valide dans l'URL
   useEffect(() => {
@@ -3128,6 +3166,14 @@ useEffect(() => {
         errors={validation.errors}
         onOpenSettings={() => window.dispatchEvent(new Event('openCampaignSettingsModal'))}
       />
+      
+      {/* Mode selection modal - shown first for new campaigns */}
+      <CampaignModeSelectionModal
+        isOpen={showModeSelection}
+        onSelect={handleModeSelect}
+        onClose={() => setShowModeSelection(false)}
+      />
+      
       {/* First-time campaign name modal */}
       {isNameModalOpen && (
         <div className="fixed inset-0 z-[10000] flex items-center justify-center">
