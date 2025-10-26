@@ -104,6 +104,9 @@ interface EditorActions {
   // Initialize a fresh new campaign
   initializeNewCampaign: (type: string) => void;
   
+  // Initialize a fresh new campaign with a specific ID
+  initializeNewCampaignWithId: (type: string, campaignId: string) => void;
+  
   // Select a campaign for an editor
   selectCampaign: (campaignId: string, editorType?: string) => void;
 
@@ -153,14 +156,26 @@ export const useEditorStore = create<EditorStore>()(
       const newCampaign = typeof updater === 'function' ? updater(state.campaign) : updater;
       
       if (newCampaign) {
+        // Deep clone to ensure complete isolation between campaigns
+        const clonedCampaign = JSON.parse(JSON.stringify({
+          ...newCampaign,
+          _lastUpdate: Date.now(),
+          _version: (state.campaign?._version || 0) + 1
+        }));
+        
         set({
-          campaign: {
-            ...newCampaign,
-            _lastUpdate: Date.now(),
-            _version: (state.campaign?._version || 0) + 1
-          },
+          campaign: clonedCampaign,
           isModified: true,
           updateCounter: state.updateCounter + 1,
+          lastUpdateTime: Date.now()
+        });
+      } else {
+        // If setting to null, fully reset
+        set({
+          campaign: null,
+          isModified: false,
+          selectedElementId: null,
+          updateCounter: 0,
           lastUpdateTime: Date.now()
         });
       }
@@ -359,6 +374,48 @@ export const useEditorStore = create<EditorStore>()(
       
       set({
         campaign: freshCampaign,
+        isModified: false,
+        selectedElementId: null,
+        updateCounter: 0,
+        lastUpdateTime: Date.now()
+      });
+    },
+    
+    initializeNewCampaignWithId: (type: string, campaignId: string) => {
+      console.log('🆕 [EditorStore] Initializing fresh new campaign with ID:', campaignId, 'type:', type);
+      const validType = ['wheel', 'scratch', 'jackpot', 'quiz', 'dice', 'form', 'memory', 'puzzle'].includes(type) 
+        ? type as OptimizedCampaign['type']
+        : 'wheel';
+      
+      // Clear per-screen background cache across devices so new campaign starts clean
+      try {
+        const screens: Array<'screen1' | 'screen2' | 'screen3'> = ['screen1','screen2','screen3'];
+        const devices: Array<'desktop' | 'tablet' | 'mobile'> = ['desktop','tablet','mobile'];
+        screens.forEach((s) => devices.forEach((d) => {
+          try { localStorage.removeItem(`quiz-bg-${d}-${s}`); } catch {}
+        }));
+        try { localStorage.removeItem('quiz-bg-owner'); } catch {}
+      } catch {}
+
+      const freshCampaign: OptimizedCampaign = {
+        id: campaignId,
+        name: 'Nouvelle campagne',
+        type: validType,
+        design: {
+          background: '#ffffff',
+          customTexts: [],
+          customImages: []
+        },
+        gameConfig: {},
+        buttonConfig: {},
+        _lastUpdate: Date.now(),
+        _version: 1,
+        _initialized: true
+      };
+      
+      set({
+        campaign: freshCampaign,
+        selectedCampaignId: campaignId,
         isModified: false,
         selectedElementId: null,
         updateCounter: 0,

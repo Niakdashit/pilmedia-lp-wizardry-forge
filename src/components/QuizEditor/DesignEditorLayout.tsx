@@ -237,6 +237,45 @@ const { syncAllStates } = useCampaignStateSync();
       if (isNewCampaignGlobal) clearNewCampaignFlag();
     }
   }, [location.search]);
+  
+  // CRITICAL: Reset all local state when campaign ID changes to ensure complete isolation
+  const prevCampaignIdRef = useRef<string | undefined>(undefined);
+  useEffect(() => {
+    const currentCampaignId = (campaignState as any)?.id;
+    const prevCampaignId = prevCampaignIdRef.current;
+    
+    // If campaign ID changed, reset all local states to prevent data mixing
+    if (prevCampaignId && currentCampaignId && prevCampaignId !== currentCampaignId) {
+      console.log('🔄 [QuizEditor] Campaign changed from', prevCampaignId, 'to', currentCampaignId, '→ Resetting all local state');
+      
+      // Reset canvas elements
+      setCanvasElements([]);
+      
+      // Reset backgrounds
+      setScreenBackgrounds({
+        screen1: defaultBackground,
+        screen2: defaultBackground,
+        screen3: defaultBackground
+      });
+      setCanvasBackground(defaultBackground);
+      bgHydratedRef.current = false;
+      bgAppliedRef.current = {};
+      
+      // Reset modular page
+      setModularPage(createEmptyModularPage());
+      
+      // Clear localStorage backgrounds for clean slate
+      try {
+        const screens: Array<'screen1' | 'screen2' | 'screen3'> = ['screen1','screen2','screen3'];
+        const devices: Array<'desktop' | 'tablet' | 'mobile'> = ['desktop','tablet','mobile'];
+        screens.forEach((s) => devices.forEach((d) => {
+          try { localStorage.removeItem(`quiz-bg-${d}-${s}`); } catch {}
+        }));
+      } catch {}
+    }
+    
+    prevCampaignIdRef.current = currentCampaignId;
+  }, [campaignState?.id]);
 
   // État local pour la compatibilité existante
   const [selectedDevice, setSelectedDevice] = useState<'desktop' | 'tablet' | 'mobile'>(actualDevice);
