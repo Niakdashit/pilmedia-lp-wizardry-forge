@@ -1,7 +1,6 @@
 // @ts-nocheck
 import React, { useState, useMemo, useEffect, useRef, useCallback, lazy } from 'react';
 import CampaignValidationModal from '@/components/shared/CampaignValidationModal';
-import CampaignModeSelectionModal from '@/components/shared/CampaignModeSelectionModal';
 import { useCampaignValidation } from '@/hooks/useCampaignValidation';
 // Align routing with QuizEditor via router adapter
 import { useLocation, useNavigate } from '@/lib/router-adapter';
@@ -127,9 +126,6 @@ const JackpotEditorLayout: React.FC<JackpotEditorLayoutProps> = ({ mode = 'campa
   const searchParams = new URLSearchParams(location.search);
   const editorMode: 'article' | 'fullscreen' = searchParams.get('mode') === 'article' ? 'article' : 'fullscreen';
   
-  // Mode selection modal state
-  const [showModeSelection, setShowModeSelection] = useState(false);
-  
   console.log('🎨 [JackpotEditorLayout] Editor Mode:', editorMode);
   const getTemplateBaseWidths = useCallback((templateId?: string) => {
     const template = quizTemplates.find((tpl) => tpl.id === templateId) || quizTemplates[0];
@@ -209,40 +205,6 @@ const JackpotEditorLayout: React.FC<JackpotEditorLayoutProps> = ({ mode = 'campa
   
   // Campaign state synchronization hook
   const { syncAllStates } = useCampaignStateSync();
-
-  // Check if we need to show mode selection on initial load
-  useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const campaignId = params.get('campaign');
-    const modeParam = params.get('mode');
-    
-    // Valider que c'est un UUID valide
-    const isValidUuid = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id);
-    
-    // Show mode selection if: no campaign ID AND no mode specified
-    if (!campaignId || !isValidUuid(campaignId)) {
-      if (!modeParam) {
-        console.log('🎯 [JackpotEditor] No campaign ID and no mode → showing mode selection');
-        setShowModeSelection(true);
-      } else {
-        console.log('🎯 [JackpotEditor] Mode already selected:', modeParam);
-        setShowModeSelection(false);
-      }
-    }
-  }, [location.search]);
-  
-  // Handle mode selection
-  const handleModeSelect = (selectedMode: 'fullscreen' | 'article') => {
-    console.log('🎯 [JackpotEditor] Mode selected:', selectedMode);
-    setShowModeSelection(false);
-    
-    // Update URL with selected mode
-    const params = new URLSearchParams(location.search);
-    params.set('mode', selectedMode);
-    navigate(`${location.pathname}?${params.toString()}`, { replace: true });
-    
-    // The name modal will be shown automatically by existing logic
-  };
 
   // Charger campagne depuis l'URL (déclarer tôt pour éviter TDZ)
   const { campaign: urlCampaign } = useCampaignFromUrl();
@@ -3731,13 +3693,7 @@ useEffect(() => {
         onOpenSettings={() => window.dispatchEvent(new Event('openCampaignSettingsModal'))}
       />
       
-      {/* Mode selection modal - shown first for new campaigns */}
-      <CampaignModeSelectionModal
-        isOpen={showModeSelection}
-        onSelect={handleModeSelect}
-        onClose={() => setShowModeSelection(false)}
-      />
-      
+      {/* First-time campaign name modal */}
       {/* First-time campaign name modal */}
       {isNameModalOpen && (
         <div className="fixed inset-0 z-[10000] flex items-center justify-center">
