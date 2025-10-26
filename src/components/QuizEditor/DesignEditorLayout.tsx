@@ -927,7 +927,6 @@ const handleSaveCampaignName = useCallback(async () => {
     const id = (campaignState as any)?.id as string | undefined;
     if (!id) return;
     if (!bgHydratedRef.current) return; // avoid saving defaults over persisted data
-    if (!dataHydratedRef.current) return; // ensure modularPage/elements are hydrated for this campaign
     
     // Guard: only autosave if campaign has valid UUID
     const isUuid = (v?: string) => !!v && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v);
