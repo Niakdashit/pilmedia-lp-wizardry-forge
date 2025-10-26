@@ -403,6 +403,10 @@ useEffect(() => {
   const [selectedModuleId, setSelectedModuleId] = useState<string | null>(null);
   const lastModuleSelectionRef = useRef<string | null>(null);
   
+  // Fix: ensure local selection state exists
+  const [selectedElement, setSelectedElement] = useState<any | null>(null);
+  const [selectedElements, setSelectedElements] = useState<any[]>([]);
+  
   const selectedModule: Module | null = useMemo(() => {
     if (!selectedModuleId) return null;
     const allModules = (Object.values(modularPage.screens) as Module[][]).flat();
