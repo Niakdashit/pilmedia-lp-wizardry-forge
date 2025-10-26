@@ -387,11 +387,10 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
   React.useEffect(() => {
     const prev = prevStatesRef.current;
     
-    // Utiliser la version fonctionnelle de setState pour éviter la dépendance à internalActiveTab
-    setActiveTab(currentTab => {
+    // Mettre à jour l'onglet actif en interne uniquement (aucune propagation au parent ici)
+    setInternalActiveTab((currentTab) => {
       let newActiveTab = currentTab;
       
-      // Vérifier si un panneau a été activé/désactivé
       const panelStates = [
         { key: 'effects', active: showEffectsPanel, prevActive: prev.showEffectsPanel },
         { key: 'animations', active: showAnimationsPanel, prevActive: prev.showAnimationsPanel },
@@ -401,26 +400,17 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
         { key: 'background', active: showDesignPanel, prevActive: prev.showDesignPanel }
       ];
 
-      // Si le panneau Quiz est activé, forcer l'onglet quiz
       if (showQuizPanel && !prev.showQuizPanel) {
         newActiveTab = 'quiz';
-      }
-      // Si le panneau Wheel est activé, forcer l'onglet wheel
-      else if (showWheelPanel && !prev.showWheelPanel) {
+      } else if (showWheelPanel && !prev.showWheelPanel) {
         newActiveTab = 'wheel';
-      }
-      // Si le panneau Design est activé, forcer l'onglet background (sauf si déjà sur background)
-      else if (showDesignPanel && !prev.showDesignPanel && currentTab !== 'background') {
+      } else if (showDesignPanel && !prev.showDesignPanel && currentTab !== 'background') {
         newActiveTab = 'background';
-      } 
-      // Si un autre panneau a été activé, basculer vers son onglet correspondant
-      else {
+      } else {
         const activatedPanel = panelStates.find(p => p.active && !p.prevActive && p.key !== 'background' && p.key !== 'quiz' && p.key !== 'wheel');
         if (activatedPanel) {
           newActiveTab = activatedPanel.key;
-        } 
-        // Si l'onglet actif est un panneau qui a été désactivé, revenir à 'game' pour wheel ou 'elements' pour les autres
-        else if (panelStates.some(p => p.key === currentTab && !p.active && p.prevActive)) {
+        } else if (panelStates.some(p => p.key === currentTab && !p.active && p.prevActive)) {
           newActiveTab = currentTab === 'wheel' ? 'game' : 'elements';
         }
       }
@@ -436,7 +426,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
         activeTab: newActiveTab
       };
 
-      // Notifier le parent des changements de l'onglet Design
+      // Notifier le parent pour le seul état Design, pas pour l'onglet
       const isDesignActive = newActiveTab === 'background' || showDesignPanel;
       if (onDesignPanelChange && isDesignActive !== prev.showDesignPanel) {
         onDesignPanelChange(isDesignActive);
@@ -445,18 +435,18 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
       return newActiveTab;
     });
   }, [
-    showEffectsPanel, 
-    showAnimationsPanel, 
-    showPositionPanel, 
+    showEffectsPanel,
+    showAnimationsPanel,
+    showPositionPanel,
     showQuizPanel,
     showWheelPanel,
     showDesignPanel,
     onDesignPanelChange
   ]);
 
-  // Fermer automatiquement le panneau d'effets si aucun élément texte n'est sélectionné
   React.useEffect(() => {
-    setActiveTab(currentTab => {
+    // Ferme le panneau d'effets et revient aux éléments sans remonter l'info au parent
+    setInternalActiveTab((currentTab) => {
       if (currentTab === 'effects' && (!selectedElement || selectedElement.type !== 'text')) {
         onEffectsPanelChange?.(false);
         return 'elements';
