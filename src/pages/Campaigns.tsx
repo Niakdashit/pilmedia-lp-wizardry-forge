@@ -79,6 +79,7 @@ const Campaigns: React.FC = () => {
   const [selectedCampaign, setSelectedCampaign] = useState<any>(null);
   const [modalPosition, setModalPosition] = useState({ x: 0, y: 0 });
   const [showEditorMenu, setShowEditorMenu] = useState(false);
+  const [selectedCampaigns, setSelectedCampaigns] = useState<string[]>([]);
 
   const editorOptions = [
     { name: 'Roue de la Fortune', path: '/design-editor', icon: '🎯' },
@@ -214,6 +215,35 @@ const Campaigns: React.FC = () => {
     navigate(`/stats/${id}`);
   };
 
+  const handleSelectAll = () => {
+    if (selectedCampaigns.length === filteredCampaigns.length) {
+      setSelectedCampaigns([]);
+    } else {
+      setSelectedCampaigns(filteredCampaigns.map(c => c.id));
+    }
+  };
+
+  const handleSelectCampaign = (id: string) => {
+    setSelectedCampaigns(prev => 
+      prev.includes(id) ? prev.filter(cId => cId !== id) : [...prev, id]
+    );
+  };
+
+  const handleDeleteSelected = async () => {
+    openConfirm({
+      title: 'Supprimer les campagnes sélectionnées',
+      description: `Confirmez la suppression de ${selectedCampaigns.length} campagne(s). Cette action est définitive.`,
+      danger: true,
+      onConfirm: async () => {
+        for (const id of selectedCampaigns) {
+          await deleteCampaign(id);
+        }
+        setSelectedCampaigns([]);
+        setConfirmOpen(false);
+      }
+    });
+  };
+
   return (
     <div className="-mx-6 -mt-6">
       <PageHeader
@@ -268,6 +298,20 @@ const Campaigns: React.FC = () => {
 
         {!loading && !error && (
           <div className="bg-white rounded-xl shadow-sm mt-6">
+            {selectedCampaigns.length > 0 && (
+              <div className="p-4 bg-[#841b60] text-white flex items-center justify-between">
+                <span className="font-medium">
+                  {selectedCampaigns.length} campagne(s) sélectionnée(s)
+                </span>
+                <button
+                  onClick={handleDeleteSelected}
+                  className="flex items-center gap-2 bg-white text-[#841b60] px-4 py-2 rounded-lg font-medium hover:bg-gray-100 transition-colors"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Supprimer la sélection
+                </button>
+              </div>
+            )}
             <div className="p-6 border-b border-gray-200">
               <div className="flex flex-col md:flex-row gap-4">
                 <div className="relative flex-1">
@@ -302,6 +346,14 @@ const Campaigns: React.FC = () => {
               <table className="w-full">
                 <thead>
                   <tr className="bg-gray-50">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-12">
+                      <input
+                        type="checkbox"
+                        checked={selectedCampaigns.length === filteredCampaigns.length && filteredCampaigns.length > 0}
+                        onChange={handleSelectAll}
+                        className="w-4 h-4 text-[#841b60] border-gray-300 rounded focus:ring-[#841b60]"
+                      />
+                    </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-8">
                       Type
                     </th>
@@ -350,6 +402,15 @@ const Campaigns: React.FC = () => {
                         className="hover:bg-gray-50 transition-colors duration-200 cursor-pointer"
                         onClick={handleRowClick}
                       >
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <input
+                            type="checkbox"
+                            checked={selectedCampaigns.includes(campaign.id)}
+                            onChange={() => handleSelectCampaign(campaign.id)}
+                            onClick={(e) => e.stopPropagation()}
+                            className="w-4 h-4 text-[#841b60] border-gray-300 rounded focus:ring-[#841b60]"
+                          />
+                        </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center justify-center">
                             <CampaignIcon />

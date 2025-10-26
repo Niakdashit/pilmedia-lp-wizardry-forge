@@ -340,7 +340,6 @@ useEffect(() => {
     const globalMobile = designBg.mobileBackgroundImage as string | undefined;
     if (globalDesktop || globalMobile) {
       const imgDesktop = globalDesktop ? { type: 'image' as const, value: globalDesktop } : defaultBackground;
-      const imgMobile = globalMobile ? { type: 'image' as const, value: globalMobile } : imgDesktop;
       const derived: ScreenBackgrounds = {
         screen1: imgDesktop,
         screen2: imgDesktop,
@@ -433,7 +432,7 @@ useEffect(() => {
         }
       });
     } catch {}
-  }, [campaignState?.id, campaignState?.config?.canvasConfig?.screenBackgrounds, selectedDevice]);
+  }, [campaignState?.id, screenBackgrounds, selectedDevice]);
 
 // 🔗 Miroir local → store: conserve les éléments dans campaign.config.canvasConfig
 useEffect(() => {
