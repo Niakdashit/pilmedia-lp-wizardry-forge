@@ -33,6 +33,7 @@ import { useCampaigns } from '@/hooks/useCampaigns';
 import { createSaveAndContinueHandler, saveCampaignToDB } from '@/hooks/useModernCampaignEditor/saveHandler';
 import { useCampaignStateSync } from '@/hooks/useCampaignStateSync';
 import { quizTemplates } from '../../types/quizTemplates';
+import { generateTempCampaignId, isTempCampaignId, clearTempCampaignData } from '@/utils/tempCampaignId';
 
 const KeyboardShortcutsHelp = lazy(() => import('../shared/KeyboardShortcutsHelp'));
 const MobileStableEditor = lazy(() => import('./components/MobileStableEditor'));
@@ -261,12 +262,45 @@ useEffect(() => {
   } else {
     // Nouvelle campagne → activer le flag global pour bloquer les auto-ajouts
     beginNewCampaign('form');
-    const tempId = `temp-form-${Date.now()}`;
+    const tempId = generateTempCampaignId('form');
     selectCampaign(tempId, 'form');
     initializeNewCampaignWithId('form', tempId);
     requestAnimationFrame(() => clearNewCampaignFlag());
   }
   // eslint-disable-next-line react-hooks/exhaustive-deps
+}, [location.search]);
+
+// 🧹 CRITICAL: Clean temporary campaigns - keep only Participer and Rejouer buttons
+useEffect(() => {
+  const params = new URLSearchParams(location.search);
+  const id = params.get('campaign');
+  if (!id || !isTempCampaignId(id)) return;
+  
+  console.log('🧹 [FormEditor] Cleaning temp campaign:', id);
+  
+  // Clear localStorage
+  clearTempCampaignData(id);
+  
+  // Reset background images
+  setCampaign((prev: any) => {
+    if (!prev) return prev;
+    return {
+      ...prev,
+      design: {
+        ...(prev.design || {}),
+        backgroundImage: undefined,
+        mobileBackgroundImage: undefined
+      }
+    };
+  });
+  
+  // Reset backgrounds to color only
+  const defaultBg = { type: 'color' as const, value: '' };
+  setCanvasBackground(defaultBg);
+  setScreenBackgrounds({
+    screen1: defaultBg,
+    screen2: defaultBg
+  });
 }, [location.search]);
 
   // État local pour la compatibilité existante

@@ -391,6 +391,59 @@ const { syncAllStates } = useCampaignStateSync();
     }
   }, [location.pathname]);
   
+  // 🧹 CRITICAL: Clean temporary campaigns - keep only Participer and Rejouer buttons
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const id = params.get('campaign');
+    if (!id || !isTempCampaignId(id)) return;
+    
+    console.log('🧹 [QuizEditor] Cleaning temp campaign:', id);
+    
+    // Clear localStorage
+    clearTempCampaignData(id);
+    
+    // Reset background images
+    setCampaign((prev: any) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        design: {
+          ...(prev.design || {}),
+          backgroundImage: undefined,
+          mobileBackgroundImage: undefined
+        }
+      };
+    });
+    
+    // Reset backgrounds to color only
+    const defaultBg = { type: 'color' as const, value: '' };
+    setCanvasBackground(defaultBg);
+    setScreenBackgrounds({
+      screen1: defaultBg,
+      screen2: defaultBg,
+      screen3: defaultBg
+    });
+    
+    // Filter modularPage to keep only Participer and Rejouer
+    setModularPage((prev: ModularPage) => {
+      const participerButton = prev.screens.screen1?.find((m: Module) => 
+        m.type === 'BlocBouton' && m.label?.toLowerCase().includes('participer')
+      );
+      const rejouerButton = prev.screens.screen3?.find((m: Module) => 
+        m.type === 'BlocBouton' && m.label?.toLowerCase().includes('rejouer')
+      );
+      
+      return {
+        ...prev,
+        screens: {
+          screen1: participerButton ? [participerButton] : [],
+          screen2: [],
+          screen3: rejouerButton ? [rejouerButton] : []
+        }
+      };
+    });
+  }, [location.search]);
+  
   // CRITICAL: Reset all local state when campaign ID changes to ensure complete isolation
   const prevCampaignIdRef = useRef<string | undefined>(undefined);
   const dataHydratedRef = useRef(false);

@@ -34,6 +34,7 @@ import { useCampaignFromUrl } from '@/hooks/useCampaignFromUrl';
 import { useCampaigns } from '@/hooks/useCampaigns';
 import { saveCampaignToDB } from '@/hooks/useModernCampaignEditor/saveHandler';
 import { useCampaignStateSync } from '@/hooks/useCampaignStateSync';
+import { generateTempCampaignId, isTempCampaignId, clearTempCampaignData } from '@/utils/tempCampaignId';
 
 const KeyboardShortcutsHelp = lazy(() => import('../shared/KeyboardShortcutsHelp'));
 const MobileStableEditor = lazy(() => import('./components/MobileStableEditor'));
@@ -172,6 +173,59 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
 
     createCampaign();
   }, [location.search]); // Se déclenche si l'URL change
+
+  // 🧹 CRITICAL: Clean temporary campaigns - keep only Participer and Rejouer buttons
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const id = params.get('campaign');
+    if (!id || !isTempCampaignId(id)) return;
+    
+    console.log('🧹 [DesignEditor] Cleaning temp campaign:', id);
+    
+    // Clear localStorage
+    clearTempCampaignData(id);
+    
+    // Reset background images
+    setCampaign((prev: any) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        design: {
+          ...(prev.design || {}),
+          backgroundImage: undefined,
+          mobileBackgroundImage: undefined
+        }
+      };
+    });
+    
+    // Reset backgrounds to color only
+    const defaultBg = { type: 'color' as const, value: '' };
+    setCanvasBackground(defaultBg);
+    setScreenBackgrounds({
+      screen1: defaultBg,
+      screen2: defaultBg,
+      screen3: defaultBg
+    });
+    
+    // Filter modularPage to keep only Participer and Rejouer
+    setModularPage((prev: ModularPage) => {
+      const participerButton = prev.screens.screen1?.find((m: Module) => 
+        m.type === 'BlocBouton' && m.label?.toLowerCase().includes('participer')
+      );
+      const rejouerButton = prev.screens.screen3?.find((m: Module) => 
+        m.type === 'BlocBouton' && m.label?.toLowerCase().includes('rejouer')
+      );
+      
+      return {
+        ...prev,
+        screens: {
+          screen1: participerButton ? [participerButton] : [],
+          screen2: [],
+          screen3: rejouerButton ? [rejouerButton] : []
+        }
+      };
+    });
+  }, [location.search]);
 
   // Charger la campagne dans l'éditeur si elle vient de l'URL
   useEffect(() => {
