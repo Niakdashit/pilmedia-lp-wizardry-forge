@@ -365,28 +365,30 @@ const TemplatedQuiz: React.FC<TemplatedQuizProps> = ({
 
   // Calculer la couleur de fond avec opacité
   const getBackgroundWithOpacity = () => {
-    const bgColor = currentStyles.backgroundColor || 
-                   campaign?.design?.quizConfig?.style?.backgroundColor || 
-                   template.style.backgroundColor || 
-                   '#ffffff';
-    
-    const opacityValue = currentStyles.backgroundOpacity ?? 
-                        campaign?.design?.quizConfig?.style?.backgroundOpacity ?? 
+    // Ne pas masquer l'image de fond d'écran: par défaut, fond transparent
+    // N'appliquer une couleur que si elle est explicitement définie par l'utilisateur ou la campagne
+    const explicitBg = currentStyles.backgroundColor || campaign?.design?.quizConfig?.style?.backgroundColor;
+    if (!explicitBg) {
+      return 'transparent';
+    }
+
+    const opacityValue = currentStyles.backgroundOpacity ??
+                        campaign?.design?.quizConfig?.style?.backgroundOpacity ??
                         100;
-    
+
     // Les valeurs 0 et 1 doivent être complètement transparentes
     const opacity = (opacityValue === 0 || opacityValue === 1) ? 0 : opacityValue / 100;
-    
+
     // Convertir la couleur hex en rgba avec opacité
-    if (bgColor.startsWith('#')) {
-      const r = parseInt(bgColor.slice(1, 3), 16);
-      const g = parseInt(bgColor.slice(3, 5), 16);
-      const b = parseInt(bgColor.slice(5, 7), 16);
+    if (explicitBg.startsWith('#')) {
+      const r = parseInt(explicitBg.slice(1, 3), 16);
+      const g = parseInt(explicitBg.slice(3, 5), 16);
+      const b = parseInt(explicitBg.slice(5, 7), 16);
       return `rgba(${r}, ${g}, ${b}, ${opacity})`;
     }
-    
+
     // Si c'est déjà une couleur rgba ou autre format, l'utiliser tel quel
-    return bgColor;
+    return explicitBg;
   };
 
   const containerStyle: React.CSSProperties = {
