@@ -235,9 +235,7 @@ const Campaigns: React.FC = () => {
       description: `Confirmez la suppression de ${selectedCampaigns.length} campagne(s). Cette action est définitive.`,
       danger: true,
       onConfirm: async () => {
-        for (const id of selectedCampaigns) {
-          await deleteCampaign(id);
-        }
+        await Promise.all(selectedCampaigns.map(id => deleteCampaign(id)));
         setSelectedCampaigns([]);
         setConfirmOpen(false);
       }
