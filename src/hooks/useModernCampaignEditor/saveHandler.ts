@@ -99,8 +99,8 @@ export const saveCampaignToDB = async (
     // Duplicate elements at top-level config for compatibility with older loaders
     elements: (campaign?.canvasElements || campaign?.canvasConfig?.elements || campaign?.config?.elements || []),
     
-    // Modular page structure (modules par écran)
-    modularPage: campaign?.modularPage || campaign?.config?.modularPage || {
+    // Modular page structure (modules par écran) - prioritize design.quizModules as it's the primary save location
+    modularPage: campaign?.design?.quizModules || campaign?.modularPage || campaign?.config?.modularPage || {
       screens: { screen1: [], screen2: [], screen3: [] },
       _updatedAt: Date.now()
     },
@@ -139,10 +139,10 @@ export const saveCampaignToDB = async (
     customColors: campaign?.design?.customColors || {},
     
     // Design modules (for modular editor compatibility)
-    designModules: campaign?.modularPage || campaign?.design?.designModules,
+    designModules: campaign?.design?.designModules || campaign?.modularPage,
     
-    // Quiz modules (for QuizEditor compatibility)
-    quizModules: campaign?.modularPage || campaign?.design?.quizModules,
+    // Quiz modules (for QuizEditor compatibility) - prioritize design.quizModules as it's the primary save location
+    quizModules: campaign?.design?.quizModules || campaign?.modularPage || campaign?.config?.modularPage,
     
     // Custom texts and images
     customTexts: campaign?.design?.customTexts || [],

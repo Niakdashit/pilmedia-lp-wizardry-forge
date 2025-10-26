@@ -358,7 +358,8 @@ useEffect(() => {
 // ✅ Hydrater les éléments/modularPage/backgrounds depuis la DB à l'ouverture
 useEffect(() => {
   const cfg = (campaignState as any)?.config?.canvasConfig || (campaignState as any)?.canvasConfig;
-  const mp = (campaignState as any)?.config?.modularPage || (campaignState as any)?.design?.quizModules;
+  // Prioritize design.quizModules as it's the primary save location
+  const mp = (campaignState as any)?.design?.quizModules || (campaignState as any)?.config?.modularPage || (campaignState as any)?.modularPage;
   const topLevelElements = (campaignState as any)?.config?.elements;
 
   // N'hydrate que si on a des données utiles ET que le local est vide
@@ -395,7 +396,12 @@ useEffect(() => {
   if (mp && mp.screens) {
     const total = Object.values(mp.screens || {}).reduce((n: number, arr: any) => n + (Array.isArray(arr) ? arr.length : 0), 0);
     if (total > 0) {
-      console.log('🧩 [QuizEditor] Hydration: applying modularPage', total);
+      console.log('🧩 [QuizEditor] Hydration: applying modularPage from', {
+        fromDesignQuizModules: !!(campaignState as any)?.design?.quizModules,
+        fromConfigModularPage: !!(campaignState as any)?.config?.modularPage,
+        fromTopLevelModularPage: !!(campaignState as any)?.modularPage,
+        modulesCount: total
+      });
       setModularPage(mp);
     }
   }
@@ -504,32 +510,6 @@ useEffect(() => {
     return next as any;
   });
 }, [canvasElements, screenBackgrounds, selectedDevice, canvasZoom, setCampaign]);
-
-// 💾 Autosave léger des éléments du canvas
-useEffect(() => {
-  const id = (campaignState as any)?.id as string | undefined;
-  if (!id) return;
-  if (!bgHydratedRef.current) return; // avoid saving defaults over persisted data
-  const t = window.setTimeout(async () => {
-    try {
-      const payload: any = {
-        ...(campaignState || {}),
-        canvasConfig: {
-          ...(campaignState as any)?.canvasConfig,
-          elements: canvasElements,
-          screenBackgrounds,
-          device: selectedDevice
-        }
-      };
-      console.log('💾 [QuizEditor] Autosave canvas elements → DB', canvasElements.length);
-      await saveCampaignToDB(payload, saveCampaign);
-      setIsModified(false);
-    } catch (e) {
-      console.warn('⚠️ [QuizEditor] Autosave failed', e);
-    }
-  }, 1000);
-  return () => clearTimeout(t);
-}, [campaignState?.id, canvasElements, screenBackgrounds, selectedDevice]);
 
   // Détection de la taille de fenêtre
   useEffect(() => {
@@ -934,6 +914,56 @@ const handleSaveCampaignName = useCallback(async () => {
       setModularPage(mp);
     }
   }, [campaignConfig]);
+
+  // 💾 Autosave with complete state including modules
+  useEffect(() => {
+    const id = (campaignState as any)?.id as string | undefined;
+    if (!id) return;
+    if (!bgHydratedRef.current) return; // avoid saving defaults over persisted data
+    
+    // Guard: only autosave if campaign has valid UUID
+    const isUuid = (v?: string) => !!v && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v);
+    if (!isUuid(id)) return;
+    
+    const t = window.setTimeout(async () => {
+      try {
+        const payload: any = {
+          ...(campaignState || {}),
+          // Save modules in multiple locations for compatibility
+          modularPage,
+          design: {
+            ...(campaignState as any)?.design,
+            quizModules: modularPage
+          },
+          config: {
+            ...(campaignState as any)?.config,
+            modularPage,
+            canvasConfig: {
+              ...(campaignState as any)?.config?.canvasConfig,
+              elements: canvasElements,
+              screenBackgrounds,
+              device: selectedDevice
+            }
+          },
+          canvasConfig: {
+            ...(campaignState as any)?.canvasConfig,
+            elements: canvasElements,
+            screenBackgrounds,
+            device: selectedDevice
+          }
+        };
+        console.log('💾 [QuizEditor] Autosave complete state → DB', {
+          canvasElements: canvasElements.length,
+          modules: Object.values(modularPage?.screens || {}).reduce((sum: number, arr: any) => sum + (Array.isArray(arr) ? arr.length : 0), 0)
+        });
+        await saveCampaignToDB(payload, saveCampaign);
+        setIsModified(false);
+      } catch (e) {
+        console.warn('⚠️ [QuizEditor] Autosave failed', e);
+      }
+    }, 1000);
+    return () => clearTimeout(t);
+  }, [campaignState?.id, canvasElements, screenBackgrounds, selectedDevice, modularPage]);
 
   // Handler utilisé par HybridSidebar → BackgroundPanel (placé après currentScreen pour éviter TDZ)
   const handleBackgroundChange = useCallback((
@@ -2534,13 +2564,24 @@ const handleSaveCampaignName = useCallback(async () => {
       // Récupérer le campaign mis à jour après synchronisation
       const updatedCampaign = useEditorStore.getState().campaign;
       
-      // Inject canvasConfig so backgrounds/images and elements are persisted in DB
+      // Build complete payload with modules in all required locations
       const payload = {
         ...updatedCampaign,
-        // Persist modules inside design.quizModules for DB
+        // Save modules at multiple locations for compatibility
+        modularPage,
         design: {
           ...((updatedCampaign as any)?.design || {}),
           quizModules: modularPage
+        },
+        config: {
+          ...((updatedCampaign as any)?.config || {}),
+          modularPage,
+          canvasConfig: {
+            elements: canvasElements,
+            background: canvasBackground,
+            screenBackgrounds,
+            device: selectedDevice
+          }
         },
         canvasConfig: {
           elements: canvasElements,
@@ -2549,6 +2590,10 @@ const handleSaveCampaignName = useCallback(async () => {
           device: selectedDevice
         }
       };
+      console.log('💾 [QuizEditor] handleSave complete payload', {
+        id: payload.id,
+        modules: Object.values(modularPage?.screens || {}).reduce((sum: number, arr: any) => sum + (Array.isArray(arr) ? arr.length : 0), 0)
+      });
       const saved = await saveCampaignToDB(payload, saveCampaign);
       if (saved?.id && !(campaignState as any)?.id) {
         setCampaign((prev: any) => ({ ...prev, id: saved.id }));

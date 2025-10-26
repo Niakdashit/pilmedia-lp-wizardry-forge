@@ -104,8 +104,8 @@ export const loadCampaign = async (
         : (Array.isArray((existingCampaign.config as any)?.elements) ? (existingCampaign.config as any).elements : []);
       const screenBackgrounds = canvasConfig.screenBackgrounds || existingCampaign.design?.screenBackgrounds || {};
       
-      // Restore modularPage structure
-      const modularPage = existingCampaign.config?.modularPage || existingCampaign.design?.designModules || {
+      // Restore modularPage structure - prioritize design.quizModules as it's the primary save location
+      const modularPage = existingCampaign.design?.quizModules || existingCampaign.config?.modularPage || existingCampaign.design?.designModules || {
         screens: { screen1: [], screen2: [], screen3: [] },
         _updatedAt: Date.now()
       };
@@ -157,6 +157,7 @@ export const loadCampaign = async (
           extractedColors,
           screenBackgrounds,
           designModules: modularPage,
+          quizModules: modularPage, // For QuizEditor compatibility
           customTexts: existingCampaign.design?.customTexts || [],
           customImages: existingCampaign.design?.customImages || [],
           borderStyle: existingCampaign.design?.borderStyle,
