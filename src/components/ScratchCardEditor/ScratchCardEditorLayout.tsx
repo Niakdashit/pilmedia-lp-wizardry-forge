@@ -30,6 +30,7 @@ import { recalculateAllElements } from '../../utils/recalculateAllModules';
 import { useEditorPreviewSync } from '@/hooks/useEditorPreviewSync';
 import { useCampaignSettings } from '@/hooks/useCampaignSettings';
 import type { ScreenBackgrounds, DeviceSpecificBackground } from '@/types/background';
+import { isTempCampaignId, clearTempCampaignData } from '@/utils/tempCampaignId';
 
 
 import { useCampaigns } from '@/hooks/useCampaigns';
@@ -717,6 +718,46 @@ const handleSaveCampaignName = useCallback(async () => {
   const [currentScreen, setCurrentScreen] = useState<'screen1' | 'screen2' | 'screen3'>('screen1');
   // Modular editor JSON state
   const [modularPage, setModularPage] = useState<ModularPage>(createEmptyModularPage());
+
+  // Ensure temp campaigns are clean: keep only Participer/Rejouer and no background images
+  const didTempCleanupRef = useRef(false);
+  useEffect(() => {
+    const id = (campaignState as any)?.id as string | undefined;
+    if (!id || didTempCleanupRef.current) return;
+    if (!isTempCampaignId(id)) return;
+    didTempCleanupRef.current = true;
+
+    // Wipe any leftover localStorage and background images
+    try { clearTempCampaignData(id); } catch {}
+
+    setCampaign((prev: any) => {
+      if (!prev) return prev;
+      const next = {
+        ...prev,
+        design: {
+          ...(prev.design || {}),
+          backgroundImage: undefined,
+          mobileBackgroundImage: undefined
+        }
+      };
+      return next as any;
+    });
+
+    // Reset editor backgrounds to default color (no image)
+    setCanvasBackground(defaultBackground);
+    setScreenBackgrounds({
+      screen1: defaultBackground,
+      screen2: defaultBackground,
+      screen3: defaultBackground
+    });
+
+    // Prune modules: keep only Participer (screen1) and Rejouer (screen3)
+    setModularPage((prev) => {
+      const s1 = (prev?.screens?.screen1 || []).filter((m: any) => m?.type === 'BlocBouton' && ((m.label || '').trim().toLowerCase() === 'participer'));
+      const s3 = (prev?.screens?.screen3 || []).filter((m: any) => m?.type === 'BlocBouton' && ((m.label || '').trim().toLowerCase() === 'rejouer'));
+      return { screens: { screen1: s1, screen2: [], screen3: s3 }, _updatedAt: Date.now() } as ModularPage;
+    });
+  }, [campaignState?.id]);
   
   const selectedModule: Module | null = useMemo(() => {
     if (!selectedModuleId) return null;
