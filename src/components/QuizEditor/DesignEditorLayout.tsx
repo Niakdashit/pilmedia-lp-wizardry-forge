@@ -951,6 +951,12 @@ const handleSaveCampaignName = useCallback(async () => {
       console.log('🚫 [QuizEditor] Autosave skipped: not a valid UUID', id);
       return;
     }
+
+    // CRITICAL: avoid wiping modules during initial hydration after a refresh
+    if (!dataHydratedRef.current) {
+      console.log('⏭️ [QuizEditor] Autosave skipped: hydration not completed yet');
+      return;
+    }
     
     const t = window.setTimeout(async () => {
       try {
