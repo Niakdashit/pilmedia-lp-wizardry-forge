@@ -579,7 +579,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
           const devicesToPersist: Array<'desktop' | 'tablet' | 'mobile'> =
             targetDevice === 'mobile' ? ['mobile'] : ['desktop', 'tablet'];
           devicesToPersist.forEach((d) => {
-            try { localStorage.setItem(`quiz-bg-${d}-${screenId}` as string, detail.url || ''); } catch {}
+            try { localStorage.setItem(`quiz-bg-${(campaign?.id || 'global')}-${d}-${screenId}` as string, detail.url || ''); } catch {}
           });
         } catch {}
         // Synchroniser les autres canvas du même écran
@@ -613,7 +613,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
           targetDevice === 'mobile' ? ['mobile'] : ['desktop', 'tablet'];
         devicesToPersist.forEach((d) => {
           screens.forEach((s) => {
-            try { localStorage.setItem(`quiz-bg-${d}-${s}`, detail.url || ''); } catch {}
+            try { localStorage.setItem(`quiz-bg-${(campaign?.id || 'global')}-${d}-${s}`, detail.url || ''); } catch {}
           });
         });
         try { if (campaign?.id) localStorage.setItem('quiz-bg-owner', String(campaign.id)); } catch {}
@@ -640,7 +640,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
           [targetDevice]: null
         }));
         try {
-          localStorage.removeItem(`quiz-bg-${targetDevice}-${screenId}`);
+          localStorage.removeItem(`quiz-bg-${(campaign?.id || 'global')}-${targetDevice}-${screenId}`);
         } catch {}
       }
     };
@@ -656,7 +656,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
       if (screenBg?.type === 'image' && screenBg.value) {
         const devices: Array<'desktop' | 'tablet' | 'mobile'> = ['desktop', 'tablet', 'mobile'];
         devices.forEach((d) => {
-          try { localStorage.setItem(`quiz-bg-${d}-${screenId}`, screenBg.value); } catch {}
+          try { localStorage.setItem(`quiz-bg-${(campaign?.id || 'global')}-${d}-${screenId}`, screenBg.value); } catch {}
         });
         try { if (campaign?.id) localStorage.setItem('quiz-bg-owner', String(campaign.id)); } catch {}
         setDeviceBackgrounds((prev) => ({ ...prev, desktop: screenBg.value, tablet: screenBg.value, mobile: screenBg.value }));
@@ -674,7 +674,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
         const devices: Array<'desktop' | 'tablet' | 'mobile'> = ['desktop', 'tablet', 'mobile'];
         const vals: Partial<Record<'desktop' | 'tablet' | 'mobile', string | null>> = {};
         devices.forEach((d) => {
-          try { vals[d] = localStorage.getItem(`quiz-bg-${d}-${screenId}`); } catch { vals[d] = null; }
+          try { vals[d] = localStorage.getItem(`quiz-bg-${(campaign?.id || 'global')}-${d}-${screenId}`); } catch { vals[d] = null; }
         });
         const anyVal = vals.desktop || vals.tablet || vals.mobile;
         if (anyVal) {
@@ -707,7 +707,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
           const devices: Array<'desktop' | 'tablet' | 'mobile'> = ['desktop', 'tablet', 'mobile'];
           // Nettoyer toutes les clés persistées pour CE screenId
           devices.forEach((d) => {
-            try { localStorage.removeItem(`quiz-bg-${d}-${screenId}`); } catch {}
+            try { localStorage.removeItem(`quiz-bg-${(campaign?.id || 'global')}-${d}-${screenId}`); } catch {}
           });
           // Réinitialiser les overrides en mémoire pour ne pas afficher d'image
           setDeviceBackgrounds({ desktop: null, tablet: null, mobile: null });

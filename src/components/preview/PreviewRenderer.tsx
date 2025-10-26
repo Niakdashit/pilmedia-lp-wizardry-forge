@@ -188,8 +188,17 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
     let perScreenImage: string | null = null;
     try {
       const deviceKey = previewMode === 'mobile' ? 'mobile' : (previewMode === 'tablet' ? 'tablet' : 'desktop');
-      const lsKey = `quiz-bg-${deviceKey}-${currentScreen}`;
-      perScreenImage = typeof window !== 'undefined' ? (localStorage.getItem(lsKey) || null) : null;
+      const namespacedKey = campaign?.id ? `quiz-bg-${campaign.id}-${deviceKey}-${currentScreen}` : null;
+      if (namespacedKey) {
+        perScreenImage = typeof window !== 'undefined' ? (localStorage.getItem(namespacedKey) || null) : null;
+      }
+      if (!perScreenImage) {
+        const legacyKey = `quiz-bg-${deviceKey}-${currentScreen}`;
+        const owner = typeof window !== 'undefined' ? localStorage.getItem('quiz-bg-owner') : null;
+        if (!campaign?.id || owner === String(campaign.id)) {
+          perScreenImage = typeof window !== 'undefined' ? (localStorage.getItem(legacyKey) || null) : null;
+        }
+      }
     } catch {}
 
     // Si une image par écran existe pour l'appareil courant, l'utiliser immédiatement

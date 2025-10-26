@@ -268,7 +268,9 @@ const { syncAllStates } = useCampaignStateSync();
       try {
         const screens: Array<'screen1' | 'screen2' | 'screen3'> = ['screen1','screen2','screen3'];
         const devices: Array<'desktop' | 'tablet' | 'mobile'> = ['desktop','tablet','mobile'];
+        const newId = (campaignState as any)?.id || 'global';
         screens.forEach((s) => devices.forEach((d) => {
+          try { localStorage.removeItem(`quiz-bg-${newId}-${d}-${s}`); } catch {}
           try { localStorage.removeItem(`quiz-bg-${d}-${s}`); } catch {}
         }));
       } catch {}
@@ -428,7 +430,7 @@ useEffect(() => {
         if (!value) value = device === 'mobile' ? globalMobile : globalDesktop;
 
         const key = `${device}:${s}`;
-        const storageKey = `quiz-bg-${device}-${s}`;
+        const storageKey = `quiz-bg-${(campaignState as any)?.id || 'global'}-${device}-${s}`;
         if (value && bgAppliedRef.current[key] !== value) {
           bgAppliedRef.current[key] = value;
           try { localStorage.setItem(storageKey, value); } catch {}
@@ -471,7 +473,7 @@ useEffect(() => {
           const key = `${device}:${s}`;
           if (bgAppliedRef.current[key] !== bg.value) {
             bgAppliedRef.current[key] = bg.value;
-            try { localStorage.setItem(`quiz-bg-${device}-${s}`, bg.value); } catch {}
+            try { localStorage.setItem(`quiz-bg-${(campaignState as any)?.id || 'global'}-${device}-${s}`, bg.value); } catch {}
             try { window.dispatchEvent(new CustomEvent('applyBackgroundCurrentScreen', { detail: { url: bg.value, device, screenId: s } })); } catch {}
           }
         }
@@ -544,7 +546,7 @@ useEffect(() => {
             if (bg?.type === 'image' && typeof bg.value === 'string') value = bg.value;
             if (!value && bg?.devices?.[device]?.type === 'image' && typeof bg?.devices?.[device]?.value === 'string') value = bg.devices[device].value;
             if (!value) value = device === 'mobile' ? globalMobile : globalDesktop;
-            const key = `quiz-bg-${device}-${s}`;
+            const key = `quiz-bg-${(campaignState as any)?.id || 'global'}-${device}-${s}`;
             if (value) {
               try { localStorage.setItem(key, value); } catch {}
               try { window.dispatchEvent(new CustomEvent('applyBackgroundCurrentScreen', { detail: { url: value, device, screenId: s } })); } catch {}

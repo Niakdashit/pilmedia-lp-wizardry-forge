@@ -328,6 +328,10 @@ export const useEditorStore = create<EditorStore>()(
         const devices: Array<'desktop' | 'tablet' | 'mobile'> = ['desktop','tablet','mobile'];
         screens.forEach((s) => devices.forEach((d) => {
           try { localStorage.removeItem(`quiz-bg-${d}-${s}`); } catch {}
+          try {
+            const owner = localStorage.getItem('quiz-bg-owner');
+            if (owner) { localStorage.removeItem(`quiz-bg-${owner}-${d}-${s}`); }
+          } catch {}
         }));
         try { localStorage.removeItem('quiz-bg-owner'); } catch {}
       } catch {}
@@ -352,6 +356,10 @@ export const useEditorStore = create<EditorStore>()(
         const devices: Array<'desktop' | 'tablet' | 'mobile'> = ['desktop','tablet','mobile'];
         screens.forEach((s) => devices.forEach((d) => {
           try { localStorage.removeItem(`quiz-bg-${d}-${s}`); } catch {}
+          try {
+            const owner = localStorage.getItem('quiz-bg-owner');
+            if (owner) { localStorage.removeItem(`quiz-bg-${owner}-${d}-${s}`); }
+          } catch {}
         }));
         try { localStorage.removeItem('quiz-bg-owner'); } catch {}
       } catch {}
@@ -393,6 +401,10 @@ export const useEditorStore = create<EditorStore>()(
         const devices: Array<'desktop' | 'tablet' | 'mobile'> = ['desktop','tablet','mobile'];
         screens.forEach((s) => devices.forEach((d) => {
           try { localStorage.removeItem(`quiz-bg-${d}-${s}`); } catch {}
+          try {
+            const owner = localStorage.getItem('quiz-bg-owner');
+            if (owner) { localStorage.removeItem(`quiz-bg-${owner}-${d}-${s}`); }
+          } catch {}
         }));
         try { localStorage.removeItem('quiz-bg-owner'); } catch {}
       } catch {}
