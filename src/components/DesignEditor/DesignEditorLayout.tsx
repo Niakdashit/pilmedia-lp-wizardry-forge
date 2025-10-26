@@ -102,11 +102,6 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
   } = useEditorStore();
   // Campagne centralisée (source de vérité pour les champs de contact)
   const campaignState = useEditorStore((s) => s.campaign);
-  
-  // Flag global: nouvelle campagne en cours (empêche auto-injections)
-  const isNewCampaignGlobal = useEditorStore(s => s.isNewCampaignGlobal);
-  const beginNewCampaign = useEditorStore(s => s.beginNewCampaign);
-  const clearNewCampaignFlag = useEditorStore(s => s.clearNewCampaignFlag);
 
   // Supabase campaigns API
   const { saveCampaign } = useCampaigns();
@@ -126,18 +121,9 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
     const isValidUuid = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id);
 
     // Si UUID valide présent, ne rien faire (sera chargé par useCampaignFromUrl)
-    if (!campaignId || !isValidUuid(campaignId)) {
-      // Nouvelle campagne : initialiser avec un état vierge via store (flag global)
-      console.log('🆕 [DesignEditor] No valid campaign ID → beginNewCampaign("wheel")');
-      beginNewCampaign('wheel');
-      resetCampaignLocals(); // Reset tous les états locaux pour une campagne vierge
-      // Libérer le flag au prochain frame pour réautoriser les effets ultérieurs
-      requestAnimationFrame(() => clearNewCampaignFlag());
-    } else {
-      // Campagne existante : sera chargée par useCampaignFromUrl
-      console.log('📂 [DesignEditor] Valid UUID in URL, will load campaign:', campaignId);
-      // S'assurer que le flag est bas
-      if (isNewCampaignGlobal) clearNewCampaignFlag();
+    if (campaignId && isValidUuid(campaignId)) {
+      console.log('✅ [DesignEditor] Valid UUID in URL, will load campaign:', campaignId);
+      return;
     }
 
     // Sinon, créer une nouvelle campagne UNE SEULE FOIS
@@ -235,27 +221,13 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
           || { type: 'color', value: '#ffffff' };
         
         console.log('📥 [DesignEditor] Final background applied:', bg);
-        // Forcer la synchronisation des backgrounds même si identiques
-        setCanvasBackground({ ...bg });
-        
-        // Toujours synchroniser screenBackgrounds avec les données chargées
-        const defaultScreens = {
-          screen1: defaultBackground,
-          screen2: defaultBackground,
-          screen3: defaultBackground
-        };
-        const loadedScreens = canvasCfg.screenBackgrounds || defaultScreens;
-        setScreenBackgrounds({ ...loadedScreens });
-        
+        setCanvasBackground(typeof bg === 'string' ? { type: 'color', value: bg } : bg);
+        if (canvasCfg.screenBackgrounds) {
+          setScreenBackgrounds(canvasCfg.screenBackgrounds);
+        }
         if (canvasCfg.device && ['desktop','tablet','mobile'].includes(canvasCfg.device)) {
           setSelectedDevice(canvasCfg.device);
           setCanvasZoom(getDefaultZoom(canvasCfg.device));
-        }
-        
-        // Synchroniser modularPage si présente dans canvasConfig
-        if (canvasCfg.modularPage && canvasCfg.modularPage.screens) {
-          console.log('📥 [DesignEditor] Restoring modularPage from canvasConfig');
-          setModularPage(canvasCfg.modularPage);
         }
       } catch (e) {
         console.warn('[DesignEditor] Failed to restore canvasConfig from campaign', e);
@@ -744,12 +716,10 @@ useEffect(() => {
     return screen === 'screen3' ? 'Rejouer' : 'Participer';
   }, []);
 
-  // Assurer la présence d'un bouton "Participer" sur l'écran 1 en mode édition (désactivé pour nouvelle campagne)
+  // Assurer la présence d'un bouton "Participer" sur l'écran 1 en mode édition
   React.useEffect(() => {
     // Ne s'exécute que lorsque l'écran 1 est affiché pour éviter des insertions inutiles
     if (currentScreen !== 'screen1') return;
-    // Bloquer complètement l'auto-ajout pour les nouvelles campagnes
-    if (isNewCampaignGlobal) return;
 
     const screen1Modules = Array.isArray(modularPage.screens.screen1)
       ? modularPage.screens.screen1
@@ -763,7 +733,7 @@ useEffect(() => {
     if (hasStandaloneParticiper || hasCardButton) return; // déjà présent
 
     const participerButton: BlocBouton = {
-      id: generateUniqueId('BlocBouton'),
+      id: `bloc-bouton-participer-${Date.now()}`,
       type: 'BlocBouton',
       label: getDefaultButtonLabel('screen1'),
       href: '#',
@@ -782,7 +752,7 @@ useEffect(() => {
     const nextScreens: ModularPage['screens'] = { ...modularPage.screens };
     nextScreens.screen1 = [...screen1Modules, participerButton];
     persistModular({ screens: nextScreens, _updatedAt: Date.now() });
-  }, [currentScreen, modularPage.screens, persistModular, screenHasCardButton, getDefaultButtonLabel, isNewCampaignGlobal]);
+  }, [currentScreen, modularPage.screens, persistModular, screenHasCardButton, getDefaultButtonLabel]);
 
   // Bouton "Rejouer" sur l'écran 3 désactivé (retiré par demande utilisateur)
   // React.useEffect(() => {
@@ -984,6 +954,10 @@ useEffect(() => {
     canvasScrollArea.scrollTo({ top: clamped, behavior: 'smooth' });
     return true;
   }, []);
+
+  // État pour l'élément sélectionné
+  const [selectedElement, setSelectedElement] = useState<any>(null);
+  const [selectedElements, setSelectedElements] = useState<any[]>([]);
   
   // Détecter quand selectedElement contient un moduleId et mettre à jour selectedModuleId + ouvrir le panneau
   useEffect(() => {

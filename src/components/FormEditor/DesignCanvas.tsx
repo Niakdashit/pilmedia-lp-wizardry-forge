@@ -616,7 +616,6 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
             try { localStorage.setItem(`quiz-bg-${d}-${s}`, detail.url || ''); } catch {}
           });
         });
-        try { if (campaign?.id) localStorage.setItem('quiz-bg-owner', String(campaign.id)); } catch {}
       } catch {}
       try {
         // Applied background to device
@@ -648,54 +647,23 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     return () => window.removeEventListener('clearBackgroundOtherScreens', handler as EventListener);
   }, [screenId, selectedDevice]);
 
-  // Hydrater localStorage depuis l'état de campagne au montage/changement d'écran (ne pas effacer)
+  // Nettoyer les images de fond au montage (réinitialisation à chaque chargement de page)
   useEffect(() => {
     try {
-      const scrBG = (campaign?.canvasConfig?.screenBackgrounds || campaign?.design?.screenBackgrounds || {}) as Record<string, any>;
-      const screenBg = scrBG?.[screenId];
-      if (screenBg?.type === 'image' && screenBg.value) {
-        const devices: Array<'desktop' | 'tablet' | 'mobile'> = ['desktop', 'tablet', 'mobile'];
-        devices.forEach((d) => {
-          try { localStorage.setItem(`quiz-bg-${d}-${screenId}`, screenBg.value); } catch {}
-        });
-        try { if (campaign?.id) localStorage.setItem('quiz-bg-owner', String(campaign.id)); } catch {}
-        setDeviceBackgrounds((prev) => ({ ...prev, desktop: screenBg.value, tablet: screenBg.value, mobile: screenBg.value }));
-      }
-    } catch {}
-  }, [screenId, campaign]);
-
-  // Relecture résiliente depuis localStorage (au montage/retour focus) pour restaurer les fonds en mode édition
-  useEffect(() => {
-    const applyFromLocalStorage = () => {
-      try {
-        const owner = (() => { try { return localStorage.getItem('quiz-bg-owner'); } catch { return null; } })();
-        const currentId = campaign?.id ? String(campaign.id) : null;
-        if (!owner || !currentId || owner !== currentId) return;
-        const devices: Array<'desktop' | 'tablet' | 'mobile'> = ['desktop', 'tablet', 'mobile'];
-        const vals: Partial<Record<'desktop' | 'tablet' | 'mobile', string | null>> = {};
-        devices.forEach((d) => {
-          try { vals[d] = localStorage.getItem(`quiz-bg-${d}-${screenId}`); } catch { vals[d] = null; }
-        });
-        const anyVal = vals.desktop || vals.tablet || vals.mobile;
-        if (anyVal) {
-          setDeviceBackgrounds(prev => ({
-            ...prev,
-            desktop: vals.desktop || prev.desktop,
-            tablet: vals.tablet || prev.tablet,
-            mobile: vals.mobile || prev.mobile
-          }));
-        }
-      } catch {}
-    };
-    // Initial apply on mount
-    applyFromLocalStorage();
-    // Re-apply when window regains focus or page is shown (return from preview)
-    window.addEventListener('focus', applyFromLocalStorage);
-    window.addEventListener('pageshow', applyFromLocalStorage);
-    return () => {
-      window.removeEventListener('focus', applyFromLocalStorage);
-      window.removeEventListener('pageshow', applyFromLocalStorage);
-    };
+      // Nettoyer toutes les clés de background pour ce screenId
+      const devices: Array<'desktop' | 'tablet' | 'mobile'> = ['desktop', 'tablet', 'mobile'];
+      devices.forEach((d) => {
+        try { 
+          localStorage.removeItem(`quiz-bg-${d}-${screenId}`);
+        } catch {}
+      });
+      
+      // Réinitialiser l'état
+      setDeviceBackgrounds({ desktop: null, tablet: null, mobile: null });
+      // Backgrounds cleared on page load
+    } catch {
+      setDeviceBackgrounds({ desktop: null, tablet: null, mobile: null });
+    }
   }, [screenId]);
 
   // Écouter la synchronisation globale de fond envoyée par le layout

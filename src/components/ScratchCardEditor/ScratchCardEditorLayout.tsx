@@ -261,15 +261,8 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
     setPreviewDevice,
     setIsLoading,
     setIsModified,
-    resetCampaign,
-    initializeNewCampaign,
-    initializeNewCampaignWithId,
-    selectCampaign
+    resetCampaign
   } = useEditorStore();
-  const isNewCampaignGlobal = useEditorStore((s) => s.isNewCampaignGlobal);
-  const beginNewCampaign = useEditorStore((s) => s.beginNewCampaign);
-  const clearNewCampaignFlag = useEditorStore((s) => s.clearNewCampaignFlag);
-  const selectedCampaignId = useEditorStore((s) => s.selectedCampaignId);
   // Campagne centralisée (source de vérité pour les champs de contact)
   const campaignState = useEditorStore((s) => s.campaign);
 
@@ -281,30 +274,17 @@ const { syncAllStates } = useCampaignStateSync();
 // Charger campagne depuis l'URL si présente
 const { campaign: urlCampaign, loading: urlLoading, error: urlError } = useCampaignFromUrl();
 
-// Initialiser/sélectionner une campagne namespacée au montage
-const didInitRef = useRef(false);
+// Réinitialiser la campagne au montage de l'éditeur SEULEMENT si aucune ID n'est présente dans l'URL
 useEffect(() => {
-  if (didInitRef.current) return;
-  didInitRef.current = true;
   const params = new URLSearchParams(location.search);
-  const explicitId = params.get('campaign');
-  const existingId = (storeCampaign as any)?.id as string | undefined;
-  const cid = explicitId || existingId;
-  if (cid) {
-    console.log('📂 [ScratchEditor] selectCampaign for id', cid);
-    selectCampaign(cid, 'scratch');
+  const hasId = params.get('campaign');
+  if (!hasId) {
+    console.log('🎨 [ScratchEditor] Mount: no campaign id → resetting store');
+    resetCampaign();
   } else {
-    // Nouvelle campagne → activer le flag global pour bloquer toute auto-injection initiale
-    beginNewCampaign('scratch');
-    const tempId = `temp-scratch-${Date.now()}`;
-    console.log('🆕 [ScratchEditor] initializing isolated temp campaign', tempId);
-    selectCampaign(tempId, 'scratch');
-    initializeNewCampaignWithId('scratch', tempId);
-    // Libérer au prochain frame
-    requestAnimationFrame(() => clearNewCampaignFlag());
+    console.log('🎨 [ScratchEditor] Mount: campaign id detected, skipping reset');
   }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-}, []);
+}, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // État local pour la compatibilité existante
   const [selectedDevice, setSelectedDevice] = useState<'desktop' | 'tablet' | 'mobile'>(actualDevice);
@@ -471,7 +451,6 @@ useEffect(() => {
 useEffect(() => {
   const id = (campaignState as any)?.id as string | undefined;
   if (!id) return;
-  if (selectedCampaignId && id !== selectedCampaignId) return;
   const t = window.setTimeout(async () => {
     try {
       const payload: any = {
@@ -491,7 +470,7 @@ useEffect(() => {
     }
   }, 1000);
   return () => clearTimeout(t);
-}, [campaignState?.id, selectedCampaignId, canvasElements, screenBackgrounds, selectedDevice]);
+}, [campaignState?.id, canvasElements, screenBackgrounds, selectedDevice]);
 
   // Écoute l'évènement global pour appliquer l'image de fond à tous les écrans par device (desktop/tablette/mobile distinct)
   useEffect(() => {
@@ -998,7 +977,7 @@ const handleSaveCampaignName = useCallback(async () => {
 
   const ensuredBlocBoutonRef = useRef(false);
   const createDefaultBlocBouton = useCallback((screen: ScreenId = 'screen1'): BlocBouton => ({
-    id: `BlocBouton-${Date.now()}-${performance.now().toFixed(3).replace('.', '')}-${Math.random().toString(36).slice(2, 8)}`,
+    id: `BlocBouton-${Date.now()}`,
     type: 'BlocBouton',
     label: getDefaultButtonLabel(screen),
     href: '#',
@@ -1011,16 +990,7 @@ const handleSaveCampaignName = useCallback(async () => {
   }), [getDefaultButtonLabel]);
 
   useEffect(() => {
-    if (isNewCampaignGlobal) return; // ne pas auto-ajouter pendant new-campaign
     if (ensuredBlocBoutonRef.current) return;
-    
-    // Ne pas ajouter de boutons si la campagne a déjà été chargée depuis la DB
-    const hasCampaignFromDB = !!campaignState?.id;
-    if (hasCampaignFromDB) {
-      ensuredBlocBoutonRef.current = true;
-      return;
-    }
-    
     const hasStandaloneButton = (Object.values(modularPage.screens) as Module[][]).some((modules) => modules?.some((m) => m.type === 'BlocBouton'));
     if (!hasStandaloneButton && !editorHasCardButton()) {
       const targetScreen = currentScreen || 'screen1';
@@ -1030,16 +1000,11 @@ const handleSaveCampaignName = useCallback(async () => {
       persistModular({ screens: nextScreens, _updatedAt: Date.now() });
     }
     ensuredBlocBoutonRef.current = true;
-  }, [isNewCampaignGlobal, modularPage.screens, currentScreen, persistModular, createDefaultBlocBouton, editorHasCardButton, campaignState?.id]);
+  }, [modularPage.screens, currentScreen, persistModular, createDefaultBlocBouton, editorHasCardButton]);
 
   useEffect(() => {
-    if (isNewCampaignGlobal) return; // ne pas auto-convertir/ajouter pendant new-campaign
     const legacyButton = canvasElements.find((el) => typeof el?.role === 'string' && el.role.toLowerCase().includes('button'));
     if (!legacyButton) return;
-
-    // Ne pas traiter les legacy buttons si la campagne a déjà été chargée depuis la DB
-    const hasCampaignFromDB = !!campaignState?.id;
-    if (hasCampaignFromDB) return;
 
     const hasStandalone = (Object.values(modularPage.screens) as Module[][]).some((modules) => modules?.some((m) => m.type === 'BlocBouton'));
     if (!hasStandalone && !editorHasCardButton()) {
@@ -1066,7 +1031,7 @@ const handleSaveCampaignName = useCallback(async () => {
       persistModular({ screens: nextScreens, _updatedAt: Date.now() });
     }
     setCanvasElements((prev) => prev.filter((el) => el !== legacyButton));
-  }, [isNewCampaignGlobal, canvasElements, modularPage.screens, currentScreen, persistModular, createDefaultBlocBouton, campaignState?.id]);
+  }, [canvasElements, modularPage.screens, currentScreen, persistModular, createDefaultBlocBouton]);
 
   const handleDeleteModule = useCallback((id: string) => {
     const nextScreens: ModularPage['screens'] = { ...modularPage.screens };
@@ -1130,7 +1095,7 @@ const handleSaveCampaignName = useCallback(async () => {
       return;
     }
 
-    const newId = `module-${Date.now()}-${performance.now().toFixed(3).replace('.', '')}-${Math.random().toString(36).slice(2, 8)}`;
+    const newId = `module-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
     const duplicatedModule: ModuleWithMeta = {
       ...moduleToDuplicate,
       id: newId

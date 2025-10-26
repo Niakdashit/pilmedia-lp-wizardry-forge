@@ -10,12 +10,8 @@ interface ClipboardData {
 interface EditorState {
   // Core state
   campaign: OptimizedCampaign | null;
-  selectedCampaignId: string | null;
   activeTab: string;
   previewDevice: 'desktop' | 'tablet' | 'mobile';
-  
-  // Global new-campaign guard to prevent auto-injection across editors
-  isNewCampaignGlobal: boolean;
   
   // UI state
   isLoading: boolean;
@@ -100,16 +96,6 @@ interface EditorActions {
   
   // Reset campaign (for editor navigation)
   resetCampaign: () => void;
-  
-  // Initialize a fresh new campaign
-  initializeNewCampaign: (type: string) => void;
-  
-  // Select a campaign for an editor
-  selectCampaign: (campaignId: string, editorType?: string) => void;
-
-  // Global begin/clear new-campaign session
-  beginNewCampaign: (type: string) => void;
-  clearNewCampaignFlag: () => void;
 }
 
 type EditorStore = EditorState & EditorActions;
@@ -126,10 +112,8 @@ export const useEditorStore = create<EditorStore>()(
   subscribeWithSelector((set, get) => ({
     // Initial state
     campaign: null,
-    selectedCampaignId: null,
     activeTab: 'general',
     previewDevice: 'desktop',
-    isNewCampaignGlobal: false,
     isLoading: false,
     isSaving: false,
     isModified: false,
@@ -307,15 +291,6 @@ export const useEditorStore = create<EditorStore>()(
     
     resetCampaign: () => {
       console.log('🔄 [EditorStore] Resetting campaign state');
-      // Clear per-screen background cache across devices to avoid leaking into next editor
-      try {
-        const screens: Array<'screen1' | 'screen2' | 'screen3'> = ['screen1','screen2','screen3'];
-        const devices: Array<'desktop' | 'tablet' | 'mobile'> = ['desktop','tablet','mobile'];
-        screens.forEach((s) => devices.forEach((d) => {
-          try { localStorage.removeItem(`quiz-bg-${d}-${s}`); } catch {}
-        }));
-        try { localStorage.removeItem('quiz-bg-owner'); } catch {}
-      } catch {}
       set({
         campaign: null,
         isModified: false,
@@ -323,67 +298,6 @@ export const useEditorStore = create<EditorStore>()(
         updateCounter: 0,
         lastUpdateTime: Date.now()
       });
-    },
-    
-    initializeNewCampaign: (type: string) => {
-      console.log('🆕 [EditorStore] Initializing fresh new campaign of type:', type);
-      const validType = ['wheel', 'scratch', 'jackpot', 'quiz', 'dice', 'form', 'memory', 'puzzle'].includes(type) 
-        ? type as OptimizedCampaign['type']
-        : 'wheel';
-      
-      // Clear per-screen background cache across devices so new campaign starts clean
-      try {
-        const screens: Array<'screen1' | 'screen2' | 'screen3'> = ['screen1','screen2','screen3'];
-        const devices: Array<'desktop' | 'tablet' | 'mobile'> = ['desktop','tablet','mobile'];
-        screens.forEach((s) => devices.forEach((d) => {
-          try { localStorage.removeItem(`quiz-bg-${d}-${s}`); } catch {}
-        }));
-        try { localStorage.removeItem('quiz-bg-owner'); } catch {}
-      } catch {}
-
-      const freshCampaign: OptimizedCampaign = {
-        id: undefined,
-        name: 'Nouvelle campagne',
-        type: validType,
-        design: {
-          background: '#ffffff',
-          customTexts: [],
-          customImages: []
-        },
-        gameConfig: {},
-        buttonConfig: {},
-        _lastUpdate: Date.now(),
-        _version: 1,
-        _initialized: true
-      };
-      
-      set({
-        campaign: freshCampaign,
-        isModified: false,
-        selectedElementId: null,
-        updateCounter: 0,
-        lastUpdateTime: Date.now()
-      });
-    },
-    
-    selectCampaign: (campaignId: string, editorType?: string) => {
-      console.log('🎯 [EditorStore] Selecting campaign:', campaignId, 'for editor:', editorType || 'unknown');
-      set({ selectedCampaignId: campaignId });
-    },
-
-    beginNewCampaign: (type: string) => {
-      console.log('🚀 [EditorStore] beginNewCampaign →', type);
-      // Mark global guard to block any auto-injection across editors for this render turn
-      set({ isNewCampaignGlobal: true });
-      // Initialize a clean store campaign of the requested type
-      get().initializeNewCampaign(type);
-    },
-
-    clearNewCampaignFlag: () => {
-      if (get().isNewCampaignGlobal) {
-        console.log('🔓 [EditorStore] clearNewCampaignFlag');
-        set({ isNewCampaignGlobal: false });
-      }
     },
   }))
 );

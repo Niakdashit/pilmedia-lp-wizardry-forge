@@ -130,18 +130,44 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
     return { desktop: `${width}px`, mobile: `${mobileWidth}px` };
   }, []);
 
-  // Initialisation session: ne rien effacer dans localStorage pour préserver les BG entre preview/édition
+  // Réinitialiser les backgrounds temporaires UNIQUEMENT au premier montage après un rafraîchissement
   useEffect(() => {
     try {
       const w = window as any;
       if (!w.__quizBgSessionInitialized) {
+        const devices: Array<'desktop' | 'tablet' | 'mobile'> = ['desktop', 'tablet', 'mobile'];
+        const screens: Array<'screen1' | 'screen2' | 'screen3'> = ['screen1', 'screen2', 'screen3'];
+        devices.forEach((d) => {
+          screens.forEach((s) => {
+            try { localStorage.removeItem(`quiz-bg-${d}-${s}`); } catch {}
+          });
+
+  // --- Save Design: floating action + throttled autosave ---
+  const autosaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // @ts-expect-error - Fonction utilisée pour l'autosave, peut être ignorée
+  const scheduleSaveDesign = useCallback(() => {
+    if (autosaveTimer.current) clearTimeout(autosaveTimer.current);
+    autosaveTimer.current = setTimeout(async () => {
+      const id = (campaignState as any)?.id as string | undefined;
+      if (!id) return;
+      try {
+        await saveCampaign({
+          id,
+          design: {
+            background: canvasBackground,
+            extractedColors,
+          },
+          config: campaignConfig,
+          game_config: {},
+        } as any);
+      } catch (e) { console.warn('[QuizEditor] autosave design skipped', e); }
+    }, 1200);
+  }, [campaignState, canvasBackground, extractedColors, campaignConfig, saveCampaign]);
+        });
         w.__quizBgSessionInitialized = true;
       }
     } catch {}
   }, []);
-
-  // --- Save Design: floating action + throttled autosave ---
-  // (moved below after campaignState/saveCampaign declarations to avoid TDZ)
 
   // Effet de montage: ne plus nettoyer les images de fond pour préserver l'édition après un aperçu
   useEffect(() => {
@@ -206,10 +232,6 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
     setIsLoading,
     setIsModified
   } = useEditorStore();
-  const isNewCampaignGlobal = useEditorStore((s) => s.isNewCampaignGlobal);
-  const beginNewCampaign = useEditorStore((s) => s.beginNewCampaign);
-  const clearNewCampaignFlag = useEditorStore((s) => s.clearNewCampaignFlag);
-  const selectCampaign = useEditorStore((s) => s.selectCampaign);
   
   // Hook de synchronisation preview
   const { syncBackground } = useEditorPreviewSync();
@@ -221,22 +243,6 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
   
 // Campaign state synchronization hook
 const { syncAllStates } = useCampaignStateSync();
-
-  // Nouvelle campagne via header: si aucun id dans l'URL, créer une campagne vierge et activer le flag global
-  useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const cid = params.get('campaign');
-    if (!cid) {
-      beginNewCampaign('quiz');
-      // Assigner un selectedCampaignId temporaire (pour garde éventuelle) sans sauvegarde DB
-      const tempId = `temp-quiz-${Date.now()}`;
-      try { selectCampaign(tempId, 'quiz'); } catch {}
-      requestAnimationFrame(() => clearNewCampaignFlag());
-    } else {
-      // S'assurer que le flag est désactivé quand on charge une campagne existante
-      if (isNewCampaignGlobal) clearNewCampaignFlag();
-    }
-  }, [location.search]);
 
   // État local pour la compatibilité existante
   const [selectedDevice, setSelectedDevice] = useState<'desktop' | 'tablet' | 'mobile'>(actualDevice);
@@ -261,8 +267,6 @@ const { syncAllStates } = useCampaignStateSync();
     screen2: defaultBackground,
     screen3: defaultBackground
   });
-  // Hydration flag to avoid overwriting DB with defaults before campaign data is applied
-  const bgHydratedRef = useRef(false);
   
   // Background global (fallback pour compatibilité)
   const [canvasBackground, setCanvasBackground] = useState<{ type: 'color' | 'image'; value: string }>(defaultBackground);
@@ -306,8 +310,6 @@ const { syncAllStates } = useCampaignStateSync();
     } catch {}
   }, [canvasZoom, selectedDevice]);
 
-  // --- Save Design: floating action + throttled autosave --- (defined later to avoid TDZ)
-
 // Synchronise l'état de l'appareil réel et sélectionné après le montage (corrige les différences entre Lovable et Safari)
 useEffect(() => {
   const device = detectDevice();
@@ -331,27 +333,8 @@ useEffect(() => {
     setCanvasElements(topLevelElements);
   }
 
-  if (cfg?.screenBackgrounds) {
-    setScreenBackgrounds(cfg.screenBackgrounds);
-    bgHydratedRef.current = true;
-  } else {
-    const designBg = (campaignState as any)?.design || {};
-    const globalDesktop = designBg.backgroundImage as string | undefined;
-    const globalMobile = designBg.mobileBackgroundImage as string | undefined;
-    if (globalDesktop || globalMobile) {
-      const imgDesktop = globalDesktop ? { type: 'image' as const, value: globalDesktop } : defaultBackground;
-      const derived: ScreenBackgrounds = {
-        screen1: imgDesktop,
-        screen2: imgDesktop,
-        screen3: imgDesktop
-      };
-      setScreenBackgrounds(derived);
-      bgHydratedRef.current = true;
-    }
-  }
+  if (cfg?.screenBackgrounds) setScreenBackgrounds(cfg.screenBackgrounds);
   if (cfg?.device) setSelectedDevice(cfg.device as any);
-
-  // (projection top-level retirée pour éviter des boucles de mise à jour)
 
   if (mp && mp.screens) {
     const total = Object.values(mp.screens || {}).reduce((n: number, arr: any) => n + (Array.isArray(arr) ? arr.length : 0), 0);
@@ -362,94 +345,12 @@ useEffect(() => {
   }
 }, [campaignState]);
 
-// Mémo de ce qui a été appliqué pour éviter les boucles (device+screen -> url)
-const bgAppliedRef = useRef<Record<string, string>>({});
-
-// Hydratation basée campagne → localStorage + Preview (tous devices), avec garde anti-boucle
-useEffect(() => {
-  try {
-    const devices: Array<'desktop' | 'tablet' | 'mobile'> = ['desktop', 'tablet', 'mobile'];
-    const screens: Array<'screen1' | 'screen2' | 'screen3'> = ['screen1', 'screen2', 'screen3'];
-    const designBg = (campaignState as any)?.design || {};
-    const globalDesktop = designBg.backgroundImage as string | undefined;
-    const globalMobile = designBg.mobileBackgroundImage as string | undefined;
-
-    devices.forEach((device) => {
-      screens.forEach((s) => {
-        const bg = screenBackgrounds[s] as any;
-        let value: string | undefined = undefined;
-        if (bg?.type === 'image' && typeof bg.value === 'string') value = bg.value;
-        if (!value && bg?.devices?.[device]?.type === 'image' && typeof bg?.devices?.[device]?.value === 'string') value = bg.devices[device].value;
-        if (!value) value = device === 'mobile' ? globalMobile : globalDesktop;
-
-        const key = `${device}:${s}`;
-        const storageKey = `quiz-bg-${device}-${s}`;
-        if (value && bgAppliedRef.current[key] !== value) {
-          bgAppliedRef.current[key] = value;
-          try { localStorage.setItem(storageKey, value); } catch {}
-          try { window.dispatchEvent(new CustomEvent('applyBackgroundCurrentScreen', { detail: { url: value, device, screenId: s } })); } catch {}
-        }
-      });
-    });
-  } catch {}
-}, [campaignState?.design?.backgroundImage, campaignState?.design?.mobileBackgroundImage, screenBackgrounds]);
-
-  // Réflection après édition locale (screenBackgrounds modifiés) → garde anti-boucle
-  useEffect(() => {
-    try {
-      const device = selectedDevice;
-      const screens: Array<'screen1' | 'screen2' | 'screen3'> = ['screen1', 'screen2', 'screen3'];
-      screens.forEach((s) => {
-        const bg = screenBackgrounds[s];
-        if (bg?.type === 'image' && typeof bg.value === 'string') {
-          const key = `${device}:${s}`;
-          if (bgAppliedRef.current[key] !== bg.value) {
-            bgAppliedRef.current[key] = bg.value;
-            try { localStorage.setItem(`quiz-bg-${device}-${s}`, bg.value); } catch {}
-            try { window.dispatchEvent(new CustomEvent('applyBackgroundCurrentScreen', { detail: { url: bg.value, device, screenId: s } })); } catch {}
-          }
-        }
-      });
-    } catch {}
-  }, [screenBackgrounds, selectedDevice]);
-
-  // Hydratation initiale depuis config.canvasConfig.screenBackgrounds si présent → garde anti-boucle
-  useEffect(() => {
-    try {
-      const cfg = (campaignState as any)?.config?.canvasConfig;
-      const sb = cfg?.screenBackgrounds as ScreenBackgrounds | undefined;
-      if (!sb) return;
-      const device = selectedDevice;
-      (['screen1','screen2','screen3'] as const).forEach((s) => {
-        const bg: any = (sb as any)[s];
-        if (bg?.type === 'image' && typeof bg.value === 'string') {
-          const key = `${device}:${s}`;
-          if (bgAppliedRef.current[key] !== bg.value) {
-            bgAppliedRef.current[key] = bg.value;
-            try { localStorage.setItem(`quiz-bg-${device}-${s}`, bg.value); } catch {}
-            try { window.dispatchEvent(new CustomEvent('applyBackgroundCurrentScreen', { detail: { url: bg.value, device, screenId: s } })); } catch {}
-          }
-        }
-      });
-    } catch {}
-  }, [campaignState?.id, screenBackgrounds, selectedDevice]);
-
 // 🔗 Miroir local → store: conserve les éléments dans campaign.config.canvasConfig
 useEffect(() => {
-  // Skip initial mirror until backgrounds were hydrated from campaign or user edited
-  if (!bgHydratedRef.current) return;
   setCampaign((prev: any) => {
     if (!prev) return prev;
     const next = {
       ...prev,
-      // Top-level projection for PreviewRenderer
-      canvasConfig: {
-        ...(prev.canvasConfig || {}),
-        elements: canvasElements,
-        screenBackgrounds,
-        device: selectedDevice,
-        zoom: canvasZoom,
-      },
       config: {
         ...(prev.config || {}),
         canvasConfig: {
@@ -470,7 +371,6 @@ useEffect(() => {
 useEffect(() => {
   const id = (campaignState as any)?.id as string | undefined;
   if (!id) return;
-  if (!bgHydratedRef.current) return; // avoid saving defaults over persisted data
   const t = window.setTimeout(async () => {
     try {
       const payload: any = {
@@ -503,44 +403,24 @@ useEffect(() => {
     return () => window.removeEventListener('resize', updateWindowSize);
   }, []);
 
-  // Ne pas réinitialiser l'image de fond lors des changements de route (préserve l'image après Preview)
+  // Réinitialiser l'image de fond quand on change de route (uniquement si on vient d'une autre page)
   const prevPathRef = useRef<string>('');
   useEffect(() => {
-    prevPathRef.current = location.pathname;
-  }, [location.pathname]);
-
-  // Forcer la ré-application des backgrounds au retour (focus/pageshow) depuis le Preview
-  useEffect(() => {
-    const forceReapply = () => {
-      try {
-        const devices: Array<'desktop' | 'tablet' | 'mobile'> = ['desktop', 'tablet', 'mobile'];
-        const screens: Array<'screen1' | 'screen2' | 'screen3'> = ['screen1', 'screen2', 'screen3'];
-        const designBg = (campaignState as any)?.design || {};
-        const globalDesktop = designBg.backgroundImage as string | undefined;
-        const globalMobile = designBg.mobileBackgroundImage as string | undefined;
-        devices.forEach((device) => {
-          screens.forEach((s) => {
-            const bg = screenBackgrounds[s] as any;
-            let value: string | undefined = undefined;
-            if (bg?.type === 'image' && typeof bg.value === 'string') value = bg.value;
-            if (!value && bg?.devices?.[device]?.type === 'image' && typeof bg?.devices?.[device]?.value === 'string') value = bg.devices[device].value;
-            if (!value) value = device === 'mobile' ? globalMobile : globalDesktop;
-            const key = `quiz-bg-${device}-${s}`;
-            if (value) {
-              try { localStorage.setItem(key, value); } catch {}
-              try { window.dispatchEvent(new CustomEvent('applyBackgroundCurrentScreen', { detail: { url: value, device, screenId: s } })); } catch {}
-            }
-          });
-        });
-      } catch {}
-    };
-    window.addEventListener('focus', forceReapply);
-    window.addEventListener('pageshow', forceReapply);
-    return () => {
-      window.removeEventListener('focus', forceReapply);
-      window.removeEventListener('pageshow', forceReapply);
-    };
-  }, [campaignState?.design?.backgroundImage, campaignState?.design?.mobileBackgroundImage, screenBackgrounds]);
+    const currentPath = location.pathname;
+    const prevPath = prevPathRef.current;
+    
+    // Réinitialiser uniquement si on vient d'une autre page ET qu'il y a une image
+    if (prevPath && prevPath !== currentPath && canvasBackground.type === 'image') {
+      console.log('🧹 [QuizEditor] Navigation détectée - réinitialisation du fond');
+      setCanvasBackground(
+        mode === 'template'
+          ? { type: 'color', value: '#4ECDC4' }
+          : { type: 'color', value: 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)' }
+      );
+    }
+    
+    prevPathRef.current = currentPath;
+  }, [location.pathname, mode, canvasBackground.type]); // Se déclenche au changement de route
 
   // Ajuste automatiquement le zoom lors du redimensionnement sur mobile
   useEffect(() => {
@@ -703,34 +583,22 @@ useEffect(() => {
   const [isNameModalOpen, setIsNameModalOpen] = useState(false);
   const [newCampaignName, setNewCampaignName] = useState('');
 
-  // Open name modal only for new campaigns or when explicitly requested
+  // Always open name modal on arrival (both modes), independent of previous prompts or name value
   useEffect(() => {
-    const id = (campaignState as any)?.id as string | undefined;
     const name = (campaignState as any)?.name as string | undefined;
-    const promptedKey = id ? `campaign:name:prompted:${id}` : `campaign:name:prompted:new:quiz`;
-    const alreadyPrompted = typeof window !== 'undefined' ? localStorage.getItem(promptedKey) === '1' : true;
     const forceOpen = new URLSearchParams(location.search).get('forceNameModal') === '1';
-    
     setNewCampaignName((name || '').trim());
-    
     if (forceOpen) {
       try { requestAnimationFrame(() => setIsNameModalOpen(true)); } catch { setIsNameModalOpen(true); }
       return;
     }
-    
-    // Only open for new campaigns or campaigns without proper names that haven't been prompted yet
-    const defaultNames = new Set([
-      'Nouvelle campagne',
-      'Nouvelle Roue de la Fortune',
-      '',
-      undefined as unknown as string
-    ]);
-    const needsName = !name || defaultNames.has((name || '').trim());
-    
-    if (needsName && !alreadyPrompted) {
-      try { requestAnimationFrame(() => setIsNameModalOpen(true)); } catch { setIsNameModalOpen(true); }
-    }
-  }, [campaignState?.id, campaignState?.name, location.search]);
+    // Always open on entry, regardless of mode or prior view
+    try { requestAnimationFrame(() => setIsNameModalOpen(true)); } catch { setIsNameModalOpen(true); }
+    return () => {
+      // Reset when leaving or switching mode/path so next entry re-opens deterministically
+      setIsNameModalOpen(false);
+    };
+  }, [editorMode, location.search, location.pathname]);
 
 const { upsertSettings } = useCampaignSettings();
 
@@ -896,52 +764,6 @@ const handleSaveCampaignName = useCallback(async () => {
     }
   }, [campaignConfig]);
 
-  // Handler utilisé par HybridSidebar → BackgroundPanel (placé après currentScreen pour éviter TDZ)
-  const handleBackgroundChange = useCallback((
-    background: { type: 'color' | 'image'; value: string },
-    options?: { screenId?: 'screen1' | 'screen2' | 'screen3'; applyToAllScreens?: boolean; device?: 'desktop' | 'tablet' | 'mobile' }
-  ) => {
-    const targetScreen = options?.screenId || currentScreen;
-    const applyAll = !!options?.applyToAllScreens;
-    const targetDevice = options?.device || selectedDevice;
-
-    const nextScreens: ScreenBackgrounds = applyAll
-      ? { screen1: background, screen2: background, screen3: background }
-      : ({ ...screenBackgrounds, [targetScreen]: background } as ScreenBackgrounds);
-
-    setScreenBackgrounds(nextScreens);
-    bgHydratedRef.current = true;
-
-    if (background.type === 'image') {
-      try {
-        if (applyAll) {
-          window.dispatchEvent(new CustomEvent('applyBackgroundAllScreens', { detail: { url: background.value, device: targetDevice } }));
-        } else {
-          window.dispatchEvent(new CustomEvent('applyBackgroundCurrentScreen', { detail: { url: background.value, device: targetDevice, screenId: targetScreen } }));
-        }
-      } catch {}
-    }
-
-    setCampaign((prev: any) => {
-      if (!prev) return prev;
-      const design = { ...(prev.design || {}) } as any;
-      if (background.type === 'image') {
-        if (targetDevice === 'mobile') design.mobileBackgroundImage = background.value;
-        else design.backgroundImage = background.value;
-      } else {
-        design.background = background;
-      }
-      return {
-        ...prev,
-        design,
-        config: { ...(prev.config || {}), canvasConfig: { ...(prev.config?.canvasConfig || {}), screenBackgrounds: nextScreens } }
-      };
-    });
-
-    try { setIsModified(true); } catch {}
-    setBackgroundUpdateTrigger((p) => p + 1);
-  }, [currentScreen, selectedDevice, screenBackgrounds, setCampaign, setIsModified]);
-
   // Helper to persist modularPage into campaignConfig (and mark modified)
   const persistModular = useCallback((next: ModularPage) => {
     setModularPage(next);
@@ -1005,7 +827,7 @@ const handleSaveCampaignName = useCallback(async () => {
     if (hasStandaloneReplay || hasCardReplay) return; // déjà présent
 
     const replayButton: BlocBouton = {
-      id: generateUniqueId('BlocBouton'),
+      id: `bloc-bouton-replay-${Date.now()}`,
       type: 'BlocBouton',
       label: getDefaultButtonLabel('screen3'),
       href: '#',
@@ -1029,7 +851,7 @@ const handleSaveCampaignName = useCallback(async () => {
   // Modular handlers
   const handleAddModule = useCallback((screen: ScreenId, module: Module) => {
     if (module.type === 'BlocLogo') {
-      const logoId = module.id || generateUniqueId('BlocLogo');
+      const logoId = module.id || `BlocLogo-${Date.now()}`;
       const cloneLogo = (base: typeof module): Module => ({
         ...(base as Module),
         id: logoId
@@ -1046,7 +868,7 @@ const handleSaveCampaignName = useCallback(async () => {
     }
 
     if (module.type === 'BlocPiedDePage') {
-      const footerId = module.id || generateUniqueId('BlocPiedDePage');
+      const footerId = module.id || `BlocPiedDePage-${Date.now()}`;
       const cloneFooter = (base: typeof module): Module => {
         if (base.type !== 'BlocPiedDePage') return { ...base } as Module;
         const footer = base;
@@ -1128,21 +950,9 @@ const handleSaveCampaignName = useCallback(async () => {
     persistModular({ screens: nextScreens, _updatedAt: Date.now() });
   }, [modularPage, persistModular]);
 
-  // Compteur global pour garantir l'unicité des IDs
-  const idCounterRef = useRef(0);
-  
-  // Fonction utilitaire pour générer des IDs vraiment uniques
-  const generateUniqueId = useCallback((prefix: string = 'element') => {
-    const timestamp = Date.now();
-    const perfTime = Math.floor(performance.now() * 1000);
-    const counter = idCounterRef.current++;
-    const random = Math.random().toString(36).substring(2, 15);
-    return `${prefix}-${timestamp}-${perfTime}-${counter}-${random}`;
-  }, []);
-
   const ensuredBlocBoutonRef = useRef(false);
   const createDefaultBlocBouton = useCallback((screen: ScreenId = 'screen1'): BlocBouton => ({
-    id: generateUniqueId('BlocBouton'),
+    id: `BlocBouton-${Date.now()}`,
     type: 'BlocBouton',
     label: getDefaultButtonLabel(screen),
     href: '#',
@@ -1152,18 +962,10 @@ const handleSaveCampaignName = useCallback(async () => {
     textColor: LAUNCH_BUTTON_DEFAULT_TEXT_COLOR,
     padding: LAUNCH_BUTTON_DEFAULT_PADDING,
     boxShadow: LAUNCH_BUTTON_DEFAULT_SHADOW
-  }), [getDefaultButtonLabel, generateUniqueId]);
+  }), [getDefaultButtonLabel]);
 
   useEffect(() => {
     if (ensuredBlocBoutonRef.current) return;
-    
-    // Ne pas ajouter de boutons si la campagne a déjà été chargée depuis la DB
-    const hasCampaignFromDB = !!campaignState?.id;
-    if (hasCampaignFromDB) {
-      ensuredBlocBoutonRef.current = true;
-      return;
-    }
-    
     const hasStandaloneButton = (Object.values(modularPage.screens) as Module[][]).some((modules) => modules?.some((m) => m.type === 'BlocBouton'));
     if (!hasStandaloneButton && !editorHasCardButton()) {
       const targetScreen = currentScreen || 'screen1';
@@ -1173,15 +975,11 @@ const handleSaveCampaignName = useCallback(async () => {
       persistModular({ screens: nextScreens, _updatedAt: Date.now() });
     }
     ensuredBlocBoutonRef.current = true;
-  }, [modularPage.screens, currentScreen, persistModular, createDefaultBlocBouton, editorHasCardButton, campaignState?.id]);
+  }, [modularPage.screens, currentScreen, persistModular, createDefaultBlocBouton, editorHasCardButton]);
 
   useEffect(() => {
     const legacyButton = canvasElements.find((el) => typeof el?.role === 'string' && el.role.toLowerCase().includes('button'));
     if (!legacyButton) return;
-
-    // Ne pas traiter les legacy buttons si la campagne a déjà été chargée depuis la DB
-    const hasCampaignFromDB = !!campaignState?.id;
-    if (hasCampaignFromDB) return;
 
     const hasStandalone = (Object.values(modularPage.screens) as Module[][]).some((modules) => modules?.some((m) => m.type === 'BlocBouton'));
     if (!hasStandalone && !editorHasCardButton()) {
@@ -1208,7 +1006,7 @@ const handleSaveCampaignName = useCallback(async () => {
       persistModular({ screens: nextScreens, _updatedAt: Date.now() });
     }
     setCanvasElements((prev) => prev.filter((el) => el !== legacyButton));
-  }, [canvasElements, modularPage.screens, currentScreen, persistModular, createDefaultBlocBouton, campaignState?.id]);
+  }, [canvasElements, modularPage.screens, currentScreen, persistModular, createDefaultBlocBouton]);
 
   const handleDeleteModule = useCallback((id: string) => {
     const nextScreens: ModularPage['screens'] = { ...modularPage.screens };
@@ -1272,7 +1070,7 @@ const handleSaveCampaignName = useCallback(async () => {
       return;
     }
 
-    const newId = generateUniqueId('module');
+    const newId = `module-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
     const duplicatedModule: ModuleWithMeta = {
       ...moduleToDuplicate,
       id: newId
@@ -1403,7 +1201,7 @@ const handleSaveCampaignName = useCallback(async () => {
             .from('campaigns')
             .select('*')
             .eq('id', campaignId)
-            .maybeSingle();
+            .single();
           
           if (error) throw error;
           if (!data) {
@@ -1419,27 +1217,17 @@ const handleSaveCampaignName = useCallback(async () => {
             setCanvasElements(mergedCanvasConfig.elements);
           }
           
-          // Restore background - check multiple sources
-          const bg = mergedCanvasConfig.background 
-            || (data?.design as any)?.backgroundImage 
-            || (data?.design as any)?.background 
-            || { type: 'color', value: 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)' };
-          
-          // If we have a background image URL in design, use it
-          if ((data?.design as any)?.backgroundImage && typeof (data.design as any).backgroundImage === 'string') {
-            setCanvasBackground({ type: 'image', value: (data.design as any).backgroundImage });
-          } else {
-            setCanvasBackground(typeof bg === 'string' ? { type: 'color', value: bg } : bg);
-          }
-          
-          // Extract colors if background is an image
-          const initialBg = (mergedCanvasConfig as any)?.background?.value || (data?.design as any)?.backgroundImage;
-          if (initialBg && typeof initialBg === 'string' && initialBg.startsWith('http')) {
+          // Restore background
+          const initialBg = (mergedCanvasConfig as any)?.background?.value;
+          if (initialBg) {
             const loadedColors = (data?.config as any)?.extractedColors ?? (data?.design as any)?.extractedColors ?? (data as any)?.extractedColors;
             const colorArray = (Array.isArray(loadedColors) ? loadedColors : (loadedColors as any)?.colors ?? [])
               .filter((c: string) => /^#[0-9A-Fa-f]{6}$/.test(c));
             setExtractedColors(colorArray);
           }
+          
+          const bg = mergedCanvasConfig.background || (data?.design as any)?.background || { type: 'color', value: '#ffffff' };
+          setCanvasBackground(typeof bg === 'string' ? { type: 'color', value: bg } : bg);
           
           // Restore screen backgrounds if available
           if (mergedCanvasConfig.screenBackgrounds) {
@@ -1450,13 +1238,11 @@ const handleSaveCampaignName = useCallback(async () => {
           const quizFromConfig = {
             ...(data?.config || {} as any),
             quizConfig: (data?.config as any)?.quizConfig ?? (data as any)?.modularPage,
-            quizModules: (data?.config as any)?.quizModules || (data?.design as any)?.quizModules || [],
-            modularPage: (data as any)?.modularPage || (data?.design as any)?.quizModules || [],
+            quizModules: (data?.config as any)?.quizModules || [],
+            modularPage: (data as any)?.modularPage || [],
           };
           if ((data?.config as any)?.quizModules) {
             quizFromConfig.quizModules = (data.config as any).quizModules;
-          } else if ((data?.design as any)?.quizModules) {
-            quizFromConfig.quizModules = (data.design as any).quizModules;
           } else if ((data as any)?.modularPage) {
             quizFromConfig.modularPage = (data as any).modularPage;
           }
@@ -1469,14 +1255,6 @@ const handleSaveCampaignName = useCallback(async () => {
             quizFromConfig.quizConfig = qC;
           }
 
-          console.log('📦 [QuizEditor] Modules to restore:', {
-            fromConfigQuizModules: (data?.config as any)?.quizModules,
-            fromDesignQuizModules: (data?.design as any)?.quizModules,
-            fromModularPage: (data as any)?.modularPage,
-            finalQuizModules: quizFromConfig.quizModules,
-            finalModularPage: quizFromConfig.modularPage
-          });
-
           // Restore campaign config
           setCampaignConfig({
             ...data,
@@ -1487,15 +1265,11 @@ const handleSaveCampaignName = useCallback(async () => {
             }
           });
           
-          // Restore modular page (modules) - check all possible sources
-          if (quizFromConfig.quizModules && (Array.isArray(quizFromConfig.quizModules) ? quizFromConfig.quizModules.length > 0 : Object.keys(quizFromConfig.quizModules).length > 0)) {
-            console.log('✅ Restoring modules from quizModules:', quizFromConfig.quizModules);
+          // Restore modular page (modules)
+          if (quizFromConfig.quizModules && quizFromConfig.quizModules.length > 0) {
             setModularPage(quizFromConfig.quizModules);
-          } else if (quizFromConfig.modularPage && (Array.isArray(quizFromConfig.modularPage) ? quizFromConfig.modularPage.length > 0 : Object.keys(quizFromConfig.modularPage).length > 0)) {
-            console.log('✅ Restoring modules from modularPage:', quizFromConfig.modularPage);
+          } else if (quizFromConfig.modularPage && quizFromConfig.modularPage.length > 0) {
             setModularPage(quizFromConfig.modularPage);
-          } else {
-            console.warn('⚠️ No modules found to restore');
           }
           
           // Restore quiz config
@@ -1579,7 +1353,190 @@ const handleSaveCampaignName = useCallback(async () => {
     setSelectedElement(enrichedElement);
   };
 
-  // (duplicate handleBackgroundChange removed, using the useCallback version above)
+  // Ajoute à l'historique lors du changement de background (granulaire)
+  const handleBackgroundChange = (bg: any, options?: { screenId?: 'screen1' | 'screen2' | 'screen3'; applyToAllScreens?: boolean; device?: 'desktop' | 'tablet' | 'mobile' }) => {
+    console.log('🎨 [QuizEditor] handleBackgroundChange:', { bg, options });
+    
+    if (options?.applyToAllScreens) {
+      // Appliquer à tous les écrans
+      console.log('✅ Applying background to ALL screens');
+      setScreenBackgrounds({
+        screen1: bg,
+        screen2: bg,
+        screen3: bg
+      });
+      setCanvasBackground(bg); // Fallback global
+    } else if (options?.screenId && options?.device) {
+      // 📱 Appliquer uniquement à l'écran ET appareil spécifiés
+      console.log(`✅ Applying background to ${options.screenId} on ${options.device} ONLY`);
+      setScreenBackgrounds(prev => {
+        const screenKey = options.screenId!;
+        const deviceKey = options.device!;
+        const currentScreenBg = prev[screenKey];
+        
+        // Structure: { type, value, devices: { desktop: {...}, mobile: {...}, tablet: {...} } }
+        const newScreenBg = {
+          ...currentScreenBg,
+          devices: {
+            ...(currentScreenBg?.devices || {}),
+            [deviceKey]: bg
+          }
+        };
+        
+        console.log('📱 Updated screen background with device-specific data:', {
+          screenKey,
+          deviceKey,
+          newScreenBg
+        });
+        
+        return {
+          ...prev,
+          [screenKey]: newScreenBg
+        };
+      });
+    } else if (options?.screenId) {
+      // Appliquer uniquement à l'écran spécifié (tous devices)
+      console.log(`✅ Applying background to ${options.screenId} ONLY`);
+      setScreenBackgrounds(prev => ({
+        ...prev,
+        [options.screenId!]: bg
+      }));
+      // Ne pas modifier canvasBackground global
+    } else {
+      // Pas d'options : comportement par défaut (appliquer globalement)
+      console.log('⚠️ No options provided, applying globally (fallback)');
+      setScreenBackgrounds({
+        screen1: bg,
+        screen2: bg,
+        screen3: bg
+      });
+      setCanvasBackground(bg);
+    }
+    
+    // 🔗 Mode Article: si une image de fond est uploadée depuis le panneau gauche,
+    // la refléter aussi vers la bannière Article pour un feedback immédiat.
+    try {
+      const searchParams = new URLSearchParams(location.search);
+      const isArticleMode = searchParams.get('mode') === 'article';
+      if (isArticleMode && bg?.type === 'image' && typeof bg?.value === 'string') {
+        setCampaignConfig((prev: any) => {
+          const base = prev || {};
+          const baseArticle = base.articleConfig || {};
+          const baseBanner = baseArticle.banner || {};
+          return {
+            ...base,
+            articleConfig: {
+              ...baseArticle,
+              banner: {
+                ...baseBanner,
+                imageUrl: bg.value
+              }
+            }
+          };
+        });
+      }
+    } catch {}
+
+    setTimeout(() => {
+      addToHistory({
+        campaignConfig: { ...campaignConfig },
+        canvasElements: JSON.parse(JSON.stringify(canvasElements)),
+        canvasBackground: { ...bg },
+        screenBackgrounds: { ...screenBackgrounds }
+      }, 'background_update');
+    }, 0);
+
+    // Auto-theme quiz + form based on solid background color
+    try {
+      if (bg?.type === 'color' && typeof bg.value === 'string') {
+        const base = bg.value as string;
+
+        const toRgb = (color: string): { r: number; g: number; b: number } | null => {
+          if (!color) return null;
+          const hex = color.trim();
+          const rgbMatch = hex.match(/^rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)$/i);
+          if (rgbMatch) {
+            return { r: +rgbMatch[1], g: +rgbMatch[2], b: +rgbMatch[3] };
+          }
+          const h = hex.replace('#', '');
+          if (h.length === 3) {
+            const r = parseInt(h[0] + h[0], 16);
+            const g = parseInt(h[1] + h[1], 16);
+            const b = parseInt(h[2] + h[2], 16);
+            return { r, g, b };
+          }
+          if (h.length === 6) {
+            const r = parseInt(h.slice(0, 2), 16);
+            const g = parseInt(h.slice(2, 4), 16);
+            const b = parseInt(h.slice(4, 6), 16);
+            return { r, g, b };
+          }
+          return null;
+        };
+        const toHex = (rgb: { r: number; g: number; b: number }): string => {
+          const c = (n: number) => n.toString(16).padStart(2, '0');
+          return `#${c(Math.max(0, Math.min(255, Math.round(rgb.r))))}${c(Math.max(0, Math.min(255, Math.round(rgb.g))))}${c(Math.max(0, Math.min(255, Math.round(rgb.b))))}`;
+        };
+        const luminance = (rgb: { r: number; g: number; b: number }) => {
+          const a = [rgb.r, rgb.g, rgb.b].map((v) => {
+            v /= 255;
+            return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+          });
+          return 0.2126 * a[0] + 0.7152 * a[1] + 0.0722 * a[2];
+        };
+        const darken = (rgb: { r: number; g: number; b: number }, pct: number) => ({
+          r: rgb.r * (1 - pct),
+          g: rgb.g * (1 - pct),
+          b: rgb.b * (1 - pct)
+        });
+        const lighten = (rgb: { r: number; g: number; b: number }, pct: number) => ({
+          r: rgb.r + (255 - rgb.r) * pct,
+          g: rgb.g + (255 - rgb.g) * pct,
+          b: rgb.b + (255 - rgb.b) * pct
+        });
+        const getTextOn = (rgb: { r: number; g: number; b: number }) => (luminance(rgb) > 0.55 ? '#111111' : '#ffffff');
+
+        const baseRgb = toRgb(base);
+        if (baseRgb) {
+          // Choose a primary accent that contrasts with background
+          const primaryRgb = luminance(baseRgb) > 0.6 ? darken(baseRgb, 0.35) : lighten(baseRgb, 0.35);
+          const primaryHex = toHex(primaryRgb);
+          const buttonText = getTextOn(primaryRgb);
+          const hoverHex = toHex(darken(primaryRgb, 0.12));
+          const activeHex = toHex(darken(primaryRgb, 0.24));
+
+          setCampaignConfig((prev: any) => {
+            const next = {
+              ...(prev || {}),
+              design: {
+                ...(prev?.design || {}),
+                // expose brand colors for forms + other UIs
+                customColors: {
+                  ...(prev?.design?.customColors || {}),
+                  primary: primaryHex,
+                  secondary: '#ffffff',
+                  _updatedAt: Date.now()
+                },
+                quizConfig: {
+                  ...(prev?.design?.quizConfig || {}),
+                  style: {
+                    ...(prev?.design?.quizConfig?.style || {}),
+                    buttonBackgroundColor: primaryHex,
+                    buttonTextColor: buttonText,
+                    buttonHoverBackgroundColor: hoverHex,
+                    buttonActiveBackgroundColor: activeHex
+                  }
+                }
+              }
+            };
+            return next;
+          });
+        }
+      }
+    } catch (e) {
+      console.warn('Auto-theme from background color failed:', e);
+    }
+  };
 
   // Ajoute à l'historique lors du changement de config (granulaire)
   const handleCampaignConfigChange = (cfg: any) => {
@@ -2255,7 +2212,7 @@ const handleSaveCampaignName = useCallback(async () => {
     });
     
     return {
-      id: 'quiz-preview-campaign',
+      id: 'quiz-design-preview',
       type: 'quiz',
       // Fournir la configuration Article pour le mode article
       articleConfig: (campaignConfig as any)?.articleConfig,

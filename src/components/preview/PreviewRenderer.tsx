@@ -172,7 +172,7 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
   const footerModules3 = allModules3.filter((m: any) => m?.type === 'BlocPiedDePage');
   const modules3 = allModules3.filter((m: any) => m?.type !== 'BlocLogo' && m?.type !== 'BlocPiedDePage');
 
-  // Background style - Privilégier d'abord le localStorage par écran pour robustesse
+  // Background style - Utiliser directement campaign.design.background pour avoir les dernières données
   const backgroundStyle: React.CSSProperties = useMemo(() => {
     console.log('🎨 [PreviewRenderer] Raw data:', {
       'campaign.canvasConfig.background': campaign?.canvasConfig?.background,
@@ -183,7 +183,18 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
       'forceUpdate': forceUpdate
     });
     
-    // Priorité 1: image de fond par écran stockée en session (localStorage) – la plus robuste entre Editor/Preview
+    // Priorité 1: Backgrounds par écran depuis canvasConfig
+    const screenBackgrounds = campaign?.canvasConfig?.screenBackgrounds || campaign?.design?.screenBackgrounds;
+    if (screenBackgrounds && screenBackgrounds[currentScreen]) {
+      const screenBg = screenBackgrounds[currentScreen];
+      console.log(`✅ [PreviewRenderer] Using screen-specific background for ${currentScreen}:`, screenBg);
+      if (screenBg.type === 'image' && screenBg.value) {
+        return { background: `url(${screenBg.value}) center/cover no-repeat` };
+      }
+      return { background: screenBg.value || 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)' };
+    }
+    
+    // Priorité 2 (fallback): image de fond par écran stockée en session (localStorage)
     // Clés gérées par DesignCanvas lors des uploads: `quiz-bg-<device>-<screenId>`
     let perScreenImage: string | null = null;
     try {
@@ -192,36 +203,25 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
       perScreenImage = typeof window !== 'undefined' ? (localStorage.getItem(lsKey) || null) : null;
     } catch {}
 
-    // Si une image par écran existe pour l'appareil courant, l'utiliser immédiatement
+    // Priorité 3: si une image par écran existe pour l'appareil courant, l'utiliser
     if (perScreenImage) {
       return { background: `url(${perScreenImage}) center/cover no-repeat` };
     }
 
-    // Priorité 2: Backgrounds par écran depuis canvasConfig (si non disponible en localStorage)
-    const screenBackgrounds = campaign?.canvasConfig?.screenBackgrounds || campaign?.design?.screenBackgrounds;
-    if (screenBackgrounds && screenBackgrounds[currentScreen]) {
-      const screenBg = screenBackgrounds[currentScreen];
-      console.log(`✅ [PreviewRenderer] Using screen-specific background for ${currentScreen} (campaign):`, screenBg);
-      if (screenBg.type === 'image' && screenBg.value) {
-        return { background: `url(${screenBg.value}) center/cover no-repeat` };
-      }
-      return { background: screenBg.value || 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)' };
-    }
-
-    // Priorité 3: campaign.canvasConfig.background (preview-only, le plus à jour)
+    // Priorité 4: campaign.canvasConfig.background (preview-only, le plus à jour)
     let bg = campaign?.canvasConfig?.background;
     
-    // Priorité 4: campaign.design.background (global)
+    // Priorité 3: campaign.design.background (global)
     if (!bg || (!bg.value && !bg.type)) {
       bg = campaign?.design?.background;
     }
     
-    // Priorité 5: canonicalData.background (fallback)
+    // Priorité 4: canonicalData.background (fallback)
     if (!bg || (!bg.value && !bg.type)) {
       bg = canonicalData.background;
     }
     
-    // Priorité 6: backgroundImage si défini
+    // Priorité 5: backgroundImage si défini
     if (!bg?.value && campaign?.design?.backgroundImage) {
       bg = { type: 'image', value: campaign.design.backgroundImage };
     }

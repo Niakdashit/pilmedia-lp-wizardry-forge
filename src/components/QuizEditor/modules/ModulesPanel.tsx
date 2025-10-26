@@ -9,8 +9,7 @@ export interface ModulesPanelProps {
 }
 
 const createModule = (type: ModuleType, screen: ScreenId): Module => {
-  // Générer un ID unique avec timestamp haute précision et random plus long
-  const id = `${type}-${Date.now()}-${performance.now().toFixed(3).replace('.', '')}-${Math.random().toString(36).slice(2, 11)}`;
+  const id = `${type}-${Date.now()}-${Math.random().toString(36).slice(2,7)}`;
   const defaultCTA = screen === 'screen3' ? 'Rejouer' : 'Participer';
   switch (type) {
     case 'BlocTexte':
@@ -91,7 +90,7 @@ const createModule = (type: ModuleType, screen: ScreenId): Module => {
         links: networks.map((network) => {
           const preset = SOCIAL_PRESETS[network];
           return {
-            id: `${id}-${network}-${Date.now()}-${Math.random().toString(36).slice(2, 5)}`,
+            id: `${id}-${network}`,
             label: preset.label,
             url: preset.defaultUrl,
             network,
@@ -130,14 +129,14 @@ const createModule = (type: ModuleType, screen: ScreenId): Module => {
         align: 'center',
         children: [
           {
-            id: `${id}-text-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+            id: `${id}-text-1`,
             type: 'BlocTexte',
             body: 'Texte par défaut',
             bodyFontSize: 16,
             align: 'center'
           },
           {
-            id: `${id}-btn-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+            id: `${id}-btn-1`,
             type: 'BlocBouton',
             label: defaultCTA,
             href: '#',

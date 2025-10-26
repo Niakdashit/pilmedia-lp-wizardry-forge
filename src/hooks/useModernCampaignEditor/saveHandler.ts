@@ -40,14 +40,6 @@ export const saveCampaignToDB = async (
   campaign: any,
   saveCampaignFn: (data: any) => Promise<any>
 ) => {
-  const isUuid = (v?: string) => !!v && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v);
-  // Hard guard: never persist preview-only campaign objects
-  if (typeof campaign?.id === 'string' && !isUuid(campaign.id)) {
-    if (campaign.id.includes('preview')) {
-      console.warn('⛔ [saveCampaignToDB] Skipping save for preview-only campaign id:', campaign.id);
-      return { ...campaign };
-    }
-  }
   console.log('💾 [saveCampaignToDB] Saving campaign with complete state:', {
     id: campaign?.id,
     name: campaign?.name,
@@ -141,9 +133,6 @@ export const saveCampaignToDB = async (
     // Design modules (for modular editor compatibility)
     designModules: campaign?.modularPage || campaign?.design?.designModules,
     
-    // Quiz modules (for QuizEditor compatibility)
-    quizModules: campaign?.modularPage || campaign?.design?.quizModules,
-    
     // Custom texts and images
     customTexts: campaign?.design?.customTexts || [],
     customImages: campaign?.design?.customImages || [],
@@ -167,7 +156,7 @@ export const saveCampaignToDB = async (
 
   // Build final payload with ALL campaign data
   const payload: any = {
-    id: isUuid(campaign?.id) ? campaign?.id : undefined,
+    id: campaign?.id,
     name: campaign?.name || 'Nouvelle campagne',
     description: campaign?.description,
     slug: campaign?.slug,

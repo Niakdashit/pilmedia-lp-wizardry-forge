@@ -97,8 +97,7 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
     setPreviewDevice,
     setIsLoading,
     setIsModified,
-    resetCampaign,
-    initializeNewCampaign
+    resetCampaign
   } = useEditorStore();
   // Campagne centralisée (source de vérité pour les champs de contact)
   const campaignState = useEditorStore((s) => s.campaign);
@@ -106,19 +105,10 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
   // Supabase campaigns API
   const { saveCampaign } = useCampaigns();
 
-  // Initialiser ou charger la campagne au montage
+  // Réinitialiser la campagne au montage de l'éditeur
   useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const campaignId = params.get('campaign');
-    
-    if (!campaignId) {
-      // Nouvelle campagne : initialiser avec un état vierge
-      console.log(' [ModelEditor] Mount: no campaign id → initializing fresh campaign');
-      initializeNewCampaign('wheel');
-    } else {
-      // Campagne existante : sera chargée par useCampaignFromUrl
-      console.log(' [ModelEditor] Mount: campaign id detected, will load from URL');
-    }
+    console.log('🎨 [ModelEditor] Mounting - resetting campaign state');
+    resetCampaign();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // État local pour la compatibilité existante

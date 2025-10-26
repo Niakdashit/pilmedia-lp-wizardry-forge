@@ -524,8 +524,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
         }));
         // Stocker pour l'appareil ciblé pour conserver des images distinctes par device
         try {
-          const cid = (campaign as any)?.id || 'default';
-          localStorage.setItem(`sc-bg-${cid}-${targetDevice}-${detail.screenId}`, detail.url);
+          localStorage.setItem(`sc-bg-${targetDevice}-${detail.screenId}`, detail.url);
           console.log(`🔔 [${screenId}] Emitting sc-bg-sync event for ${detail.screenId}`);
           // Émettre un événement de synchronisation pour les autres canvas
           window.dispatchEvent(new CustomEvent('sc-bg-sync', { detail: { screenId: detail.screenId } }));
@@ -571,8 +570,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
       }));
       // Stocker pour l'appareil ciblé afin de conserver les images distinctes par device
       try {
-        const cid = (campaign as any)?.id || 'default';
-        localStorage.setItem(`sc-bg-${cid}-${targetDevice}-${screenId}`, detail.url);
+        localStorage.setItem(`sc-bg-${targetDevice}-${screenId}`, detail.url);
         console.log(`✅ [${screenId}] Applied background to device ${targetDevice}`);
       } catch {}
       // Mettre aussi à jour le design global (par device) pour la persistance et le preview
