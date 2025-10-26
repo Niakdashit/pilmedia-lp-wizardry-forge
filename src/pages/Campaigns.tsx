@@ -235,9 +235,24 @@ const Campaigns: React.FC = () => {
       description: `Confirmez la suppression de ${selectedCampaigns.length} campagne(s). Cette action est définitive.`,
       danger: true,
       onConfirm: async () => {
-        await Promise.all(selectedCampaigns.map(id => deleteCampaign(id)));
-        setSelectedCampaigns([]);
-        setConfirmOpen(false);
+        try {
+          // Supprimer les dépendances et campagnes en parallèle pour toutes les campagnes sélectionnées
+          await Promise.all(
+            selectedCampaigns.flatMap(campaignId => [
+              supabase.from('participations').delete().eq('campaign_id', campaignId),
+              supabase.from('campaign_stats').delete().eq('campaign_id', campaignId),
+              supabase.from('campaigns').delete().eq('id', campaignId)
+            ])
+          );
+          
+          // Rafraîchir une seule fois après toutes les suppressions
+          await refetch();
+          setSelectedCampaigns([]);
+          setConfirmOpen(false);
+        } catch (error) {
+          console.error('Erreur lors de la suppression:', error);
+          await refetch(); // Rafraîchir pour voir l'état réel
+        }
       }
     });
   };

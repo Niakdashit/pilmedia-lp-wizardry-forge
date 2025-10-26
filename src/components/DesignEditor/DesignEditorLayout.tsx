@@ -102,6 +102,11 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
   } = useEditorStore();
   // Campagne centralisée (source de vérité pour les champs de contact)
   const campaignState = useEditorStore((s) => s.campaign);
+  
+  // Flag global: nouvelle campagne en cours (empêche auto-injections)
+  const isNewCampaignGlobal = useEditorStore(s => s.isNewCampaignGlobal);
+  const beginNewCampaign = useEditorStore(s => s.beginNewCampaign);
+  const clearNewCampaignFlag = useEditorStore(s => s.clearNewCampaignFlag);
 
   // Supabase campaigns API
   const { saveCampaign } = useCampaigns();
@@ -979,11 +984,6 @@ useEffect(() => {
     canvasScrollArea.scrollTo({ top: clamped, behavior: 'smooth' });
     return true;
   }, []);
-
-  // Flag global: nouvelle campagne en cours (empêche auto-injections)
-  const isNewCampaignGlobal = useEditorStore(s => s.isNewCampaignGlobal);
-  const beginNewCampaign = useEditorStore(s => s.beginNewCampaign);
-  const clearNewCampaignFlag = useEditorStore(s => s.clearNewCampaignFlag);
   
   // Détecter quand selectedElement contient un moduleId et mettre à jour selectedModuleId + ouvrir le panneau
   useEffect(() => {
