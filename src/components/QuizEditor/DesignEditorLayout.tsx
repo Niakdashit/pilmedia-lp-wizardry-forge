@@ -35,6 +35,7 @@ import { useCampaignStateSync } from '@/hooks/useCampaignStateSync';
 import { quizTemplates } from '../../types/quizTemplates';
 import { supabase } from '@/integrations/supabase/client';
 import { CampaignStorage } from '@/utils/campaignStorage';
+import { useAutoSaveToSupabase } from '@/hooks/useAutoSaveToSupabase';
 
 const KeyboardShortcutsHelp = lazy(() => import('../shared/KeyboardShortcutsHelp'));
 const MobileStableEditor = lazy(() => import('./components/MobileStableEditor'));
@@ -1036,6 +1037,28 @@ const handleSaveCampaignName = useCallback(async () => {
     const allModules = (Object.values(modularPage.screens) as Module[][]).flat();
     return allModules.find((module) => module.id === selectedModuleId) || null;
   }, [selectedModuleId, modularPage.screens]);
+  
+  // 🔄 Auto-save to Supabase every 30 seconds
+  // Placed here after all state declarations to avoid TDZ issues
+  useAutoSaveToSupabase(
+    {
+      campaign: campaignState,
+      canvasElements,
+      modularPage,
+      screenBackgrounds,
+      canvasZoom
+    },
+    {
+      enabled: true,
+      interval: 30000, // 30 seconds
+      onSave: () => {
+        console.log('✅ [AutoSave] Campaign auto-saved to Supabase');
+      },
+      onError: (error) => {
+        console.error('❌ [AutoSave] Auto-save failed:', error);
+      }
+    }
+  );
   
   // Détecter la position de scroll pour changer l'écran courant
   useEffect(() => {
