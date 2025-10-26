@@ -1556,14 +1556,25 @@ const handleSaveCampaignName = useCallback(async () => {
           // Initialize config
           const quizFromConfig = {
             ...(data?.config || {} as any),
-            quizConfig: (data?.config as any)?.quizConfig ?? (data as any)?.modularPage,
-            quizModules: (data?.config as any)?.quizModules || (data?.design as any)?.quizModules || [],
-            modularPage: (data as any)?.modularPage || (data?.design as any)?.quizModules || [],
+            quizConfig: (data?.config as any)?.quizConfig ?? (data?.config as any)?.modularPage ?? (data as any)?.modularPage,
+            quizModules: (data?.config as any)?.quizModules 
+              || (data?.design as any)?.quizModules 
+              || (data?.config as any)?.modularPage 
+              || [],
+            modularPage: (data?.config as any)?.modularPage 
+              || (data as any)?.modularPage 
+              || (data?.design as any)?.quizModules 
+              || [],
           };
           if ((data?.config as any)?.quizModules) {
             quizFromConfig.quizModules = (data.config as any).quizModules;
           } else if ((data?.design as any)?.quizModules) {
             quizFromConfig.quizModules = (data.design as any).quizModules;
+          } else if ((data?.config as any)?.modularPage) {
+            quizFromConfig.modularPage = (data.config as any).modularPage;
+            if (!quizFromConfig.quizModules || (Array.isArray(quizFromConfig.quizModules) && quizFromConfig.quizModules.length === 0)) {
+              quizFromConfig.quizModules = (data.config as any).modularPage;
+            }
           } else if ((data as any)?.modularPage) {
             quizFromConfig.modularPage = (data as any).modularPage;
           }
