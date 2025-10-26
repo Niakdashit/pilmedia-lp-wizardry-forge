@@ -1,10 +1,21 @@
 import { create } from 'zustand';
 import { subscribeWithSelector, persist } from 'zustand/middleware';
 import type { OptimizedCampaign } from '../components/ModernEditor/types/CampaignTypes';
+import { CampaignStorage } from '../utils/campaignStorage';
 
 interface ClipboardData {
   type: string; // e.g. 'element', 'style', etc.
   payload: any;
+}
+
+interface CampaignCache {
+  campaign: OptimizedCampaign | null;
+  canvasElements?: any[];
+  modularPage?: any;
+  screenBackgrounds?: any;
+  extractedColors?: any[];
+  canvasZoom?: number;
+  lastAccessed: number;
 }
 
 interface EditorState {
@@ -43,6 +54,11 @@ interface EditorState {
 
   // Global clipboard state
   clipboard: ClipboardData | null;
+  
+  // Campaign isolation cache (per campaign ID)
+  campaignDataCache: {
+    [campaignId: string]: CampaignCache;
+  };
   
   // Editor-specific states (namespaced by editor type)
   editorStates: {
@@ -113,6 +129,12 @@ interface EditorActions {
   // Global begin/clear new-campaign session
   beginNewCampaign: (type: string) => void;
   clearNewCampaignFlag: () => void;
+  
+  // Campaign cache management for isolation
+  saveToCampaignCache: (campaignId: string, data: Omit<CampaignCache, 'lastAccessed'>) => void;
+  loadFromCampaignCache: (campaignId: string) => CampaignCache | null;
+  clearCampaignCache: (campaignId: string) => void;
+  cleanupOldCaches: () => void;
 }
 
 type EditorStore = EditorState & EditorActions;
@@ -147,6 +169,9 @@ export const useEditorStore = create<EditorStore>()(
 
     // Clipboard state
     clipboard: null,
+    
+    // Campaign isolation cache
+    campaignDataCache: {},
     
     // Editor-specific states
     editorStates: {},
@@ -454,6 +479,98 @@ export const useEditorStore = create<EditorStore>()(
         console.log('🔓 [EditorStore] clearNewCampaignFlag');
         set({ isNewCampaignGlobal: false });
       }
+    },
+    
+    // Campaign cache management for complete isolation
+    saveToCampaignCache: (campaignId, data) => {
+      console.log('💾 [EditorStore] Saving to campaign cache:', campaignId);
+      
+      const cacheData: CampaignCache = {
+        ...data,
+        lastAccessed: Date.now()
+      };
+      
+      // Save to in-memory cache
+      set((state) => ({
+        campaignDataCache: {
+          ...state.campaignDataCache,
+          [campaignId]: cacheData
+        }
+      }));
+      
+      // Save to localStorage with namespacing
+      CampaignStorage.saveCampaignState(campaignId, data);
+    },
+    
+    loadFromCampaignCache: (campaignId) => {
+      console.log('📂 [EditorStore] Loading from campaign cache:', campaignId);
+      
+      const state = get();
+      
+      // Try in-memory cache first
+      if (state.campaignDataCache[campaignId]) {
+        console.log('✅ [EditorStore] Found in memory cache');
+        return state.campaignDataCache[campaignId];
+      }
+      
+      // Try localStorage
+      const cached = CampaignStorage.loadCampaignState(campaignId);
+      if (cached) {
+        console.log('✅ [EditorStore] Found in localStorage cache');
+        // Load into memory cache
+        set((state) => ({
+          campaignDataCache: {
+            ...state.campaignDataCache,
+            [campaignId]: cached
+          }
+        }));
+        return cached;
+      }
+      
+      console.log('ℹ️ [EditorStore] No cache found for campaign:', campaignId);
+      return null;
+    },
+    
+    clearCampaignCache: (campaignId) => {
+      console.log('🗑️ [EditorStore] Clearing campaign cache:', campaignId);
+      
+      // Clear from memory
+      set((state) => {
+        const newCache = { ...state.campaignDataCache };
+        delete newCache[campaignId];
+        return { campaignDataCache: newCache };
+      });
+      
+      // Clear from localStorage
+      CampaignStorage.clearCampaign(campaignId);
+    },
+    
+    cleanupOldCaches: () => {
+      console.log('🧹 [EditorStore] Cleaning up old caches');
+      
+      const SEVEN_DAYS = 7 * 24 * 60 * 60 * 1000;
+      const now = Date.now();
+      
+      const state = get();
+      const newCache = { ...state.campaignDataCache };
+      let cleaned = 0;
+      
+      // Clean in-memory cache
+      Object.keys(newCache).forEach(campaignId => {
+        if (newCache[campaignId].lastAccessed && (now - newCache[campaignId].lastAccessed) > SEVEN_DAYS) {
+          delete newCache[campaignId];
+          cleaned++;
+        }
+      });
+      
+      if (cleaned > 0) {
+        set({ campaignDataCache: newCache });
+      }
+      
+      // Clean localStorage
+      const localCleaned = CampaignStorage.cleanupOldCaches();
+      
+      console.log(`✅ [EditorStore] Cleaned ${cleaned + localCleaned} old caches`);
     },
   })),
   {

@@ -34,6 +34,7 @@ import { saveCampaignToDB } from '@/hooks/useModernCampaignEditor/saveHandler';
 import { useCampaignStateSync } from '@/hooks/useCampaignStateSync';
 import { quizTemplates } from '../../types/quizTemplates';
 import { supabase } from '@/integrations/supabase/client';
+import { CampaignStorage } from '@/utils/campaignStorage';
 
 const KeyboardShortcutsHelp = lazy(() => import('../shared/KeyboardShortcutsHelp'));
 const MobileStableEditor = lazy(() => import('./components/MobileStableEditor'));
@@ -221,7 +222,9 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
     setCampaign,
     setPreviewDevice,
     setIsLoading,
-    setIsModified
+    setIsModified,
+    saveToCampaignCache,
+    loadFromCampaignCache
   } = useEditorStore();
   const isNewCampaignGlobal = useEditorStore((s) => s.isNewCampaignGlobal);
   const beginNewCampaign = useEditorStore((s) => s.beginNewCampaign);
@@ -253,14 +256,46 @@ useEffect(() => {
   
   if (!campaignId || !isUuid(campaignId)) return;
   
+  // Check if we're switching campaigns
+  const currentCampaignId = (campaignState as any)?.id;
+  if (currentCampaignId && currentCampaignId !== campaignId) {
+    console.log('🔄 [QuizEditor] Switching campaigns, saving current state');
+    
+    // Save current campaign state to cache before switching (use refs for current values)
+    saveToCampaignCache(currentCampaignId, {
+      campaign: campaignState,
+      canvasElements: canvasElementsRef.current,
+      modularPage: modularPageRef.current || undefined,
+      screenBackgrounds: screenBackgroundsRef.current || undefined,
+      canvasZoom: canvasZoomRef.current
+    });
+  }
+  
   // Skip if this campaign is already loaded
-  if ((campaignState as any)?.id === campaignId) {
+  if (currentCampaignId === campaignId) {
     console.log('✅ [QuizEditor] Campaign already loaded:', campaignId);
     return;
   }
   
-  console.log('🔄 [QuizEditor] Loading campaign from Supabase:', campaignId);
+  console.log('🔄 [QuizEditor] Loading campaign:', campaignId);
   
+  // Try to load from cache first
+  const cachedData = loadFromCampaignCache(campaignId);
+  if (cachedData && cachedData.campaign) {
+    console.log('📦 [QuizEditor] Restoring from cache');
+    setCampaign(cachedData.campaign);
+    if (cachedData.canvasElements) setCanvasElements(cachedData.canvasElements);
+    if (cachedData.modularPage) setModularPage(cachedData.modularPage);
+    if (cachedData.screenBackgrounds) {
+      setScreenBackgrounds(cachedData.screenBackgrounds);
+      bgHydratedRef.current = true;
+    }
+    if (cachedData.canvasZoom) setCanvasZoom(cachedData.canvasZoom);
+    dataHydratedRef.current = true;
+    return;
+  }
+  
+  // Otherwise, load from Supabase
   const loadCampaignData = async () => {
     try {
       const { data, error } = await supabase
@@ -297,6 +332,11 @@ useEffect(() => {
         
         // Update campaign state with loaded data
         setCampaign(campaignData);
+        
+        // Save to cache for faster subsequent loads
+        saveToCampaignCache(campaignId, {
+          campaign: campaignData
+        });
       }
     } catch (error) {
       console.error('❌ [QuizEditor] Failed to load campaign:', error);
@@ -304,7 +344,8 @@ useEffect(() => {
   };
   
   loadCampaignData();
-}, [location.search, campaignState, setCampaign]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, [location.search, campaignState, setCampaign, saveToCampaignCache, loadFromCampaignCache]);
   
 // Campaign state synchronization hook
 const { syncAllStates } = useCampaignStateSync();
@@ -354,16 +395,18 @@ const { syncAllStates } = useCampaignStateSync();
       // Reset modular page
       setModularPage(createEmptyModularPage());
       
-      // Clear localStorage backgrounds for clean slate
+      // Clear localStorage backgrounds for clean slate using CampaignStorage
       try {
         const screens: Array<'screen1' | 'screen2' | 'screen3'> = ['screen1','screen2','screen3'];
         const devices: Array<'desktop' | 'tablet' | 'mobile'> = ['desktop','tablet','mobile'];
-        const newId = (campaignState as any)?.id || 'global';
-        screens.forEach((s) => devices.forEach((d) => {
-          try { localStorage.removeItem(`quiz-bg-${newId}-${d}-${s}`); } catch {}
-          try { localStorage.removeItem(`quiz-bg-${d}-${s}`); } catch {}
-        }));
-        try { if (currentCampaignId) localStorage.setItem('quiz-bg-owner', String(currentCampaignId)); } catch {}
+        const newId = (campaignState as any)?.id;
+        if (newId) {
+          screens.forEach((s) => devices.forEach((d) => {
+            try { 
+              CampaignStorage.saveData(newId, `bg-${d}-${s}`, null);
+            } catch {}
+          }));
+        }
       } catch {}
     }
     
@@ -383,6 +426,17 @@ const { syncAllStates } = useCampaignStateSync();
   // États principaux
   const [canvasElements, setCanvasElements] = useState<any[]>([]);
   
+  // State refs for campaign switching (to avoid dependency issues)
+  const canvasElementsRef = useRef<any[]>([]);
+  const modularPageRef = useRef<ModularPage | null>(null);
+  const screenBackgroundsRef = useRef<ScreenBackgrounds | null>(null);
+  const canvasZoomRef = useRef<number>(0.7);
+  
+  // Update refs when state changes
+  useEffect(() => {
+    canvasElementsRef.current = canvasElements;
+  }, [canvasElements]);
+  
   // Background par écran - chaque écran a son propre background
   const defaultBackground = mode === 'template'
     ? { type: 'color' as const, value: '#4ECDC4' }
@@ -393,12 +447,21 @@ const { syncAllStates } = useCampaignStateSync();
     screen2: defaultBackground,
     screen3: defaultBackground
   });
+  
+  useEffect(() => {
+    screenBackgroundsRef.current = screenBackgrounds;
+  }, [screenBackgrounds]);
+  
   // Hydration flag to avoid overwriting DB with defaults before campaign data is applied
   const bgHydratedRef = useRef(false);
   
   // Background global (fallback pour compatibilité)
   const [canvasBackground, setCanvasBackground] = useState<{ type: 'color' | 'image'; value: string }>(defaultBackground);
   const [canvasZoom, setCanvasZoom] = useState(getDefaultZoom(selectedDevice));
+  
+  useEffect(() => {
+    canvasZoomRef.current = canvasZoom;
+  }, [canvasZoom]);
 
   useEffect(() => {
     if (!canvasElements.length) return;
@@ -963,6 +1026,11 @@ const handleSaveCampaignName = useCallback(async () => {
   const [currentScreen, setCurrentScreen] = useState<'screen1' | 'screen2' | 'screen3'>('screen1');
   // Modular editor JSON state
   const [modularPage, setModularPage] = useState<ModularPage>(createEmptyModularPage());
+  
+  useEffect(() => {
+    modularPageRef.current = modularPage;
+  }, [modularPage]);
+  
   const selectedModule: Module | null = useMemo(() => {
     if (!selectedModuleId) return null;
     const allModules = (Object.values(modularPage.screens) as Module[][]).flat();
