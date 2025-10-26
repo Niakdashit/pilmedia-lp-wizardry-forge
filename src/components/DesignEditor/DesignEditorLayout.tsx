@@ -103,6 +103,11 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
   } = useEditorStore();
   // Campagne centralisée (source de vérité pour les champs de contact)
   const campaignState = useEditorStore((s) => s.campaign);
+  
+  // Flag global: nouvelle campagne en cours (empêche auto-injections)
+  const isNewCampaignGlobal = useEditorStore(s => s.isNewCampaignGlobal);
+  const beginNewCampaign = useEditorStore(s => s.beginNewCampaign);
+  const clearNewCampaignFlag = useEditorStore(s => s.clearNewCampaignFlag);
 
   // Supabase campaigns API
   const { saveCampaign } = useCampaigns();
@@ -112,67 +117,6 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
 
   // Charger campagne depuis URL si présente
   const { campaign: urlCampaign, loading: urlLoading, error: urlError } = useCampaignFromUrl();
-
-  // Créer une campagne vide UNIQUEMENT si aucun UUID valide dans l'URL
-  useEffect(() => {
-    const searchParams = new URLSearchParams(location.search);
-    const campaignId = searchParams.get('campaign');
-
-    // Valider que c'est un UUID valide
-    const isValidUuid = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id);
-
-    // Si UUID valide présent, ne rien faire (sera chargé par useCampaignFromUrl)
-    if (!campaignId || !isValidUuid(campaignId)) {
-      // Nouvelle campagne : initialiser avec un état vierge via store (flag global)
-      console.log('🆕 [DesignEditor] No valid campaign ID → beginNewCampaign("wheel")');
-      beginNewCampaign('wheel');
-      resetCampaignLocals(); // Reset tous les états locaux pour une campagne vierge
-      // Libérer le flag au prochain frame pour réautoriser les effets ultérieurs
-      requestAnimationFrame(() => clearNewCampaignFlag());
-    } else {
-      // Campagne existante : sera chargée par useCampaignFromUrl
-      console.log('📂 [DesignEditor] Valid UUID in URL, will load campaign:', campaignId);
-      // S'assurer que le flag est bas
-      if (isNewCampaignGlobal) clearNewCampaignFlag();
-    }
-
-    // Sinon, créer une nouvelle campagne UNE SEULE FOIS
-    const createCampaign = async () => {
-      console.log('🆕 [DesignEditor] Creating new campaign (no valid ID in URL)...');
-      
-      const newCampaign = {
-        name: 'Nouvelle Roue de la Fortune',
-        description: '',
-        type: 'wheel' as const,
-        status: 'draft' as const,
-        config: {},
-        design: {},
-        game_config: {},
-        form_fields: []
-      };
-
-      const savedCampaign = await saveCampaign(newCampaign);
-      
-      if (savedCampaign) {
-        console.log('✅ [DesignEditor] Campaign created:', savedCampaign.id);
-        setCampaign({
-          ...savedCampaign,
-          gameConfig: savedCampaign.game_config || {},
-          buttonConfig: {}
-        } as any);
-        setIsLoading(false);
-        
-        // Mettre à jour l'URL avec l'ID de la campagne ET préserver le mode
-        const currentMode = searchParams.get('mode');
-        const newUrl = currentMode 
-          ? `${location.pathname}?campaign=${savedCampaign.id}&mode=${currentMode}`
-          : `${location.pathname}?campaign=${savedCampaign.id}`;
-        navigate(newUrl, { replace: true });
-      }
-    };
-
-    createCampaign();
-  }, [location.search]); // Se déclenche si l'URL change
 
   // 🧹 CRITICAL: Clean temporary campaigns - keep only Participer and Rejouer buttons
   useEffect(() => {
@@ -1034,10 +978,7 @@ useEffect(() => {
     return true;
   }, []);
 
-  // Flag global: nouvelle campagne en cours (empêche auto-injections)
-  const isNewCampaignGlobal = useEditorStore(s => s.isNewCampaignGlobal);
-  const beginNewCampaign = useEditorStore(s => s.beginNewCampaign);
-  const clearNewCampaignFlag = useEditorStore(s => s.clearNewCampaignFlag);
+  // Flags moved to top of component (before first useEffect)
   
   // Détecter quand selectedElement contient un moduleId et mettre à jour selectedModuleId + ouvrir le panneau
   useEffect(() => {
