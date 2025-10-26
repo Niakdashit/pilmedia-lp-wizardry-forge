@@ -36,6 +36,7 @@ import { quizTemplates } from '../../types/quizTemplates';
 import { supabase } from '@/integrations/supabase/client';
 import { CampaignStorage } from '@/utils/campaignStorage';
 import { useAutoSaveToSupabase } from '@/hooks/useAutoSaveToSupabase';
+import { generateTempCampaignId, isTempCampaignId, clearTempCampaignData, replaceTempWithPersistedId } from '@/utils/tempCampaignId';
 
 const KeyboardShortcutsHelp = lazy(() => import('../shared/KeyboardShortcutsHelp'));
 const MobileStableEditor = lazy(() => import('./components/MobileStableEditor'));
@@ -246,6 +247,13 @@ useEffect(() => {
   const campaignId = sp.get('campaign');
   const isUuid = (v?: string | null) => !!v && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v);
   
+  // CRITICAL: Skip loading for temporary campaign IDs - they should remain blank
+  if (isTempCampaignId(campaignId)) {
+    console.log('⏭️ [QuizEditor] Skipping load for temporary campaign:', campaignId);
+    dataHydratedRef.current = true; // Mark as hydrated to prevent default data loading
+    return;
+  }
+  
   if (!campaignId || !isUuid(campaignId)) return;
   
   // Check if we're switching campaigns
@@ -271,20 +279,22 @@ useEffect(() => {
   
   console.log('🔄 [QuizEditor] Loading campaign:', campaignId);
   
-  // Try to load from cache first
-  const cachedData = loadFromCampaignCache(campaignId);
-  if (cachedData && cachedData.campaign) {
-    console.log('📦 [QuizEditor] Restoring from cache');
-    setCampaign(cachedData.campaign);
-    if (cachedData.canvasElements) setCanvasElements(cachedData.canvasElements);
-    if (cachedData.modularPage) setModularPage(cachedData.modularPage);
-    if (cachedData.screenBackgrounds) {
-      setScreenBackgrounds(cachedData.screenBackgrounds);
-      bgHydratedRef.current = true;
+  // Try to load from cache first (but NOT for temp campaigns)
+  if (!isTempCampaignId(campaignId)) {
+    const cachedData = loadFromCampaignCache(campaignId);
+    if (cachedData && cachedData.campaign) {
+      console.log('📦 [QuizEditor] Restoring from cache');
+      setCampaign(cachedData.campaign);
+      if (cachedData.canvasElements) setCanvasElements(cachedData.canvasElements);
+      if (cachedData.modularPage) setModularPage(cachedData.modularPage);
+      if (cachedData.screenBackgrounds) {
+        setScreenBackgrounds(cachedData.screenBackgrounds);
+        bgHydratedRef.current = true;
+      }
+      if (cachedData.canvasZoom) setCanvasZoom(cachedData.canvasZoom);
+      dataHydratedRef.current = true;
+      return;
     }
-    if (cachedData.canvasZoom) setCanvasZoom(cachedData.canvasZoom);
-    dataHydratedRef.current = true;
-    return;
   }
   
   // Otherwise, load from Supabase
@@ -347,16 +357,28 @@ const { syncAllStates } = useCampaignStateSync();
     const params = new URLSearchParams(location.search);
     const cid = params.get('campaign');
     if (!cid) {
+      console.log('🆕 [QuizEditor] Creating new blank campaign');
       beginNewCampaign('quiz');
-      // Assigner un selectedCampaignId temporaire (pour garde éventuelle) sans sauvegarde DB
-      const tempId = `temp-quiz-${Date.now()}`;
-      try { selectCampaign(tempId, 'quiz'); } catch {}
+      // Générer un ID temporaire unique
+      const tempId = generateTempCampaignId('quiz');
+      
+      // Nettoyer toutes les données pour garantir une campagne vierge
+      clearTempCampaignData(tempId);
+      
+      // Assigner l'ID temporaire
+      try { 
+        selectCampaign(tempId, 'quiz');
+        
+        // Mettre à jour l'URL pour inclure le temp ID
+        navigate(`${location.pathname}?campaign=${tempId}${searchParams.get('mode') ? `&mode=${searchParams.get('mode')}` : ''}`, { replace: true });
+      } catch {}
+      
       requestAnimationFrame(() => clearNewCampaignFlag());
     } else {
       // S'assurer que le flag est désactivé quand on charge une campagne existante
       if (isNewCampaignGlobal) clearNewCampaignFlag();
     }
-  }, [location.search]);
+  }, [location.pathname]);
   
   // CRITICAL: Reset all local state when campaign ID changes to ensure complete isolation
   const prevCampaignIdRef = useRef<string | undefined>(undefined);
@@ -1182,6 +1204,12 @@ const handleSaveCampaignName = useCallback(async () => {
           modulesCount: Object.values(modularPage?.screens || {}).reduce((sum: number, arr: any) => sum + (Array.isArray(arr) ? arr.length : 0), 0),
           screenBackgroundsKeys: Object.keys(screenBackgrounds || {})
         });
+        
+        // Skip autosave for temporary campaigns - they should only be saved manually
+        if (isTempCampaignId(id)) {
+          console.log('⏭️ [QuizEditor] Skipping autosave for temporary campaign:', id);
+          return;
+        }
         
         const savedResult = await saveCampaignToDB(payload, saveCampaign);
         
@@ -2881,10 +2909,32 @@ const handleSaveCampaignName = useCallback(async () => {
         id: payload.id,
         modules: Object.values(modularPage?.screens || {}).reduce((sum: number, arr: any) => sum + (Array.isArray(arr) ? arr.length : 0), 0)
       });
+      
+      const wasTempId = isTempCampaignId(payload.id);
+      const tempId = wasTempId ? payload.id : undefined;
+      
       const saved = await saveCampaignToDB(payload, saveCampaign);
-      if (saved?.id && !(campaignState as any)?.id) {
+      
+      if (saved?.id) {
+        // Update campaign with saved ID
         setCampaign((prev: any) => ({ ...prev, id: saved.id }));
+        
+        // If we just saved a temporary campaign, replace temp ID with real ID
+        if (wasTempId && tempId) {
+          console.log('🔄 [QuizEditor] Replacing temp ID with persisted ID:', { tempId, persistedId: saved.id });
+          
+          replaceTempWithPersistedId(tempId, saved.id, (newId) => {
+            // Update URL with real campaign ID
+            const currentMode = searchParams.get('mode');
+            const newUrl = `${location.pathname}?campaign=${newId}${currentMode ? `&mode=${currentMode}` : ''}`;
+            navigate(newUrl, { replace: true });
+            
+            // Update store
+            selectCampaign(newId, 'quiz');
+          });
+        }
       }
+      
       setIsModified(false);
     } catch (e) {
       console.error('[DesignEditorLayout] Save failed', e);
