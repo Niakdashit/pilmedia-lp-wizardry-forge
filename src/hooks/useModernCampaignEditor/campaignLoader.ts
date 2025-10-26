@@ -104,14 +104,11 @@ export const loadCampaign = async (
         : (Array.isArray((existingCampaign.config as any)?.elements) ? (existingCampaign.config as any).elements : []);
       const screenBackgrounds = canvasConfig.screenBackgrounds || existingCampaign.design?.screenBackgrounds || {};
       
-      // Restore modularPage structure (priority: config.modularPage > design.quizModules > design.designModules)
-      const modularPage = existingCampaign.config?.modularPage 
-        || existingCampaign.design?.quizModules 
-        || existingCampaign.design?.designModules 
-        || {
-          screens: { screen1: [], screen2: [], screen3: [] },
-          _updatedAt: Date.now()
-        };
+      // Restore modularPage structure
+      const modularPage = existingCampaign.config?.modularPage || existingCampaign.design?.designModules || {
+        screens: { screen1: [], screen2: [], screen3: [] },
+        _updatedAt: Date.now()
+      };
       
       // Restore extracted colors
       const extractedColors = existingCampaign.design?.extractedColors || [];
@@ -127,6 +124,17 @@ export const loadCampaign = async (
         screenBackgrounds,
         modularPage,
         extractedColors,
+        
+        // Restore button and screen configs
+        buttonConfig: {
+          ...defaultCampaign.buttonConfig,
+          ...(existingCampaign.config?.buttonConfig || existingCampaign.buttonConfig || {})
+        },
+        screens: {
+          ...defaultCampaign.screens,
+          ...(existingCampaign.config?.screens || existingCampaign.screens || {})
+        },
+        campaignConfig: existingCampaign.config?.campaignConfig || {},
         
         // Restore form fields
         formFields: existingCampaign.form_fields || existingCampaign.formFields || defaultCampaign.formFields,
@@ -149,27 +157,10 @@ export const loadCampaign = async (
           extractedColors,
           screenBackgrounds,
           designModules: modularPage,
-          quizModules: modularPage, // QuizEditor compatibility
           customTexts: existingCampaign.design?.customTexts || [],
           customImages: existingCampaign.design?.customImages || [],
           borderStyle: existingCampaign.design?.borderStyle,
           wheelBorderStyle: existingCampaign.design?.wheelBorderStyle
-        },
-        
-        // Restore complete config object with modularPage
-        config: {
-          ...(existingCampaign.config || {}),
-          canvasConfig,
-          modularPage, // Ensure config.modularPage is always available
-          buttonConfig: {
-            ...defaultCampaign.buttonConfig,
-            ...(existingCampaign.config?.buttonConfig || existingCampaign.buttonConfig || {})
-          },
-          screens: {
-            ...defaultCampaign.screens,
-            ...(existingCampaign.config?.screens || existingCampaign.screens || {})
-          },
-          campaignConfig: existingCampaign.config?.campaignConfig || {}
         },
         
         // Restore complete game configuration

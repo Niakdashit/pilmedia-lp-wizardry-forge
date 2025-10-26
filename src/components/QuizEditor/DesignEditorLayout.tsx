@@ -227,31 +227,7 @@ const { syncAllStates } = useCampaignStateSync();
     const params = new URLSearchParams(location.search);
     const cid = params.get('campaign');
     if (!cid) {
-      console.log('🆕 [QuizEditor] New campaign detected - resetting all state');
       beginNewCampaign('quiz');
-      
-      // Reset all local state for new campaign
-      setCanvasElements([]);
-      setModularPage(createEmptyModularPage());
-      modularPageHydratedRef.current = false;
-      setScreenBackgrounds({
-        screen1: defaultBackground,
-        screen2: defaultBackground,
-        screen3: defaultBackground
-      });
-      setCanvasBackground(defaultBackground);
-      bgHydratedRef.current = false;
-      bgAppliedRef.current = {};
-      
-      // Clear localStorage for clean slate
-      try {
-        const screens: Array<'screen1' | 'screen2' | 'screen3'> = ['screen1','screen2','screen3'];
-        const devices: Array<'desktop' | 'tablet' | 'mobile'> = ['desktop','tablet','mobile'];
-        screens.forEach((s) => devices.forEach((d) => {
-          try { localStorage.removeItem(`quiz-bg-${d}-${s}`); } catch {}
-        }));
-      } catch {}
-      
       // Assigner un selectedCampaignId temporaire (pour garde éventuelle) sans sauvegarde DB
       const tempId = `temp-quiz-${Date.now()}`;
       try { selectCampaign(tempId, 'quiz'); } catch {}
@@ -268,10 +244,8 @@ const { syncAllStates } = useCampaignStateSync();
     const currentCampaignId = (campaignState as any)?.id;
     const prevCampaignId = prevCampaignIdRef.current;
     
-    console.log('🔍 [QuizEditor] Campaign ID check:', { prevCampaignId, currentCampaignId });
-    
-    // If campaign ID changed (including from undefined to an ID or vice versa), reset all local states
-    if (currentCampaignId !== prevCampaignId && (prevCampaignId !== undefined || currentCampaignId)) {
+    // If campaign ID changed, reset all local states to prevent data mixing
+    if (prevCampaignId && currentCampaignId && prevCampaignId !== currentCampaignId) {
       console.log('🔄 [QuizEditor] Campaign changed from', prevCampaignId, 'to', currentCampaignId, '→ Resetting all local state');
       
       // Reset canvas elements
@@ -287,25 +261,21 @@ const { syncAllStates } = useCampaignStateSync();
       bgHydratedRef.current = false;
       bgAppliedRef.current = {};
       
-      // Reset modular page with explicit empty state
-      console.log('🧹 [QuizEditor] Clearing modularPage');
+      // Reset modular page
       setModularPage(createEmptyModularPage());
-      modularPageHydratedRef.current = false;
       
       // Clear localStorage backgrounds for clean slate
       try {
         const screens: Array<'screen1' | 'screen2' | 'screen3'> = ['screen1','screen2','screen3'];
         const devices: Array<'desktop' | 'tablet' | 'mobile'> = ['desktop','tablet','mobile'];
         screens.forEach((s) => devices.forEach((d) => {
-          try { 
-            localStorage.removeItem(`quiz-bg-${d}-${s}`);
-          } catch {}
+          try { localStorage.removeItem(`quiz-bg-${d}-${s}`); } catch {}
         }));
       } catch {}
     }
     
     prevCampaignIdRef.current = currentCampaignId;
-  }, [(campaignState as any)?.id]);
+  }, [campaignState?.id]);
 
   // État local pour la compatibilité existante
   const [selectedDevice, setSelectedDevice] = useState<'desktop' | 'tablet' | 'mobile'>(actualDevice);
@@ -332,14 +302,10 @@ const { syncAllStates } = useCampaignStateSync();
   });
   // Hydration flag to avoid overwriting DB with defaults before campaign data is applied
   const bgHydratedRef = useRef(false);
-  const modularPageHydratedRef = useRef(false);
   
   // Background global (fallback pour compatibilité)
   const [canvasBackground, setCanvasBackground] = useState<{ type: 'color' | 'image'; value: string }>(defaultBackground);
   const [canvasZoom, setCanvasZoom] = useState(getDefaultZoom(selectedDevice));
-  
-  // Modular editor JSON state
-  const [modularPage, setModularPage] = useState<ModularPage>(createEmptyModularPage());
 
   useEffect(() => {
     if (!canvasElements.length) return;
@@ -392,11 +358,7 @@ useEffect(() => {
 // ✅ Hydrater les éléments/modularPage/backgrounds depuis la DB à l'ouverture
 useEffect(() => {
   const cfg = (campaignState as any)?.config?.canvasConfig || (campaignState as any)?.canvasConfig;
-  // Broad fallback chain for maximum compatibility (check all possible locations)
-  const mp = (campaignState as any)?.config?.modularPage 
-    || (campaignState as any)?.design?.quizModules 
-    || (campaignState as any)?.design?.designModules 
-    || (campaignState as any)?.modularPage;
+  const mp = (campaignState as any)?.config?.modularPage || (campaignState as any)?.design?.quizModules;
   const topLevelElements = (campaignState as any)?.config?.elements;
 
   // N'hydrate que si on a des données utiles ET que le local est vide
@@ -430,22 +392,12 @@ useEffect(() => {
 
   // (projection top-level retirée pour éviter des boucles de mise à jour)
 
-  // CRITICAL: Only hydrate modularPage once, if we have data from DB and haven't hydrated yet
-  if (mp && mp.screens && !modularPageHydratedRef.current) {
-    const dbModuleCount = Object.values(mp.screens || {}).reduce((n: number, arr: any) => n + (Array.isArray(arr) ? arr.length : 0), 0);
-    if (dbModuleCount > 0) {
-      console.log('🧩 [QuizEditor] Hydration: applying modularPage', dbModuleCount, 'modules from DB');
+  if (mp && mp.screens) {
+    const total = Object.values(mp.screens || {}).reduce((n: number, arr: any) => n + (Array.isArray(arr) ? arr.length : 0), 0);
+    if (total > 0) {
+      console.log('🧩 [QuizEditor] Hydration: applying modularPage', total);
       setModularPage(mp);
-      modularPageHydratedRef.current = true;
-    } else {
-      console.log('✅ [QuizEditor] DB modularPage is empty, keeping local state');
-      // Mark as hydrated even if empty to prevent re-hydration loops
-      modularPageHydratedRef.current = true;
     }
-  } else if (!mp || !mp.screens) {
-    console.log('✅ [QuizEditor] No modularPage in DB, keeping local state');
-    // Mark as hydrated to prevent re-hydration loops
-    modularPageHydratedRef.current = true;
   }
 }, [campaignState]);
 
@@ -553,39 +505,15 @@ useEffect(() => {
   });
 }, [canvasElements, screenBackgrounds, selectedDevice, canvasZoom, setCampaign]);
 
-// 💾 Autosave léger des éléments du canvas ET modularPage avec protection anti-écrasement
+// 💾 Autosave léger des éléments du canvas
 useEffect(() => {
   const id = (campaignState as any)?.id as string | undefined;
   if (!id) return;
   if (!bgHydratedRef.current) return; // avoid saving defaults over persisted data
   const t = window.setTimeout(async () => {
     try {
-      const localModuleCount = Object.values(modularPage.screens || {}).reduce((n: number, arr: any) => n + (Array.isArray(arr) ? arr.length : 0), 0);
-      const dbModularPage = (campaignState as any)?.config?.modularPage 
-        || (campaignState as any)?.design?.quizModules 
-        || (campaignState as any)?.design?.designModules 
-        || (campaignState as any)?.modularPage;
-      const dbModuleCount = dbModularPage?.screens ? Object.values(dbModularPage.screens || {}).reduce((n: number, arr: any) => n + (Array.isArray(arr) ? arr.length : 0), 0) : 0;
-      
-      // CRITICAL: Anti-overwrite protection - don't save empty modularPage if DB has modules
-      if (localModuleCount === 0 && dbModuleCount > 0) {
-        console.warn('⚠️ [QuizEditor] Skipping autosave: local modularPage is empty but DB has', dbModuleCount, 'modules');
-        return;
-      }
-      
       const payload: any = {
         ...(campaignState || {}),
-        // Explicitly persist modularPage in multiple locations for robustness
-        modularPage,
-        config: {
-          ...(((campaignState as any)?.config) || {}),
-          modularPage,
-        },
-        // CRITICAL: Save modularPage in design.quizModules so modules persist
-        design: {
-          ...((campaignState as any)?.design || {}),
-          quizModules: modularPage
-        },
         canvasConfig: {
           ...(campaignState as any)?.canvasConfig,
           elements: canvasElements,
@@ -593,7 +521,7 @@ useEffect(() => {
           device: selectedDevice
         }
       };
-      console.log('💾 [QuizEditor] Autosave → DB', { elements: canvasElements.length, modules: localModuleCount });
+      console.log('💾 [QuizEditor] Autosave canvas elements → DB', canvasElements.length);
       await saveCampaignToDB(payload, saveCampaign);
       setIsModified(false);
     } catch (e) {
@@ -601,7 +529,7 @@ useEffect(() => {
     }
   }, 1000);
   return () => clearTimeout(t);
-}, [campaignState?.id, canvasElements, screenBackgrounds, selectedDevice, modularPage]);
+}, [campaignState?.id, canvasElements, screenBackgrounds, selectedDevice]);
 
   // Détection de la taille de fenêtre
   useEffect(() => {
@@ -941,8 +869,8 @@ const handleSaveCampaignName = useCallback(async () => {
   
   // État pour tracker la position de scroll (quel écran est visible)
   const [currentScreen, setCurrentScreen] = useState<'screen1' | 'screen2' | 'screen3'>('screen1');
-  
-  // selectedModule computed from modularPage (declared earlier)
+  // Modular editor JSON state
+  const [modularPage, setModularPage] = useState<ModularPage>(createEmptyModularPage());
   const selectedModule: Module | null = useMemo(() => {
     if (!selectedModuleId) return null;
     const allModules = (Object.values(modularPage.screens) as Module[][]).flat();
@@ -1265,28 +1193,26 @@ const handleSaveCampaignName = useCallback(async () => {
     boxShadow: LAUNCH_BUTTON_DEFAULT_SHADOW
   }), [getDefaultButtonLabel, generateUniqueId]);
 
-  // CRITICAL: Inject default "Participer" button on screen1 if none exists
-  // This must run AFTER hydration to correctly detect if button is needed
   useEffect(() => {
-    // Only run once after hydration is complete
-    if (ensuredBlocBoutonRef.current || !modularPageHydratedRef.current) return;
+    if (ensuredBlocBoutonRef.current) return;
     
-    const screen1Modules = modularPage.screens.screen1 || [];
-    const hasStandaloneButton = screen1Modules.some((m) => m.type === 'BlocBouton');
-    const hasCardButton = screen1Modules.some((m) => m.type === 'BlocCarte' && Array.isArray((m as any).children) && (m as any).children.some((c: Module) => c?.type === 'BlocBouton'));
+    // Ne pas ajouter de boutons si la campagne a déjà été chargée depuis la DB
+    const hasCampaignFromDB = !!campaignState?.id;
+    if (hasCampaignFromDB) {
+      ensuredBlocBoutonRef.current = true;
+      return;
+    }
     
-    // Only inject button if screen1 has NO button at all
-    if (!hasStandaloneButton && !hasCardButton) {
-      console.log('🎯 [QuizEditor] Injecting default "Participer" button on screen1');
-      const defaultModule = createDefaultBlocBouton('screen1');
+    const hasStandaloneButton = (Object.values(modularPage.screens) as Module[][]).some((modules) => modules?.some((m) => m.type === 'BlocBouton'));
+    if (!hasStandaloneButton && !editorHasCardButton()) {
+      const targetScreen = currentScreen || 'screen1';
+      const defaultModule = createDefaultBlocBouton(targetScreen);
       const nextScreens: ModularPage['screens'] = { ...modularPage.screens };
-      nextScreens.screen1 = [...screen1Modules, defaultModule];
+      nextScreens[targetScreen] = [...(nextScreens[targetScreen] || []), defaultModule];
       persistModular({ screens: nextScreens, _updatedAt: Date.now() });
-    } else {
-      console.log('✅ [QuizEditor] Button already exists on screen1, skipping injection');
     }
     ensuredBlocBoutonRef.current = true;
-  }, [modularPage.screens, persistModular, createDefaultBlocBouton]);
+  }, [modularPage.screens, currentScreen, persistModular, createDefaultBlocBouton, editorHasCardButton, campaignState?.id]);
 
   useEffect(() => {
     const legacyButton = canvasElements.find((el) => typeof el?.role === 'string' && el.role.toLowerCase().includes('button'));
@@ -1562,25 +1488,14 @@ const handleSaveCampaignName = useCallback(async () => {
           // Initialize config
           const quizFromConfig = {
             ...(data?.config || {} as any),
-            quizConfig: (data?.config as any)?.quizConfig ?? (data?.config as any)?.modularPage ?? (data as any)?.modularPage,
-            quizModules: (data?.config as any)?.quizModules 
-              || (data?.design as any)?.quizModules 
-              || (data?.config as any)?.modularPage 
-              || [],
-            modularPage: (data?.config as any)?.modularPage 
-              || (data as any)?.modularPage 
-              || (data?.design as any)?.quizModules 
-              || [],
+            quizConfig: (data?.config as any)?.quizConfig ?? (data as any)?.modularPage,
+            quizModules: (data?.config as any)?.quizModules || (data?.design as any)?.quizModules || [],
+            modularPage: (data as any)?.modularPage || (data?.design as any)?.quizModules || [],
           };
           if ((data?.config as any)?.quizModules) {
             quizFromConfig.quizModules = (data.config as any).quizModules;
           } else if ((data?.design as any)?.quizModules) {
             quizFromConfig.quizModules = (data.design as any).quizModules;
-          } else if ((data?.config as any)?.modularPage) {
-            quizFromConfig.modularPage = (data.config as any).modularPage;
-            if (!quizFromConfig.quizModules || (Array.isArray(quizFromConfig.quizModules) && quizFromConfig.quizModules.length === 0)) {
-              quizFromConfig.quizModules = (data.config as any).modularPage;
-            }
           } else if ((data as any)?.modularPage) {
             quizFromConfig.modularPage = (data as any).modularPage;
           }
@@ -2622,12 +2537,6 @@ const handleSaveCampaignName = useCallback(async () => {
       // Inject canvasConfig so backgrounds/images and elements are persisted in DB
       const payload = {
         ...updatedCampaign,
-        // Persist modules explicitly in multiple locations
-        modularPage,
-        config: {
-          ...((updatedCampaign as any)?.config || {}),
-          modularPage
-        },
         // Persist modules inside design.quizModules for DB
         design: {
           ...((updatedCampaign as any)?.design || {}),
