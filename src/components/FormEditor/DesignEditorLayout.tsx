@@ -209,8 +209,15 @@ const FormEditorLayout: React.FC<FormEditorLayoutProps> = ({ mode = 'campaign', 
     setPreviewDevice,
     setIsLoading,
     setIsModified,
-    resetCampaign
+    resetCampaign,
+    initializeNewCampaign,
+    initializeNewCampaignWithId,
+    selectCampaign
   } = useEditorStore();
+  const isNewCampaignGlobal = useEditorStore((s) => s.isNewCampaignGlobal);
+  const beginNewCampaign = useEditorStore((s) => s.beginNewCampaign);
+  const clearNewCampaignFlag = useEditorStore((s) => s.clearNewCampaignFlag);
+  const selectedCampaignId = useEditorStore((s) => s.selectedCampaignId);
   
   // Hook de synchronisation preview
   const { syncBackground } = useEditorPreviewSync();
@@ -225,17 +232,41 @@ const { syncAllStates } = useCampaignStateSync();
 // Charger campagne depuis l'URL si présente
 const { campaign: urlCampaign, loading: urlLoading, error: urlError } = useCampaignFromUrl();
 
-// Réinitialiser la campagne au montage de l'éditeur SEULEMENT si aucune ID n'est présente dans l'URL
+// Hydrater le store namespacé quand la campagne URL est chargée
+useEffect(() => {
+  const cid = (urlCampaign as any)?.id as string | undefined;
+  if (!cid) return;
+  try {
+    selectCampaign(cid, 'form');
+    // injecter l'objet complet dans la slice
+    if (urlCampaign) {
+      // accès direct via setter global scoper à selectedCampaignId
+      setCampaign(() => urlCampaign as any);
+    }
+  } catch (e) {
+    console.warn('hydrate urlCampaign failed', e);
+  }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, [urlCampaign?.id]);
+
+// Sélectionner la campagne en fonction de l'URL, réactif aux changements d'id
 useEffect(() => {
   const params = new URLSearchParams(location.search);
-  const hasId = params.get('campaign');
-  if (!hasId) {
-    console.log('🎨 [FormEditor] Mount: no campaign id → resetting store');
-    resetCampaign();
+  const explicitId = params.get('campaign');
+  const existingId = (storeCampaign as any)?.id as string | undefined;
+  const cid = explicitId || existingId;
+  if (cid) {
+    selectCampaign(cid, 'form');
   } else {
-    console.log('🎨 [FormEditor] Mount: campaign id detected, skipping reset');
+    // Nouvelle campagne → activer le flag global pour bloquer les auto-ajouts
+    beginNewCampaign('form');
+    const tempId = `temp-form-${Date.now()}`;
+    selectCampaign(tempId, 'form');
+    initializeNewCampaignWithId('form', tempId);
+    requestAnimationFrame(() => clearNewCampaignFlag());
   }
-}, []); // eslint-disable-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, [location.search]);
 
   // État local pour la compatibilité existante
   const [selectedDevice, setSelectedDevice] = useState<'desktop' | 'tablet' | 'mobile'>(actualDevice);
@@ -337,6 +368,10 @@ useEffect(() => {
 
 // 🔗 Miroir local → store: conserve les éléments dans campaign.config.canvasConfig
 useEffect(() => {
+  // Ne pas écrire dans le store tant que la campagne n'est pas sélectionnée
+  const id = (campaignState as any)?.id as string | undefined;
+  if (!id) return;
+  if (selectedCampaignId && id !== selectedCampaignId) return;
   setCampaign((prev: any) => {
     if (!prev) return prev;
     const next = {
@@ -355,12 +390,14 @@ useEffect(() => {
     };
     return next as any;
   });
-}, [canvasElements, screenBackgrounds, selectedDevice, canvasZoom, setCampaign]);
+}, [selectedCampaignId, campaignState?.id, canvasElements, screenBackgrounds, selectedDevice, canvasZoom, setCampaign]);
 
 // 💾 Autosave léger des éléments du canvas
 useEffect(() => {
   const id = (campaignState as any)?.id as string | undefined;
   if (!id) return;
+  // Guard: ensure we only persist for the selected campaign slice
+  if (selectedCampaignId && id !== selectedCampaignId) return;
   const t = window.setTimeout(async () => {
     try {
       const payload: any = {
@@ -380,7 +417,7 @@ useEffect(() => {
     }
   }, 1000);
   return () => clearTimeout(t);
-}, [campaignState?.id, canvasElements, screenBackgrounds, selectedDevice]);
+}, [campaignState?.id, selectedCampaignId, canvasElements, screenBackgrounds, selectedDevice]);
 
   // Détection de la taille de fenêtre
   useEffect(() => {
@@ -895,7 +932,7 @@ useEffect(() => {
 
   const ensuredBlocBoutonRef = useRef(false);
   const createDefaultBlocBouton = useCallback((screen: ScreenId = 'screen1'): BlocBouton => ({
-    id: `BlocBouton-${Date.now()}`,
+    id: `BlocBouton-${Date.now()}-${performance.now().toFixed(3).replace('.', '')}-${Math.random().toString(36).slice(2, 8)}`,
     type: 'BlocBouton',
     label: getDefaultButtonLabel(screen),
     href: '#',
@@ -909,6 +946,14 @@ useEffect(() => {
 
   useEffect(() => {
     if (ensuredBlocBoutonRef.current) return;
+    
+    // Ne pas ajouter de boutons si la campagne a déjà été chargée depuis la DB
+    const hasCampaignFromDB = !!campaignState?.id;
+    if (hasCampaignFromDB) {
+      ensuredBlocBoutonRef.current = true;
+      return;
+    }
+    
     const hasStandaloneButton = (Object.values(modularPage.screens) as Module[][]).some((modules) => modules?.some((m) => m.type === 'BlocBouton'));
     if (!hasStandaloneButton && !editorHasCardButton()) {
       const targetScreen = currentScreen || 'screen1';
@@ -918,11 +963,15 @@ useEffect(() => {
       persistModular({ screens: nextScreens, _updatedAt: Date.now() });
     }
     ensuredBlocBoutonRef.current = true;
-  }, [modularPage.screens, currentScreen, persistModular, createDefaultBlocBouton, editorHasCardButton]);
+  }, [modularPage.screens, currentScreen, persistModular, createDefaultBlocBouton, editorHasCardButton, campaignState?.id]);
 
   useEffect(() => {
     const legacyButton = canvasElements.find((el) => typeof el?.role === 'string' && el.role.toLowerCase().includes('button'));
     if (!legacyButton) return;
+
+    // Ne pas traiter les legacy buttons si la campagne a déjà été chargée depuis la DB
+    const hasCampaignFromDB = !!campaignState?.id;
+    if (hasCampaignFromDB) return;
 
     const hasStandalone = (Object.values(modularPage.screens) as Module[][]).some((modules) => modules?.some((m) => m.type === 'BlocBouton'));
     if (!hasStandalone && !editorHasCardButton()) {
@@ -949,7 +998,7 @@ useEffect(() => {
       persistModular({ screens: nextScreens, _updatedAt: Date.now() });
     }
     setCanvasElements((prev) => prev.filter((el) => el !== legacyButton));
-  }, [canvasElements, modularPage.screens, currentScreen, persistModular, createDefaultBlocBouton]);
+  }, [canvasElements, modularPage.screens, currentScreen, persistModular, createDefaultBlocBouton, campaignState?.id]);
 
   const handleDeleteModule = useCallback((id: string) => {
     const nextScreens: ModularPage['screens'] = { ...modularPage.screens };
@@ -1013,7 +1062,7 @@ useEffect(() => {
       return;
     }
 
-    const newId = `module-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+    const newId = `module-${Date.now()}-${performance.now().toFixed(3).replace('.', '')}-${Math.random().toString(36).slice(2, 8)}`;
     const duplicatedModule: ModuleWithMeta = {
       ...moduleToDuplicate,
       id: newId
@@ -2016,7 +2065,7 @@ useEffect(() => {
     });
     
     return {
-      id: 'quiz-design-preview',
+      id: 'form-preview-campaign',
       type: 'quiz',
       design: {
         background: canvasBackground,
