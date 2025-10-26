@@ -341,7 +341,8 @@ export const useEditorStore = create<EditorStore>()(
         isModified: false,
         selectedElementId: null,
         updateCounter: 0,
-        lastUpdateTime: Date.now()
+        lastUpdateTime: Date.now(),
+        clipboard: null, // Clear clipboard when switching campaigns
       });
     },
     
@@ -459,7 +460,8 @@ export const useEditorStore = create<EditorStore>()(
   {
     name: 'prosplay-editor-store',
     partialize: (state) => ({
-      campaign: state.campaign,
+      // Only persist the selected campaign ID, not the full campaign data
+      // Each campaign data is loaded fresh from Supabase to avoid mixing
       selectedCampaignId: state.selectedCampaignId,
     }),
   })

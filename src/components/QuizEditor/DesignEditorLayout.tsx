@@ -253,8 +253,19 @@ useEffect(() => {
   
   if (!campaignId || !isUuid(campaignId)) return;
   
+  const currentCampaignId = (campaignState as any)?.id;
+  
+  // If switching to a different campaign, reset everything first
+  if (currentCampaignId && currentCampaignId !== campaignId) {
+    console.log('🔄 [QuizEditor] Switching campaigns, resetting state:', {
+      from: currentCampaignId,
+      to: campaignId
+    });
+    useEditorStore.getState().resetCampaign();
+  }
+  
   // Skip if this campaign is already loaded
-  if ((campaignState as any)?.id === campaignId) {
+  if (currentCampaignId === campaignId) {
     console.log('✅ [QuizEditor] Campaign already loaded:', campaignId);
     return;
   }
