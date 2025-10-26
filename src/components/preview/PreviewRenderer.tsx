@@ -184,20 +184,21 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
     });
     
     // Priorité 1: image de fond par écran stockée en session (localStorage) – la plus robuste entre Editor/Preview
-    // Clés gérées par DesignCanvas lors des uploads: `quiz-bg-<device>-<screenId>`
+    // Using new CampaignStorage namespaced keys
     let perScreenImage: string | null = null;
     try {
+      const campaignId = campaign?.id;
       const deviceKey = previewMode === 'mobile' ? 'mobile' : (previewMode === 'tablet' ? 'tablet' : 'desktop');
-      const namespacedKey = campaign?.id ? `quiz-bg-${campaign.id}-${deviceKey}-${currentScreen}` : null;
-      if (namespacedKey) {
+      
+      if (campaignId) {
+        // Use CampaignStorage namespace format: campaign_<uuid>:bg-<device>-<screen>
+        const namespacedKey = `campaign_${campaignId}:bg-${deviceKey}-${currentScreen}`;
         perScreenImage = typeof window !== 'undefined' ? (localStorage.getItem(namespacedKey) || null) : null;
-      }
-      if (!perScreenImage) {
-        const legacyKey = `quiz-bg-${deviceKey}-${currentScreen}`;
-        const owner = typeof window !== 'undefined' ? localStorage.getItem('quiz-bg-owner') : null;
-        if (!campaign?.id || owner === String(campaign.id)) {
-          perScreenImage = typeof window !== 'undefined' ? (localStorage.getItem(legacyKey) || null) : null;
-        }
+        
+        console.log(`🔍 [PreviewRenderer] Checking localStorage for ${currentScreen}:`, {
+          key: namespacedKey,
+          found: !!perScreenImage
+        });
       }
     } catch {}
 
@@ -214,7 +215,8 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
       if (screenBg.type === 'image' && screenBg.value) {
         return { background: `url(${screenBg.value}) center/cover no-repeat` };
       }
-      return { background: screenBg.value || 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)' };
+      // If color but empty, use white as default
+      return { background: screenBg.value || '#ffffff' };
     }
 
     // Priorité 3: campaign.canvasConfig.background (preview-only, le plus à jour)
@@ -261,7 +263,8 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
     if (bg?.type === 'image' && bg.value) {
       return { background: `url(${bg.value}) center/cover no-repeat` };
     }
-    return { background: bg?.value || 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)' };
+    // Default to white background instead of gradient
+    return { background: bg?.value || '#ffffff' };
   }, [
     // Dépendre aussi de l'écran courant et du mode pour rafraîchir la lecture localStorage
     currentScreen,

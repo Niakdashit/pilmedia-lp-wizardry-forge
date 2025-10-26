@@ -149,12 +149,29 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
     return { desktop: `${width}px`, mobile: `${mobileWidth}px` };
   }, []);
 
-  // Initialisation session: ne rien effacer dans localStorage pour préserver les BG entre preview/édition
+  // Initialisation session: nettoyer les anciennes clés localStorage sans namespacing
   useEffect(() => {
     try {
       const w = window as any;
       if (!w.__quizBgSessionInitialized) {
         w.__quizBgSessionInitialized = true;
+        
+        // CRITICAL: Clean up old localStorage keys without namespacing
+        console.log('🧹 [QuizEditor] Cleaning up old localStorage background keys');
+        const screens: Array<'screen1' | 'screen2' | 'screen3'> = ['screen1', 'screen2', 'screen3'];
+        const devices: Array<'desktop' | 'tablet' | 'mobile'> = ['desktop', 'tablet', 'mobile'];
+        
+        screens.forEach((s) => devices.forEach((d) => {
+          try { 
+            // Remove old keys without campaign ID
+            localStorage.removeItem(`quiz-bg-${d}-${s}`);
+          } catch {}
+        }));
+        
+        // Remove global owner key
+        try { localStorage.removeItem('quiz-bg-owner'); } catch {}
+        
+        console.log('✅ [QuizEditor] Old background keys cleaned');
       }
     } catch {}
   }, []);
@@ -382,13 +399,13 @@ const { syncAllStates } = useCampaignStateSync();
       // Reset canvas elements
       setCanvasElements([]);
       
-      // Reset backgrounds
+      // Reset backgrounds to empty instead of default
       setScreenBackgrounds({
-        screen1: defaultBackground,
-        screen2: defaultBackground,
-        screen3: defaultBackground
+        screen1: { type: 'color', value: '' },
+        screen2: { type: 'color', value: '' },
+        screen3: { type: 'color', value: '' }
       });
-      setCanvasBackground(defaultBackground);
+      setCanvasBackground({ type: 'color', value: '' });
       bgHydratedRef.current = false;
       dataHydratedRef.current = false;
       bgAppliedRef.current = {};
@@ -439,9 +456,8 @@ const { syncAllStates } = useCampaignStateSync();
   }, [canvasElements]);
   
   // Background par écran - chaque écran a son propre background
-  const defaultBackground = mode === 'template'
-    ? { type: 'color' as const, value: '#4ECDC4' }
-    : { type: 'color' as const, value: 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)' };
+  // IMPORTANT: Initialize with empty/null to force loading from DB instead of using default
+  const defaultBackground = { type: 'color' as const, value: '' };
   
   const [screenBackgrounds, setScreenBackgrounds] = useState<ScreenBackgrounds>({
     screen1: defaultBackground,
@@ -457,7 +473,7 @@ const { syncAllStates } = useCampaignStateSync();
   const bgHydratedRef = useRef(false);
   
   // Background global (fallback pour compatibilité)
-  const [canvasBackground, setCanvasBackground] = useState<{ type: 'color' | 'image'; value: string }>(defaultBackground);
+  const [canvasBackground, setCanvasBackground] = useState<{ type: 'color' | 'image'; value: string }>({ type: 'color', value: '' });
   const [canvasZoom, setCanvasZoom] = useState(getDefaultZoom(selectedDevice));
   
   useEffect(() => {
@@ -536,7 +552,7 @@ useEffect(() => {
     const globalDesktop = designBg.backgroundImage as string | undefined;
     const globalMobile = designBg.mobileBackgroundImage as string | undefined;
     if (globalDesktop || globalMobile) {
-      const imgDesktop = globalDesktop ? { type: 'image' as const, value: globalDesktop } : defaultBackground;
+      const imgDesktop = globalDesktop ? { type: 'image' as const, value: globalDesktop } : { type: 'color' as const, value: '' };
       const derived: ScreenBackgrounds = {
         screen1: imgDesktop,
         screen2: imgDesktop,
@@ -544,6 +560,13 @@ useEffect(() => {
       };
       setScreenBackgrounds(derived);
       bgHydratedRef.current = true;
+    } else {
+      // No background in DB, use empty background
+      setScreenBackgrounds({
+        screen1: { type: 'color', value: '' },
+        screen2: { type: 'color', value: '' },
+        screen3: { type: 'color', value: '' }
+      });
     }
   }
   if (cfg?.device) setSelectedDevice(cfg.device as any);
@@ -572,6 +595,9 @@ const bgAppliedRef = useRef<Record<string, string>>({});
 // Hydratation basée campagne → localStorage + Preview (tous devices), avec garde anti-boucle
 useEffect(() => {
   try {
+    const campaignId = (campaignState as any)?.id;
+    if (!campaignId) return;
+    
     const devices: Array<'desktop' | 'tablet' | 'mobile'> = ['desktop', 'tablet', 'mobile'];
     const screens: Array<'screen1' | 'screen2' | 'screen3'> = ['screen1', 'screen2', 'screen3'];
     const designBg = (campaignState as any)?.design || {};
@@ -587,7 +613,8 @@ useEffect(() => {
         if (!value) value = device === 'mobile' ? globalMobile : globalDesktop;
 
         const key = `${device}:${s}`;
-        const storageKey = `quiz-bg-${(campaignState as any)?.id || 'global'}-${device}-${s}`;
+        // Use CampaignStorage namespace format
+        const storageKey = `campaign_${campaignId}:bg-${device}-${s}`;
         if (value && bgAppliedRef.current[key] !== value) {
           bgAppliedRef.current[key] = value;
           try { localStorage.setItem(storageKey, value); } catch {}
@@ -601,6 +628,9 @@ useEffect(() => {
   // Réflection après édition locale (screenBackgrounds modifiés) → garde anti-boucle
   useEffect(() => {
     try {
+      const campaignId = (campaignState as any)?.id;
+      if (!campaignId) return;
+      
       const device = selectedDevice;
       const screens: Array<'screen1' | 'screen2' | 'screen3'> = ['screen1', 'screen2', 'screen3'];
       screens.forEach((s) => {
@@ -609,17 +639,22 @@ useEffect(() => {
           const key = `${device}:${s}`;
           if (bgAppliedRef.current[key] !== bg.value) {
             bgAppliedRef.current[key] = bg.value;
-            try { localStorage.setItem(`quiz-bg-${device}-${s}`, bg.value); } catch {}
+            // Use CampaignStorage namespace format
+            const storageKey = `campaign_${campaignId}:bg-${device}-${s}`;
+            try { localStorage.setItem(storageKey, bg.value); } catch {}
             try { window.dispatchEvent(new CustomEvent('applyBackgroundCurrentScreen', { detail: { url: bg.value, device, screenId: s } })); } catch {}
           }
         }
       });
     } catch {}
-  }, [screenBackgrounds, selectedDevice]);
+  }, [screenBackgrounds, selectedDevice, campaignState?.id]);
 
   // Hydratation initiale depuis config.canvasConfig.screenBackgrounds si présent → garde anti-boucle
   useEffect(() => {
     try {
+      const campaignId = (campaignState as any)?.id;
+      if (!campaignId) return;
+      
       const cfg = (campaignState as any)?.config?.canvasConfig;
       const sb = cfg?.screenBackgrounds as ScreenBackgrounds | undefined;
       if (!sb) return;
@@ -630,7 +665,9 @@ useEffect(() => {
           const key = `${device}:${s}`;
           if (bgAppliedRef.current[key] !== bg.value) {
             bgAppliedRef.current[key] = bg.value;
-            try { localStorage.setItem(`quiz-bg-${(campaignState as any)?.id || 'global'}-${device}-${s}`, bg.value); } catch {}
+            // Use CampaignStorage namespace format
+            const storageKey = `campaign_${campaignId}:bg-${device}-${s}`;
+            try { localStorage.setItem(storageKey, bg.value); } catch {}
             try { window.dispatchEvent(new CustomEvent('applyBackgroundCurrentScreen', { detail: { url: bg.value, device, screenId: s } })); } catch {}
           }
         }
