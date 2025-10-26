@@ -246,7 +246,8 @@ const { syncAllStates } = useCampaignStateSync();
     const prevCampaignId = prevCampaignIdRef.current;
     
     // If campaign ID changed, reset all local states to prevent data mixing
-    if (prevCampaignId && currentCampaignId && prevCampaignId !== currentCampaignId) {
+    // BUT ONLY if data is not currently being hydrated from DB
+    if (prevCampaignId && currentCampaignId && prevCampaignId !== currentCampaignId && !dataHydratedRef.current) {
       console.log('🔄 [QuizEditor] Campaign changed from', prevCampaignId, 'to', currentCampaignId, '→ Resetting all local state');
       
       // Reset canvas elements
@@ -1501,6 +1502,7 @@ const handleSaveCampaignName = useCallback(async () => {
     if (campaignId) {
       console.log('📂 [QuizEditor] Loading existing campaign:', campaignId);
       setIsLoading(true);
+      dataHydratedRef.current = false; // Mark that we're starting to load data
       
       (async () => {
         try {
@@ -1513,6 +1515,7 @@ const handleSaveCampaignName = useCallback(async () => {
           if (error) throw error;
           if (!data) {
             console.warn('⚠️ Campaign not found:', campaignId);
+            dataHydratedRef.current = true; // Mark as complete even if not found
             return;
           }
           
@@ -1615,14 +1618,39 @@ const handleSaveCampaignName = useCallback(async () => {
           });
           
           // Restore modular page (modules) - check all possible sources
-          if (quizFromConfig.quizModules && (Array.isArray(quizFromConfig.quizModules) ? quizFromConfig.quizModules.length > 0 : Object.keys(quizFromConfig.quizModules).length > 0)) {
-            console.log('✅ Restoring modules from quizModules:', quizFromConfig.quizModules);
-            setModularPage(quizFromConfig.quizModules);
-          } else if (quizFromConfig.modularPage && (Array.isArray(quizFromConfig.modularPage) ? quizFromConfig.modularPage.length > 0 : Object.keys(quizFromConfig.modularPage).length > 0)) {
-            console.log('✅ Restoring modules from modularPage:', quizFromConfig.modularPage);
-            setModularPage(quizFromConfig.modularPage);
+          const modulesToRestore = quizFromConfig.quizModules || quizFromConfig.modularPage || (data as any)?.modularPage || (data?.design as any)?.quizModules;
+          
+          console.log('📦 [QuizEditor] Final modules to restore:', {
+            modulesToRestore,
+            isArray: Array.isArray(modulesToRestore),
+            hasScreens: modulesToRestore?.screens,
+            screensKeys: modulesToRestore?.screens ? Object.keys(modulesToRestore.screens) : [],
+            screen1Count: modulesToRestore?.screens?.screen1?.length || 0,
+            screen2Count: modulesToRestore?.screens?.screen2?.length || 0,
+            screen3Count: modulesToRestore?.screens?.screen3?.length || 0
+          });
+          
+          if (modulesToRestore) {
+            if (modulesToRestore.screens) {
+              console.log('✅ [QuizEditor] Restoring modules with screens structure');
+              setModularPage(modulesToRestore);
+              dataHydratedRef.current = true;
+            } else if (Array.isArray(modulesToRestore) && modulesToRestore.length > 0) {
+              console.log('✅ [QuizEditor] Converting array modules to screens structure');
+              setModularPage({
+                screens: {
+                  screen1: modulesToRestore,
+                  screen2: [],
+                  screen3: []
+                },
+                _updatedAt: Date.now()
+              });
+              dataHydratedRef.current = true;
+            } else {
+              console.warn('⚠️ [QuizEditor] Modules format not recognized:', modulesToRestore);
+            }
           } else {
-            console.warn('⚠️ No modules found to restore');
+            console.warn('⚠️ [QuizEditor] No modules found to restore');
           }
           
           // Restore quiz config
