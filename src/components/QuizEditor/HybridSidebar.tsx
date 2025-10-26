@@ -434,11 +434,9 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
     };
 
     // Notifier le parent des changements de l'onglet Design
-    if (onDesignPanelChange) {
+    if (onDesignPanelChange && isDesignActive !== prev.showDesignPanel) {
       const isDesignActive = newActiveTab === 'background' || showDesignPanel;
-      if (isDesignActive !== prev.showDesignPanel) {
-        onDesignPanelChange(isDesignActive);
-      }
+      onDesignPanelChange(isDesignActive);
     }
   }, [
     showEffectsPanel, 
@@ -447,8 +445,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
     showQuizPanel,
     showWheelPanel,
     showDesignPanel,
-    activeTab,
-    onDesignPanelChange
+    internalActiveTab
   ]);
 
   // Fermer automatiquement le panneau d'effets si aucun élément texte n'est sélectionné
