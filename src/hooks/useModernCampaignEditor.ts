@@ -9,6 +9,7 @@ import { loadCampaign } from './useModernCampaignEditor/campaignLoader';
 import { saveCampaignToDB } from './useModernCampaignEditor/saveHandler';
 import { useOptimizedCampaignState } from '../components/ModernEditor/hooks/useOptimizedCampaignState';
 import { usePreviewOptimization } from '../components/ModernEditor/hooks/usePreviewOptimization';
+import { isTempCampaignId } from '@/utils/tempCampaignId';
 
 export const useModernCampaignEditor = () => {
   const params = useParams();
@@ -23,7 +24,7 @@ export const useModernCampaignEditor = () => {
   // Gestion spéciale pour quick-preview
   const isQuickPreview = location.includes('quick-preview') || rawId === 'quick-preview';
   const actualId = isQuickPreview ? 'quick-preview' : rawId;
-  const isNewCampaign = actualId === 'new';
+  const isNewCampaign = actualId === 'new' || isTempCampaignId(actualId || undefined);
   const campaignType = searchParams.get('type') as CampaignType || 'wheel';
   
   const [activeTab, setActiveTab] = useState('general');

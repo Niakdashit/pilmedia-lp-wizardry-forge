@@ -102,17 +102,17 @@ export const getDefaultCampaign = (campaignType: CampaignType, isNewCampaign: bo
   },
   screens: {
     1: {
-      title: 'Bienvenue !',
-      description: 'Participez à notre jeu et tentez de gagner !',
+      title: isNewCampaign ? '' : 'Bienvenue !',
+      description: isNewCampaign ? '' : 'Participez à notre jeu et tentez de gagner !',
       buttonText: 'Participer',
-      showTitle: true,
-      showDescription: true
+      showTitle: !isNewCampaign,
+      showDescription: !isNewCampaign
     },
     3: {
-      title: 'Félicitations !',
-      description: 'Merci pour votre participation !',
-      showTitle: true,
-      showDescription: true
+      title: isNewCampaign ? '' : 'Félicitations !',
+      description: isNewCampaign ? '' : 'Merci pour votre participation !',
+      showTitle: !isNewCampaign,
+      showDescription: !isNewCampaign
     }
   }
 });

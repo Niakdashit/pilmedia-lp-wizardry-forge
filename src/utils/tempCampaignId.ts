@@ -40,23 +40,36 @@ export function clearTempCampaignData(campaignId: string): void {
   
   console.log('🧹 [TempCampaign] Clearing all data for temporary campaign:', campaignId);
   
-  // Clear all potential localStorage keys
-  const screens: Array<'screen1' | 'screen2' | 'screen3'> = ['screen1', 'screen2', 'screen3'];
-  const devices: Array<'desktop' | 'tablet' | 'mobile'> = ['desktop', 'tablet', 'mobile'];
-  
+  // Clear all potential localStorage keys related to this temp campaign and legacy globals
   try {
-    // Clear namespaced backgrounds
-    screens.forEach((screen) => 
-      devices.forEach((device) => {
-        const key = `campaign_${campaignId}:bg-${device}-${screen}`;
-        localStorage.removeItem(key);
-      })
-    );
-    
-    // Clear any other namespaced data
-    localStorage.removeItem(`campaign_${campaignId}:canvasElements`);
-    localStorage.removeItem(`campaign_${campaignId}:modularPage`);
-    localStorage.removeItem(`campaign_${campaignId}:canvasZoom`);
+    const prefixesToWipe = [
+      // Namespaced to this campaign
+      `campaign_${campaignId}:`,
+      `campaign:draft:${campaignId}`,
+      // Legacy/global prefixes that can leak between campaigns
+      'design-bg-',
+      'quiz-bg-',
+      'quiz-bg-owner',
+      'quiz-modules-',
+      'quiz-layer-',
+      'form-bg-',
+      'editor-zoom-'
+    ];
+
+    // Iterate through all localStorage keys and remove matches
+    for (let i = localStorage.length - 1; i >= 0; i--) {
+      const key = localStorage.key(i);
+      if (!key) continue;
+      if (prefixesToWipe.some((p) => key.startsWith(p))) {
+        try { localStorage.removeItem(key); } catch {}
+      }
+      // Also remove explicit known keys per campaign namespace
+      if (key === `campaign_${campaignId}:canvasElements` ||
+          key === `campaign_${campaignId}:modularPage` ||
+          key === `campaign_${campaignId}:canvasZoom`) {
+        try { localStorage.removeItem(key); } catch {}
+      }
+    }
   } catch (error) {
     console.error('Failed to clear temp campaign data:', error);
   }
