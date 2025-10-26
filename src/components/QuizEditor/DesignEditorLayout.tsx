@@ -217,7 +217,7 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
   const campaignState = useEditorStore((s) => s.campaign);
 
   // Supabase campaigns API
-  const { saveCampaign } = useCampaigns();
+  const { saveCampaign, duplicateCampaign } = useCampaigns();
   
 // Campaign state synchronization hook
 const { syncAllStates } = useCampaignStateSync();
@@ -1490,6 +1490,28 @@ const handleSaveCampaignName = useCallback(async () => {
           }
           
           console.log('✅ Campaign loaded:', data);
+          
+          // Ownership check: duplicate under current user if not owner to allow edits (RLS-safe)
+          try {
+            const { data: authData } = await supabase.auth.getUser();
+            const currentUserId = authData?.user?.id;
+            if (currentUserId && data.created_by && data.created_by !== currentUserId) {
+              console.log('🛡️ Not owner of campaign. Duplicating for current user...', { currentUserId, owner: data.created_by });
+              const duplicated = await duplicateCampaign(campaignId);
+              if (duplicated?.id) {
+                const sp = new URLSearchParams(location.search);
+                const modeParam = sp.get('mode');
+                const newUrl = modeParam ? `${location.pathname}?campaign=${duplicated.id}&mode=${modeParam}` : `${location.pathname}?campaign=${duplicated.id}`;
+                setCampaign(duplicated as any);
+                navigate(newUrl, { replace: true });
+                return; // Stop processing original campaign
+              } else {
+                console.warn('⚠️ Failed to duplicate campaign, proceeding read-only');
+              }
+            }
+          } catch (e) {
+            console.warn('⚠️ Ownership check failed:', e);
+          }
           
           // Restore canvas elements
           const mergedCanvasConfig = (data?.config as any)?.canvasConfig ?? (data as any)?.canvasConfig ?? {};
