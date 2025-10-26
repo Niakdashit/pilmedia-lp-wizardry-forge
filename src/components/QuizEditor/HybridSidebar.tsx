@@ -308,8 +308,13 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
         ignoreExternalUntilRef.current = 0;
       }
 
-      setInternalActiveTab(tab);
-      onActiveTabChange?.(tab);
+      setInternalActiveTab((prev) => {
+        const next = tab;
+        if (next !== prev) {
+          onActiveTabChange?.(next);
+        }
+        return next;
+      });
       // Mettre à jour les états des panneaux en fonction de l'onglet sélectionné
       if (tab === 'background') {
         onDesignPanelChange?.(true);
