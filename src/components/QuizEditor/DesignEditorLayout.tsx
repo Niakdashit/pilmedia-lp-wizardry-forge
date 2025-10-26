@@ -337,6 +337,9 @@ const { syncAllStates } = useCampaignStateSync();
   // Background global (fallback pour compatibilité)
   const [canvasBackground, setCanvasBackground] = useState<{ type: 'color' | 'image'; value: string }>(defaultBackground);
   const [canvasZoom, setCanvasZoom] = useState(getDefaultZoom(selectedDevice));
+  
+  // Modular editor JSON state
+  const [modularPage, setModularPage] = useState<ModularPage>(createEmptyModularPage());
 
   useEffect(() => {
     if (!canvasElements.length) return;
@@ -427,10 +430,18 @@ useEffect(() => {
   if (mp && mp.screens && !modularPageHydratedRef.current) {
     const dbModuleCount = Object.values(mp.screens || {}).reduce((n: number, arr: any) => n + (Array.isArray(arr) ? arr.length : 0), 0);
     if (dbModuleCount > 0) {
-      console.log('🧩 [QuizEditor] Hydration: applying modularPage', dbModuleCount);
+      console.log('🧩 [QuizEditor] Hydration: applying modularPage', dbModuleCount, 'modules from DB');
       setModularPage(mp);
       modularPageHydratedRef.current = true;
+    } else {
+      console.log('✅ [QuizEditor] DB modularPage is empty, keeping local state');
+      // Mark as hydrated even if empty to prevent re-hydration loops
+      modularPageHydratedRef.current = true;
     }
+  } else if (!mp || !mp.screens) {
+    console.log('✅ [QuizEditor] No modularPage in DB, keeping local state');
+    // Mark as hydrated to prevent re-hydration loops
+    modularPageHydratedRef.current = true;
   }
 }, [campaignState]);
 
@@ -538,7 +549,7 @@ useEffect(() => {
   });
 }, [canvasElements, screenBackgrounds, selectedDevice, canvasZoom, setCampaign]);
 
-// 💾 Autosave léger des éléments du canvas
+// 💾 Autosave léger des éléments du canvas ET modularPage
 useEffect(() => {
   const id = (campaignState as any)?.id as string | undefined;
   if (!id) return;
@@ -547,6 +558,11 @@ useEffect(() => {
     try {
       const payload: any = {
         ...(campaignState || {}),
+        // CRITICAL: Save modularPage in design.quizModules so modules persist
+        design: {
+          ...((campaignState as any)?.design || {}),
+          quizModules: modularPage
+        },
         canvasConfig: {
           ...(campaignState as any)?.canvasConfig,
           elements: canvasElements,
@@ -554,7 +570,8 @@ useEffect(() => {
           device: selectedDevice
         }
       };
-      console.log('💾 [QuizEditor] Autosave canvas elements → DB', canvasElements.length);
+      const moduleCount = Object.values(modularPage.screens || {}).reduce((n: number, arr: any) => n + (Array.isArray(arr) ? arr.length : 0), 0);
+      console.log('💾 [QuizEditor] Autosave → DB', { elements: canvasElements.length, modules: moduleCount });
       await saveCampaignToDB(payload, saveCampaign);
       setIsModified(false);
     } catch (e) {
@@ -562,7 +579,7 @@ useEffect(() => {
     }
   }, 1000);
   return () => clearTimeout(t);
-}, [campaignState?.id, canvasElements, screenBackgrounds, selectedDevice]);
+}, [campaignState?.id, canvasElements, screenBackgrounds, selectedDevice, modularPage]);
 
   // Détection de la taille de fenêtre
   useEffect(() => {
@@ -902,8 +919,8 @@ const handleSaveCampaignName = useCallback(async () => {
   
   // État pour tracker la position de scroll (quel écran est visible)
   const [currentScreen, setCurrentScreen] = useState<'screen1' | 'screen2' | 'screen3'>('screen1');
-  // Modular editor JSON state
-  const [modularPage, setModularPage] = useState<ModularPage>(createEmptyModularPage());
+  
+  // selectedModule computed from modularPage (declared earlier)
   const selectedModule: Module | null = useMemo(() => {
     if (!selectedModuleId) return null;
     const allModules = (Object.values(modularPage.screens) as Module[][]).flat();
