@@ -308,13 +308,8 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
         ignoreExternalUntilRef.current = 0;
       }
 
-      setInternalActiveTab((prev) => {
-        const next = tab;
-        if (next !== prev) {
-          onActiveTabChange?.(next);
-        }
-        return next;
-      });
+      setInternalActiveTab(tab);
+      onActiveTabChange?.(tab);
       // Mettre à jour les états des panneaux en fonction de l'onglet sélectionné
       if (tab === 'background') {
         onDesignPanelChange?.(true);
@@ -360,18 +355,12 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
   const templateDesktopWidth = React.useMemo(() => `${activeTemplate?.style?.containerWidth ?? 450}px`, [activeTemplate]);
   const templateMobileWidth = React.useMemo(() => `${activeTemplate?.style?.containerWidth ?? 450}px`, [activeTemplate]);
 
-  // Fonction interne pour gérer le changement d'onglet (supporte valeur ou updater fonctionnel)
-  const setActiveTab = (
-    nextOrUpdater: string | null | ((prev: string | null) => string | null)
-  ) => {
-    setInternalActiveTab((prev) => {
-      const next = typeof nextOrUpdater === 'function' ? (nextOrUpdater as any)(prev) : nextOrUpdater;
-      if (next !== prev) {
-        onActiveTabChange?.(next);
-      }
-      return next;
-    });
+  // Fonction interne pour gérer le changement d'onglet
+  const setActiveTab = (tab: string | null) => {
+    setInternalActiveTab(tab);
+    onActiveTabChange?.(tab);
   };
+  
   // Référence pour suivre les états précédents
   const prevStatesRef = useRef({
     showEffectsPanel,
@@ -386,74 +375,89 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
   // Gérer l'affichage des onglets en fonction des états des panneaux
   React.useEffect(() => {
     const prev = prevStatesRef.current;
-    
-    // Mettre à jour l'onglet actif en interne uniquement (aucune propagation au parent ici)
-    setInternalActiveTab((currentTab) => {
-      let newActiveTab = currentTab;
-      
-      const panelStates = [
-        { key: 'effects', active: showEffectsPanel, prevActive: prev.showEffectsPanel },
-        { key: 'animations', active: showAnimationsPanel, prevActive: prev.showAnimationsPanel },
-        { key: 'position', active: showPositionPanel, prevActive: prev.showPositionPanel },
-        { key: 'quiz', active: showQuizPanel, prevActive: prev.showQuizPanel },
-        { key: 'wheel', active: showWheelPanel, prevActive: prev.showWheelPanel },
-        { key: 'background', active: showDesignPanel, prevActive: prev.showDesignPanel }
-      ];
+    let newActiveTab = internalActiveTab;
+    let shouldUpdate = false;
 
-      if (showQuizPanel && !prev.showQuizPanel) {
-        newActiveTab = 'quiz';
-      } else if (showWheelPanel && !prev.showWheelPanel) {
-        newActiveTab = 'wheel';
-      } else if (showDesignPanel && !prev.showDesignPanel && currentTab !== 'background') {
-        newActiveTab = 'background';
-      } else {
-        const activatedPanel = panelStates.find(p => p.active && !p.prevActive && p.key !== 'background' && p.key !== 'quiz' && p.key !== 'wheel');
-        if (activatedPanel) {
-          newActiveTab = activatedPanel.key;
-        } else if (panelStates.some(p => p.key === currentTab && !p.active && p.prevActive)) {
-          newActiveTab = currentTab === 'wheel' ? 'game' : 'elements';
-        }
+    // Vérifier si un panneau a été activé/désactivé
+    const panelStates = [
+      { key: 'effects', active: showEffectsPanel, prevActive: prev.showEffectsPanel },
+      { key: 'animations', active: showAnimationsPanel, prevActive: prev.showAnimationsPanel },
+      { key: 'position', active: showPositionPanel, prevActive: prev.showPositionPanel },
+      { key: 'quiz', active: showQuizPanel, prevActive: prev.showQuizPanel },
+      { key: 'wheel', active: showWheelPanel, prevActive: prev.showWheelPanel },
+      { key: 'background', active: showDesignPanel, prevActive: prev.showDesignPanel }
+    ];
+
+    // Si le panneau Quiz est activé, forcer l'onglet quiz
+    if (showQuizPanel && !prev.showQuizPanel) {
+      newActiveTab = 'quiz';
+      shouldUpdate = true;
+    }
+    // Si le panneau Wheel est activé, forcer l'onglet wheel
+    else if (showWheelPanel && !prev.showWheelPanel) {
+      newActiveTab = 'wheel';
+      shouldUpdate = true;
+    }
+    // Si le panneau Design est activé, forcer l'onglet background (sauf si déjà sur background)
+    else if (showDesignPanel && !prev.showDesignPanel && internalActiveTab !== 'background') {
+      newActiveTab = 'background';
+      shouldUpdate = true;
+    } 
+    // Si un autre panneau a été activé, basculer vers son onglet correspondant
+    else {
+      const activatedPanel = panelStates.find(p => p.active && !p.prevActive && p.key !== 'background' && p.key !== 'quiz' && p.key !== 'wheel');
+      if (activatedPanel) {
+        newActiveTab = activatedPanel.key;
+        shouldUpdate = true;
+      } 
+      // Si l'onglet actif est un panneau qui a été désactivé, revenir à 'game' pour wheel ou 'elements' pour les autres
+      else if (panelStates.some(p => p.key === internalActiveTab && !p.active && p.prevActive)) {
+        newActiveTab = internalActiveTab === 'wheel' ? 'game' : 'elements';
+        shouldUpdate = true;
       }
+    }
 
-      // Mettre à jour la référence des états précédents
-      prevStatesRef.current = {
-        showEffectsPanel,
-        showAnimationsPanel,
-        showPositionPanel,
-        showQuizPanel,
-        showWheelPanel,
-        showDesignPanel,
-        activeTab: newActiveTab
-      };
+    // Mettre à jour l'état si nécessaire
+    if (shouldUpdate && newActiveTab !== internalActiveTab) {
+      setActiveTab(newActiveTab);
+    }
 
-      // Notifier le parent pour le seul état Design, pas pour l'onglet
+    // Mettre à jour la référence des états précédents
+    prevStatesRef.current = {
+      showEffectsPanel,
+      showAnimationsPanel,
+      showPositionPanel,
+      showQuizPanel,
+      showWheelPanel,
+      showDesignPanel,
+      activeTab: newActiveTab
+    };
+
+    // Notifier le parent des changements de l'onglet Design
+    if (onDesignPanelChange) {
       const isDesignActive = newActiveTab === 'background' || showDesignPanel;
-      if (onDesignPanelChange && isDesignActive !== prev.showDesignPanel) {
+      if (isDesignActive !== prev.showDesignPanel) {
         onDesignPanelChange(isDesignActive);
       }
-
-      return newActiveTab;
-    });
+    }
   }, [
-    showEffectsPanel,
-    showAnimationsPanel,
-    showPositionPanel,
+    showEffectsPanel, 
+    showAnimationsPanel, 
+    showPositionPanel, 
     showQuizPanel,
     showWheelPanel,
     showDesignPanel,
+    activeTab,
     onDesignPanelChange
   ]);
 
+  // Fermer automatiquement le panneau d'effets si aucun élément texte n'est sélectionné
   React.useEffect(() => {
-    // Ferme le panneau d'effets et revient aux éléments sans remonter l'info au parent
-    setInternalActiveTab((currentTab) => {
-      if (currentTab === 'effects' && (!selectedElement || selectedElement.type !== 'text')) {
-        onEffectsPanelChange?.(false);
-        return 'elements';
-      }
-      return currentTab;
-    });
-  }, [selectedElement, onEffectsPanelChange]);
+    if (internalActiveTab === 'effects' && (!selectedElement || selectedElement.type !== 'text')) {
+      onEffectsPanelChange?.(false);
+      setActiveTab('elements');
+    }
+  }, [selectedElement, internalActiveTab, onEffectsPanelChange]);
 
   // Idle prefetch heavy panels to smooth first open without blocking initial render
   React.useEffect(() => {
