@@ -392,7 +392,11 @@ useEffect(() => {
 // ✅ Hydrater les éléments/modularPage/backgrounds depuis la DB à l'ouverture
 useEffect(() => {
   const cfg = (campaignState as any)?.config?.canvasConfig || (campaignState as any)?.canvasConfig;
-  const mp = (campaignState as any)?.config?.modularPage || (campaignState as any)?.design?.quizModules;
+  // Broad fallback chain for maximum compatibility (check all possible locations)
+  const mp = (campaignState as any)?.config?.modularPage 
+    || (campaignState as any)?.design?.quizModules 
+    || (campaignState as any)?.design?.designModules 
+    || (campaignState as any)?.modularPage;
   const topLevelElements = (campaignState as any)?.config?.elements;
 
   // N'hydrate que si on a des données utiles ET que le local est vide
@@ -557,7 +561,10 @@ useEffect(() => {
   const t = window.setTimeout(async () => {
     try {
       const localModuleCount = Object.values(modularPage.screens || {}).reduce((n: number, arr: any) => n + (Array.isArray(arr) ? arr.length : 0), 0);
-      const dbModularPage = (campaignState as any)?.design?.quizModules || (campaignState as any)?.config?.modularPage;
+      const dbModularPage = (campaignState as any)?.config?.modularPage 
+        || (campaignState as any)?.design?.quizModules 
+        || (campaignState as any)?.design?.designModules 
+        || (campaignState as any)?.modularPage;
       const dbModuleCount = dbModularPage?.screens ? Object.values(dbModularPage.screens || {}).reduce((n: number, arr: any) => n + (Array.isArray(arr) ? arr.length : 0), 0) : 0;
       
       // CRITICAL: Anti-overwrite protection - don't save empty modularPage if DB has modules
