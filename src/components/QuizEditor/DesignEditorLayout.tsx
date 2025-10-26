@@ -926,14 +926,17 @@ const handleSaveCampaignName = useCallback(async () => {
   useEffect(() => {
     const id = (campaignState as any)?.id as string | undefined;
     if (!id) return;
-    if (!bgHydratedRef.current) return; // avoid saving defaults over persisted data
     
     // Guard: only autosave if campaign has valid UUID
     const isUuid = (v?: string) => !!v && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v);
-    if (!isUuid(id)) return;
+    if (!isUuid(id)) {
+      console.log('🚫 [QuizEditor] Autosave skipped: not a valid UUID', id);
+      return;
+    }
     
     const t = window.setTimeout(async () => {
       try {
+        console.log('💾 [QuizEditor] Autosave START for campaign:', id);
         const payload: any = {
           ...(campaignState || {}),
           // Save modules in multiple locations for compatibility
@@ -959,15 +962,23 @@ const handleSaveCampaignName = useCallback(async () => {
             device: selectedDevice
           }
         };
-        console.log('💾 [QuizEditor] Autosave complete state → DB', {
+        console.log('💾 [QuizEditor] Autosave payload:', {
           id,
+          name: payload.name,
           canvasElements: canvasElements.length,
-          modules: Object.values(modularPage?.screens || {}).reduce((sum: number, arr: any) => sum + (Array.isArray(arr) ? arr.length : 0), 0)
+          modulesCount: Object.values(modularPage?.screens || {}).reduce((sum: number, arr: any) => sum + (Array.isArray(arr) ? arr.length : 0), 0),
+          screenBackgroundsKeys: Object.keys(screenBackgrounds || {})
         });
-        await saveCampaignToDB(payload, saveCampaign);
+        
+        const savedResult = await saveCampaignToDB(payload, saveCampaign);
+        
+        console.log('✅ [QuizEditor] Autosave SUCCESS:', {
+          savedId: savedResult?.id,
+          savedName: savedResult?.name
+        });
         setIsModified(false);
       } catch (e) {
-        console.warn('⚠️ [QuizEditor] Autosave failed', e);
+        console.error('❌ [QuizEditor] Autosave FAILED:', e);
       }
     }, 1500);
     return () => clearTimeout(t);

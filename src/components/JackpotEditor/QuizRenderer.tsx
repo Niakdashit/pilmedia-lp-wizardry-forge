@@ -262,7 +262,7 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
       const borderRadius = imageModule.borderRadius ?? 0;
       const imageSource = (imageModule.url && imageModule.url.trim().length > 0)
         ? imageModule.url
-        : '/assets/templates/placeholder.png';
+        : '/assets/templates/placeholder.svg';
 
       return (
         <div 

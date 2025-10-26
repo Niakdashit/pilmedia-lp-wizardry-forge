@@ -55,7 +55,7 @@ const createModule = (type: ModuleType, screen: ScreenId): Module => {
       return {
         id,
         type,
-        url: '/assets/templates/placeholder.png',
+        url: '/assets/templates/placeholder.svg',
         alt: 'image',
         spacingTop: 16,
         spacingBottom: 16,

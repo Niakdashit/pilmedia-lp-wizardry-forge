@@ -71,13 +71,32 @@ export const useCampaigns = () => {
         maybeSet('thumbnail_url', campaign.thumbnail_url);
         maybeSet('banner_url', campaign.banner_url);
 
+        console.log('📤 [useCampaigns] UPDATE campaigns:', {
+          id: campaign.id,
+          fieldsUpdated: Object.keys(updateData),
+          configKeys: updateData.config ? Object.keys(updateData.config) : [],
+          designKeys: updateData.design ? Object.keys(updateData.design) : []
+        });
+
         const { data, error } = await supabase
           .from('campaigns')
           .update(updateData)
           .eq('id', campaign.id)
           .select()
           .single();
-        if (error) throw error;
+        
+        if (error) {
+          console.error('❌ [useCampaigns] UPDATE FAILED:', error);
+          throw error;
+        }
+        
+        console.log('✅ [useCampaigns] UPDATE SUCCESS:', {
+          id: data.id,
+          name: data.name,
+          configKeys: data.config ? Object.keys(data.config) : [],
+          designKeys: data.design ? Object.keys(data.design) : []
+        });
+        
         result = data;
       } else {
         // Create new campaign (require or default type)
