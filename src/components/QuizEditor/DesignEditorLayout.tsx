@@ -549,13 +549,23 @@ useEffect(() => {
   });
 }, [canvasElements, screenBackgrounds, selectedDevice, canvasZoom, setCampaign]);
 
-// 💾 Autosave léger des éléments du canvas ET modularPage
+// 💾 Autosave léger des éléments du canvas ET modularPage avec protection anti-écrasement
 useEffect(() => {
   const id = (campaignState as any)?.id as string | undefined;
   if (!id) return;
   if (!bgHydratedRef.current) return; // avoid saving defaults over persisted data
   const t = window.setTimeout(async () => {
     try {
+      const localModuleCount = Object.values(modularPage.screens || {}).reduce((n: number, arr: any) => n + (Array.isArray(arr) ? arr.length : 0), 0);
+      const dbModularPage = (campaignState as any)?.design?.quizModules || (campaignState as any)?.config?.modularPage;
+      const dbModuleCount = dbModularPage?.screens ? Object.values(dbModularPage.screens || {}).reduce((n: number, arr: any) => n + (Array.isArray(arr) ? arr.length : 0), 0) : 0;
+      
+      // CRITICAL: Anti-overwrite protection - don't save empty modularPage if DB has modules
+      if (localModuleCount === 0 && dbModuleCount > 0) {
+        console.warn('⚠️ [QuizEditor] Skipping autosave: local modularPage is empty but DB has', dbModuleCount, 'modules');
+        return;
+      }
+      
       const payload: any = {
         ...(campaignState || {}),
         // CRITICAL: Save modularPage in design.quizModules so modules persist
@@ -570,8 +580,7 @@ useEffect(() => {
           device: selectedDevice
         }
       };
-      const moduleCount = Object.values(modularPage.screens || {}).reduce((n: number, arr: any) => n + (Array.isArray(arr) ? arr.length : 0), 0);
-      console.log('💾 [QuizEditor] Autosave → DB', { elements: canvasElements.length, modules: moduleCount });
+      console.log('💾 [QuizEditor] Autosave → DB', { elements: canvasElements.length, modules: localModuleCount });
       await saveCampaignToDB(payload, saveCampaign);
       setIsModified(false);
     } catch (e) {
@@ -1243,26 +1252,28 @@ const handleSaveCampaignName = useCallback(async () => {
     boxShadow: LAUNCH_BUTTON_DEFAULT_SHADOW
   }), [getDefaultButtonLabel, generateUniqueId]);
 
+  // CRITICAL: Inject default "Participer" button on screen1 if none exists
+  // This must run AFTER hydration to correctly detect if button is needed
   useEffect(() => {
-    if (ensuredBlocBoutonRef.current) return;
+    // Only run once after hydration is complete
+    if (ensuredBlocBoutonRef.current || !modularPageHydratedRef.current) return;
     
-    // Ne pas ajouter de boutons si la campagne a déjà été chargée depuis la DB
-    const hasCampaignFromDB = !!campaignState?.id;
-    if (hasCampaignFromDB) {
-      ensuredBlocBoutonRef.current = true;
-      return;
-    }
+    const screen1Modules = modularPage.screens.screen1 || [];
+    const hasStandaloneButton = screen1Modules.some((m) => m.type === 'BlocBouton');
+    const hasCardButton = screen1Modules.some((m) => m.type === 'BlocCarte' && Array.isArray((m as any).children) && (m as any).children.some((c: Module) => c?.type === 'BlocBouton'));
     
-    const hasStandaloneButton = (Object.values(modularPage.screens) as Module[][]).some((modules) => modules?.some((m) => m.type === 'BlocBouton'));
-    if (!hasStandaloneButton && !editorHasCardButton()) {
-      const targetScreen = currentScreen || 'screen1';
-      const defaultModule = createDefaultBlocBouton(targetScreen);
+    // Only inject button if screen1 has NO button at all
+    if (!hasStandaloneButton && !hasCardButton) {
+      console.log('🎯 [QuizEditor] Injecting default "Participer" button on screen1');
+      const defaultModule = createDefaultBlocBouton('screen1');
       const nextScreens: ModularPage['screens'] = { ...modularPage.screens };
-      nextScreens[targetScreen] = [...(nextScreens[targetScreen] || []), defaultModule];
+      nextScreens.screen1 = [...screen1Modules, defaultModule];
       persistModular({ screens: nextScreens, _updatedAt: Date.now() });
+    } else {
+      console.log('✅ [QuizEditor] Button already exists on screen1, skipping injection');
     }
     ensuredBlocBoutonRef.current = true;
-  }, [modularPage.screens, currentScreen, persistModular, createDefaultBlocBouton, editorHasCardButton, campaignState?.id]);
+  }, [modularPage.screens, persistModular, createDefaultBlocBouton]);
 
   useEffect(() => {
     const legacyButton = canvasElements.find((el) => typeof el?.role === 'string' && el.role.toLowerCase().includes('button'));

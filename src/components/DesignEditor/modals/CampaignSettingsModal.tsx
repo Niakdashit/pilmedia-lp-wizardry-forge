@@ -84,7 +84,12 @@ useEffect(() => {
           return;
         }
         
-        console.log('💾 [CampaignSettingsModal] Saving new campaign to DB...');
+        console.log('💾 [CampaignSettingsModal] Saving new campaign to DB (includes modularPage)...');
+        // CRITICAL: Ensure all local states are included in the campaign object before save
+        // The campaign object from store should already include modularPage via the mirror useEffect
+        // but we log here to confirm
+        const moduleCount = Object.values((campaign as any)?.design?.quizModules?.screens || {}).reduce((n: number, arr: any) => n + (Array.isArray(arr) ? arr.length : 0), 0);
+        console.log('💾 [CampaignSettingsModal] Campaign contains', moduleCount, 'modules in design.quizModules');
         const savedCampaign = await saveCampaignToDB(campaign, saveCampaign);
         
         if (!savedCampaign?.id) {
