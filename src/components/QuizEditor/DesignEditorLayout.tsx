@@ -244,6 +244,67 @@ useEffect(() => {
     if (typeof id === 'string' && isUuid(id)) localStorage.setItem('quiz:lastCampaignId', id);
   } catch {}
 }, [campaignState?.id]);
+
+// 🔄 Load campaign data from Supabase when campaign ID is in URL
+useEffect(() => {
+  const sp = new URLSearchParams(location.search);
+  const campaignId = sp.get('campaign');
+  const isUuid = (v?: string | null) => !!v && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v);
+  
+  if (!campaignId || !isUuid(campaignId)) return;
+  
+  // Skip if this campaign is already loaded
+  if ((campaignState as any)?.id === campaignId) {
+    console.log('✅ [QuizEditor] Campaign already loaded:', campaignId);
+    return;
+  }
+  
+  console.log('🔄 [QuizEditor] Loading campaign from Supabase:', campaignId);
+  
+  const loadCampaignData = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('campaigns')
+        .select('*')
+        .eq('id', campaignId)
+        .maybeSingle();
+      
+      if (error) throw error;
+      
+      if (data) {
+        console.log('✅ [QuizEditor] Campaign loaded from DB:', {
+          id: data.id,
+          name: data.name,
+          hasConfig: !!data.config,
+          hasDesign: !!data.design,
+          hasModules: !!((data.design as any)?.quizModules || (data.config as any)?.modularPage)
+        });
+        
+        // Transform database row to OptimizedCampaign format
+        const campaignData: any = {
+          ...data,
+          id: data.id,
+          name: data.name || 'Campaign',
+          type: data.type || 'quiz',
+          design: data.design || {},
+          gameConfig: (data.game_config || {}) as any,
+          buttonConfig: {},
+          config: data.config || {},
+          formFields: data.form_fields || [],
+          _lastUpdate: Date.now(),
+          _version: 1
+        };
+        
+        // Update campaign state with loaded data
+        setCampaign(campaignData);
+      }
+    } catch (error) {
+      console.error('❌ [QuizEditor] Failed to load campaign:', error);
+    }
+  };
+  
+  loadCampaignData();
+}, [location.search, campaignState, setCampaign]);
   
 // Campaign state synchronization hook
 const { syncAllStates } = useCampaignStateSync();

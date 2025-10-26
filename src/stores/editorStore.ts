@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { subscribeWithSelector } from 'zustand/middleware';
+import { subscribeWithSelector, persist } from 'zustand/middleware';
 import type { OptimizedCampaign } from '../components/ModernEditor/types/CampaignTypes';
 
 interface ClipboardData {
@@ -126,7 +126,8 @@ const initialDragState = {
 };
 
 export const useEditorStore = create<EditorStore>()(
-  subscribeWithSelector((set, get) => ({
+  persist(
+    subscribeWithSelector((set, get) => ({
     // Initial state
     campaign: null,
     selectedCampaignId: null,
@@ -454,7 +455,14 @@ export const useEditorStore = create<EditorStore>()(
         set({ isNewCampaignGlobal: false });
       }
     },
-  }))
+  })),
+  {
+    name: 'prosplay-editor-store',
+    partialize: (state) => ({
+      campaign: state.campaign,
+      selectedCampaignId: state.selectedCampaignId,
+    }),
+  })
 );
 
 // Performance monitoring hook
