@@ -731,11 +731,21 @@ useEffect(() => {
 
   // Open name modal only for new campaigns or when explicitly requested
   useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const urlCampaignId = searchParams.get('campaign');
     const id = (campaignState as any)?.id as string | undefined;
     const name = (campaignState as any)?.name as string | undefined;
+    
+    // CRITICAL: Don't show modal until campaign is fully loaded from DB
+    // If URL has a campaign ID but state doesn't match yet, campaign is still loading
+    if (urlCampaignId && urlCampaignId !== id) {
+      console.log('⏳ [QuizEditor] Campaign still loading, waiting...', { urlCampaignId, stateId: id });
+      return;
+    }
+    
     const promptedKey = id ? `campaign:name:prompted:${id}` : `campaign:name:prompted:new:quiz`;
     const alreadyPrompted = typeof window !== 'undefined' ? localStorage.getItem(promptedKey) === '1' : true;
-    const forceOpen = new URLSearchParams(location.search).get('forceNameModal') === '1';
+    const forceOpen = searchParams.get('forceNameModal') === '1';
     
     setNewCampaignName((name || '').trim());
     
@@ -754,6 +764,7 @@ useEffect(() => {
     const needsName = !name || defaultNames.has((name || '').trim());
     
     if (needsName && !alreadyPrompted) {
+      console.log('📝 [QuizEditor] Campaign needs name, opening modal', { id, name });
       try { requestAnimationFrame(() => setIsNameModalOpen(true)); } catch { setIsNameModalOpen(true); }
     }
   }, [campaignState?.id, campaignState?.name, location.search]);
