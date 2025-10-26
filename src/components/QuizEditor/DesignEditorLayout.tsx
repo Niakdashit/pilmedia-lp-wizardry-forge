@@ -753,6 +753,12 @@ useEffect(() => {
       try { requestAnimationFrame(() => setIsNameModalOpen(true)); } catch { setIsNameModalOpen(true); }
       return;
     }
+
+    // If we're explicitly editing an existing campaign via URL, never prompt for name
+    if (urlCampaignId) {
+      setIsNameModalOpen(false);
+      return;
+    }
     
     // Only open for new campaigns or campaigns without proper names that haven't been prompted yet
     const defaultNames = new Set([
