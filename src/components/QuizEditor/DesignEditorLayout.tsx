@@ -410,6 +410,8 @@ useEffect(() => {
       setModularPage(mp);
     }
   }
+  // Mark data hydrated for autosave guards
+  dataHydratedRef.current = true;
 }, [campaignState]);
 
 // Mémo de ce qui a été appliqué pour éviter les boucles (device+screen -> url)
@@ -959,6 +961,7 @@ const handleSaveCampaignName = useCallback(async () => {
           }
         };
         console.log('💾 [QuizEditor] Autosave complete state → DB', {
+          id,
           canvasElements: canvasElements.length,
           modules: Object.values(modularPage?.screens || {}).reduce((sum: number, arr: any) => sum + (Array.isArray(arr) ? arr.length : 0), 0)
         });
@@ -2330,7 +2333,7 @@ const handleSaveCampaignName = useCallback(async () => {
     });
     
     return {
-      id: 'quiz-preview-campaign',
+      id: (campaignState as any)?.id || (campaignConfig as any)?.id || 'quiz-preview-campaign',
       type: 'quiz',
       // Fournir la configuration Article pour le mode article
       articleConfig: (campaignConfig as any)?.articleConfig,
