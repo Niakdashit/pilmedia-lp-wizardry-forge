@@ -575,6 +575,12 @@ useEffect(() => {
       
       const payload: any = {
         ...(campaignState || {}),
+        // Explicitly persist modularPage in multiple locations for robustness
+        modularPage,
+        config: {
+          ...(((campaignState as any)?.config) || {}),
+          modularPage,
+        },
         // CRITICAL: Save modularPage in design.quizModules so modules persist
         design: {
           ...((campaignState as any)?.design || {}),
@@ -2616,6 +2622,12 @@ const handleSaveCampaignName = useCallback(async () => {
       // Inject canvasConfig so backgrounds/images and elements are persisted in DB
       const payload = {
         ...updatedCampaign,
+        // Persist modules explicitly in multiple locations
+        modularPage,
+        config: {
+          ...((updatedCampaign as any)?.config || {}),
+          modularPage
+        },
         // Persist modules inside design.quizModules for DB
         design: {
           ...((updatedCampaign as any)?.design || {}),
