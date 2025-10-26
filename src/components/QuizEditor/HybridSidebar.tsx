@@ -434,8 +434,8 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
     };
 
     // Notifier le parent des changements de l'onglet Design
+    const isDesignActive = newActiveTab === 'background' || showDesignPanel;
     if (onDesignPanelChange && isDesignActive !== prev.showDesignPanel) {
-      const isDesignActive = newActiveTab === 'background' || showDesignPanel;
       onDesignPanelChange(isDesignActive);
     }
   }, [
