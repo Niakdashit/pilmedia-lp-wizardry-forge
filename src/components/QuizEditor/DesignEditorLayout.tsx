@@ -117,6 +117,23 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
   const navigate = useNavigate();
   const location = useLocation();
   
+  // If the URL lacks ?campaign, try restoring last opened campaign id to keep modules after refresh
+  useEffect(() => {
+    try {
+      const sp = new URLSearchParams(location.search);
+      const hasCampaignParam = !!sp.get('campaign');
+      if (hasCampaignParam) return;
+      const lastId = localStorage.getItem('quiz:lastCampaignId');
+      const isUuid = (v?: string | null) => !!v && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v);
+      if (isUuid(lastId)) {
+        const modeParam = sp.get('mode');
+        const newUrl = modeParam ? `${location.pathname}?campaign=${lastId}&mode=${modeParam}` : `${location.pathname}?campaign=${lastId}`;
+        console.log('↪️ [QuizEditor] Restoring last campaign from storage, redirecting to', newUrl);
+        navigate(newUrl, { replace: true });
+      }
+    } catch {}
+  }, [location.pathname, location.search, navigate]);
+  
   // Détection du mode Article via URL (?mode=article)
   const searchParams = new URLSearchParams(location.search);
   const editorMode: 'article' | 'fullscreen' = searchParams.get('mode') === 'article' ? 'article' : 'fullscreen';
@@ -216,8 +233,17 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
   // Campagne centralisée (source de vérité pour les champs de contact)
   const campaignState = useEditorStore((s) => s.campaign);
 
-  // Supabase campaigns API
-  const { saveCampaign, duplicateCampaign } = useCampaigns();
+// Supabase campaigns API
+const { saveCampaign, duplicateCampaign } = useCampaigns();
+
+// Persist last opened valid campaign id to survive refreshes
+useEffect(() => {
+  const id = (campaignState as any)?.id as string | undefined;
+  const isUuid = (v?: string) => !!v && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v);
+  try {
+    if (typeof id === 'string' && isUuid(id)) localStorage.setItem('quiz:lastCampaignId', id);
+  } catch {}
+}, [campaignState?.id]);
   
 // Campaign state synchronization hook
 const { syncAllStates } = useCampaignStateSync();
