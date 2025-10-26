@@ -1540,6 +1540,7 @@ const handleSaveCampaignName = useCallback(async () => {
                 const newUrl = modeParam ? `${location.pathname}?campaign=${duplicated.id}&mode=${modeParam}` : `${location.pathname}?campaign=${duplicated.id}`;
                 setCampaign(duplicated as any);
                 navigate(newUrl, { replace: true });
+                dataHydratedRef.current = true; // Mark as complete
                 return; // Stop processing original campaign
               } else {
                 console.warn('⚠️ Failed to duplicate campaign, proceeding read-only');
@@ -1676,8 +1677,172 @@ const handleSaveCampaignName = useCallback(async () => {
           // Update editor store
           setCampaign(data as any);
           
+          console.log('✅ [QuizEditor] Campaign hydration complete, dataHydratedRef=true');
+          dataHydratedRef.current = true; // CRITICAL: Mark hydration as complete
+          
         } catch (err) {
           console.error('❌ Failed to load campaign:', err);
+          dataHydratedRef.current = true; // Mark as complete even on error
+        } finally {
+          setIsLoading(false);
+        }
+      })();
+    }
+  }, [location.search]);
+          
+          console.log('✅ Campaign loaded:', data);
+          
+          // Ownership check: duplicate under current user if not owner to allow edits (RLS-safe)
+          try {
+            const { data: authData } = await supabase.auth.getUser();
+            const currentUserId = authData?.user?.id;
+            if (currentUserId && data.created_by && data.created_by !== currentUserId) {
+              console.log('🛡️ Not owner of campaign. Duplicating for current user...', { currentUserId, owner: data.created_by });
+              const duplicated = await duplicateCampaign(campaignId);
+              if (duplicated?.id) {
+                const sp = new URLSearchParams(location.search);
+                const modeParam = sp.get('mode');
+                const newUrl = modeParam ? `${location.pathname}?campaign=${duplicated.id}&mode=${modeParam}` : `${location.pathname}?campaign=${duplicated.id}`;
+                setCampaign(duplicated as any);
+                navigate(newUrl, { replace: true });
+                return; // Stop processing original campaign
+              } else {
+                console.warn('⚠️ Failed to duplicate campaign, proceeding read-only');
+              }
+            }
+          } catch (e) {
+            console.warn('⚠️ Ownership check failed:', e);
+          }
+          
+          // Restore canvas elements
+          const mergedCanvasConfig = (data?.config as any)?.canvasConfig ?? (data as any)?.canvasConfig ?? {};
+          if (Array.isArray(mergedCanvasConfig.elements)) {
+            setCanvasElements(mergedCanvasConfig.elements);
+          }
+          
+          // Restore background - check multiple sources
+          const bg = mergedCanvasConfig.background 
+            || (data?.design as any)?.backgroundImage 
+            || (data?.design as any)?.background 
+            || { type: 'color', value: 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)' };
+          
+          // If we have a background image URL in design, use it
+          if ((data?.design as any)?.backgroundImage && typeof (data.design as any).backgroundImage === 'string') {
+            setCanvasBackground({ type: 'image', value: (data.design as any).backgroundImage });
+          } else {
+            setCanvasBackground(typeof bg === 'string' ? { type: 'color', value: bg } : bg);
+          }
+          
+          // Extract colors if background is an image
+          const initialBg = (mergedCanvasConfig as any)?.background?.value || (data?.design as any)?.backgroundImage;
+          if (initialBg && typeof initialBg === 'string' && initialBg.startsWith('http')) {
+            const loadedColors = (data?.config as any)?.extractedColors ?? (data?.design as any)?.extractedColors ?? (data as any)?.extractedColors;
+            const colorArray = (Array.isArray(loadedColors) ? loadedColors : (loadedColors as any)?.colors ?? [])
+              .filter((c: string) => /^#[0-9A-Fa-f]{6}$/.test(c));
+            setExtractedColors(colorArray);
+          }
+          
+          // Restore screen backgrounds if available
+          if (mergedCanvasConfig.screenBackgrounds) {
+            setScreenBackgrounds(mergedCanvasConfig.screenBackgrounds);
+          }
+          
+          // Initialize config
+          const quizFromConfig = {
+            ...(data?.config || {} as any),
+            quizConfig: (data?.config as any)?.quizConfig ?? (data as any)?.modularPage,
+            quizModules: (data?.config as any)?.quizModules || (data?.design as any)?.quizModules || [],
+            modularPage: (data as any)?.modularPage || (data?.design as any)?.quizModules || [],
+          };
+          if ((data?.config as any)?.quizModules) {
+            quizFromConfig.quizModules = (data.config as any).quizModules;
+          } else if ((data?.design as any)?.quizModules) {
+            quizFromConfig.quizModules = (data.design as any).quizModules;
+          } else if ((data as any)?.modularPage) {
+            quizFromConfig.modularPage = (data as any).modularPage;
+          }
+          if (!quizFromConfig.quizConfig) {
+            const qC = (
+              (data?.design as any)?.quizConfig ||
+              (quizFromConfig as any)?.quizConfig ||
+              {}
+            );
+            quizFromConfig.quizConfig = qC;
+          }
+
+          console.log('📦 [QuizEditor] Modules to restore:', {
+            fromConfigQuizModules: (data?.config as any)?.quizModules,
+            fromDesignQuizModules: (data?.design as any)?.quizModules,
+            fromModularPage: (data as any)?.modularPage,
+            finalQuizModules: quizFromConfig.quizModules,
+            finalModularPage: quizFromConfig.modularPage
+          });
+
+          // Restore campaign config
+          setCampaignConfig({
+            ...data,
+            design: {
+              ...(data?.design || {} as any),
+              quizConfig: quizFromConfig.quizConfig || {},
+              quizModules: quizFromConfig.quizModules || quizFromConfig.modularPage || modularPage
+            }
+          });
+          
+          // Restore modular page (modules) - check all possible sources
+          const modulesToRestore = quizFromConfig.quizModules || quizFromConfig.modularPage || (data as any)?.modularPage || (data?.design as any)?.quizModules;
+          
+          console.log('📦 [QuizEditor] Final modules to restore:', {
+            modulesToRestore,
+            isArray: Array.isArray(modulesToRestore),
+            hasScreens: modulesToRestore?.screens,
+            screensKeys: modulesToRestore?.screens ? Object.keys(modulesToRestore.screens) : [],
+            screen1Count: modulesToRestore?.screens?.screen1?.length || 0,
+            screen2Count: modulesToRestore?.screens?.screen2?.length || 0,
+            screen3Count: modulesToRestore?.screens?.screen3?.length || 0
+          });
+          
+          if (modulesToRestore) {
+            if (modulesToRestore.screens) {
+              console.log('✅ [QuizEditor] Restoring modules with screens structure');
+              setModularPage(modulesToRestore);
+              dataHydratedRef.current = true;
+            } else if (Array.isArray(modulesToRestore) && modulesToRestore.length > 0) {
+              console.log('✅ [QuizEditor] Converting array modules to screens structure');
+              setModularPage({
+                screens: {
+                  screen1: modulesToRestore,
+                  screen2: [],
+                  screen3: []
+                },
+                _updatedAt: Date.now()
+              });
+              dataHydratedRef.current = true;
+            } else {
+              console.warn('⚠️ [QuizEditor] Modules format not recognized:', modulesToRestore);
+            }
+          } else {
+            console.warn('⚠️ [QuizEditor] No modules found to restore');
+          }
+          
+          // Restore quiz config
+          if (quizFromConfig.quizConfig) {
+            setQuizConfig((prev: any) => ({
+              ...prev,
+              ...quizFromConfig.quizConfig
+            }));
+          }
+          
+          // Restore device if saved
+          if (mergedCanvasConfig.device && ['desktop', 'tablet', 'mobile'].includes(mergedCanvasConfig.device)) {
+            setSelectedDevice(mergedCanvasConfig.device);
+            setCanvasZoom(getDefaultZoom(mergedCanvasConfig.device));
+          }
+          console.log('✅ [QuizEditor] Campaign hydration complete, dataHydratedRef=true');
+          dataHydratedRef.current = true; // CRITICAL: Mark hydration as complete
+          
+        } catch (err) {
+          console.error('❌ Failed to load campaign:', err);
+          dataHydratedRef.current = true; // Mark as complete even on error
         } finally {
           setIsLoading(false);
         }
