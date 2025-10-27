@@ -42,6 +42,7 @@ import { createGameConfigFromQuiz } from '@/types/gameConfig';
 import { supabase } from '@/integrations/supabase/client';
 import { generateTempCampaignId } from '@/utils/tempCampaignId';
 import { useAutoSaveToSupabase } from '@/hooks/useAutoSaveToSupabase';
+import { useEditorUnmountSave } from '@/hooks/useEditorUnmountSave';
 
 const KeyboardShortcutsHelp = lazy(() => import('../shared/KeyboardShortcutsHelp'));
 const MobileStableEditor = lazy(() => import('./components/MobileStableEditor'));
