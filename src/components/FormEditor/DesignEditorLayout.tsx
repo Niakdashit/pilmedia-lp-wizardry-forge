@@ -30,14 +30,14 @@ import { useCampaignSettings } from '@/hooks/useCampaignSettings';
 
 
 import { useCampaigns } from '@/hooks/useCampaigns';
-import { createSaveAndContinueHandler, saveCampaignToDB } from '@/hooks/useModernCampaignEditor/saveHandler';
+import { saveCampaignToDB } from '@/hooks/useModernCampaignEditor/saveHandler';
 import { useCampaignStateSync } from '@/hooks/useCampaignStateSync';
 import { quizTemplates } from '../../types/quizTemplates';
+import { supabase } from '@/integrations/supabase/client';
 import { generateTempCampaignId, isTempCampaignId, clearTempCampaignData } from '@/utils/tempCampaignId';
 
 const KeyboardShortcutsHelp = lazy(() => import('../shared/KeyboardShortcutsHelp'));
 const MobileStableEditor = lazy(() => import('./components/MobileStableEditor'));
-import { useCampaignFromUrl } from '@/hooks/useCampaignFromUrl';
 
 const LAUNCH_BUTTON_FALLBACK_GRADIENT = '#000000';
 const LAUNCH_BUTTON_DEFAULT_TEXT_COLOR = '#ffffff';
@@ -205,20 +205,19 @@ const FormEditorLayout: React.FC<FormEditorLayoutProps> = ({ mode = 'campaign', 
 
   // Store centralisé pour l'optimisation
   const {
-    campaign: storeCampaign,
     setCampaign,
     setPreviewDevice,
     setIsLoading,
     setIsModified,
     resetCampaign,
-    initializeNewCampaign,
     initializeNewCampaignWithId,
-    selectCampaign
+    saveToCampaignCache,
+    loadFromCampaignCache
   } = useEditorStore();
   const isNewCampaignGlobal = useEditorStore((s) => s.isNewCampaignGlobal);
   const beginNewCampaign = useEditorStore((s) => s.beginNewCampaign);
   const clearNewCampaignFlag = useEditorStore((s) => s.clearNewCampaignFlag);
-  const selectedCampaignId = useEditorStore((s) => s.selectedCampaignId);
+  const selectCampaign = useEditorStore((s) => s.selectCampaign);
   
   // Hook de synchronisation preview
   const { syncBackground } = useEditorPreviewSync();
@@ -239,44 +238,148 @@ const FormEditorLayout: React.FC<FormEditorLayoutProps> = ({ mode = 'campaign', 
 // Campaign state synchronization hook
 const { syncAllStates } = useCampaignStateSync();
 
-// Charger campagne depuis l'URL si présente
-const { campaign: urlCampaign, loading: urlLoading, error: urlError } = useCampaignFromUrl();
-
-// Hydrater le store namespacé quand la campagne URL est chargée
+// 🔄 Load campaign data from Supabase when campaign ID is in URL
+const dataHydratedRef = useRef(false);
 useEffect(() => {
-  const cid = (urlCampaign as any)?.id as string | undefined;
-  if (!cid) return;
-  try {
-    selectCampaign(cid, 'form');
-    // injecter l'objet complet dans la slice
-    if (urlCampaign) {
-      // accès direct via setter global scoper à selectedCampaignId
-      setCampaign(() => urlCampaign as any);
-    }
-  } catch (e) {
-    console.warn('hydrate urlCampaign failed', e);
+  const sp = new URLSearchParams(location.search);
+  const campaignId = sp.get('campaign');
+  const isUuid = (v?: string | null) => !!v && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v);
+  
+  // CRITICAL: Skip loading for temporary campaign IDs - they should remain blank
+  if (isTempCampaignId(campaignId)) {
+    console.log('⏭️ [FormEditor] Skipping load for temporary campaign:', campaignId);
+    dataHydratedRef.current = true;
+    return;
   }
+  
+  if (!campaignId || !isUuid(campaignId)) return;
+  
+  // Check if we're switching campaigns
+  const currentCampaignId = (campaignState as any)?.id;
+  if (currentCampaignId && currentCampaignId !== campaignId) {
+    console.log('🔄 [FormEditor] Switching campaigns, saving current state');
+  }
+  
+  // Skip if this campaign is already loaded
+  if (currentCampaignId === campaignId) {
+    console.log('✅ [FormEditor] Campaign already loaded:', campaignId);
+    return;
+  }
+  
+  console.log('🔄 [FormEditor] Loading campaign:', campaignId);
+  
+  // Try to load from cache first
+  if (!isTempCampaignId(campaignId)) {
+    const cachedData = loadFromCampaignCache(campaignId);
+    if (cachedData && cachedData.campaign) {
+      console.log('📦 [FormEditor] Restoring from cache');
+      setCampaign(cachedData.campaign);
+      if (cachedData.canvasElements) setCanvasElements(cachedData.canvasElements);
+      if (cachedData.modularPage) setModularPage(cachedData.modularPage);
+      if (cachedData.screenBackgrounds) setScreenBackgrounds(cachedData.screenBackgrounds);
+      if (cachedData.canvasZoom) setCanvasZoom(cachedData.canvasZoom);
+      dataHydratedRef.current = true;
+      return;
+    }
+  }
+  
+  // Otherwise, load from Supabase
+  const loadCampaignData = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('campaigns')
+        .select('*')
+        .eq('id', campaignId)
+        .maybeSingle();
+      
+      if (error) throw error;
+      
+      if (data) {
+        console.log('✅ [FormEditor] Campaign loaded from DB:', {
+          id: data.id,
+          name: data.name,
+          hasConfig: !!data.config,
+          hasDesign: !!data.design,
+          hasModules: !!((data.design as any)?.quizModules || (data.config as any)?.modularPage)
+        });
+        
+        // Transform database row to campaign format
+        const campaignData: any = {
+          ...data,
+          id: data.id,
+          name: data.name || 'Campaign',
+          type: data.type || 'form',
+          design: data.design || {},
+          gameConfig: (data.game_config || {}) as any,
+          buttonConfig: {},
+          config: data.config || {},
+          formFields: data.form_fields || [],
+          _lastUpdate: Date.now(),
+          _version: 1
+        };
+        
+        // Update campaign state with loaded data
+        setCampaign(campaignData);
+        
+        // Restore canvasElements, backgrounds, modularPage, and zoom
+        const cfg = campaignData.config?.canvasConfig || campaignData.canvasConfig;
+        const mp = campaignData.config?.modularPage || campaignData.design?.modularPage;
+        
+        if (cfg?.elements && Array.isArray(cfg.elements) && cfg.elements.length > 0) {
+          setCanvasElements(cfg.elements);
+        }
+        if (cfg?.screenBackgrounds) {
+          setScreenBackgrounds(cfg.screenBackgrounds);
+        }
+        if (cfg?.device) {
+          setSelectedDevice(cfg.device);
+        }
+        if (cfg?.zoom) {
+          setCanvasZoom(cfg.zoom);
+        }
+        if (mp && mp.screens) {
+          setModularPage(mp);
+        }
+        
+        dataHydratedRef.current = true;
+      }
+    } catch (error) {
+      console.error('❌ [FormEditor] Failed to load campaign:', error);
+    }
+  };
+  
+  loadCampaignData();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-}, [urlCampaign?.id]);
+}, [location.search, campaignState, setCampaign, saveToCampaignCache, loadFromCampaignCache]);
 
-// Sélectionner la campagne en fonction de l'URL, réactif aux changements d'id
+// Nouvelle campagne via header: si aucun id dans l'URL, créer une campagne vierge
 useEffect(() => {
   const params = new URLSearchParams(location.search);
-  const explicitId = params.get('campaign');
-  const existingId = (storeCampaign as any)?.id as string | undefined;
-  const cid = explicitId || existingId;
-  if (cid) {
-    selectCampaign(cid, 'form');
-  } else {
-    // Nouvelle campagne → activer le flag global pour bloquer les auto-ajouts
+  const cid = params.get('campaign');
+  if (!cid) {
+    console.log('🆕 [FormEditor] Creating new blank campaign');
     beginNewCampaign('form');
     const tempId = generateTempCampaignId('form');
-    selectCampaign(tempId, 'form');
+    
+    clearTempCampaignData(tempId);
+    
+    // Purge legacy keys
+    try {
+      const devices: Array<'desktop' | 'tablet' | 'mobile'> = ['desktop', 'tablet', 'mobile'];
+      const screens: Array<'screen1' | 'screen2'> = ['screen1', 'screen2'];
+      devices.forEach((d) => screens.forEach((s) => {
+        try { localStorage.removeItem(`form-modules-${d}-${s}`); } catch {}
+        try { localStorage.removeItem(`form-bg-${d}-${s}`); } catch {}
+      }));
+    } catch {}
+    
     initializeNewCampaignWithId('form', tempId);
+    navigate(`${location.pathname}?campaign=${tempId}${searchParams.get('mode') ? `&mode=${searchParams.get('mode')}` : ''}`, { replace: true });
     requestAnimationFrame(() => clearNewCampaignFlag());
+  } else {
+    if (isNewCampaignGlobal) clearNewCampaignFlag();
   }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-}, [location.search]);
+}, [location.pathname]);
 
 // 🧹 CRITICAL: Clean temporary campaigns - keep only Participer and Rejouer buttons
 useEffect(() => {
