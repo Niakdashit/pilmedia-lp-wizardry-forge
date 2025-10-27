@@ -284,17 +284,6 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
 // Campaign state synchronization hook
 const { syncAllStates } = useCampaignStateSync();
 
-// 🧹 CRITICAL: Save complete state before unmount to prevent data loss
-useEditorUnmountSave('scratch', {
-  canvasElements,
-  modularPage,
-  screenBackgrounds,
-  extractedColors,
-  selectedDevice,
-  canvasZoom,
-  gameConfig: (campaignState as any)?.scratchConfig
-}, saveCampaign);
-
 // 🔄 Load campaign data from Supabase when campaign ID is in URL
 useEffect(() => {
   const sp = new URLSearchParams(location.search);
@@ -461,6 +450,18 @@ useEffect(() => {
   // Modular editor JSON state - DOIT être déclaré AVANT les callbacks qui l'utilisent
   const [modularPage, setModularPage] = useState<ModularPage>(createEmptyModularPage());
   const [extractedColors, setExtractedColors] = useState<string[]>([]);
+
+  // 🧹 CRITICAL: Save complete state before unmount to prevent data loss
+  // Placed here AFTER all state declarations to avoid TDZ errors
+  useEditorUnmountSave('scratch', {
+    canvasElements,
+    modularPage,
+    screenBackgrounds,
+    extractedColors,
+    selectedDevice,
+    canvasZoom,
+    gameConfig: (campaignState as any)?.scratchConfig
+  }, saveCampaign);
 
   useEffect(() => {
     if (!canvasElements.length) return;
