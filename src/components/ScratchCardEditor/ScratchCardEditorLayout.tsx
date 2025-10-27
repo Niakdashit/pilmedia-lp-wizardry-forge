@@ -493,7 +493,7 @@ useEffect(() => {
   });
 }, [canvasElements, screenBackgrounds, selectedDevice, modularPage, setCampaign]);
 
-// 💾 Autosave léger et non intrusif des éléments du canvas
+// 💾 Autosave complet: canvas + modules + tous les états
 useEffect(() => {
   const id = (campaignState as any)?.id as string | undefined;
   if (!id) return;
@@ -502,6 +502,11 @@ useEffect(() => {
     try {
       const payload: any = {
         ...(campaignState || {}),
+        // ✅ CRITICAL: Include modularPage for autosave
+        modularPage,
+        canvasElements,
+        screenBackgrounds,
+        selectedDevice,
         canvasConfig: {
           ...(campaignState as any)?.canvasConfig,
           elements: canvasElements,
@@ -509,15 +514,18 @@ useEffect(() => {
           device: selectedDevice
         }
       };
-      console.log('💾 [ScratchEditor] Autosave canvas elements → DB', canvasElements.length);
+      console.log('💾 [ScratchEditor] Autosave complet → DB', {
+        canvasElements: canvasElements.length,
+        modularScreens: Object.keys(modularPage?.screens || {}).length
+      });
       await saveCampaignToDB(payload, saveCampaign);
       setIsModified(false);
     } catch (e) {
-      console.warn('⚠️ Autosave canvas failed', e);
+      console.warn('⚠️ [ScratchEditor] Autosave failed', e);
     }
   }, 1000);
   return () => clearTimeout(t);
-}, [campaignState?.id, selectedCampaignId, canvasElements, screenBackgrounds, selectedDevice]);
+}, [campaignState?.id, selectedCampaignId, canvasElements, screenBackgrounds, selectedDevice, modularPage]);
 
   // Écoute l'évènement global pour appliquer l'image de fond à tous les écrans par device (desktop/tablette/mobile distinct)
   useEffect(() => {

@@ -435,7 +435,7 @@ useEffect(() => {
   });
 }, [selectedCampaignId, campaignState?.id, canvasElements, screenBackgrounds, selectedDevice, canvasZoom, modularPage, setCampaign]);
 
-// 💾 Autosave léger des éléments du canvas
+// 💾 Autosave complet: canvas + modules + tous les états
 useEffect(() => {
   const id = (campaignState as any)?.id as string | undefined;
   if (!id) return;
@@ -445,6 +445,11 @@ useEffect(() => {
     try {
       const payload: any = {
         ...(campaignState || {}),
+        // ✅ CRITICAL: Include modularPage for autosave
+        modularPage,
+        canvasElements,
+        screenBackgrounds,
+        selectedDevice,
         canvasConfig: {
           ...(campaignState as any)?.canvasConfig,
           elements: canvasElements,
@@ -452,7 +457,10 @@ useEffect(() => {
           device: selectedDevice
         }
       };
-      console.log('💾 [JackpotEditor] Autosave canvas elements → DB', canvasElements.length);
+      console.log('💾 [JackpotEditor] Autosave complet → DB', {
+        canvasElements: canvasElements.length,
+        modularScreens: Object.keys(modularPage?.screens || {}).length
+      });
       await saveCampaignToDB(payload, saveCampaign);
       setIsModified(false);
     } catch (e) {
@@ -460,7 +468,7 @@ useEffect(() => {
     }
   }, 1000);
   return () => clearTimeout(t);
-}, [campaignState?.id, selectedCampaignId, canvasElements, screenBackgrounds, selectedDevice]);
+}, [campaignState?.id, selectedCampaignId, canvasElements, screenBackgrounds, selectedDevice, modularPage]);
 
   // Écoute l'évènement global pour appliquer l'image de fond à tous les écrans par device (desktop/tablette/mobile distinct)
   useEffect(() => {

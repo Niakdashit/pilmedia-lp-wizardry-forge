@@ -99,8 +99,8 @@ export const saveCampaignToDB = async (
     // Duplicate elements at top-level config for compatibility with older loaders
     elements: (campaign?.canvasElements || campaign?.canvasConfig?.elements || campaign?.config?.elements || []),
     
-    // Modular page structure (modules par écran) - CRITICAL: prioritize direct modularPage as it's synced from syncAllStates
-    modularPage: campaign?.modularPage || campaign?.design?.quizModules || campaign?.config?.modularPage || {
+    // Modular page structure (modules par écran) - CRITICAL: prioritize direct modularPage as it's synced from store
+    modularPage: campaign?.modularPage || campaign?.config?.modularPage || campaign?.design?.quizModules || {
       screens: { screen1: [], screen2: [], screen3: [] },
       _updatedAt: Date.now()
     },
@@ -141,8 +141,8 @@ export const saveCampaignToDB = async (
     // Design modules (for modular editor compatibility)
     designModules: campaign?.modularPage || campaign?.design?.designModules,
     
-    // Quiz modules (for QuizEditor compatibility) - CRITICAL: prioritize direct modularPage as it's synced from syncAllStates
-    quizModules: campaign?.modularPage || campaign?.design?.quizModules || campaign?.config?.modularPage,
+    // Quiz modules (for QuizEditor compatibility) - CRITICAL: prioritize direct modularPage as it's synced from store
+    quizModules: campaign?.modularPage || campaign?.config?.modularPage || campaign?.design?.quizModules,
     
     // Custom texts and images
     customTexts: campaign?.design?.customTexts || [],

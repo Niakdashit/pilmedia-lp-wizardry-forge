@@ -104,8 +104,8 @@ export const loadCampaign = async (
         : (Array.isArray((existingCampaign.config as any)?.elements) ? (existingCampaign.config as any).elements : []);
       const screenBackgrounds = canvasConfig.screenBackgrounds || existingCampaign.design?.screenBackgrounds || {};
       
-      // Restore modularPage structure - prioritize design.quizModules as it's the primary save location
-      const modularPage = existingCampaign.design?.quizModules || existingCampaign.config?.modularPage || existingCampaign.design?.designModules || {
+      // Restore modularPage structure - UNIFIED PRIORITY: config.modularPage (latest from store) > design.quizModules (fallback)
+      const modularPage = existingCampaign.config?.modularPage || existingCampaign.design?.quizModules || existingCampaign.design?.designModules || {
         screens: { screen1: [], screen2: [], screen3: [] },
         _updatedAt: Date.now()
       };
