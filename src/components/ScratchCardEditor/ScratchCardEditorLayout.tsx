@@ -283,6 +283,14 @@ const { syncAllStates } = useCampaignStateSync();
 // Charger campagne depuis l'URL si présente
 const { campaign: urlCampaign, loading: urlLoading, error: urlError } = useCampaignFromUrl();
 
+// 🧹 CRITICAL: Reset store when leaving editor to prevent contamination
+useEffect(() => {
+  return () => {
+    console.log('🧹 [ScratchCardEditor] Unmounting - resetting store for next editor');
+    resetCampaign();
+  };
+}, [resetCampaign]);
+
 // Initialiser/sélectionner une campagne namespacée au montage
 const didInitRef = useRef(false);
 useEffect(() => {

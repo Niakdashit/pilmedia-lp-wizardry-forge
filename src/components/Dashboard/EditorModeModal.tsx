@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { X, Maximize2, FileText } from 'lucide-react';
+import { useEditorStore } from '@/stores/editorStore';
 
 interface EditorModeModalProps {
   isOpen: boolean;
@@ -22,6 +23,7 @@ const EditorModeModal: React.FC<EditorModeModalProps> = ({
   editorType,
 }) => {
   const navigate = useNavigate();
+  const { resetCampaign, beginNewCampaign } = useEditorStore();
 
   if (!isOpen) return null;
 
@@ -58,6 +60,13 @@ const EditorModeModal: React.FC<EditorModeModalProps> = ({
   };
 
   const handleModeSelect = (mode: 'fullscreen' | 'article') => {
+    // 🧹 CRITICAL: Reset store completely before opening new editor from dashboard
+    console.log('🧹 [EditorModeModal] Resetting editor store for new campaign');
+    resetCampaign();
+    
+    // Mark as new campaign to prevent auto-injection from URL
+    beginNewCampaign(editorType);
+    
     navigate(getEditorRoute(mode));
     onClose();
   };

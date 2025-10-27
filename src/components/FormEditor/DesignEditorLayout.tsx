@@ -228,6 +228,14 @@ const FormEditorLayout: React.FC<FormEditorLayoutProps> = ({ mode = 'campaign', 
   // Supabase campaigns API
   const { saveCampaign } = useCampaigns();
   
+  // 🧹 CRITICAL: Reset store when leaving editor to prevent contamination
+  useEffect(() => {
+    return () => {
+      console.log('🧹 [FormEditor] Unmounting - resetting store for next editor');
+      resetCampaign();
+    };
+  }, [resetCampaign]);
+
 // Campaign state synchronization hook
 const { syncAllStates } = useCampaignStateSync();
 

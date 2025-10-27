@@ -133,6 +133,15 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
     return { desktop: `${width}px`, mobile: `${mobileWidth}px` };
   }, []);
 
+  // 🧹 CRITICAL: Reset store when leaving editor to prevent contamination
+  const resetCampaign = useEditorStore(s => s.resetCampaign);
+  useEffect(() => {
+    return () => {
+      console.log('🧹 [QuizEditor] Unmounting - resetting store for next editor');
+      resetCampaign();
+    };
+  }, [resetCampaign]);
+
   // Initialisation session: nettoyer les anciennes clés localStorage sans namespacing
   useEffect(() => {
     try {

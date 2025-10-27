@@ -99,7 +99,8 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
     setCampaign,
     setPreviewDevice,
     setIsLoading,
-    setIsModified
+    setIsModified,
+    resetCampaign
   } = useEditorStore();
   // Campagne centralisée (source de vérité pour les champs de contact)
   const campaignState = useEditorStore((s) => s.campaign);
@@ -117,6 +118,14 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
 
   // Charger campagne depuis URL si présente
   const { campaign: urlCampaign, loading: urlLoading, error: urlError } = useCampaignFromUrl();
+
+  // 🧹 CRITICAL: Reset store when leaving editor to prevent contamination
+  useEffect(() => {
+    return () => {
+      console.log('🧹 [DesignEditor] Unmounting - resetting store for next editor');
+      resetCampaign();
+    };
+  }, [resetCampaign]);
 
   // 🧹 CRITICAL: Clean temporary campaigns - keep only Participer and Rejouer buttons
   useEffect(() => {

@@ -210,6 +210,14 @@ const JackpotEditorLayout: React.FC<JackpotEditorLayoutProps> = ({ mode = 'campa
   // Charger campagne depuis l'URL (déclarer tôt pour éviter TDZ)
   const { campaign: urlCampaign } = useCampaignFromUrl();
 
+  // 🧹 CRITICAL: Reset store when leaving editor to prevent contamination
+  useEffect(() => {
+    return () => {
+      console.log('🧹 [JackpotEditor] Unmounting - resetting store for next editor');
+      resetCampaign();
+    };
+  }, [resetCampaign]);
+
 // Initialiser/sélectionner la campagne au montage et sur changement d'URL
 useEffect(() => {
   const params = new URLSearchParams(location.search);
