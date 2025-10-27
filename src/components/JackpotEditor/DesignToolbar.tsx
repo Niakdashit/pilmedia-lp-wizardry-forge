@@ -284,13 +284,8 @@ const ScratchToolbar: React.FC<ScratchToolbarProps> = React.memo(({
             </button>
             <button 
               onClick={handleSaveAndQuit}
-              disabled={!campaignId}
-              className={`flex items-center px-3 py-1.5 text-xs sm:text-sm rounded-lg transition-colors ${
-                campaignId
-                  ? 'bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white hover:opacity-95'
-                  : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-              }`}
-              title={campaignId ? saveDesktopLabel : "Veuillez d'abord créer la campagne"}
+              className="flex items-center px-3 py-1.5 text-xs sm:text-sm rounded-lg transition-colors bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white hover:opacity-95"
+              title={saveDesktopLabel}
             >
               <Save className="w-4 h-4 mr-1" />
               <span className="hidden sm:inline">{saveDesktopLabel}</span>
