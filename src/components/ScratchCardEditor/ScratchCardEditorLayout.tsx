@@ -283,16 +283,13 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
 // Campaign state synchronization hook
 const { syncAllStates } = useCampaignStateSync();
 
-// Phase 1: Sauvegarde complète au démontage
+// 🧹 CRITICAL: Reset store when leaving editor to prevent contamination
 useEffect(() => {
   return () => {
-    console.log('🧹 [ScratchCardEditor] Unmounting - saving complete state');
+    console.log('🧹 [ScratchCardEditor] Unmounting - resetting store for next editor');
     try {
-      const id = (campaignState as any)?.id as string | undefined;
-      const isUuid = (v?: string) => !!v && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v);
-      
-      if (isUuid(id)) {
-        // 1. Sync local → store avec extractedColors
+      // Persist last known state before reset (also for temp ids; insert if needed)
+        // Ensure all local states are synchronized into the store
         try {
           syncAllStates({
             canvasElements,
@@ -300,43 +297,25 @@ useEffect(() => {
             screenBackgrounds,
             extractedColors,
             selectedDevice,
-            canvasZoom
+            canvasZoom,
           });
         } catch {}
-
-        // 2. Build payload complet avec scratchConfig
-        const base = useEditorStore.getState().campaign || campaignState || {};
         const payload: any = {
-          ...base,
-          type: 'scratch',
-          scratchConfig: (base as any)?.scratchConfig,
+          ...(useEditorStore.getState().campaign || campaignState || {}),
           modularPage,
-          canvasElements,
-          screenBackgrounds,
-          extractedColors,
-          selectedDevice,
-          canvasZoom,
           canvasConfig: {
-            ...((base as any)?.canvasConfig || {}),
+            ...((campaignState as any)?.canvasConfig || {}),
             elements: canvasElements,
             screenBackgrounds,
             device: selectedDevice,
-            zoom: canvasZoom
-          }
+            zoom: canvasZoom,
+          },
         };
-
-        // 3. Save
-        try { 
-          void saveCampaignToDB(payload, saveCampaign);
-          console.log('✅ [ScratchCardEditor] State saved on unmount');
-        } catch {}
-      }
+        try { void saveCampaignToDB(payload, saveCampaign); } catch {}
     } catch {}
-    
-    // 4. Reset
     resetCampaign();
   };
-}, [canvasElements, modularPage, screenBackgrounds, extractedColors, selectedDevice, canvasZoom, campaignState, saveCampaign, syncAllStates, resetCampaign]);
+}, [resetCampaign]);
 
 // 🔄 Load campaign data from Supabase when campaign ID is in URL
 useEffect(() => {

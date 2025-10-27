@@ -15,9 +15,6 @@ export const useCampaignStateSync = () => {
    * Synchronise tous les états de l'éditeur avec l'objet campaign
    * À appeler avant chaque sauvegarde pour garantir la persistance complète
    */
-  /**
-   * Phase 2: Synchronisation enrichie avec extraction d'images
-   */
   const syncAllStates = useCallback((editorStates: {
     canvasElements?: any[];
     modularPage?: any;
@@ -35,46 +32,6 @@ export const useCampaignStateSync = () => {
   }) => {
     setCampaign((prev: any) => {
       if (!prev) return prev;
-
-      // Phase 4: Extraire les images utilisées
-      const extractImages = () => {
-        const images = new Set<string>();
-        
-        // Images des modules
-        if (editorStates.modularPage?.screens) {
-          Object.values(editorStates.modularPage.screens).forEach((modules: any) => {
-            if (!Array.isArray(modules)) return;
-            modules.forEach((module: any) => {
-              if (module.type === 'BlocImage' && module.src) images.add(module.src);
-              if (module.backgroundImage) images.add(module.backgroundImage);
-              if (module.type === 'BlocProfil' && module.avatarUrl) images.add(module.avatarUrl);
-              if (module.type === 'BlocHeader' && module.logoUrl) images.add(module.logoUrl);
-            });
-          });
-        }
-
-        // Images des backgrounds
-        if (editorStates.screenBackgrounds) {
-          Object.values(editorStates.screenBackgrounds).forEach((bg: any) => {
-            if (bg?.type === 'image' && bg?.value) images.add(bg.value);
-            if (bg?.desktop?.type === 'image' && bg?.desktop?.value) images.add(bg.desktop.value);
-            if (bg?.tablet?.type === 'image' && bg?.tablet?.value) images.add(bg.tablet.value);
-            if (bg?.mobile?.type === 'image' && bg?.mobile?.value) images.add(bg.mobile.value);
-          });
-        }
-
-        // Images du canvas
-        if (editorStates.canvasElements) {
-          editorStates.canvasElements.forEach((el: any) => {
-            if (el.type === 'image' && el.src) images.add(el.src);
-            if (el.backgroundImage) images.add(el.backgroundImage);
-          });
-        }
-
-        return Array.from(images);
-      };
-
-      const customImages = extractImages();
 
       const updated = {
         ...prev,
@@ -94,7 +51,7 @@ export const useCampaignStateSync = () => {
           screenBackgrounds: editorStates.screenBackgrounds
         }),
         
-        // Phase 2: Synchroniser les couleurs extraites (PARTOUT)
+        // Synchroniser les couleurs extraites
         ...(editorStates.extractedColors !== undefined && {
           extractedColors: editorStates.extractedColors
         }),
@@ -132,12 +89,6 @@ export const useCampaignStateSync = () => {
           jackpotConfig: editorStates.jackpotConfig
         }),
         
-        // Phase 4: Ajouter les images extraites dans design.customImages
-        design: {
-          ...(prev.design || {}),
-          customImages: customImages.length > 0 ? customImages : (prev.design?.customImages || [])
-        },
-        
         // Timestamp de synchronisation
         _lastSync: Date.now()
       };
@@ -148,9 +99,7 @@ export const useCampaignStateSync = () => {
         syncedStates: Object.keys(editorStates),
         canvasElementsCount: updated.canvasElements?.length || 0,
         modularPageScreens: Object.keys(updated.modularPage?.screens || {}).length,
-        screenBackgroundsCount: Object.keys(updated.screenBackgrounds || {}).length,
-        extractedColorsCount: updated.extractedColors?.length || 0,
-        customImagesCount: customImages.length
+        screenBackgroundsCount: Object.keys(updated.screenBackgrounds || {}).length
       });
 
       return updated;
