@@ -32,6 +32,23 @@ const EditorStateCleanup: React.FC = () => {
     });
     
     console.log(`🧹 [EditorStateCleanup] Nettoyage des états pour l'éditeur: ${currentEditorType}`);
+
+    // Forcer le reset de l'éditeur courant à la fermeture/actualisation
+    const handleBeforeUnload = () => {
+      try {
+        resetEditorState(currentEditorType);
+      } catch {}
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    // À la sortie de la page (changement de route / unmount), on reset aussi l'éditeur courant
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      try {
+        resetEditorState(currentEditorType);
+      } catch {}
+    };
   }, [location.pathname, resetEditorState]);
   
   return null; // Ce composant ne rend rien
