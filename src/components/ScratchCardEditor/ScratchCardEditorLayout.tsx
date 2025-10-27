@@ -3484,6 +3484,10 @@ const handleSaveCampaignName = useCallback(async () => {
                     // Quiz sync props
                     extractedColors={extractedColors}
                     quizModalConfig={quizModalConfig}
+                    // Mobile sidebar integrations
+                    onAddElement={handleAddElement}
+                    onBackgroundChange={handleBackgroundChange}
+                    onExtractedColorsChange={handleExtractedColorsChange}
                     containerClassName={mode === 'template' ? 'bg-gray-50' : undefined}
                     hideInlineQuizPreview
                     elementFilter={(element: any) => {
