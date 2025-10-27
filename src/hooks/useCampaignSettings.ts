@@ -127,12 +127,46 @@ export const useCampaignSettings = () => {
     setError(null);
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      const realId = await resolveCampaignId(campaignId);
-      if (!user || !realId) {
-        // Early state (unauthenticated or unresolved id): keep a local draft and exit quietly
+      if (!user) {
+        // Unauthenticated: keep a local draft and exit
         try { saveDraft(campaignId, values); } catch {}
-        console.warn('[useCampaignSettings.upsertSettings] Skipped (unauthenticated or unresolved id)', { hasUser: !!user, campaignId, realId });
+        console.warn('[useCampaignSettings.upsertSettings] Skipped (unauthenticated)', { campaignId });
         return null;
+      }
+      
+      let realId = await resolveCampaignId(campaignId);
+      
+      // If we can't resolve the ID, try to create the campaign first
+      if (!realId) {
+        console.log('[useCampaignSettings] Campaign ID not found, creating campaign first');
+        const slugSuffix = Math.random().toString(36).slice(2, 10);
+        const campaignName = (values?.publication as any)?.name || 'Campaign';
+        
+        const insertCampaignResp: any = await (supabase as any)
+          .from('campaigns')
+          .insert({
+            name: campaignName,
+            slug: `camp-${slugSuffix}`,
+            type: 'jackpot', // Default type, will be updated if needed
+            status: 'draft',
+            created_by: user.id,
+            updated_at: new Date().toISOString(),
+          })
+          .select('id')
+          .single();
+          
+        if (insertCampaignResp.error) {
+          console.error('[useCampaignSettings] Failed to create campaign:', insertCampaignResp.error);
+          throw insertCampaignResp.error;
+        }
+        
+        realId = insertCampaignResp.data.id;
+        console.log('[useCampaignSettings] Created new campaign with ID:', realId);
+      }
+      
+      // Final check: if realId is still null, throw error
+      if (!realId) {
+        throw new Error('Unable to resolve or create campaign ID');
       }
 
       const payload: any = {
