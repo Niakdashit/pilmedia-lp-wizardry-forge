@@ -372,6 +372,16 @@ useEffect(() => {
 
 // ✅ Hydrater les éléments/modularPage/backgrounds depuis la DB à l'ouverture
 useEffect(() => {
+  const cid = (campaignState as any)?.id as string | undefined;
+  
+  // 🛡️ GUARD: Ne pas hydrater si :
+  // - Pas de campagne chargée
+  // - C'est une nouvelle campagne (temp ID ou pas d'ID)
+  // - L'ID ne correspond pas à celui sélectionné
+  if (!cid) return;
+  if (cid.startsWith('temp-')) return;
+  if (selectedCampaignId && cid !== selectedCampaignId) return;
+  
   const cfg = (campaignState as any)?.config?.canvasConfig || (campaignState as any)?.canvasConfig;
   const mp = (campaignState as any)?.config?.modularPage || (campaignState as any)?.design?.quizModules;
   const topLevelElements = (campaignState as any)?.config?.elements;
@@ -395,7 +405,7 @@ useEffect(() => {
       setModularPage(mp);
     }
   }
-}, [campaignState]);
+}, [campaignState, selectedCampaignId]);
 
 // 🔗 Miroir local → store: conserve les éléments dans campaign.config.canvasConfig afin d'éviter toute perte
 useEffect(() => {
