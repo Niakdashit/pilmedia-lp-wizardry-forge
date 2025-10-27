@@ -1,3 +1,5 @@
+import { extractAllCampaignImages } from '@/utils/extractImagesFromModules';
+
 export const createSaveHandler = (
   campaign: any,
   saveCampaign: (data: any) => Promise<any>,
@@ -144,9 +146,9 @@ export const saveCampaignToDB = async (
     // Quiz modules (for QuizEditor compatibility) - CRITICAL: prioritize direct modularPage as it's synced from store
     quizModules: campaign?.modularPage || campaign?.config?.modularPage || campaign?.design?.quizModules,
     
-    // Custom texts and images
+    // Custom texts and images - AUTO-POPULATE images from all sources
     customTexts: campaign?.design?.customTexts || [],
-    customImages: campaign?.design?.customImages || [],
+    customImages: extractAllCampaignImages(campaign),
     
     // Border and style settings
     borderStyle: campaign?.design?.borderStyle,

@@ -26,6 +26,7 @@ import { getDeviceDimensions } from '../../utils/deviceDimensions';
 import { getEditorDeviceOverride } from '@/utils/deviceOverrides';
 import { useEditorPreviewSync } from '@/hooks/useEditorPreviewSync';
 import { useCampaignSettings } from '@/hooks/useCampaignSettings';
+import { useEditorUnmountSave } from '@/hooks/useEditorUnmountSave';
 // FormEditor types removed - using inline types for 2-screen layout
 
 
@@ -229,13 +230,16 @@ const FormEditorLayout: React.FC<FormEditorLayoutProps> = ({ mode = 'campaign', 
   // Supabase campaigns API
   const { saveCampaign } = useCampaigns();
   
-  // 🧹 CRITICAL: Reset store when leaving editor to prevent contamination
-  useEffect(() => {
-    return () => {
-      console.log('🧹 [FormEditor] Unmounting - resetting store for next editor');
-      resetCampaign();
-    };
-  }, [resetCampaign]);
+  // 🧹 CRITICAL: Save complete state before unmount to prevent data loss
+  useEditorUnmountSave('form', {
+    canvasElements,
+    modularPage,
+    screenBackgrounds,
+    extractedColors,
+    selectedDevice,
+    canvasZoom,
+    gameConfig: (campaignState as any)?.formConfig
+  }, saveCampaign);
 
 // Campaign state synchronization hook
 const { syncAllStates } = useCampaignStateSync();
@@ -564,14 +568,21 @@ useEffect(() => {
     try {
       const payload: any = {
         ...(campaignState || {}),
+        type: 'form',
+        extractedColors, // ✅ Include extracted colors
+        modularPage,
+        canvasElements,
+        screenBackgrounds,
+        selectedDevice,
         canvasConfig: {
           ...(campaignState as any)?.canvasConfig,
           elements: canvasElements,
           screenBackgrounds,
-          device: selectedDevice
+          device: selectedDevice,
+          zoom: canvasZoom
         }
       };
-      console.log('💾 [FormEditor] Autosave canvas elements → DB', canvasElements.length);
+      console.log('💾 [FormEditor] Autosave complete state → DB', canvasElements.length);
       await saveCampaignToDB(payload, saveCampaign);
       setIsModified(false);
     } catch (e) {

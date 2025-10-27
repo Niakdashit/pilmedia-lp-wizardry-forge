@@ -29,6 +29,7 @@ import { getEditorDeviceOverride } from '@/utils/deviceOverrides';
 import { recalculateAllElements } from '../../utils/recalculateAllModules';
 import { useEditorPreviewSync } from '@/hooks/useEditorPreviewSync';
 import { useCampaignSettings } from '@/hooks/useCampaignSettings';
+import { useEditorUnmountSave } from '@/hooks/useEditorUnmountSave';
 import type { ScreenBackgrounds, DeviceSpecificBackground } from '@/types/background';
 import { isTempCampaignId, clearTempCampaignData } from '@/utils/tempCampaignId';
 
@@ -283,39 +284,16 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
 // Campaign state synchronization hook
 const { syncAllStates } = useCampaignStateSync();
 
-// 🧹 CRITICAL: Reset store when leaving editor to prevent contamination
-useEffect(() => {
-  return () => {
-    console.log('🧹 [ScratchCardEditor] Unmounting - resetting store for next editor');
-    try {
-      // Persist last known state before reset (also for temp ids; insert if needed)
-        // Ensure all local states are synchronized into the store
-        try {
-          syncAllStates({
-            canvasElements,
-            modularPage,
-            screenBackgrounds,
-            extractedColors,
-            selectedDevice,
-            canvasZoom,
-          });
-        } catch {}
-        const payload: any = {
-          ...(useEditorStore.getState().campaign || campaignState || {}),
-          modularPage,
-          canvasConfig: {
-            ...((campaignState as any)?.canvasConfig || {}),
-            elements: canvasElements,
-            screenBackgrounds,
-            device: selectedDevice,
-            zoom: canvasZoom,
-          },
-        };
-        try { void saveCampaignToDB(payload, saveCampaign); } catch {}
-    } catch {}
-    resetCampaign();
-  };
-}, [resetCampaign]);
+// 🧹 CRITICAL: Save complete state before unmount to prevent data loss
+useEditorUnmountSave('scratch', {
+  canvasElements,
+  modularPage,
+  screenBackgrounds,
+  extractedColors,
+  selectedDevice,
+  canvasZoom,
+  gameConfig: (campaignState as any)?.scratchConfig
+}, saveCampaign);
 
 // 🔄 Load campaign data from Supabase when campaign ID is in URL
 useEffect(() => {
@@ -640,9 +618,8 @@ useEffect(() => {
       const payload: any = {
         ...(campaignState || {}),
         type: 'scratch',
-        // include scratch derived config for DB
+        extractedColors, // ✅ Include extracted colors
         scratchConfig: transformScratchStateToGameConfig(scratchState),
-        // ✅ CRITICAL: Include modularPage for autosave
         modularPage,
         canvasElements,
         screenBackgrounds,
@@ -651,7 +628,8 @@ useEffect(() => {
           ...(campaignState as any)?.canvasConfig,
           elements: canvasElements,
           screenBackgrounds,
-          device: selectedDevice
+          device: selectedDevice,
+          zoom: canvasZoom
         }
       };
       console.log('💾 [ScratchEditor] Autosave complet → DB', {

@@ -26,6 +26,7 @@ import { getEditorDeviceOverride } from '@/utils/deviceOverrides';
 import { recalculateAllElements } from '../../utils/recalculateAllModules';
 import { useEditorPreviewSync } from '@/hooks/useEditorPreviewSync';
 import { useCampaignSettings } from '@/hooks/useCampaignSettings';
+import { useEditorUnmountSave } from '@/hooks/useEditorUnmountSave';
 
 
 
@@ -149,13 +150,16 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
   const [modularPage, setModularPage] = useState<ModularPage>(createEmptyModularPage());
   const [extractedColors, setExtractedColors] = useState<string[]>([]);
 
-  // 🧹 CRITICAL: Reset store when leaving editor to prevent contamination
-  useEffect(() => {
-    return () => {
-      console.log('🧹 [DesignEditor] Unmounting - resetting store for next editor');
-      resetCampaign();
-    };
-  }, [resetCampaign]);
+  // 🧹 CRITICAL: Save complete state before unmount to prevent data loss
+  useEditorUnmountSave('wheel', {
+    canvasElements,
+    modularPage,
+    screenBackgrounds,
+    extractedColors,
+    selectedDevice,
+    canvasZoom,
+    gameConfig: (campaignState as any)?.wheelConfig
+  }, saveCampaign);
 
 // 🔄 Load campaign data from Supabase when campaign ID is in URL
 useEffect(() => {
@@ -425,14 +429,24 @@ useEffect(() => {
     try {
       const payload: any = {
         ...(campaignState || {}),
+        type: 'wheel',
+        extractedColors, // ✅ Include extracted colors
+        modularPage,
+        canvasElements,
+        screenBackgrounds,
+        selectedDevice,
         canvasConfig: {
           ...(campaignState as any)?.canvasConfig,
           elements: canvasElements,
           screenBackgrounds,
-          device: selectedDevice
+          device: selectedDevice,
+          zoom: canvasZoom
         }
       };
-      console.log('💾 [DesignEditor] Autosave canvas elements → DB', canvasElements.length);
+      console.log('💾 [DesignEditor] Autosave complete state → DB', {
+        canvasElements: canvasElements.length,
+        modularScreens: Object.keys(modularPage?.screens || {}).length
+      });
       await saveCampaignToDB(payload, saveCampaign);
       setIsModified(false);
     } catch (e) {
