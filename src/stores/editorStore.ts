@@ -576,8 +576,10 @@ export const useEditorStore = create<EditorStore>()(
   {
     name: 'prosplay-editor-store',
     partialize: (state) => ({
-      campaign: state.campaign,
+      // Ne persister que le strict minimum pour éviter le dépassement de quota
       selectedCampaignId: state.selectedCampaignId,
+      activeTab: state.activeTab,
+      previewDevice: state.previewDevice,
     }),
   })
 );
