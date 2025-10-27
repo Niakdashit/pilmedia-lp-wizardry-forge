@@ -40,7 +40,8 @@ import { quizTemplates } from '../../types/quizTemplates';
 import { useScratchCardStore } from './state/scratchcard.store';
 import type { GameModalConfig } from '@/types/gameConfig';
 import { createGameConfigFromQuiz } from '@/types/gameConfig';
-import { useCampaignFromUrl } from '@/hooks/useCampaignFromUrl';
+import { supabase } from '@/integrations/supabase/client';
+import { generateTempCampaignId } from '@/utils/tempCampaignId';
 
 const KeyboardShortcutsHelp = lazy(() => import('../shared/KeyboardShortcutsHelp'));
 const MobileStableEditor = lazy(() => import('./components/MobileStableEditor'));
@@ -280,9 +281,6 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
 // Campaign state synchronization hook
 const { syncAllStates } = useCampaignStateSync();
 
-// Charger campagne depuis l'URL si présente
-const { campaign: urlCampaign, loading: urlLoading, error: urlError } = useCampaignFromUrl();
-
 // 🧹 CRITICAL: Reset store when leaving editor to prevent contamination
 useEffect(() => {
   return () => {
@@ -291,30 +289,106 @@ useEffect(() => {
   };
 }, [resetCampaign]);
 
-// Initialiser/sélectionner une campagne namespacée au montage
-const didInitRef = useRef(false);
+// 🔄 Load campaign data from Supabase when campaign ID is in URL
 useEffect(() => {
-  if (didInitRef.current) return;
-  didInitRef.current = true;
-  const params = new URLSearchParams(location.search);
-  const explicitId = params.get('campaign');
-  const existingId = (storeCampaign as any)?.id as string | undefined;
-  const cid = explicitId || existingId;
-  if (cid) {
-    console.log('📂 [ScratchEditor] selectCampaign for id', cid);
-    selectCampaign(cid, 'scratch');
-  } else {
-    // Nouvelle campagne → activer le flag global pour bloquer toute auto-injection initiale
-    beginNewCampaign('scratch');
-    const tempId = `temp-scratch-${Date.now()}`;
-    console.log('🆕 [ScratchEditor] initializing isolated temp campaign', tempId);
-    selectCampaign(tempId, 'scratch');
-    initializeNewCampaignWithId('scratch', tempId);
-    // Libérer au prochain frame
-    requestAnimationFrame(() => clearNewCampaignFlag());
+  const sp = new URLSearchParams(location.search);
+  const campaignId = sp.get('campaign');
+  const isUuid = (v?: string | null) => !!v && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v);
+  
+  // CRITICAL: Skip loading for temporary campaign IDs - they should remain blank
+  if (isTempCampaignId(campaignId)) {
+    console.log('⏭️ [ScratchCardEditor] Skipping load for temporary campaign:', campaignId);
+    return;
   }
+  
+  if (!campaignId || !isUuid(campaignId)) return;
+  
+  // Check if we're switching campaigns
+  const currentCampaignId = (campaignState as any)?.id;
+  if (currentCampaignId && currentCampaignId !== campaignId) {
+    console.log('🔄 [ScratchCardEditor] Switching campaigns');
+  }
+  
+  // Skip if this campaign is already loaded
+  if (currentCampaignId === campaignId) {
+    console.log('✅ [ScratchCardEditor] Campaign already loaded:', campaignId);
+    return;
+  }
+  
+  console.log('🔄 [ScratchCardEditor] Loading campaign:', campaignId);
+  
+  // Load from Supabase
+  const loadCampaignData = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('campaigns')
+        .select('*')
+        .eq('id', campaignId)
+        .maybeSingle();
+      
+      if (error) throw error;
+      
+      if (data) {
+        console.log('✅ [ScratchCardEditor] Campaign loaded from DB:', {
+          id: data.id,
+          name: data.name,
+          hasConfig: !!data.config,
+          hasDesign: !!data.design,
+          hasModules: !!((data.design as any)?.scratchModules || (data.config as any)?.modularPage)
+        });
+        
+        // Transform database row to campaign format
+        const campaignData: any = {
+          ...data,
+          id: data.id,
+          name: data.name || 'Campaign',
+          type: data.type || 'scratch',
+          design: data.design || {},
+          gameConfig: (data.game_config || {}) as any,
+          buttonConfig: {},
+          config: data.config || {},
+          formFields: data.form_fields || [],
+          _lastUpdate: Date.now(),
+          _version: 1
+        };
+        
+        // Update campaign state with loaded data
+        setCampaign(campaignData);
+      }
+    } catch (error) {
+      console.error('❌ [ScratchCardEditor] Failed to load campaign:', error);
+    }
+  };
+  
+  loadCampaignData();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-}, []);
+}, [location.search, campaignState, setCampaign]);
+
+// Nouvelle campagne via header: si aucun id dans l'URL, créer une campagne vierge et activer le flag global
+useEffect(() => {
+  const params = new URLSearchParams(location.search);
+  const cid = params.get('campaign');
+  if (!cid) {
+    console.log('🆕 [ScratchCardEditor] Creating new blank campaign');
+    beginNewCampaign('scratch');
+    // Générer un ID temporaire unique
+    const tempId = generateTempCampaignId('scratch');
+    
+    // CRITICAL: Nettoyer TOUTES les données d'abord pour garantir une campagne vierge
+    clearTempCampaignData(tempId);
+    
+    // CRITICAL: Initialiser la campagne avec l'ID temporaire dans le store
+    initializeNewCampaignWithId('scratch', tempId);
+    
+    // Mettre à jour l'URL pour inclure le temp ID
+    navigate(`${location.pathname}?campaign=${tempId}${searchParams.get('mode') ? `&mode=${searchParams.get('mode')}` : ''}`, { replace: true });
+    
+    requestAnimationFrame(() => clearNewCampaignFlag());
+  } else {
+    // S'assurer que le flag est désactivé quand on charge une campagne existante
+    if (isNewCampaignGlobal) clearNewCampaignFlag();
+  }
+}, [location.pathname]);
 
   // État local pour la compatibilité existante
   const [selectedDevice, setSelectedDevice] = useState<'desktop' | 'tablet' | 'mobile'>(actualDevice);

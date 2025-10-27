@@ -39,6 +39,8 @@ import { useCampaignStateSync } from '@/hooks/useCampaignStateSync';
 import { quizTemplates } from '../../types/quizTemplates';
 import type { GameModalConfig } from '@/types/gameConfig';
 import { createGameConfigFromQuiz } from '@/types/gameConfig';
+import { supabase } from '@/integrations/supabase/client';
+import { generateTempCampaignId } from '@/utils/tempCampaignId';
 
 const KeyboardShortcutsHelp = lazy(() => import('../shared/KeyboardShortcutsHelp'));
 const MobileStableEditor = lazy(() => import('./components/MobileStableEditor'));
@@ -204,11 +206,8 @@ const JackpotEditorLayout: React.FC<JackpotEditorLayoutProps> = ({ mode = 'campa
   // Supabase campaigns API
   const { saveCampaign } = useCampaigns();
   
-  // Campaign state synchronization hook
-  const { syncAllStates } = useCampaignStateSync();
-
-  // Charger campagne depuis l'URL (déclarer tôt pour éviter TDZ)
-  const { campaign: urlCampaign } = useCampaignFromUrl();
+// Campaign state synchronization hook
+const { syncAllStates } = useCampaignStateSync();
 
   // 🧹 CRITICAL: Reset store when leaving editor to prevent contamination
   useEffect(() => {
@@ -218,40 +217,106 @@ const JackpotEditorLayout: React.FC<JackpotEditorLayoutProps> = ({ mode = 'campa
     };
   }, [resetCampaign]);
 
-// Initialiser/sélectionner la campagne au montage et sur changement d'URL
+// 🔄 Load campaign data from Supabase when campaign ID is in URL
+useEffect(() => {
+  const sp = new URLSearchParams(location.search);
+  const campaignId = sp.get('campaign');
+  const isUuid = (v?: string | null) => !!v && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v);
+  
+  // CRITICAL: Skip loading for temporary campaign IDs - they should remain blank
+  if (isTempCampaignId(campaignId)) {
+    console.log('⏭️ [JackpotEditor] Skipping load for temporary campaign:', campaignId);
+    return;
+  }
+  
+  if (!campaignId || !isUuid(campaignId)) return;
+  
+  // Check if we're switching campaigns
+  const currentCampaignId = (campaignState as any)?.id;
+  if (currentCampaignId && currentCampaignId !== campaignId) {
+    console.log('🔄 [JackpotEditor] Switching campaigns');
+  }
+  
+  // Skip if this campaign is already loaded
+  if (currentCampaignId === campaignId) {
+    console.log('✅ [JackpotEditor] Campaign already loaded:', campaignId);
+    return;
+  }
+  
+  console.log('🔄 [JackpotEditor] Loading campaign:', campaignId);
+  
+  // Load from Supabase
+  const loadCampaignData = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('campaigns')
+        .select('*')
+        .eq('id', campaignId)
+        .maybeSingle();
+      
+      if (error) throw error;
+      
+      if (data) {
+        console.log('✅ [JackpotEditor] Campaign loaded from DB:', {
+          id: data.id,
+          name: data.name,
+          hasConfig: !!data.config,
+          hasDesign: !!data.design,
+          hasModules: !!((data.design as any)?.quizModules || (data.config as any)?.modularPage)
+        });
+        
+        // Transform database row to campaign format
+        const campaignData: any = {
+          ...data,
+          id: data.id,
+          name: data.name || 'Campaign',
+          type: data.type || 'jackpot',
+          design: data.design || {},
+          gameConfig: (data.game_config || {}) as any,
+          buttonConfig: {},
+          config: data.config || {},
+          formFields: data.form_fields || [],
+          _lastUpdate: Date.now(),
+          _version: 1
+        };
+        
+        // Update campaign state with loaded data
+        setCampaign(campaignData);
+      }
+    } catch (error) {
+      console.error('❌ [JackpotEditor] Failed to load campaign:', error);
+    }
+  };
+  
+  loadCampaignData();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, [location.search, campaignState, setCampaign]);
+
+// Nouvelle campagne via header: si aucun id dans l'URL, créer une campagne vierge et activer le flag global
 useEffect(() => {
   const params = new URLSearchParams(location.search);
-  const explicitId = params.get('campaign');
-  const existingId = (storeCampaign as any)?.id as string | undefined;
-  const cid = explicitId || existingId;
-  if (cid) {
-    selectCampaign(cid, 'jackpot');
-  } else {
-    // Nouvelle campagne via header → activer le flag global pour bloquer tout auto-ajout
+  const cid = params.get('campaign');
+  if (!cid) {
+    console.log('🆕 [JackpotEditor] Creating new blank campaign');
     beginNewCampaign('jackpot');
-    const tempId = `temp-jackpot-${Date.now()}`;
-    selectCampaign(tempId, 'jackpot');
+    // Générer un ID temporaire unique
+    const tempId = generateTempCampaignId('jackpot');
+    
+    // CRITICAL: Nettoyer TOUTES les données d'abord pour garantir une campagne vierge
+    clearTempCampaignData(tempId);
+    
+    // CRITICAL: Initialiser la campagne avec l'ID temporaire dans le store
     initializeNewCampaignWithId('jackpot', tempId);
-    // Libérer le flag au prochain frame
+    
+    // Mettre à jour l'URL pour inclure le temp ID
+    navigate(`${location.pathname}?campaign=${tempId}${searchParams.get('mode') ? `&mode=${searchParams.get('mode')}` : ''}`, { replace: true });
+    
     requestAnimationFrame(() => clearNewCampaignFlag());
+  } else {
+    // S'assurer que le flag est désactivé quand on charge une campagne existante
+    if (isNewCampaignGlobal) clearNewCampaignFlag();
   }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-}, [location.search]);
-
-// Hydrater la slice namespacée quand la campagne URL est chargée
-useEffect(() => {
-  const cid = (urlCampaign as any)?.id as string | undefined;
-  if (!cid) return;
-  try {
-    selectCampaign(cid, 'jackpot');
-    if (urlCampaign) {
-      setCampaign(() => urlCampaign as any);
-    }
-  } catch (e) {
-    console.warn('hydrate urlCampaign failed (jackpot)', e);
-  }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-}, [urlCampaign?.id]);
+}, [location.pathname]);
 
   // État local pour la compatibilité existante
   const [selectedDevice, setSelectedDevice] = useState<'desktop' | 'tablet' | 'mobile'>(actualDevice);

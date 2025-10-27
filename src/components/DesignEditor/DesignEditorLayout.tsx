@@ -35,6 +35,7 @@ import { useCampaigns } from '@/hooks/useCampaigns';
 import { saveCampaignToDB } from '@/hooks/useModernCampaignEditor/saveHandler';
 import { useCampaignStateSync } from '@/hooks/useCampaignStateSync';
 import { generateTempCampaignId, isTempCampaignId, clearTempCampaignData } from '@/utils/tempCampaignId';
+import { supabase } from '@/integrations/supabase/client';
 
 const KeyboardShortcutsHelp = lazy(() => import('../shared/KeyboardShortcutsHelp'));
 const MobileStableEditor = lazy(() => import('./components/MobileStableEditor'));
@@ -116,9 +117,6 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
   // Campaign state synchronization hook
   const { syncAllStates } = useCampaignStateSync();
 
-  // Charger campagne depuis URL si présente
-  const { campaign: urlCampaign, loading: urlLoading, error: urlError } = useCampaignFromUrl();
-
   // 🧹 CRITICAL: Reset store when leaving editor to prevent contamination
   useEffect(() => {
     return () => {
@@ -127,152 +125,201 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
     };
   }, [resetCampaign]);
 
-  // 🧹 CRITICAL: Clean temporary campaigns - keep only Participer and Rejouer buttons
-  useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const id = params.get('campaign');
-    if (!id || !isTempCampaignId(id)) return;
-    
-    console.log('🧹 [DesignEditor] Cleaning temp campaign:', id);
-    
-    // Clear localStorage
-    clearTempCampaignData(id);
-    
-    // Reset background images
-    setCampaign((prev: any) => {
-      if (!prev) return prev;
-      return {
-        ...prev,
-        design: {
-          ...(prev.design || {}),
-          backgroundImage: undefined,
-          mobileBackgroundImage: undefined
-        }
-      };
-    });
-    
-    // Reset backgrounds to color only
-    const defaultBg = { type: 'color' as const, value: '' };
-    setCanvasBackground(defaultBg);
-    setScreenBackgrounds({
-      screen1: defaultBg,
-      screen2: defaultBg,
-      screen3: defaultBg
-    });
-    
-    // Filter modularPage to keep only Participer and Rejouer
-    setModularPage((prev: ModularPage) => {
-      const participerButton = prev.screens.screen1?.find((m: Module) => 
-        m.type === 'BlocBouton' && m.label?.toLowerCase().includes('participer')
-      );
-      const rejouerButton = prev.screens.screen3?.find((m: Module) => 
-        m.type === 'BlocBouton' && m.label?.toLowerCase().includes('rejouer')
-      );
+// 🔄 Load campaign data from Supabase when campaign ID is in URL
+useEffect(() => {
+  const sp = new URLSearchParams(location.search);
+  const campaignId = sp.get('campaign');
+  const isUuid = (v?: string | null) => !!v && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v);
+  
+  // CRITICAL: Skip loading for temporary campaign IDs - they should remain blank
+  if (isTempCampaignId(campaignId)) {
+    console.log('⏭️ [DesignEditor] Skipping load for temporary campaign:', campaignId);
+    return;
+  }
+  
+  if (!campaignId || !isUuid(campaignId)) return;
+  
+  // Check if we're switching campaigns
+  const currentCampaignId = (campaignState as any)?.id;
+  if (currentCampaignId && currentCampaignId !== campaignId) {
+    console.log('🔄 [DesignEditor] Switching campaigns');
+  }
+  
+  // Skip if this campaign is already loaded
+  if (currentCampaignId === campaignId) {
+    console.log('✅ [DesignEditor] Campaign already loaded:', campaignId);
+    return;
+  }
+  
+  console.log('🔄 [DesignEditor] Loading campaign:', campaignId);
+  
+  // Load from Supabase
+  const loadCampaignData = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('campaigns')
+        .select('*')
+        .eq('id', campaignId)
+        .maybeSingle();
       
-      return {
-        ...prev,
-        screens: {
-          screen1: participerButton ? [participerButton] : [],
-          screen2: [],
-          screen3: rejouerButton ? [rejouerButton] : []
-        }
-      };
-    });
-  }, [location.search]);
-
-  // Charger la campagne dans l'éditeur si elle vient de l'URL
-  useEffect(() => {
-    if (urlCampaign && !urlLoading && !urlError) {
-      console.log('📥 [DesignEditor] Loading campaign from URL:', {
-        id: urlCampaign.id,
-        name: urlCampaign.name,
-        hasDesign: !!urlCampaign.design,
-        designModules: urlCampaign.design?.designModules
-      });
+      if (error) throw error;
       
-      // Restaurer la campagne dans le store (design inclus)
-      const campaignToSet = {
-        ...urlCampaign,
-        name: urlCampaign.name, // Ensure name is explicitly set
-        gameConfig: urlCampaign.game_config || {},
-        buttonConfig: {}
-      } as any;
-      
-      console.log('📥 [DesignEditor] Setting campaign in store:', {
-        id: campaignToSet.id,
-        name: campaignToSet.name
-      });
-      
-      setCampaign(campaignToSet);
-      
-      // Restaurer le canvas local depuis config.canvasConfig
-      try {
-        const canvasCfg = (urlCampaign as any)?.config?.canvasConfig || (urlCampaign as any)?.canvasConfig || {};
-        if (Array.isArray(canvasCfg.elements)) {
-          setCanvasElements(canvasCfg.elements);
-        }
-        // Prioritize design.backgroundImage/mobileBackgroundImage (DB source of truth) over canvasConfig.background
-        const designObj = (urlCampaign as any)?.design || {};
-        console.log('📥 [DesignEditor] Loading backgrounds from campaign:', {
-          designBackground: designObj?.background,
-          designBackgroundImage: designObj?.backgroundImage,
-          designMobileBackgroundImage: designObj?.mobileBackgroundImage,
-          canvasBackground: canvasCfg.background
+      if (data) {
+        console.log('✅ [DesignEditor] Campaign loaded from DB:', {
+          id: data.id,
+          name: data.name,
+          hasConfig: !!data.config,
+          hasDesign: !!data.design,
+          hasModules: !!((data.design as any)?.designModules || (data.config as any)?.modularPage)
         });
         
-        // Detect if design.background is an image URL
-        const isImageUrl = (url: string) => {
-          return url && (
-            url.startsWith('http') || 
-            url.startsWith('/') || 
-            url.includes('supabase.co/storage')
-          );
+        // Transform database row to campaign format
+        const campaignData: any = {
+          ...data,
+          id: data.id,
+          name: data.name || 'Campaign',
+          type: data.type || 'wheel',
+          design: data.design || {},
+          gameConfig: (data.game_config || {}) as any,
+          buttonConfig: {},
+          config: data.config || {},
+          formFields: data.form_fields || [],
+          _lastUpdate: Date.now(),
+          _version: 1
         };
         
-        const bg = (designObj?.backgroundImage ? { type: 'image', value: designObj.backgroundImage } : undefined)
-          || (designObj?.mobileBackgroundImage ? { type: 'image', value: designObj.mobileBackgroundImage } : undefined)
-          || (designObj?.background && isImageUrl(designObj.background) ? { type: 'image', value: designObj.background } : undefined)
-          || canvasCfg.background
-          || (designObj?.background ? { type: 'color', value: designObj.background } : undefined)
-          || { type: 'color', value: '#ffffff' };
+        // Update campaign state with loaded data
+        setCampaign(campaignData);
         
-        console.log('📥 [DesignEditor] Final background applied:', bg);
-        // Forcer la synchronisation des backgrounds même si identiques
-        setCanvasBackground({ ...bg });
-        
-        // Toujours synchroniser screenBackgrounds avec les données chargées
-        const defaultScreens = {
-          screen1: defaultBackground,
-          screen2: defaultBackground,
-          screen3: defaultBackground
-        };
-        const loadedScreens = canvasCfg.screenBackgrounds || defaultScreens;
-        setScreenBackgrounds({ ...loadedScreens });
-        
-        if (canvasCfg.device && ['desktop','tablet','mobile'].includes(canvasCfg.device)) {
-          setSelectedDevice(canvasCfg.device);
-          setCanvasZoom(getDefaultZoom(canvasCfg.device));
+        // Restore canvas from config.canvasConfig
+        try {
+          const canvasCfg = (data as any)?.config?.canvasConfig || (data as any)?.canvasConfig || {};
+          if (Array.isArray(canvasCfg.elements)) {
+            setCanvasElements(canvasCfg.elements);
+          }
+          
+          const designObj = (data as any)?.design || {};
+          const isImageUrl = (url: string) => url && (url.startsWith('http') || url.startsWith('/') || url.includes('supabase.co/storage'));
+          
+          const bg = (designObj?.backgroundImage ? { type: 'image', value: designObj.backgroundImage } : undefined)
+            || (designObj?.mobileBackgroundImage ? { type: 'image', value: designObj.mobileBackgroundImage } : undefined)
+            || (designObj?.background && isImageUrl(designObj.background) ? { type: 'image', value: designObj.background } : undefined)
+            || canvasCfg.background
+            || (designObj?.background ? { type: 'color', value: designObj.background } : undefined)
+            || { type: 'color', value: '#ffffff' };
+          
+          setCanvasBackground({ ...bg });
+          
+          const defaultScreens = {
+            screen1: defaultBackground,
+            screen2: defaultBackground,
+            screen3: defaultBackground
+          };
+          const loadedScreens = canvasCfg.screenBackgrounds || defaultScreens;
+          setScreenBackgrounds({ ...loadedScreens });
+          
+          if (canvasCfg.device && ['desktop','tablet','mobile'].includes(canvasCfg.device)) {
+            setSelectedDevice(canvasCfg.device);
+            setCanvasZoom(getDefaultZoom(canvasCfg.device));
+          }
+          
+          if (canvasCfg.modularPage && canvasCfg.modularPage.screens) {
+            setModularPage(canvasCfg.modularPage);
+          }
+        } catch (e) {
+          console.warn('[DesignEditor] Failed to restore canvasConfig from campaign', e);
         }
         
-        // Synchroniser modularPage si présente dans canvasConfig
-        if (canvasCfg.modularPage && canvasCfg.modularPage.screens) {
-          console.log('📥 [DesignEditor] Restoring modularPage from canvasConfig');
-          setModularPage(canvasCfg.modularPage);
-        }
-      } catch (e) {
-        console.warn('[DesignEditor] Failed to restore canvasConfig from campaign', e);
+        setIsLoading(false);
       }
-
-      setIsLoading(false);
-      
-      // Nettoyer les brouillons locaux obsolètes
-      try {
-        Object.keys(localStorage)
-          .filter(k => k.startsWith('campaign:settings:draft:'))
-          .forEach(k => localStorage.removeItem(k));
-      } catch {}
+    } catch (error) {
+      console.error('❌ [DesignEditor] Failed to load campaign:', error);
     }
-  }, [urlCampaign, urlLoading, urlError, setCampaign, setIsLoading]);
+  };
+  
+  loadCampaignData();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, [location.search, campaignState, setCampaign]);
+
+// Nouvelle campagne via header: si aucun id dans l'URL, créer une campagne vierge et activer le flag global
+useEffect(() => {
+  const params = new URLSearchParams(location.search);
+  const cid = params.get('campaign');
+  if (!cid) {
+    console.log('🆕 [DesignEditor] Creating new blank campaign');
+    beginNewCampaign('wheel');
+    // Générer un ID temporaire unique
+    const tempId = generateTempCampaignId('wheel');
+    
+    // CRITICAL: Nettoyer TOUTES les données d'abord pour garantir une campagne vierge
+    clearTempCampaignData(tempId);
+    
+    // CRITICAL: Initialiser la campagne avec l'ID temporaire dans le store
+    const { initializeNewCampaign } = useEditorStore.getState();
+    initializeNewCampaign('wheel', tempId);
+    
+    // Mettre à jour l'URL pour inclure le temp ID
+    navigate(`${location.pathname}?campaign=${tempId}${searchParams.get('mode') ? `&mode=${searchParams.get('mode')}` : ''}`, { replace: true });
+    
+    requestAnimationFrame(() => clearNewCampaignFlag());
+  } else {
+    // S'assurer que le flag est désactivé quand on charge une campagne existante
+    if (isNewCampaignGlobal) clearNewCampaignFlag();
+  }
+}, [location.pathname]);
+
+// 🧹 CRITICAL: Clean temporary campaigns - keep only Participer and Rejouer buttons
+useEffect(() => {
+  const params = new URLSearchParams(location.search);
+  const id = params.get('campaign');
+  if (!id || !isTempCampaignId(id)) return;
+  
+  console.log('🧹 [DesignEditor] Cleaning temp campaign:', id);
+  
+  // Clear localStorage
+  clearTempCampaignData(id);
+  
+  // Reset background images
+  setCampaign((prev: any) => {
+    if (!prev) return prev;
+    return {
+      ...prev,
+      design: {
+        ...(prev.design || {}),
+        backgroundImage: undefined,
+        mobileBackgroundImage: undefined
+      }
+    };
+  });
+  
+  // Reset backgrounds to color only
+  const defaultBg = { type: 'color' as const, value: '' };
+  setCanvasBackground(defaultBg);
+  setScreenBackgrounds({
+    screen1: defaultBg,
+    screen2: defaultBg,
+    screen3: defaultBg
+  });
+  
+  // Filter modularPage to keep only Participer and Rejouer
+  setModularPage((prev: ModularPage) => {
+    const participerButton = prev.screens.screen1?.find((m: Module) => 
+      m.type === 'BlocBouton' && m.label?.toLowerCase().includes('participer')
+    );
+    const rejouerButton = prev.screens.screen3?.find((m: Module) => 
+      m.type === 'BlocBouton' && m.label?.toLowerCase().includes('rejouer')
+    );
+    
+    return {
+      ...prev,
+      screens: {
+        screen1: participerButton ? [participerButton] : [],
+        screen2: [],
+        screen3: rejouerButton ? [rejouerButton] : []
+      }
+    };
+  });
+}, [location.search]);
 
   
 
