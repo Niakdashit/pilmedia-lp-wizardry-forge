@@ -73,7 +73,7 @@ const CampaignSettingsPage: React.FC = () => {
     if (saved) {
       // Navigate back to the correct editor based on campaign type
       const editorUrl = getEditorUrl(campaign?.type, campaignId);
-      navigate(editorUrl.replace('?campaign=', '?id='));
+      navigate(editorUrl);
     } else {
       // Save a draft locally to avoid data loss
       try { saveDraft(campaignId, form); } catch {}
@@ -128,7 +128,7 @@ const CampaignSettingsPage: React.FC = () => {
           <button
             onClick={() => {
               const editorUrl = getEditorUrl(campaign?.type, campaignId);
-              navigate(editorUrl.replace('?campaign=', '?id='));
+              navigate(editorUrl);
             }}
             className="px-3 py-1.5 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm"
           >

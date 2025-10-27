@@ -473,9 +473,10 @@ useEffect(() => {
 useEffect(() => {
   setCampaign((prev: any) => {
     if (!prev) return prev;
+    const hasModules = !!modularPage && modularPage.screens && Object.values(modularPage.screens).some((arr: any) => Array.isArray(arr) && arr.length > 0);
     const next = {
       ...prev,
-      modularPage, // ✅ CRITICAL: Sync modularPage to store
+      modularPage: hasModules ? modularPage : (prev.modularPage || prev.config?.modularPage),
       config: {
         ...(prev.config || {}),
         canvasConfig: {
@@ -486,7 +487,7 @@ useEffect(() => {
         },
         // compatibilité avec anciens loaders
         elements: canvasElements,
-        modularPage // ✅ Also sync in config for compatibility
+        modularPage: hasModules ? modularPage : (prev.config?.modularPage || prev.modularPage)
       }
     };
     return next as any;

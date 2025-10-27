@@ -18,7 +18,7 @@ const CampaignSettingsLayout: React.FC = () => {
   
   // Get campaign to determine its type
   const campaign = campaigns.find((c: any) => c.id === id);
-  const editorUrl = id && campaign ? getEditorUrl(campaign.type, id).replace('?campaign=', '?id=') : '/design-editor';
+  const editorUrl = id && campaign ? getEditorUrl(campaign.type, id) : '/design-editor';
 
   const handleSaveAndClose = () => {
     // Let pages listen and persist
