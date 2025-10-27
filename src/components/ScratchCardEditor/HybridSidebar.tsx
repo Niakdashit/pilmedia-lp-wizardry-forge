@@ -433,13 +433,10 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
       activeTab: newActiveTab
     };
 
-    // Notifier le parent des changements de l'onglet Design
-    if (onDesignPanelChange) {
-      const isDesignActive = newActiveTab === 'background' || showDesignPanel;
-      if (isDesignActive !== prev.showDesignPanel) {
-        onDesignPanelChange(isDesignActive);
-      }
-    }
+    // Ne pas notifier le parent ici pour éviter les boucles de feedback
+    // Le parent (DesignEditorLayout) pilote showDesignPanel et l'onglet actif
+    // Nous nous synchronisons uniquement en lecture via les props.
+
   }, [
     showEffectsPanel, 
     showAnimationsPanel, 
