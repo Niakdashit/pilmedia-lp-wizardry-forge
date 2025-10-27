@@ -43,6 +43,7 @@ import type { GameModalConfig } from '@/types/gameConfig';
 import { createGameConfigFromQuiz } from '@/types/gameConfig';
 import { supabase } from '@/integrations/supabase/client';
 import { generateTempCampaignId } from '@/utils/tempCampaignId';
+import { useAutoSaveToSupabase } from '@/hooks/useAutoSaveToSupabase';
 
 const KeyboardShortcutsHelp = lazy(() => import('../shared/KeyboardShortcutsHelp'));
 const MobileStableEditor = lazy(() => import('./components/MobileStableEditor'));
@@ -463,6 +464,31 @@ useEffect(() => {
     gameConfig: (campaignState as any)?.scratchConfig
   }, saveCampaign);
 
+  // 🔄 Auto-save to Supabase every 30 seconds (aligned with QuizEditor)
+  useAutoSaveToSupabase(
+    {
+      campaign: {
+        ...campaignState,
+        type: 'scratch',
+        scratchConfig: (campaignState as any)?.scratchConfig
+      },
+      canvasElements,
+      modularPage,
+      screenBackgrounds,
+      canvasZoom
+    },
+    {
+      enabled: true,
+      interval: 30000, // 30 seconds
+      onSave: () => {
+        console.log('✅ [ScratchEditor AutoSave] Campaign auto-saved to Supabase');
+      },
+      onError: (error) => {
+        console.error('❌ [ScratchEditor AutoSave] Auto-save failed:', error);
+      }
+    }
+  );
+
   useEffect(() => {
     if (!canvasElements.length) return;
     const hasMissingScreen = canvasElements.some((element) => !element?.screenId);
@@ -584,7 +610,7 @@ useEffect(() => {
   }
 }, [campaignState, selectedCampaignId]);
 
-// 🔗 Miroir local → store: conserve les éléments dans campaign.config.canvasConfig afin d'éviter toute perte
+// 🔄 Miroir local → store: conserve les éléments dans campaign.config.canvasConfig
 useEffect(() => {
   setCampaign((prev: any) => {
     if (!prev) return prev;
@@ -598,7 +624,8 @@ useEffect(() => {
           ...(prev.config?.canvasConfig || {}),
           elements: canvasElements,
           screenBackgrounds,
-          device: selectedDevice
+          device: selectedDevice,
+          zoom: canvasZoom
         },
         // compatibilité avec anciens loaders
         elements: canvasElements,
@@ -607,49 +634,7 @@ useEffect(() => {
     };
     return next as any;
   });
-}, [canvasElements, screenBackgrounds, selectedDevice, modularPage, setCampaign]);
-
-// 💾 Autosave complet: canvas + modules + tous les états
-useEffect(() => {
-  const id = (campaignState as any)?.id as string | undefined;
-  // Allow insert when no id yet; keep guard only when a selectedCampaignId is set and mismatched
-  if (selectedCampaignId && id && id !== selectedCampaignId) return;
-  const t = window.setTimeout(async () => {
-    try {
-      const payload: any = {
-        ...(campaignState || {}),
-        type: 'scratch',
-        extractedColors, // ✅ Include extracted colors
-        // IMPORTANT: use campaign.scratchConfig as source of truth to avoid overwriting UI changes
-        scratchConfig: (campaignState as any)?.scratchConfig,
-        modularPage,
-        canvasElements,
-        screenBackgrounds,
-        selectedDevice,
-        canvasConfig: {
-          ...(campaignState as any)?.canvasConfig,
-          elements: canvasElements,
-          screenBackgrounds,
-          device: selectedDevice,
-          zoom: canvasZoom
-        }
-      };
-      console.log('💾 [ScratchEditor] Autosave complet → DB', {
-        canvasElements: canvasElements.length,
-        modularScreens: Object.keys(modularPage?.screens || {}).length
-      });
-      const saved = await saveCampaignToDB(payload, saveCampaign);
-      // Update store with new UUID to avoid multiple inserts
-      if (saved?.id && (!id || id !== saved.id)) {
-        setCampaign((prev: any) => ({ ...(prev || {}), id: saved.id }));
-      }
-      setIsModified(false);
-    } catch (e) {
-      console.warn('⚠️ [ScratchEditor] Autosave failed', e);
-    }
-  }, 800);
-  return () => clearTimeout(t);
-}, [campaignState?.id, selectedCampaignId, canvasElements, screenBackgrounds, selectedDevice, modularPage]);
+}, [canvasElements, screenBackgrounds, selectedDevice, modularPage, canvasZoom, setCampaign]);
 
   // Écoute l'évènement global pour appliquer l'image de fond à tous les écrans par device (desktop/tablette/mobile distinct)
   useEffect(() => {
@@ -857,32 +842,6 @@ const handleSaveCampaignName = useCallback(async () => {
 }, [campaignState, newCampaignName, saveCampaign, setCampaign, upsertSettings, location.pathname, location.search, navigate, syncAllStates, canvasElements, modularPage, screenBackgrounds, extractedColors, selectedDevice, canvasZoom, setIsModified]);
   // Quiz config state
   const scratchState = useScratchCardStore((state) => state.config);
-  
-  // Sync store from campaign.scratchConfig so UI changes persist and preview reflects them
-  useEffect(() => {
-    const sc: any = (campaignState as any)?.scratchConfig;
-    if (!sc) return;
-    try {
-      const store = useScratchCardStore.getState();
-      const { updateMaxCards, updateGrid, updateBrush, updateThreshold, updateConfig } = store;
-      // Map grid layout to maxCards
-      if (sc.gridLayout) {
-        const max = sc.gridLayout === '3x2' ? 6 : sc.gridLayout === '2x2' ? 4 : 3;
-        updateMaxCards(max as 3 | 4 | 6);
-      }
-      if (typeof sc.gridSpacing === 'number') updateGrid({ gap: sc.gridSpacing });
-      if (typeof sc.gridRadius === 'number') updateGrid({ borderRadius: sc.gridRadius });
-      if (typeof sc.brushSize === 'number') updateBrush({ radius: sc.brushSize });
-      if (typeof sc.smoothness === 'number') updateBrush({ softness: Math.max(0, Math.min(1, sc.smoothness / 100)) });
-      if (typeof sc.revealThreshold === 'number') updateThreshold(Math.max(0, Math.min(1, sc.revealThreshold / 100)));
-      if (Array.isArray(sc.cards)) {
-        const cards = sc.cards.map((c: any, idx: number) => ({ id: c.id || String(idx + 1), isWinner: !!c.isWinner }));
-        updateConfig({ cards });
-      }
-    } catch (e) {
-      console.warn('⚠️ [ScratchEditor] Failed to sync scratch store from campaign.scratchConfig', e);
-    }
-  }, [campaignState?.scratchConfig]);
   
   const [quizConfig, setQuizConfig] = useState({
     questionCount: 5,

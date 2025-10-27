@@ -21,7 +21,7 @@ const DesignCanvas = lazy(() => import('./DesignCanvas'));
 import { useEditorStore } from '../../stores/editorStore';
 import { useKeyboardShortcuts } from '../ModernEditor/hooks/useKeyboardShortcuts';
 import { useUndoRedo, useUndoRedoShortcuts } from '../../hooks/useUndoRedo';
-// Scratch Editor doesn't need wheel config sync
+// Jackpot Editor doesn't need wheel config sync
 // import { useWheelConfigSync } from '../../hooks/useWheelConfigSync';
 import { useGroupManager } from '../../hooks/useGroupManager';
 import { getDeviceDimensions } from '../../utils/deviceDimensions';
@@ -41,6 +41,7 @@ import type { GameModalConfig } from '@/types/gameConfig';
 import { createGameConfigFromQuiz } from '@/types/gameConfig';
 import { supabase } from '@/integrations/supabase/client';
 import { generateTempCampaignId } from '@/utils/tempCampaignId';
+import { useAutoSaveToSupabase } from '@/hooks/useAutoSaveToSupabase';
 
 const KeyboardShortcutsHelp = lazy(() => import('../shared/KeyboardShortcutsHelp'));
 const MobileStableEditor = lazy(() => import('./components/MobileStableEditor'));
@@ -245,89 +246,42 @@ const { syncAllStates } = useCampaignStateSync();
   
   const [canvasZoom, setCanvasZoom] = useState(getDefaultZoom(selectedDevice));
 
-  // 🧹 CRITICAL: Reset store when leaving editor to prevent contamination
-  useEffect(() => {
-    return () => {
-      console.log('🧹 [JackpotEditor] Unmounting - resetting store for next editor');
-      try {
-        const id = (campaignState as any)?.id as string | undefined;
-        const isUuid = (v?: string) => !!v && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v);
-        if (isUuid(id)) {
-          try {
-            syncAllStates({
-              canvasElements,
-              modularPage,
-              screenBackgrounds,
-              extractedColors,
-              selectedDevice,
-              canvasZoom
-            });
+  // 🧹 CRITICAL: Save complete state before unmount to prevent data loss
+  // Placed here AFTER all state declarations to avoid TDZ errors
+  useEditorUnmountSave('jackpot', {
+    canvasElements,
+    modularPage,
+    screenBackgrounds,
+    extractedColors,
+    selectedDevice,
+    canvasZoom,
+    gameConfig: (campaignState as any)?.jackpotConfig
+  }, saveCampaign);
 
-  // Helper: persist immediately (used on tab hide/unload)
-  const persistNow = useCallback(async () => {
-    try {
-      const id = (campaignState as any)?.id as string | undefined;
-      const isUuid = (v?: string) => !!v && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v);
-      if (!isUuid(id)) return;
-      try {
-        syncAllStates({
-          canvasElements,
-          modularPage,
-          screenBackgrounds,
-          extractedColors,
-          selectedDevice,
-          canvasZoom
-        });
-      } catch {}
-      const base = useEditorStore.getState().campaign || campaignState || {};
-      const payload: any = {
-        ...base,
+  // 🔄 Auto-save to Supabase every 30 seconds (aligned with QuizEditor)
+  useAutoSaveToSupabase(
+    {
+      campaign: {
+        ...campaignState,
         type: 'jackpot',
-        jackpotConfig: (base as any)?.jackpotConfig,
-        modularPage,
-        canvasConfig: {
-          ...((base as any)?.canvasConfig || {}),
-          elements: canvasElements,
-          screenBackgrounds,
-          device: selectedDevice,
-          zoom: canvasZoom
-        }
-      };
-      await saveCampaignToDB(payload, saveCampaign);
-    } catch {}
-  }, [campaignState, canvasElements, modularPage, screenBackgrounds, extractedColors, selectedDevice, canvasZoom, saveCampaign, syncAllStates]);
-
-  // Save on page/tab hide/unload
-  useEffect(() => {
-    const onHide = () => { void persistNow(); };
-    const onBeforeUnload = () => { void persistNow(); };
-    document.addEventListener('visibilitychange', onHide);
-    window.addEventListener('pagehide', onHide);
-    window.addEventListener('beforeunload', onBeforeUnload);
-    return () => {
-      document.removeEventListener('visibilitychange', onHide);
-      window.removeEventListener('pagehide', onHide);
-      window.removeEventListener('beforeunload', onBeforeUnload);
-    };
-  }, [persistNow]);
-          } catch {}
-          const payload: any = {
-            ...(useEditorStore.getState().campaign || campaignState || {}),
-            modularPage,
-            canvasConfig: {
-              ...((campaignState as any)?.canvasConfig || {}),
-              elements: canvasElements,
-              screenBackgrounds,
-              device: selectedDevice,
-              zoom: canvasZoom
-            }
-          };
-          try { void saveCampaignToDB(payload, saveCampaign); } catch {}
-        }
-      } catch {}
-      resetCampaign();
-    };
-  }, [resetCampaign]);
+        jackpotConfig: (campaignState as any)?.jackpotConfig
+      },
+      canvasElements,
+      modularPage,
+      screenBackgrounds,
+      canvasZoom
+    },
+    {
+      enabled: true,
+      interval: 30000, // 30 seconds
+      onSave: () => {
+        console.log('✅ [JackpotEditor AutoSave] Campaign auto-saved to Supabase');
+      },
+      onError: (error) => {
+        console.error('❌ [JackpotEditor AutoSave] Auto-save failed:', error);
+      }
+    }
+  );
 
 // 🔄 Load campaign data from Supabase when campaign ID is in URL
 useEffect(() => {
