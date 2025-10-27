@@ -519,6 +519,10 @@ const { syncAllStates } = useCampaignStateSync();
   const screenBackgroundsRef = useRef<ScreenBackgrounds | null>(null);
   const canvasZoomRef = useRef<number>(0.7);
   
+  // Modular editor JSON state - DOIT être déclaré AVANT les callbacks qui l'utilisent
+  const [modularPage, setModularPage] = useState<ModularPage>(createEmptyModularPage());
+  const [extractedColors, setExtractedColors] = useState<string[]>([]);
+  
   // Update refs when state changes
   useEffect(() => {
     canvasElementsRef.current = canvasElements;
@@ -1156,8 +1160,6 @@ const handleSaveCampaignName = useCallback(async () => {
   
   // État pour tracker la position de scroll (quel écran est visible)
   const [currentScreen, setCurrentScreen] = useState<'screen1' | 'screen2' | 'screen3'>('screen1');
-  // Modular editor JSON state
-  const [modularPage, setModularPage] = useState<ModularPage>(createEmptyModularPage());
   
   useEffect(() => {
     modularPageRef.current = modularPage;
@@ -1744,7 +1746,6 @@ const handleSaveCampaignName = useCallback(async () => {
       console.log('🎯 No selectable elements found on canvas');
     }
   }, [canvasElements]);
-  const [extractedColors, setExtractedColors] = useState<string[]>([]);
   const [showFunnel, setShowFunnel] = useState(false);
   const [currentStep, setCurrentStep] = useState<'article' | 'form' | 'game' | 'result'>('article');
   const [previewButtonSide, setPreviewButtonSide] = useState<'left' | 'right'>(() =>

@@ -280,6 +280,10 @@ useEffect(() => {
   // Background global (fallback pour compatibilité)
   const [canvasBackground, setCanvasBackground] = useState<{ type: 'color' | 'image'; value: string }>(defaultBackground);
   
+  // Modular editor JSON state - DOIT être déclaré AVANT les callbacks qui l'utilisent
+  const [modularPage, setModularPage] = useState<ModularPage>(createEmptyModularPage());
+  const [extractedColors, setExtractedColors] = useState<string[]>([]);
+  
   // Temp campaign cleanup guard
   const didTempCleanupRef = useRef(false);
 
@@ -699,8 +703,6 @@ useEffect(() => {
   
   // État pour tracker la position de scroll (quel écran est visible)
   const [currentScreen, setCurrentScreen] = useState<'screen1' | 'screen2' | 'screen3'>('screen1');
-  // Modular editor JSON state
-  const [modularPage, setModularPage] = useState<ModularPage>(createEmptyModularPage());
   
   const selectedModule: Module | null = useMemo(() => {
     if (!selectedModuleId) return null;
@@ -1156,9 +1158,8 @@ useEffect(() => {
       console.log('🎯 No selectable elements found on canvas');
     }
   }, [canvasElements]);
-  const [extractedColors, setExtractedColors] = useState<string[]>([]);
 
-  // Game modal config unifié (nouveau) - doit être après extractedColors
+  // Game modal config unifié (nouveau)
   const gameModalConfig: GameModalConfig = useMemo(() => createGameConfigFromQuiz({
     ...quizModalConfig,
     extractedColors

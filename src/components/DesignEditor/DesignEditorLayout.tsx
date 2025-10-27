@@ -305,6 +305,10 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
   
   const [canvasZoom, setCanvasZoom] = useState(getDefaultZoom(selectedDevice));
 
+  // Modular editor JSON state - DOIT être déclaré AVANT les callbacks qui l'utilisent
+  const [modularPage, setModularPage] = useState<ModularPage>(createEmptyModularPage());
+  const [extractedColors, setExtractedColors] = useState<string[]>([]);
+
   // Persistant autosave (debounced) du background pour fiabiliser la sauvegarde sans changer l'UI
   const saveBgTimeoutRef = useRef<number | null>(null);
   const persistBackground = useCallback((bg: { type: 'color' | 'image'; value: string }, nextScreens?: Record<'screen1' | 'screen2' | 'screen3', BackgroundValue>) => {
@@ -391,9 +395,6 @@ useEffect(() => {
 
   // État pour tracker la position de scroll (quel écran est visible)
   const [currentScreen, setCurrentScreen] = useState<'screen1' | 'screen2' | 'screen3'>('screen1');
-  
-  // Modular editor JSON state
-  const [modularPage, setModularPage] = useState<ModularPage>(createEmptyModularPage());
   
   // Debug: Log screen1 modules
   React.useEffect(() => {
@@ -1114,7 +1115,6 @@ useEffect(() => {
       console.log('🎯 No selectable elements found on canvas');
     }
   }, [canvasElements]);
-  const [extractedColors, setExtractedColors] = useState<string[]>([]);
   const [showFunnel, setShowFunnel] = useState(false);
   const [currentStep, setCurrentStep] = useState<'article' | 'form' | 'game' | 'result'>('article');
   const [previewButtonSide, setPreviewButtonSide] = useState<'left' | 'right'>(() =>

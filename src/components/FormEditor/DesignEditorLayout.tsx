@@ -338,6 +338,10 @@ useEffect(() => {
   const [canvasBackground, setCanvasBackground] = useState<{ type: 'color' | 'image'; value: string }>(defaultBackground);
   const [canvasZoom, setCanvasZoom] = useState(getDefaultZoom(selectedDevice));
 
+  // Modular editor JSON state - DOIT être déclaré AVANT les callbacks qui l'utilisent
+  const [modularPage, setModularPage] = useState<ModularPage>(createEmptyModularPage());
+  const [extractedColors, setExtractedColors] = useState<string[]>([]);
+
   useEffect(() => {
     if (!canvasElements.length) return;
     const hasMissingScreen = canvasElements.some((element) => !element?.screenId);
@@ -796,8 +800,6 @@ useEffect(() => {
   
   // État pour tracker la position de scroll (quel écran est visible)
   const [currentScreen, setCurrentScreen] = useState<'screen1' | 'screen2'>('screen1');
-  // Modular editor JSON state
-  const [modularPage, setModularPage] = useState<ModularPage>(createEmptyModularPage());
   const selectedModule: Module | null = useMemo(() => {
     if (!selectedModuleId) return null;
     const allModules = (Object.values(modularPage.screens) as Module[][]).flat();
@@ -1176,7 +1178,6 @@ useEffect(() => {
       console.log('🎯 No selectable elements found on canvas');
     }
   }, [canvasElements]);
-  const [extractedColors, setExtractedColors] = useState<string[]>([]);
   const [showFunnel, setShowFunnel] = useState(false);
   // For form campaigns, start directly with the form (no article step)
   const [currentStep, setCurrentStep] = useState<'article' | 'form' | 'game' | 'result'>('form');

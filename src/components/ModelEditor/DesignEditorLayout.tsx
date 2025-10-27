@@ -138,6 +138,10 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
   ));
   const [canvasZoom, setCanvasZoom] = useState(getDefaultZoom(selectedDevice));
 
+  // Modular editor JSON state - DOIT être déclaré AVANT les callbacks
+  const [modularPage, setModularPage] = useState<ModularPage>(createEmptyModularPage());
+  const [extractedColors, setExtractedColors] = useState<string[]>([]);
+
   // Sauvegarder le zoom à chaque changement pour persistance entre modes
   useEffect(() => {
     try {
