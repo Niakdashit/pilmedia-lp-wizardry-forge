@@ -33,50 +33,6 @@ export const useCampaignStateSync = () => {
     setCampaign((prev: any) => {
       if (!prev) return prev;
 
-      // Extract images from modules
-      const customImages = new Set<string>();
-      
-      // From modularPage
-      if (editorStates.modularPage?.screens) {
-        Object.values(editorStates.modularPage.screens).forEach((modules: any) => {
-          if (!Array.isArray(modules)) return;
-          modules?.forEach((module: any) => {
-            if (module.type === 'BlocImage' && module.url) {
-              customImages.add(module.url);
-            }
-            if (module.type === 'BlocBouton' && module.backgroundImage) {
-              customImages.add(module.backgroundImage);
-            }
-            if (module.type === 'BlocTexte' && module.backgroundImage) {
-              customImages.add(module.backgroundImage);
-            }
-          });
-        });
-      }
-      
-      // From screenBackgrounds
-      if (editorStates.screenBackgrounds) {
-        Object.values(editorStates.screenBackgrounds).forEach((bg: any) => {
-          if (bg?.type === 'image' && bg.value) {
-            customImages.add(bg.value);
-          }
-          if (bg?.devices) {
-            Object.values(bg.devices).forEach((deviceBg: any) => {
-              if (deviceBg?.type === 'image' && deviceBg.value) {
-                customImages.add(deviceBg.value);
-              }
-            });
-          }
-        });
-      }
-      
-      // From canvasElements
-      editorStates.canvasElements?.forEach((el: any) => {
-        if (el.url) customImages.add(el.url);
-        if (el.backgroundImage) customImages.add(el.backgroundImage);
-        if (el.src) customImages.add(el.src);
-      });
-
       const updated = {
         ...prev,
         
@@ -133,12 +89,6 @@ export const useCampaignStateSync = () => {
           jackpotConfig: editorStates.jackpotConfig
         }),
         
-        // Auto-populate customImages
-        design: {
-          ...(prev.design || {}),
-          customImages: Array.from(customImages)
-        },
-        
         // Timestamp de synchronisation
         _lastSync: Date.now()
       };
@@ -149,8 +99,7 @@ export const useCampaignStateSync = () => {
         syncedStates: Object.keys(editorStates),
         canvasElementsCount: updated.canvasElements?.length || 0,
         modularPageScreens: Object.keys(updated.modularPage?.screens || {}).length,
-        screenBackgroundsCount: Object.keys(updated.screenBackgrounds || {}).length,
-        imagesTracked: customImages.size
+        screenBackgroundsCount: Object.keys(updated.screenBackgrounds || {}).length
       });
 
       return updated;
