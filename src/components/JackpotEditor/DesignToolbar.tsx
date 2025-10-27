@@ -77,6 +77,17 @@ const ScratchToolbar: React.FC<ScratchToolbarProps> = React.memo(({
         name: (campaignState as any)?.name || 'Nouvelle campagne jackpot',
         type: 'jackpot',
         status: (campaignState as any)?.status || 'draft',
+        // Inclure explicitement les modules et le canvas pour la première sauvegarde
+        modularPage: (campaignState as any)?.modularPage || (campaignState as any)?.config?.modularPage,
+        canvasElements: (campaignState as any)?.canvasElements || (campaignState as any)?.config?.elements || [],
+        screenBackgrounds: (campaignState as any)?.screenBackgrounds || (campaignState as any)?.config?.canvasConfig?.screenBackgrounds || {},
+        selectedDevice: (campaignState as any)?.selectedDevice || (campaignState as any)?.canvasConfig?.device,
+        canvasConfig: {
+          ...(campaignState as any)?.canvasConfig,
+          elements: (campaignState as any)?.canvasElements || (campaignState as any)?.config?.elements || [],
+          screenBackgrounds: (campaignState as any)?.screenBackgrounds || (campaignState as any)?.config?.canvasConfig?.screenBackgrounds || {},
+          device: (campaignState as any)?.selectedDevice || (campaignState as any)?.canvasConfig?.device
+        },
         design: (campaignState as any)?.design || {},
         config: (campaignState as any)?.config || {},
         game_config: (campaignState as any)?.game_config || (campaignState as any)?.gameConfig || {},

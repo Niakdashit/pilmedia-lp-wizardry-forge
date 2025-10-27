@@ -410,13 +410,14 @@ useEffect(() => {
 // 🔗 Miroir local → store: conserve les éléments dans campaign.config.canvasConfig afin d'éviter toute perte
 useEffect(() => {
   const id = (campaignState as any)?.id as string | undefined;
-  if (!id) return;
-  if (selectedCampaignId && id !== selectedCampaignId) return;
+  // Ne PAS bloquer quand l'id n'existe pas encore (nouvelle campagne)
+  // On garde uniquement la garde de cohérence quand un selectedCampaignId est présent
+  if (selectedCampaignId && id && id !== selectedCampaignId) return;
   setCampaign((prev: any) => {
     if (!prev) return prev;
     const next = {
       ...prev,
-      modularPage, // ✅ CRITICAL: Sync modularPage to store
+      modularPage, // ✅ CRITICAL: Sync modularPage to store dès le début
       config: {
         ...(prev.config || {}),
         canvasConfig: {
