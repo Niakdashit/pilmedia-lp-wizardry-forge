@@ -227,23 +227,54 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
   }, [campaignState?.id, campaignState?.name]);
 
   const handleSaveCampaignName = useCallback(async () => {
-    const id = (campaignState as any)?.id as string | undefined;
+    const currentId = (campaignState as any)?.id as string | undefined;
     const name = (newCampaignName || '').trim();
-    if (!id || !name) return;
-    let updated: any = null;
-    try { updated = await saveCampaign({ id, name }); } catch (e) { console.warn('saveCampaign failed', e); }
-    if (updated) {
-      setCampaign({
-        ...(campaignState as any),
-        name: updated.name
-      } as any);
-      try {
-        window.dispatchEvent(new CustomEvent('campaign:name:update', { detail: { campaignId: (updated as any).id, name: updated.name } }));
-      } catch {}
-      try { localStorage.setItem(`campaign:name:prompted:${id}`, '1'); } catch {}
-      setIsNameModalOpen(false);
+    if (!name) return;
+
+    // 🔄 CRITICAL: Synchroniser TOUS les états locaux avant la sauvegarde
+    syncAllStates({
+      canvasElements,
+      modularPage,
+      screenBackgrounds,
+      extractedColors,
+      selectedDevice,
+      canvasZoom
+    });
+
+    // Récupérer le campaign mis à jour après synchronisation
+    const updatedCampaign = useEditorStore.getState().campaign;
+
+    const isUuid = (v?: string) => !!v && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v);
+    
+    // Créer le payload complet avec le nom ET toutes les configurations
+    const payload: any = {
+      ...(updatedCampaign || {}),
+      id: isUuid(currentId) ? currentId : undefined,
+      name,
+      type: 'model'
+    };
+
+    let saved: any = null;
+    try { 
+      saved = await saveCampaignToDB(payload, saveCampaign);
+    } catch (e) { 
+      console.warn('saveCampaignToDB failed', e); 
     }
-  }, [campaignState, newCampaignName, saveCampaign, setCampaign]);
+    
+    if (saved) {
+      setCampaign({
+        ...campaignState,
+        ...saved
+      } as any);
+
+      try {
+        window.dispatchEvent(new CustomEvent('campaign:name:update', { detail: { campaignId: (saved as any).id, name } }));
+      } catch {}
+      try { localStorage.setItem(`campaign:name:prompted:${(saved as any)?.id || currentId}`, '1'); } catch {}
+      setIsNameModalOpen(false);
+      setIsModified(false);
+    }
+  }, [campaignState, newCampaignName, saveCampaign, setCampaign, syncAllStates, canvasElements, modularPage, screenBackgrounds, extractedColors, selectedDevice, canvasZoom, setIsModified]);
   // Quiz config state
   const [quizConfig, setQuizConfig] = useState({
     questionCount: 5,
@@ -1168,9 +1199,22 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
       setIsValidationModalOpen(true);
       return;
     }
+    
+    // ✅ CRITICAL: Vérifier si le nom est valide AVANT de sauvegarder
+    const currentName = (campaignState as any)?.name || '';
+    const isValidName = currentName && currentName.trim() && 
+                       !currentName.includes('Nouvelle campagne') && 
+                       !currentName.includes('New Campaign');
+    
+    if (!isValidName) {
+      console.log('❌ [ModelEditor] Invalid campaign name, opening name modal before save');
+      setIsNameModalOpen(true);
+      return;
+    }
+    
     await handleSave();
     navigate('/dashboard');
-  }, [validateCampaign, handleSave, navigate]);
+  }, [validateCampaign, handleSave, navigate, campaignState]);
 
   // Navigate to settings without saving (same destination as Save & Continue)
   const handleNavigateToSettings = useCallback(() => {

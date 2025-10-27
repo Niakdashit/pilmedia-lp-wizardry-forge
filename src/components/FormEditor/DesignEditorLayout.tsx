@@ -679,20 +679,45 @@ useEffect(() => {
     const name = (newCampaignName || '').trim();
     if (!name) return;
 
-    const isUuid = (v?: string) => !!v && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v);
-    const payload: any = isUuid(currentId) ? { id: currentId, name } : { name, type: 'form' };
+    // 🔄 CRITICAL: Synchroniser TOUS les états locaux avant la sauvegarde
+    syncAllStates({
+      canvasElements,
+      modularPage,
+      screenBackgrounds,
+      extractedColors,
+      selectedDevice,
+      canvasZoom
+    });
 
-    let updated: any = null;
-    try { updated = await saveCampaign(payload); } catch (e) { console.warn('saveCampaign failed', e); }
-    if (updated) {
+    // Récupérer le campaign mis à jour après synchronisation
+    const updatedCampaign = useEditorStore.getState().campaign;
+
+    const isUuid = (v?: string) => !!v && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v);
+    
+    // Créer le payload complet avec le nom ET toutes les configurations
+    const payload: any = {
+      ...(updatedCampaign || {}),
+      id: isUuid(currentId) ? currentId : undefined,
+      name,
+      type: 'form'
+    };
+
+    let saved: any = null;
+    try { 
+      saved = await saveCampaignToDB(payload, saveCampaign);
+    } catch (e) { 
+      console.warn('saveCampaignToDB failed', e); 
+    }
+    
+    if (saved) {
       setCampaign({
         ...campaignState,
-        ...updated,
+        ...saved,
       } as any);
 
       // Ensure URL contains the real campaign UUID so next saves work
       try {
-        const cid = (updated as any)?.id || currentId;
+        const cid = (saved as any)?.id || currentId;
         if (cid && !isUuid(currentId)) {
           const sp = new URLSearchParams(location.search);
           const modeParam = sp.get('mode');
@@ -703,15 +728,16 @@ useEffect(() => {
 
       // Notify settings modal and persist to campaign_settings
       try {
-        const cid = (updated as any)?.id || currentId;
+        const cid = (saved as any)?.id || currentId;
         window.dispatchEvent(new CustomEvent('campaign:name:update', { detail: { campaignId: cid, name } }));
         if (cid) await upsertSettings(cid, { publication: { name } });
       } catch {}
 
-      try { localStorage.setItem(`campaign:name:prompted:${(updated as any)?.id || currentId || 'new:form'}`, '1'); } catch {}
+      try { localStorage.setItem(`campaign:name:prompted:${(saved as any)?.id || currentId || 'new:form'}`, '1'); } catch {}
       setIsNameModalOpen(false);
+      setIsModified(false);
     }
-  }, [campaignState, newCampaignName, saveCampaign, setCampaign, upsertSettings, location.pathname, location.search, navigate]);
+  }, [campaignState, newCampaignName, saveCampaign, setCampaign, upsertSettings, location.pathname, location.search, navigate, syncAllStates, canvasElements, modularPage, screenBackgrounds, extractedColors, selectedDevice, canvasZoom, setIsModified]);
   // Quiz config state
   const [quizConfig, setQuizConfig] = useState({
     questionCount: 5,
@@ -2434,6 +2460,18 @@ useEffect(() => {
       return;
     }
     
+    // ✅ CRITICAL: Vérifier si le nom est valide AVANT de sauvegarder
+    const currentName = (campaignState as any)?.name || '';
+    const isValidName = currentName && currentName.trim() && 
+                       !currentName.includes('Nouvelle campagne') && 
+                       !currentName.includes('New Campaign');
+    
+    if (!isValidName) {
+      console.log('❌ [FormEditor] Invalid campaign name, opening name modal before save');
+      setIsNameModalOpen(true);
+      return;
+    }
+    
     // 🔄 Synchroniser tous les états locaux avec le campaign avant la sauvegarde
     syncAllStates({
       canvasElements,
@@ -2446,7 +2484,7 @@ useEffect(() => {
     
     await handleSave();
     navigate('/dashboard');
-  }, [validateCampaign, handleSave, navigate, syncAllStates, canvasElements, modularPage, screenBackgrounds, extractedColors, selectedDevice, canvasZoom]);
+  }, [validateCampaign, handleSave, navigate, syncAllStates, canvasElements, modularPage, screenBackgrounds, extractedColors, selectedDevice, canvasZoom, campaignState]);
 
   // Navigate to settings without saving (same destination as Save & Continue)
   const handleNavigateToSettings = useCallback(() => {
