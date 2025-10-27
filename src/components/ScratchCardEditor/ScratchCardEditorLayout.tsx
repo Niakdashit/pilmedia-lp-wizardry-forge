@@ -304,12 +304,33 @@ useEffect(() => {
     console.log('📂 [ScratchEditor] selectCampaign for id', cid);
     selectCampaign(cid, 'scratch');
   } else {
-    // Nouvelle campagne → activer le flag global pour bloquer toute auto-injection initiale
+    // 🆕 Nouvelle campagne → RESET COMPLET des états locaux
+    console.log('🆕 [ScratchEditor] New campaign - resetting all local states');
+    
+    // Réinitialiser les backgrounds
+    const freshBg = mode === 'template'
+      ? { type: 'color' as const, value: '#4ECDC4' }
+      : { type: 'color' as const, value: 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)' };
+    
+    setCanvasBackground(freshBg);
+    setScreenBackgrounds({
+      screen1: freshBg,
+      screen2: freshBg,
+      screen3: freshBg
+    });
+    
+    // Réinitialiser les éléments
+    setCanvasElements([]);
+    setModularPage(createEmptyModularPage());
+    setExtractedColors([]);
+    
+    // Activer le flag global et créer campagne vide
     beginNewCampaign('scratch');
     const tempId = `temp-scratch-${Date.now()}`;
     console.log('🆕 [ScratchEditor] initializing isolated temp campaign', tempId);
     selectCampaign(tempId, 'scratch');
     initializeNewCampaignWithId('scratch', tempId);
+    
     // Libérer au prochain frame
     requestAnimationFrame(() => clearNewCampaignFlag());
   }

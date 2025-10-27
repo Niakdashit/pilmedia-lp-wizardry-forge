@@ -227,11 +227,32 @@ useEffect(() => {
   if (cid) {
     selectCampaign(cid, 'jackpot');
   } else {
-    // Nouvelle campagne via header → activer le flag global pour bloquer tout auto-ajout
+    // 🆕 Nouvelle campagne → RESET COMPLET des états locaux
+    console.log('🆕 [JackpotEditor] New campaign - resetting all local states');
+    
+    // Réinitialiser les backgrounds
+    const freshBg = mode === 'template'
+      ? { type: 'color' as const, value: '#4ECDC4' }
+      : { type: 'color' as const, value: 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)' };
+    
+    setCanvasBackground(freshBg);
+    setScreenBackgrounds({
+      screen1: freshBg,
+      screen2: freshBg,
+      screen3: freshBg
+    });
+    
+    // Réinitialiser les éléments
+    setCanvasElements([]);
+    setModularPage(createEmptyModularPage());
+    setExtractedColors([]);
+    
+    // Activer le flag global et créer campagne vide
     beginNewCampaign('jackpot');
     const tempId = `temp-jackpot-${Date.now()}`;
     selectCampaign(tempId, 'jackpot');
     initializeNewCampaignWithId('jackpot', tempId);
+    
     // Libérer le flag au prochain frame
     requestAnimationFrame(() => clearNewCampaignFlag());
   }

@@ -119,6 +119,35 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
   // Charger campagne depuis URL si présente
   const { campaign: urlCampaign, loading: urlLoading, error: urlError } = useCampaignFromUrl();
 
+  // 🆕 Réinitialiser les états locaux quand on crée une nouvelle campagne (pas d'ID dans URL)
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const campaignId = params.get('campaign');
+    
+    // Si pas d'ID et pas de chargement en cours = nouvelle campagne
+    if (!campaignId && !urlLoading && !urlCampaign) {
+      console.log('🆕 [DesignEditor] New campaign detected - resetting local states');
+      
+      const freshBg = mode === 'template'
+        ? { type: 'color' as const, value: '#4ECDC4' }
+        : { type: 'color' as const, value: 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)' };
+      
+      setCanvasBackground(freshBg);
+      setScreenBackgrounds({
+        screen1: freshBg,
+        screen2: freshBg,
+        screen3: freshBg
+      });
+      setCanvasElements([]);
+      setModularPage(createEmptyModularPage());
+      setExtractedColors([]);
+      
+      // Activer le flag global pour bloquer les auto-injections
+      beginNewCampaign('wheel');
+      requestAnimationFrame(() => clearNewCampaignFlag());
+    }
+  }, [location.search, urlLoading, urlCampaign, mode, beginNewCampaign, clearNewCampaignFlag]);
+
   // 🧹 CRITICAL: Reset store when leaving editor to prevent contamination
   useEffect(() => {
     return () => {

@@ -368,6 +368,19 @@ const { syncAllStates } = useCampaignStateSync();
     const cid = params.get('campaign');
     if (!cid) {
       console.log('🆕 [QuizEditor] Creating new blank campaign');
+      
+      // 🆕 RESET COMPLET des états locaux
+      const freshBg = { type: 'color' as const, value: 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)' };
+      setCanvasBackground(freshBg);
+      setScreenBackgrounds({
+        screen1: freshBg,
+        screen2: freshBg,
+        screen3: freshBg
+      });
+      setCanvasElements([]);
+      setModularPage(createEmptyModularPage());
+      setExtractedColors([]);
+      
       beginNewCampaign('quiz');
       // Générer un ID temporaire unique
       const tempId = generateTempCampaignId('quiz');
