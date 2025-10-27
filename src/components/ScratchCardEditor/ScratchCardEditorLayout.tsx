@@ -43,6 +43,7 @@ import type { GameModalConfig } from '@/types/gameConfig';
 import { createGameConfigFromQuiz } from '@/types/gameConfig';
 import { supabase } from '@/integrations/supabase/client';
 import { generateTempCampaignId } from '@/utils/tempCampaignId';
+import { useAutoSaveToSupabase } from '@/hooks/useAutoSaveToSupabase';
 
 const KeyboardShortcutsHelp = lazy(() => import('../shared/KeyboardShortcutsHelp'));
 const MobileStableEditor = lazy(() => import('./components/MobileStableEditor'));
@@ -462,6 +463,27 @@ useEffect(() => {
     canvasZoom,
     gameConfig: (campaignState as any)?.scratchConfig
   }, saveCampaign);
+
+  // 🔄 Auto-save to Supabase every 30 seconds (aligned with QuizEditor)
+  useAutoSaveToSupabase(
+    {
+      campaign: campaignState,
+      canvasElements,
+      modularPage,
+      screenBackgrounds,
+      canvasZoom
+    },
+    {
+      enabled: true,
+      interval: 30000, // 30 seconds
+      onSave: () => {
+        console.log('✅ [ScratchEditor AutoSave] Campaign auto-saved to Supabase');
+      },
+      onError: (error) => {
+        console.error('❌ [ScratchEditor AutoSave] Auto-save failed:', error);
+      }
+    }
+  );
 
   useEffect(() => {
     if (!canvasElements.length) return;
