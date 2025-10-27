@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import ImageUpload from '../../common/ImageUpload';
 import { useEditorStore } from '../../../stores/editorStore';
 
@@ -33,51 +33,7 @@ const BackgroundSettings: React.FC<BackgroundSettingsProps> = ({
 
     // Mise à jour du store global pour le preview
     updateDesign(updates);
-
-    // Stockage dans localStorage pour la persistance
-    try {
-      const storageKey = device === 'mobile' ? 'modern-bg-mobile' : 'modern-bg-desktop';
-      if (imageUrl) {
-        localStorage.setItem(storageKey, imageUrl);
-      } else {
-        localStorage.removeItem(storageKey);
-      }
-      // Synchronisation inter-fenêtres
-      window.dispatchEvent(new CustomEvent('modern-bg-sync', { detail: { device, url: imageUrl } }));
-    } catch (e) {
-      console.warn('Erreur localStorage:', e);
-    }
   };
-
-  // Charger les fonds depuis localStorage au montage (une seule fois)
-  useEffect(() => {
-    // Ne charger que si les deux champs sont vides (nouveau chargement)
-    if (design.backgroundImage || design.mobileBackgroundImage) {
-      return;
-    }
-
-    try {
-      const desktopBg = localStorage.getItem('modern-bg-desktop');
-      const mobileBg = localStorage.getItem('modern-bg-mobile');
-      
-      if (desktopBg || mobileBg) {
-        const updates: any = {};
-        if (desktopBg) updates.backgroundImage = desktopBg;
-        if (mobileBg) updates.mobileBackgroundImage = mobileBg;
-        
-        setCampaign((prev: any) => ({
-          ...prev,
-          design: {
-            ...prev.design,
-            ...updates
-          }
-        }));
-        updateDesign(updates);
-      }
-    } catch (e) {
-      console.warn('Erreur chargement localStorage:', e);
-    }
-  }, []);
 
   return (
     <div className="space-y-4">
