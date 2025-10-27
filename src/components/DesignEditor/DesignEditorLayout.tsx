@@ -28,7 +28,6 @@ import { useEditorPreviewSync } from '@/hooks/useEditorPreviewSync';
 import { useCampaignSettings } from '@/hooks/useCampaignSettings';
 
 
-import { useCampaignFromUrl } from '@/hooks/useCampaignFromUrl';
 
 
 import { useCampaigns } from '@/hooks/useCampaigns';
@@ -564,26 +563,22 @@ useEffect(() => {
     }
   });
 
-  // Synchroniser campaignConfig avec urlCampaign après le chargement
+  // Synchroniser campaignConfig avec la campagne du store une fois chargée
   useEffect(() => {
-    if (urlCampaign && !urlLoading) {
-      console.log('🔄 [DesignEditor] Synchronizing campaignConfig with urlCampaign:', {
-        hasDesignModules: !!urlCampaign.design?.designModules,
-        designModulesKeys: Object.keys(urlCampaign.design?.designModules || {})
-      });
-      
+    if (campaignState) {
+      const cs: any = campaignState as any;
       setCampaignConfig({
-        ...urlCampaign,
+        ...cs,
         design: {
-          ...urlCampaign.design,
+          ...(cs.design || {}),
           wheelConfig: {
             scale: 2,
-            ...urlCampaign.design?.wheelConfig
+            ...(cs.design?.wheelConfig || {})
           }
         }
       });
     }
-  }, [urlCampaign, urlLoading]);
+  }, [campaignState]);
 
   // Prompt for campaign name on first arrival
   const [isNameModalOpen, setIsNameModalOpen] = useState(false);
