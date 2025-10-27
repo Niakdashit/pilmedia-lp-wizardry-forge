@@ -229,17 +229,6 @@ const FormEditorLayout: React.FC<FormEditorLayoutProps> = ({ mode = 'campaign', 
 
   // Supabase campaigns API
   const { saveCampaign } = useCampaigns();
-  
-  // 🧹 CRITICAL: Save complete state before unmount to prevent data loss
-  useEditorUnmountSave('form', {
-    canvasElements,
-    modularPage,
-    screenBackgrounds,
-    extractedColors,
-    selectedDevice,
-    canvasZoom,
-    gameConfig: (campaignState as any)?.formConfig
-  }, saveCampaign);
 
 // Campaign state synchronization hook
 const { syncAllStates } = useCampaignStateSync();
@@ -450,6 +439,18 @@ useEffect(() => {
   // Modular editor JSON state - DOIT être déclaré AVANT les callbacks qui l'utilisent
   const [modularPage, setModularPage] = useState<ModularPage>(createEmptyModularPage());
   const [extractedColors, setExtractedColors] = useState<string[]>([]);
+
+  // 🧹 CRITICAL: Save complete state before unmount to prevent data loss
+  // Placed here AFTER all state declarations to avoid TDZ errors
+  useEditorUnmountSave('form', {
+    canvasElements,
+    modularPage,
+    screenBackgrounds,
+    extractedColors,
+    selectedDevice,
+    canvasZoom,
+    gameConfig: (campaignState as any)?.formConfig
+  }, saveCampaign);
 
   useEffect(() => {
     if (!canvasElements.length) return;
