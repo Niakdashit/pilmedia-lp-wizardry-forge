@@ -209,6 +209,42 @@ const JackpotEditorLayout: React.FC<JackpotEditorLayoutProps> = ({ mode = 'campa
 // Campaign state synchronization hook
 const { syncAllStates } = useCampaignStateSync();
 
+  // Détection automatique de l'appareil basée sur l'user-agent pour éviter le basculement lors du redimensionnement de fenêtre
+  const detectDeviceInitial = (): 'desktop' | 'tablet' | 'mobile' => {
+    const override = getEditorDeviceOverride();
+    if (override) return override;
+    const ua = typeof navigator !== 'undefined' ? navigator.userAgent : '';
+    if (/Mobi|Android/i.test(ua)) return 'mobile';
+    if (/Tablet|iPad/i.test(ua)) return 'tablet';
+    return 'desktop';
+  };
+
+  // État local pour la compatibilité existante
+  const [selectedDevice, setSelectedDevice] = useState<'desktop' | 'tablet' | 'mobile'>(detectDeviceInitial());
+  
+  // États principaux
+  const [canvasElements, setCanvasElements] = useState<any[]>([]);
+  
+  // Background par écran - chaque écran a son propre background
+  const defaultBackground = mode === 'template'
+    ? { type: 'color' as const, value: '#4ECDC4' }
+    : { type: 'color' as const, value: 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)' };
+  
+  const [screenBackgrounds, setScreenBackgrounds] = useState<ScreenBackgrounds>({
+    screen1: defaultBackground,
+    screen2: defaultBackground,
+    screen3: defaultBackground
+  });
+  
+  // Background global (fallback pour compatibilité)
+  const [canvasBackground, setCanvasBackground] = useState<{ type: 'color' | 'image'; value: string }>(defaultBackground);
+  
+  // Modular editor JSON state - DOIT être déclaré AVANT les callbacks qui l'utilisent
+  const [modularPage, setModularPage] = useState<ModularPage>(createEmptyModularPage());
+  const [extractedColors, setExtractedColors] = useState<string[]>([]);
+  
+  const [canvasZoom, setCanvasZoom] = useState(getDefaultZoom(selectedDevice));
+
   // 🧹 CRITICAL: Reset store when leaving editor to prevent contamination
   useEffect(() => {
     return () => {
@@ -428,42 +464,15 @@ useEffect(() => {
   });
 }, [location.search]);
 
-  // État local pour la compatibilité existante
-  const [selectedDevice, setSelectedDevice] = useState<'desktop' | 'tablet' | 'mobile'>(actualDevice);
-
+  // Temp campaign cleanup guard
+  const didTempCleanupRef = useRef(false);
+  
   // Gestionnaire de changement d'appareil avec ajustement automatique du zoom
   const handleDeviceChange = (device: 'desktop' | 'tablet' | 'mobile') => {
     setSelectedDevice(device);
     // Utiliser le zoom sauvegardé si présent
     setCanvasZoom(getDefaultZoom(device));
   };
-
-  // États principaux
-  const [canvasElements, setCanvasElements] = useState<any[]>([]);
-  
-  // Background par écran - chaque écran a son propre background
-  const defaultBackground = mode === 'template'
-    ? { type: 'color' as const, value: '#4ECDC4' }
-    : { type: 'color' as const, value: 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)' };
-  
-  const [screenBackgrounds, setScreenBackgrounds] = useState<ScreenBackgrounds>({
-    screen1: defaultBackground,
-    screen2: defaultBackground,
-    screen3: defaultBackground
-  });
-  
-  // Background global (fallback pour compatibilité)
-  const [canvasBackground, setCanvasBackground] = useState<{ type: 'color' | 'image'; value: string }>(defaultBackground);
-  
-  // Modular editor JSON state - DOIT être déclaré AVANT les callbacks qui l'utilisent
-  const [modularPage, setModularPage] = useState<ModularPage>(createEmptyModularPage());
-  const [extractedColors, setExtractedColors] = useState<string[]>([]);
-  
-  // Temp campaign cleanup guard
-  const didTempCleanupRef = useRef(false);
-
-  
-  const [canvasZoom, setCanvasZoom] = useState(getDefaultZoom(selectedDevice));
 
   useEffect(() => {
     if (!canvasElements.length) return;
