@@ -949,14 +949,18 @@ useEffect(() => {
       return;
     }
 
-    setModularPage((prev) => {
-      let prevScreenModules = prev.screens[screen] || [];
+    // Build the updated modularPage
+    const prevScreenModules = modularPage.screens[screen] || [];
+    let processedModule = module;
+    let filteredPrevModules = prevScreenModules;
 
-      if (module.type === 'BlocCarte' && Array.isArray((module as any).children)) {
-        const cardHasButton = (module as any).children.some((child: Module) => child?.type === 'BlocBouton');
-        if (cardHasButton) {
-          prevScreenModules = prevScreenModules.filter((m) => m.type !== 'BlocBouton');
-          (module as any).children = (module as any).children.map((child: Module) => {
+    if (module.type === 'BlocCarte' && Array.isArray((module as any).children)) {
+      const cardHasButton = (module as any).children.some((child: Module) => child?.type === 'BlocBouton');
+      if (cardHasButton) {
+        filteredPrevModules = prevScreenModules.filter((m) => m.type !== 'BlocBouton');
+        processedModule = {
+          ...module,
+          children: (module as any).children.map((child: Module) => {
             if (child?.type === 'BlocBouton') {
               return {
                 ...child,
@@ -964,41 +968,41 @@ useEffect(() => {
               } as Module;
             }
             return child;
-          });
-        }
+          })
+        } as Module;
       }
-      const isParticiperButton = module.type === 'BlocBouton' && (module.label || '').trim().toLowerCase() === 'participer';
+    }
+    
+    const isParticiperButton = processedModule.type === 'BlocBouton' && (processedModule.label || '').trim().toLowerCase() === 'participer';
 
-      let updatedModules: Module[];
-      if (isParticiperButton) {
-        // Participer est supposé unique et restera en fin de tableau
-        updatedModules = [...prevScreenModules, module];
+    let updatedModules: Module[];
+    if (isParticiperButton) {
+      // Participer est supposé unique et restera en fin de tableau
+      updatedModules = [...filteredPrevModules, processedModule];
+    } else {
+      const participateIndex = filteredPrevModules.findIndex((m) => m.type === 'BlocBouton' && (m as BlocBouton).label?.trim().toLowerCase() === 'participer');
+      if (participateIndex >= 0) {
+        updatedModules = [
+          processedModule,
+          ...filteredPrevModules.slice(0, participateIndex),
+          filteredPrevModules[participateIndex],
+          ...filteredPrevModules.slice(participateIndex + 1)
+        ];
       } else {
-        const participateIndex = prevScreenModules.findIndex((m) => m.type === 'BlocBouton' && (m as BlocBouton).label?.trim().toLowerCase() === 'participer');
-        if (participateIndex >= 0) {
-          updatedModules = [
-            module,
-            ...prevScreenModules.slice(0, participateIndex),
-            prevScreenModules[participateIndex],
-            ...prevScreenModules.slice(participateIndex + 1)
-          ];
-        } else {
-          updatedModules = [module, ...prevScreenModules];
-        }
+        updatedModules = [processedModule, ...filteredPrevModules];
       }
+    }
 
-      const next: ModularPage = {
-        screens: {
-          ...prev.screens,
-          [screen]: updatedModules
-        },
-        _updatedAt: Date.now()
-      };
+    const next: ModularPage = {
+      screens: {
+        ...modularPage.screens,
+        [screen]: updatedModules
+      },
+      _updatedAt: Date.now()
+    };
 
-      persistModular(next);
-      return next;
-    });
-  }, [persistModular]);
+    persistModular(next);
+  }, [modularPage.screens, getDefaultButtonLabel, persistModular]);
 
   const handleUpdateModule = useCallback((id: string, patch: Partial<Module>) => {
     const nextScreens: ModularPage['screens'] = { ...modularPage.screens };
