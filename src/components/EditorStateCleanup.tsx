@@ -13,29 +13,52 @@ const EditorStateCleanup: React.FC = () => {
   useEffect(() => {
     // Déterminer le type d'éditeur basé sur la route
     const getEditorType = () => {
-      if (location.pathname === '/form-editor') return 'form-editor';
-      if (location.pathname === '/jackpot-editor') return 'jackpot-editor';
-      if (location.pathname === '/quiz-editor') return 'quiz-editor';
-      if (location.pathname === '/scratch-card-editor') return 'scratch-card-editor';
+      const p = location.pathname;
+      if (p === '/form-editor') return 'form-editor';
+      if (p === '/jackpot-editor' || p === '/jackpotEditor') return 'jackpot-editor';
+      if (p === '/quiz-editor') return 'quiz-editor';
+      if (p === '/scratch-editor' || p === '/scratch-card-editor') return 'scratch-editor';
       return 'default';
     };
-    
+
     const currentEditorType = getEditorType();
-    
+
+    // Helper: suppression ciblée des clés localStorage liées aux fonds/zoom
+    const wipeLocalStorageForEditor = (editorType: string) => {
+      try {
+        const prefixes: string[] = [];
+        // Fonds Design communs aux éditeurs modernes (Jackpot/Scratch/Quiz/Form)
+        prefixes.push('design-bg-');
+        prefixes.push('editor-zoom-');
+        // Spécifiques Form/Quiz si nécessaire
+        if (editorType === 'form-editor') prefixes.push('form-bg-');
+        if (editorType === 'quiz-editor') prefixes.push('quiz-bg-', 'quiz-bg-owner', 'quiz-modules-', 'quiz-layer-');
+
+        for (let i = localStorage.length - 1; i >= 0; i--) {
+          const key = localStorage.key(i);
+          if (!key) continue;
+          if (prefixes.some((pfx) => key.startsWith(pfx))) {
+            try { localStorage.removeItem(key); } catch {}
+          }
+        }
+      } catch {}
+    };
+
     // Nettoyer les états des autres éditeurs pour éviter les conflits
-    const allEditorTypes = ['form-editor', 'jackpot-editor', 'quiz-editor', 'scratch-card-editor', 'default'];
+    const allEditorTypes = ['form-editor', 'jackpot-editor', 'quiz-editor', 'scratch-editor', 'default'];
     const otherEditorTypes = allEditorTypes.filter(type => type !== currentEditorType);
-    
+
     // Reset les états des autres éditeurs
     otherEditorTypes.forEach(editorType => {
       resetEditorState(editorType);
     });
-    
+
     console.log(`🧹 [EditorStateCleanup] Nettoyage des états pour l'éditeur: ${currentEditorType}`);
 
-    // Forcer le reset de l'éditeur courant à la fermeture/actualisation
+    // Forcer le reset de l'éditeur courant à la fermeture/actualisation + purge des backgrounds/zoom
     const handleBeforeUnload = () => {
       try {
+        wipeLocalStorageForEditor(currentEditorType);
         resetEditorState(currentEditorType);
       } catch {}
     };
@@ -46,6 +69,7 @@ const EditorStateCleanup: React.FC = () => {
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
       try {
+        wipeLocalStorageForEditor(currentEditorType);
         resetEditorState(currentEditorType);
       } catch {}
     };
