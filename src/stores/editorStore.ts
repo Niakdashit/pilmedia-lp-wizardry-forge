@@ -481,23 +481,14 @@ export const useEditorStore = create<EditorStore>()(
     
     // Campaign cache management for complete isolation
     saveToCampaignCache: (campaignId, data) => {
-      console.log('💾 [EditorStore] Saving to campaign cache:', campaignId);
-      
-      const cacheData: CampaignCache = {
-        ...data,
-        lastAccessed: Date.now()
-      };
-      
-      // Save to in-memory cache
+      console.log('💾 [EditorStore] Saving to campaign cache (memory only):', campaignId);
+      const cacheData: CampaignCache = { ...data, lastAccessed: Date.now() };
       set((state) => ({
         campaignDataCache: {
           ...state.campaignDataCache,
           [campaignId]: cacheData
         }
       }));
-      
-      // Local cache to localStorage is disabled to avoid quota issues
-      // CampaignStorage.saveCampaignState(campaignId, data);
     },
     
     loadFromCampaignCache: (campaignId) => {
