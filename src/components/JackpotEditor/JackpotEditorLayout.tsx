@@ -561,6 +561,14 @@ useEffect(() => {
   useEffect(() => {
     const id = (campaignState as any)?.id as string | undefined;
     const name = (campaignState as any)?.name as string | undefined;
+    
+    const isUuid = (v?: string) => !!v && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v);
+    
+    // Guard: for existing campaigns, wait until the name is loaded to avoid false prompts
+    if (isUuid(id) && (!name || !name.trim())) {
+      return;
+    }
+
     const promptedKey = id ? `campaign:name:prompted:${id}` : `campaign:name:prompted:new:jackpot`;
     const alreadyPrompted = typeof window !== 'undefined' ? localStorage.getItem(promptedKey) === '1' : true;
     const defaultNames = new Set([
