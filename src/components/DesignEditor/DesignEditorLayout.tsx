@@ -36,6 +36,19 @@ import { useCampaignStateSync } from '@/hooks/useCampaignStateSync';
 import { generateTempCampaignId, isTempCampaignId, clearTempCampaignData } from '@/utils/tempCampaignId';
 import { supabase } from '@/integrations/supabase/client';
 
+// Local helper to generate unique IDs for modular elements/buttons
+// Uses crypto.randomUUID when available, with a robust fallback
+const generateUniqueId = (prefix: string = 'id') => {
+  try {
+    if (typeof crypto !== 'undefined' && typeof (crypto as any).randomUUID === 'function') {
+      return `${prefix}_${(crypto as any).randomUUID()}`;
+    }
+  } catch {}
+  const rand = Math.random().toString(36).slice(2);
+  const ts = Date.now().toString(36);
+  return `${prefix}_${rand}_${ts}`;
+};
+
 const KeyboardShortcutsHelp = lazy(() => import('../shared/KeyboardShortcutsHelp'));
 const MobileStableEditor = lazy(() => import('./components/MobileStableEditor'));
 

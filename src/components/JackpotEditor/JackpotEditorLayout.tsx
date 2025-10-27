@@ -213,6 +213,82 @@ const { syncAllStates } = useCampaignStateSync();
   useEffect(() => {
     return () => {
       console.log('🧹 [JackpotEditor] Unmounting - resetting store for next editor');
+      try {
+        const id = (campaignState as any)?.id as string | undefined;
+        const isUuid = (v?: string) => !!v && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v);
+        if (isUuid(id)) {
+          try {
+            syncAllStates({
+              canvasElements,
+              modularPage,
+              screenBackgrounds,
+              extractedColors,
+              selectedDevice,
+              canvasZoom
+            });
+
+  // Helper: persist immediately (used on tab hide/unload)
+  const persistNow = useCallback(async () => {
+    try {
+      const id = (campaignState as any)?.id as string | undefined;
+      const isUuid = (v?: string) => !!v && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v);
+      if (!isUuid(id)) return;
+      try {
+        syncAllStates({
+          canvasElements,
+          modularPage,
+          screenBackgrounds,
+          extractedColors,
+          selectedDevice,
+          canvasZoom
+        });
+      } catch {}
+      const base = useEditorStore.getState().campaign || campaignState || {};
+      const payload: any = {
+        ...base,
+        type: 'jackpot',
+        jackpotConfig: (base as any)?.jackpotConfig,
+        modularPage,
+        canvasConfig: {
+          ...((base as any)?.canvasConfig || {}),
+          elements: canvasElements,
+          screenBackgrounds,
+          device: selectedDevice,
+          zoom: canvasZoom
+        }
+      };
+      await saveCampaignToDB(payload, saveCampaign);
+    } catch {}
+  }, [campaignState, canvasElements, modularPage, screenBackgrounds, extractedColors, selectedDevice, canvasZoom, saveCampaign, syncAllStates]);
+
+  // Save on page/tab hide/unload
+  useEffect(() => {
+    const onHide = () => { void persistNow(); };
+    const onBeforeUnload = () => { void persistNow(); };
+    document.addEventListener('visibilitychange', onHide);
+    window.addEventListener('pagehide', onHide);
+    window.addEventListener('beforeunload', onBeforeUnload);
+    return () => {
+      document.removeEventListener('visibilitychange', onHide);
+      window.removeEventListener('pagehide', onHide);
+      window.removeEventListener('beforeunload', onBeforeUnload);
+    };
+  }, [persistNow]);
+          } catch {}
+          const payload: any = {
+            ...(useEditorStore.getState().campaign || campaignState || {}),
+            modularPage,
+            canvasConfig: {
+              ...((campaignState as any)?.canvasConfig || {}),
+              elements: canvasElements,
+              screenBackgrounds,
+              device: selectedDevice,
+              zoom: canvasZoom
+            }
+          };
+          try { void saveCampaignToDB(payload, saveCampaign); } catch {}
+        }
+      } catch {}
       resetCampaign();
     };
   }, [resetCampaign]);
@@ -317,6 +393,40 @@ useEffect(() => {
     if (isNewCampaignGlobal) clearNewCampaignFlag();
   }
 }, [location.pathname]);
+
+// 🧹 CRITICAL: Clean temporary campaigns - reset background images and local backgrounds
+useEffect(() => {
+  const params = new URLSearchParams(location.search);
+  const id = params.get('campaign');
+  if (!id || !isTempCampaignId(id)) return;
+  
+  console.log('🧹 [JackpotEditor] Cleaning temp campaign:', id);
+  
+  // Clear localStorage namespaced temp data
+  clearTempCampaignData(id);
+  
+  // Reset background images in global campaign state
+  setCampaign((prev: any) => {
+    if (!prev) return prev;
+    return {
+      ...prev,
+      design: {
+        ...(prev.design || {}),
+        backgroundImage: undefined,
+        mobileBackgroundImage: undefined
+      }
+    };
+  });
+  
+  // Reset editor backgrounds to empty color for all screens
+  const defaultBg = { type: 'color' as const, value: '' };
+  setCanvasBackground(defaultBg);
+  setScreenBackgrounds({
+    screen1: defaultBg,
+    screen2: defaultBg,
+    screen3: defaultBg
+  });
+}, [location.search]);
 
   // État local pour la compatibilité existante
   const [selectedDevice, setSelectedDevice] = useState<'desktop' | 'tablet' | 'mobile'>(actualDevice);
@@ -513,6 +623,8 @@ useEffect(() => {
     try {
       const payload: any = {
         ...(campaignState || {}),
+        type: 'jackpot',
+        jackpotConfig: (campaignState as any)?.jackpotConfig,
         // ✅ CRITICAL: Include modularPage for autosave
         modularPage,
         canvasElements,
@@ -522,7 +634,8 @@ useEffect(() => {
           ...(campaignState as any)?.canvasConfig,
           elements: canvasElements,
           screenBackgrounds,
-          device: selectedDevice
+          device: selectedDevice,
+          zoom: canvasZoom
         }
       };
       console.log('💾 [JackpotEditor] Autosave complet → DB', {

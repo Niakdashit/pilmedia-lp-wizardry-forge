@@ -91,6 +91,8 @@ const transformScratchStateToGameConfig = (state?: any) => {
       };
     });
 
+  // NOTE: persistNow is defined at component scope (moved out of this helper)
+
   const safeCards = cards.length > 0
     ? cards
     : [{
@@ -285,6 +287,32 @@ const { syncAllStates } = useCampaignStateSync();
 useEffect(() => {
   return () => {
     console.log('🧹 [ScratchCardEditor] Unmounting - resetting store for next editor');
+    try {
+      // Persist last known state before reset (also for temp ids; insert if needed)
+        // Ensure all local states are synchronized into the store
+        try {
+          syncAllStates({
+            canvasElements,
+            modularPage,
+            screenBackgrounds,
+            extractedColors,
+            selectedDevice,
+            canvasZoom,
+          });
+        } catch {}
+        const payload: any = {
+          ...(useEditorStore.getState().campaign || campaignState || {}),
+          modularPage,
+          canvasConfig: {
+            ...((campaignState as any)?.canvasConfig || {}),
+            elements: canvasElements,
+            screenBackgrounds,
+            device: selectedDevice,
+            zoom: canvasZoom,
+          },
+        };
+        try { void saveCampaignToDB(payload, saveCampaign); } catch {}
+    } catch {}
     resetCampaign();
   };
 }, [resetCampaign]);
@@ -389,6 +417,40 @@ useEffect(() => {
     if (isNewCampaignGlobal) clearNewCampaignFlag();
   }
 }, [location.pathname]);
+
+// 🧹 CRITICAL: Clean temporary campaigns - reset background images and local backgrounds
+useEffect(() => {
+  const params = new URLSearchParams(location.search);
+  const id = params.get('campaign');
+  if (!id || !isTempCampaignId(id)) return;
+  
+  console.log('🧹 [ScratchEditor] Cleaning temp campaign:', id);
+  
+  // Clear localStorage namespaced temp data
+  clearTempCampaignData(id);
+  
+  // Reset background images in global campaign state
+  setCampaign((prev: any) => {
+    if (!prev) return prev;
+    return {
+      ...prev,
+      design: {
+        ...(prev.design || {}),
+        backgroundImage: undefined,
+        mobileBackgroundImage: undefined
+      }
+    };
+  });
+  
+  // Reset editor backgrounds to empty color for all screens
+  const defaultBg = { type: 'color' as const, value: '' };
+  setCanvasBackground(defaultBg);
+  setScreenBackgrounds({
+    screen1: defaultBg,
+    screen2: defaultBg,
+    screen3: defaultBg
+  });
+}, [location.search]);
 
   // État local pour la compatibilité existante
   const [selectedDevice, setSelectedDevice] = useState<'desktop' | 'tablet' | 'mobile'>(actualDevice);
@@ -571,12 +633,15 @@ useEffect(() => {
 // 💾 Autosave complet: canvas + modules + tous les états
 useEffect(() => {
   const id = (campaignState as any)?.id as string | undefined;
-  if (!id) return;
-  if (selectedCampaignId && id !== selectedCampaignId) return;
+  // Allow insert when no id yet; keep guard only when a selectedCampaignId is set and mismatched
+  if (selectedCampaignId && id && id !== selectedCampaignId) return;
   const t = window.setTimeout(async () => {
     try {
       const payload: any = {
         ...(campaignState || {}),
+        type: 'scratch',
+        // include scratch derived config for DB
+        scratchConfig: transformScratchStateToGameConfig(scratchState),
         // ✅ CRITICAL: Include modularPage for autosave
         modularPage,
         canvasElements,
@@ -593,12 +658,16 @@ useEffect(() => {
         canvasElements: canvasElements.length,
         modularScreens: Object.keys(modularPage?.screens || {}).length
       });
-      await saveCampaignToDB(payload, saveCampaign);
+      const saved = await saveCampaignToDB(payload, saveCampaign);
+      // Update store with new UUID to avoid multiple inserts
+      if (saved?.id && (!id || id !== saved.id)) {
+        setCampaign((prev: any) => ({ ...(prev || {}), id: saved.id }));
+      }
       setIsModified(false);
     } catch (e) {
       console.warn('⚠️ [ScratchEditor] Autosave failed', e);
     }
-  }, 1000);
+  }, 800);
   return () => clearTimeout(t);
 }, [campaignState?.id, selectedCampaignId, canvasElements, screenBackgrounds, selectedDevice, modularPage]);
 

@@ -223,6 +223,8 @@ const FormEditorLayout: React.FC<FormEditorLayoutProps> = ({ mode = 'campaign', 
   const { syncBackground } = useEditorPreviewSync();
   // Campagne centralisée (source de vérité pour les champs de contact)
   const campaignState = useEditorStore((s) => s.campaign);
+  // Selected campaign ID from store (used by guards below)
+  const selectedCampaignId = useEditorStore((s) => s.selectedCampaignId);
 
   // Supabase campaigns API
   const { saveCampaign } = useCampaigns();
