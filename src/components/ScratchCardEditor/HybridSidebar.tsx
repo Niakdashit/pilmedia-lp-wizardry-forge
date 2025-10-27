@@ -447,7 +447,6 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
     showQuizPanel,
     showWheelPanel,
     showDesignPanel,
-    activeTab,
     onDesignPanelChange
   ]);
 
