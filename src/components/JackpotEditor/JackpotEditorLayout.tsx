@@ -2243,6 +2243,19 @@ useEffect(() => {
   const id = (campaignState as any)?.id as string | undefined;
   if (!id || didTempCleanupRef.current) return;
   if (!isTempCampaignId(id)) return;
+
+  // Guard: do NOT cleanup if user already added modules/backgrounds
+  const s1 = modularPage?.screens?.screen1 || [];
+  const s2 = modularPage?.screens?.screen2 || [];
+  const s3 = modularPage?.screens?.screen3 || [];
+  const hasCustomModules = (
+    s1.some((m: any) => m?.type !== 'BlocBouton' || (m?.label || '').trim().toLowerCase() !== 'participer') ||
+    s2.length > 0 ||
+    s3.some((m: any) => m?.type !== 'BlocBouton' || (m?.label || '').trim().toLowerCase() !== 'rejouer') ||
+    (canvasElements?.length || 0) > 0
+  );
+  if (hasCustomModules) return;
+
   didTempCleanupRef.current = true;
 
   try { clearTempCampaignData(id); } catch {}

@@ -26,6 +26,7 @@ export const useCampaignSettings = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const setCampaign = useEditorStore((s) => s.setCampaign);
+  const selectCampaign = useEditorStore((s) => s.selectCampaign);
 
   // Helper: detect UUID v4 format
   const isUuid = (v: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v);
@@ -301,6 +302,19 @@ export const useCampaignSettings = () => {
         } as any));
       } catch (e) {
         console.warn('[useCampaignSettings] local store sync skipped', e);
+      }
+
+      // Ensure editor store and URL reflect the real campaign id
+      try {
+        setCampaign((prev) => prev ? ({ ...prev, id: realId as string }) : prev);
+        selectCampaign(realId as string);
+        if (typeof window !== 'undefined') {
+          const url = new URL(window.location.href);
+          url.searchParams.set('campaign', realId as string);
+          window.history.replaceState({}, '', url.toString());
+        }
+      } catch (e) {
+        console.warn('[useCampaignSettings] id sync skipped', e);
       }
 
       return result as CampaignSettings;
