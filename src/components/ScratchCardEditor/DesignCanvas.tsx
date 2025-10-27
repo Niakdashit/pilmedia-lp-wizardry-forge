@@ -522,14 +522,6 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
           ...prev,
           [targetDevice]: detail.url || null
         }));
-        // Stocker pour l'appareil ciblé pour conserver des images distinctes par device
-        try {
-          const cid = (campaign as any)?.id || 'default';
-          localStorage.setItem(`sc-bg-${cid}-${targetDevice}-${detail.screenId}`, detail.url);
-          console.log(`🔔 [${screenId}] Emitting sc-bg-sync event for ${detail.screenId}`);
-          // Émettre un événement de synchronisation pour les autres canvas
-          window.dispatchEvent(new CustomEvent('sc-bg-sync', { detail: { screenId: detail.screenId } }));
-        } catch {}
         // Mettre aussi à jour le design global (par device) pour la persistance et le preview
         try {
           updateDesign(targetDevice === 'mobile' ? { mobileBackgroundImage: detail.url } : { backgroundImage: detail.url });
@@ -539,22 +531,6 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     window.addEventListener('applyBackgroundCurrentScreen', handler as EventListener);
     return () => window.removeEventListener('applyBackgroundCurrentScreen', handler as EventListener);
   }, [screenId, selectedDevice]);
-
-  // Recharger l'image de fond depuis sessionStorage quand on change de device
-  useEffect(() => {
-    try {
-      const storedBg = localStorage.getItem(`sc-bg-${selectedDevice}-${screenId}`);
-      if (storedBg) {
-        console.log(`🔄 [${screenId}] Reloading background for ${selectedDevice}:`, storedBg.substring(0, 50) + '...');
-        setDeviceBackgrounds(prev => ({
-          ...prev,
-          [selectedDevice]: storedBg
-        }));
-      }
-    } catch (e) {
-      console.error('Error loading background from sessionStorage:', e);
-    }
-  }, [selectedDevice, screenId]);
 
   // Listen for device-scoped apply to all screens; apply to ALL screens for the specified device
   useEffect(() => {
@@ -569,12 +545,6 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
         ...prev,
         [targetDevice]: detail.url || null
       }));
-      // Stocker pour l'appareil ciblé afin de conserver les images distinctes par device
-      try {
-        const cid = (campaign as any)?.id || 'default';
-        localStorage.setItem(`sc-bg-${cid}-${targetDevice}-${screenId}`, detail.url);
-        console.log(`✅ [${screenId}] Applied background to device ${targetDevice}`);
-      } catch {}
       // Mettre aussi à jour le design global (par device) pour la persistance et le preview
       try {
         updateDesign(targetDevice === 'mobile' ? { mobileBackgroundImage: detail.url } : { backgroundImage: detail.url });
@@ -597,65 +567,12 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
           ...prev,
           [targetDevice]: null
         }));
-        try {
-          localStorage.removeItem(`sc-bg-${targetDevice}-${screenId}`);
-        } catch {}
       }
     };
     window.addEventListener('clearBackgroundOtherScreens', handler as EventListener);
     return () => window.removeEventListener('clearBackgroundOtherScreens', handler as EventListener);
   }, [screenId, selectedDevice]);
 
-  // Charger toutes les images de fond au montage initial (une seule fois)
-  useEffect(() => {
-    const loadAllBackgrounds = () => {
-      try {
-        const devices: Array<'desktop' | 'tablet' | 'mobile'> = ['desktop', 'tablet', 'mobile'];
-        const loadedBackgrounds: Record<string, string | null> = {};
-        
-        devices.forEach(device => {
-          const saved = localStorage.getItem(`sc-bg-${device}-${screenId}`);
-          loadedBackgrounds[device] = saved || null;
-        });
-        
-        setDeviceBackgrounds(loadedBackgrounds);
-      } catch {}
-    };
-
-    // Charger au montage
-    loadAllBackgrounds();
-
-    // Écouter les changements de storage pour synchroniser entre les différents canvas
-    const handleStorageSync = (e: Event) => {
-      const detail = (e as CustomEvent<any>)?.detail;
-      if (detail?.screenId === screenId) {
-        loadAllBackgrounds();
-      }
-    };
-
-    window.addEventListener('sc-bg-sync', handleStorageSync as EventListener);
-    return () => window.removeEventListener('sc-bg-sync', handleStorageSync as EventListener);
-  }, [screenId]); // Uniquement au changement de screenId, pas de selectedDevice
-
-  // Recharger les backgrounds quand on change de device pour s'assurer d'avoir les bonnes données
-  useEffect(() => {
-    const loadAllBackgrounds = () => {
-      try {
-        const devices: Array<'desktop' | 'tablet' | 'mobile'> = ['desktop', 'tablet', 'mobile'];
-        const loadedBackgrounds: Record<string, string | null> = {};
-        
-        devices.forEach(device => {
-          const saved = localStorage.getItem(`sc-bg-${device}-${screenId}`);
-          loadedBackgrounds[device] = saved || null;
-        });
-        
-        console.log(`🖼️ [${screenId}] Loading backgrounds for device ${selectedDevice}:`, loadedBackgrounds);
-        setDeviceBackgrounds(loadedBackgrounds);
-      } catch {}
-    };
-    
-    loadAllBackgrounds();
-  }, [selectedDevice, screenId]); // Recharger quand device OU screen change
 
   // Fallback: si aucune image en sessionStorage, utiliser design de campagne (par device)
   useEffect(() => {
