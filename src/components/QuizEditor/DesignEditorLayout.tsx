@@ -27,6 +27,7 @@ import { getEditorDeviceOverride } from '@/utils/deviceOverrides';
 import { useEditorPreviewSync } from '@/hooks/useEditorPreviewSync';
 import { useCampaignSettings } from '@/hooks/useCampaignSettings';
 import type { ScreenBackgrounds } from '@/types/background';
+import { useEditorUnmountSave } from '@/hooks/useEditorUnmountSave';
 
 
 import { useCampaigns } from '@/hooks/useCampaigns';
@@ -534,50 +535,17 @@ const { syncAllStates } = useCampaignStateSync();
     canvasZoomRef.current = canvasZoom;
   }, [canvasZoom]);
 
-  // 🧹 CRITICAL: Save complete state before unmount using refs to avoid closure issues
-  useEffect(() => {
-    return () => {
-      console.log('🧹 [QuizEditor] Unmounting - saving before reset');
-      
-      try {
-        const id = (campaignState as any)?.id;
-        const isUuid = (v?: string) => 
-          !!v && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v);
-        
-        if (isUuid(id)) {
-          const payload: any = {
-            ...(campaignState || {}),
-            type: 'quiz',
-            extractedColors,
-            modularPage: modularPageRef.current || createEmptyModularPage(),
-            canvasElements: canvasElementsRef.current,
-            screenBackgrounds: screenBackgroundsRef.current || { screen1: { type: 'color', value: '' }, screen2: { type: 'color', value: '' }, screen3: { type: 'color', value: '' } },
-            selectedDevice,
-            canvasZoom: canvasZoomRef.current,
-            quizConfig: (campaignState as any)?.quizConfig,
-            canvasConfig: {
-              ...(campaignState as any)?.canvasConfig,
-              elements: canvasElementsRef.current,
-              screenBackgrounds: screenBackgroundsRef.current,
-              device: selectedDevice,
-              zoom: canvasZoomRef.current
-            }
-          };
-          
-          console.log(`💾 [QuizEditor] Saving complete state before unmount`);
-          
-          // Import saveCampaignToDB to save
-          import('@/hooks/useModernCampaignEditor/saveHandler').then(({ saveCampaignToDB }) => {
-            void saveCampaignToDB(payload, saveCampaign);
-          });
-        }
-      } catch (e) {
-        console.error(`❌ [QuizEditor] Failed to save on unmount:`, e);
-      }
-      
-      resetCampaign();
-    };
-  }, [resetCampaign, campaignState, saveCampaign, selectedDevice, extractedColors]);
+  // 🧹 CRITICAL: Save complete state before unmount to prevent data loss
+  // Placed here AFTER all state declarations to avoid TDZ errors
+  useEditorUnmountSave('quiz', {
+    canvasElements,
+    modularPage,
+    screenBackgrounds,
+    extractedColors,
+    selectedDevice,
+    canvasZoom,
+    gameConfig: (campaignState as any)?.quizConfig
+  }, saveCampaign);
 
   useEffect(() => {
     if (!canvasElements.length) return;
