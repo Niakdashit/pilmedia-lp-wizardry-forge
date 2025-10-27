@@ -556,6 +556,22 @@ useEffect(() => {
     const id = (campaignState as any)?.id as string | undefined;
     const name = (campaignState as any)?.name as string | undefined;
     
+    const isUuid = (v?: string) => !!v && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v);
+
+    // Detect an explicit campaign id in URL (e.g. ?campaign= or ?id=)
+    let urlId: string | null = null;
+    try {
+      const search = typeof window !== 'undefined' ? window.location.search : '';
+      const sp = new URLSearchParams(search);
+      urlId = sp.get('campaign') || sp.get('id');
+    } catch {}
+    
+    // Guards: when editing an existing campaign (from id in state or URL),
+    // wait until the campaign name has been loaded to avoid false prompts
+    if ((isUuid(id) || !!urlId) && (!name || !name.trim())) {
+      return;
+    }
+    
     console.log('🔍 [DesignEditor] Name modal check:', {
       campaignId: id,
       campaignName: name,

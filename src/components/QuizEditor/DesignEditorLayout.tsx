@@ -998,10 +998,18 @@ useEffect(() => {
     const id = (campaignState as any)?.id as string | undefined;
     const name = (campaignState as any)?.name as string | undefined;
     
+    const isUuid = (v?: string) => !!v && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v);
+    
     // CRITICAL: Don't show modal until campaign is fully loaded from DB
     // If URL has a campaign ID but state doesn't match yet, campaign is still loading
     if (urlCampaignId && urlCampaignId !== id) {
       console.log('⏳ [QuizEditor] Campaign still loading, waiting...', { urlCampaignId, stateId: id });
+      return;
+    }
+    
+    // Guards: when editing an existing campaign (from id in state or URL),
+    // wait until the campaign name has been loaded to avoid false prompts
+    if ((isUuid(id) || !!urlCampaignId) && (!name || !name.trim())) {
       return;
     }
     
