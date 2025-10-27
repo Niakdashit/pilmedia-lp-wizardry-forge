@@ -98,8 +98,9 @@ export const useCampaignsList = () => {
           created_by: campaign.created_by,
           banner_url: campaign.banner_url,
           participants,
+          // Fallback to created_at if dates are missing (ensures all campaigns have displayable dates)
           startDate: startDate || campaign.created_at,
-          endDate: endDate || campaign.created_at,
+          endDate: endDate || new Date(new Date(campaign.created_at).getTime() + 30 * 24 * 60 * 60 * 1000).toISOString(),
         };
       });
 

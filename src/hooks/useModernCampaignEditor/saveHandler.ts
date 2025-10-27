@@ -186,9 +186,9 @@ export const saveCampaignToDB = async (
     // Form fields
     form_fields: normalizedFormFields,
     
-    // Campaign timing
-    start_date: campaign?.start_date,
-    end_date: campaign?.end_date,
+    // Campaign timing - with default dates to ensure campaigns always have valid dates
+    start_date: campaign?.start_date || new Date().toISOString(),
+    end_date: campaign?.end_date || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
     
     // Media assets
     thumbnail_url: campaign?.thumbnail_url,
