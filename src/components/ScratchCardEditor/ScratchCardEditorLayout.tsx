@@ -2564,6 +2564,77 @@ const handleSaveCampaignName = useCallback(async () => {
     navigate('/dashboard');
   }, [validateCampaign, handleSave, navigate, syncAllStates, canvasElements, modularPage, screenBackgrounds, extractedColors, selectedDevice, canvasZoom, campaignState]);
 
+  // Sync and save before opening settings
+  const handleBeforeOpenSettings = useCallback(async () => {
+    console.log('🔄 [ScratchEditor] Preparing to open settings - syncing all states...');
+    
+    // Synchroniser tous les états locaux avec le store
+    syncAllStates({
+      canvasElements,
+      modularPage,
+      screenBackgrounds,
+      extractedColors,
+      selectedDevice,
+      canvasZoom
+    });
+    
+    console.log('📊 [ScratchEditor] States to sync:', {
+      modularPageScreens: Object.keys(modularPage?.screens || {}),
+      screen1ModulesCount: modularPage?.screens?.screen1?.length || 0,
+      screen2ModulesCount: modularPage?.screens?.screen2?.length || 0,
+      screen3ModulesCount: modularPage?.screens?.screen3?.length || 0,
+      canvasElementsCount: canvasElements.length,
+      hasScreenBackgrounds: Object.keys(screenBackgrounds).length > 0
+    });
+    
+    // Si la campagne existe déjà, sauvegarder immédiatement
+    const campaignId = (campaignState as any)?.id;
+    if (campaignId && !campaignId.startsWith('temp-')) {
+      console.log('💾 [ScratchEditor] Saving existing campaign before opening settings...');
+      
+      const payload: any = {
+        ...(campaignState || {}),
+        modularPage,
+        canvasElements,
+        screenBackgrounds,
+        selectedDevice,
+        canvasConfig: {
+          ...(campaignState as any)?.canvasConfig,
+          elements: canvasElements,
+          screenBackgrounds,
+          device: selectedDevice,
+          zoom: canvasZoom
+        },
+        config: {
+          ...((campaignState as any)?.config || {}),
+          canvasConfig: {
+            ...((campaignState as any)?.config?.canvasConfig || {}),
+            elements: canvasElements,
+            screenBackgrounds,
+            device: selectedDevice,
+            zoom: canvasZoom
+          },
+          elements: canvasElements,
+          modularPage
+        }
+      };
+      
+      console.log('💾 [ScratchEditor] Payload to save:', {
+        id: payload.id,
+        hasModularPage: !!payload.modularPage,
+        modularPageInConfig: !!payload.config?.modularPage,
+        screen1Modules: payload.modularPage?.screens?.screen1?.length || 0
+      });
+      
+      try {
+        const saved = await saveCampaignToDB(payload, saveCampaign);
+        console.log('✅ [ScratchEditor] Campaign saved before opening settings:', saved?.id);
+      } catch (e) {
+        console.error('❌ [ScratchEditor] Failed to save before opening settings:', e);
+      }
+    }
+  }, [syncAllStates, canvasElements, modularPage, screenBackgrounds, extractedColors, selectedDevice, canvasZoom, campaignState, saveCampaign]);
+
   // Navigate to settings without saving (same destination as Save & Continue)
   const handleNavigateToSettings = useCallback(() => {
     let campaignId = (campaignState as any)?.id as string | undefined;
@@ -2942,6 +3013,7 @@ const handleSaveCampaignName = useCallback(async () => {
             mode={mode}
             onSave={handleSaveAndQuit}
             showSaveCloseButtons={false}
+            onBeforeOpenSettings={handleBeforeOpenSettings}
             campaignId={(campaignState as any)?.id || new URLSearchParams(location.search).get('campaign') || undefined}
           />
 

@@ -29,6 +29,8 @@ interface ScratchToolbarProps {
   showSaveCloseButtons?: boolean;
   // Campaign ID for settings modal
   campaignId?: string;
+  // Callback to sync states before opening settings
+  onBeforeOpenSettings?: () => Promise<void>;
 }
 
 const ScratchToolbar: React.FC<ScratchToolbarProps> = React.memo(({
@@ -45,7 +47,8 @@ const ScratchToolbar: React.FC<ScratchToolbarProps> = React.memo(({
   mode = 'campaign',
   onSave,
   showSaveCloseButtons = true,
-  campaignId
+  campaignId,
+  onBeforeOpenSettings
 }) => {
   const navigate = useNavigate();
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
@@ -68,10 +71,20 @@ const ScratchToolbar: React.FC<ScratchToolbarProps> = React.memo(({
   // Ensure a campaign exists before opening settings
   const handleOpenSettings = useCallback(async () => {
     try {
+      // 🔄 CRITICAL: Sync all local states before opening settings
+      if (onBeforeOpenSettings) {
+        console.log('🔄 [ScratchToolbar] Syncing states before opening settings...');
+        await onBeforeOpenSettings();
+        console.log('✅ [ScratchToolbar] States synced successfully');
+      }
+      
       if (campaignId) {
+        console.log('✅ [ScratchToolbar] Opening settings for existing campaign:', campaignId);
         setIsSettingsModalOpen(true);
         return;
       }
+      
+      console.log('⚠️ [ScratchToolbar] No campaignId, saving campaign first...');
       const payload: any = {
         ...(campaignState || {}),
         name: (campaignState as any)?.name || 'Nouvelle campagne scratch',
@@ -93,18 +106,28 @@ const ScratchToolbar: React.FC<ScratchToolbarProps> = React.memo(({
         game_config: (campaignState as any)?.game_config || (campaignState as any)?.gameConfig || {},
         form_fields: (campaignState as any)?.form_fields || (campaignState as any)?.formFields || [],
       };
+      
+      console.log('💾 [ScratchToolbar] Saving payload:', {
+        hasModularPage: !!payload.modularPage,
+        modularPageScreens: Object.keys(payload.modularPage?.screens || {}),
+        screen1ModulesCount: payload.modularPage?.screens?.screen1?.length || 0,
+        canvasElementsCount: payload.canvasElements?.length || 0
+      });
+      
       const saved = await saveCampaignToDB(payload, saveCampaign);
+      
       if (saved?.id) {
+        console.log('✅ [ScratchToolbar] Campaign saved with ID:', saved.id);
         setCampaign((prev: any) => ({ ...prev, id: saved.id }));
         setIsSettingsModalOpen(true);
       } else {
         alert('Impossible de créer la campagne. Veuillez réessayer.');
       }
     } catch (e) {
-      console.error('[ScratchToolbar] Failed to ensure campaign before opening settings', e);
+      console.error('❌ [ScratchToolbar] Failed to ensure campaign before opening settings', e);
       alert('Erreur lors de la création de la campagne');
     }
-  }, [campaignId, campaignState, saveCampaign, setCampaign]);
+  }, [campaignId, campaignState, saveCampaign, setCampaign, onBeforeOpenSettings]);
 
   const handleSaveAndQuit = async () => {
     const validation = validateCampaign();
