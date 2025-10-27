@@ -1,8 +1,6 @@
 import { create } from 'zustand';
 import { subscribeWithSelector, persist } from 'zustand/middleware';
 import type { OptimizedCampaign } from '../components/ModernEditor/types/CampaignTypes';
-import { CampaignStorage } from '../utils/campaignStorage';
-
 interface ClipboardData {
   type: string; // e.g. 'element', 'style', etc.
   payload: any;
@@ -498,8 +496,8 @@ export const useEditorStore = create<EditorStore>()(
         }
       }));
       
-      // Save to localStorage with namespacing
-      CampaignStorage.saveCampaignState(campaignId, data);
+      // Local cache to localStorage is disabled to avoid quota issues
+      // CampaignStorage.saveCampaignState(campaignId, data);
     },
     
     loadFromCampaignCache: (campaignId) => {
@@ -513,21 +511,8 @@ export const useEditorStore = create<EditorStore>()(
         return state.campaignDataCache[campaignId];
       }
       
-      // Try localStorage
-      const cached = CampaignStorage.loadCampaignState(campaignId);
-      if (cached) {
-        console.log('✅ [EditorStore] Found in localStorage cache');
-        // Load into memory cache
-        set((state) => ({
-          campaignDataCache: {
-            ...state.campaignDataCache,
-            [campaignId]: cached
-          }
-        }));
-        return cached;
-      }
-      
-      console.log('ℹ️ [EditorStore] No cache found for campaign:', campaignId);
+      // Skip localStorage fallback (disabled)
+      console.log('ℹ️ [EditorStore] No local cache fallback (disabled) for campaign:', campaignId);
       return null;
     },
     
@@ -541,8 +526,7 @@ export const useEditorStore = create<EditorStore>()(
         return { campaignDataCache: newCache };
       });
       
-      // Clear from localStorage
-      CampaignStorage.clearCampaign(campaignId);
+      // LocalStorage clear disabled
     },
     
     cleanupOldCaches: () => {
@@ -567,10 +551,8 @@ export const useEditorStore = create<EditorStore>()(
         set({ campaignDataCache: newCache });
       }
       
-      // Clean localStorage
-      const localCleaned = CampaignStorage.cleanupOldCaches();
-      
-      console.log(`✅ [EditorStore] Cleaned ${cleaned + localCleaned} old caches`);
+      // LocalStorage cleanup disabled
+      console.log(`✅ [EditorStore] Cleaned ${cleaned} old caches`);
     },
   })),
   {

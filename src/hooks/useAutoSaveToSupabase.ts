@@ -1,5 +1,4 @@
 import { useEffect, useRef } from 'react';
-import { useEditorStore } from '@/stores/editorStore';
 import { useCampaigns } from './useCampaigns';
 import { saveCampaignToDB } from './useModernCampaignEditor/saveHandler';
 import { toast } from 'sonner';
@@ -33,7 +32,8 @@ export const useAutoSaveToSupabase = (
   } = options;
 
   const { saveCampaign } = useCampaigns();
-  const { saveToCampaignCache } = useEditorStore();
+  // Local cache disabled: we no longer persist to localStorage
+  // const { saveToCampaignCache } = useEditorStore();
   
   const lastSavedRef = useRef<string>('');
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -81,14 +81,7 @@ export const useAutoSaveToSupabase = (
         isSavingRef.current = true;
         console.log('💾 [AutoSave] Starting auto-save to Supabase for campaign:', campaignId);
 
-        // First, save to cache for quick recovery
-        saveToCampaignCache(campaignId, {
-          campaign: campaignData.campaign,
-          canvasElements: campaignData.canvasElements,
-          modularPage: campaignData.modularPage,
-          screenBackgrounds: campaignData.screenBackgrounds,
-          canvasZoom: campaignData.canvasZoom
-        });
+        // Local cache disabled to avoid quota issues
 
         // Prepare campaign data with all editor states
         const campaignToSave = {
@@ -145,7 +138,6 @@ export const useAutoSaveToSupabase = (
     interval,
     campaignData,
     saveCampaign,
-    saveToCampaignCache,
     onSave,
     onError
   ]);

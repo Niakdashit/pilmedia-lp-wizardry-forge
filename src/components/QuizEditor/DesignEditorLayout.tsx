@@ -34,7 +34,7 @@ import { saveCampaignToDB } from '@/hooks/useModernCampaignEditor/saveHandler';
 import { useCampaignStateSync } from '@/hooks/useCampaignStateSync';
 import { quizTemplates } from '../../types/quizTemplates';
 import { supabase } from '@/integrations/supabase/client';
-import { CampaignStorage } from '@/utils/campaignStorage';
+// import { CampaignStorage } from '@/utils/campaignStorage';
 import { useAutoSaveToSupabase } from '@/hooks/useAutoSaveToSupabase';
 import { generateTempCampaignId, isTempCampaignId, clearTempCampaignData, replaceTempWithPersistedId } from '@/utils/tempCampaignId';
 
@@ -271,14 +271,7 @@ useEffect(() => {
   if (currentCampaignId && currentCampaignId !== campaignId) {
     console.log('🔄 [QuizEditor] Switching campaigns, saving current state');
     
-    // Save current campaign state to cache before switching (use refs for current values)
-    saveToCampaignCache(currentCampaignId, {
-      campaign: campaignState,
-      canvasElements: canvasElementsRef.current,
-      modularPage: modularPageRef.current || undefined,
-      screenBackgrounds: screenBackgroundsRef.current || undefined,
-      canvasZoom: canvasZoomRef.current
-    });
+    // Local cache disabled
   }
   
   // Skip if this campaign is already loaded
@@ -345,10 +338,7 @@ useEffect(() => {
         // Update campaign state with loaded data
         setCampaign(campaignData);
         
-        // Save to cache for faster subsequent loads
-        saveToCampaignCache(campaignId, {
-          campaign: campaignData
-        });
+        // Local cache disabled
       }
     } catch (error) {
       console.error('❌ [QuizEditor] Failed to load campaign:', error);
@@ -482,18 +472,9 @@ const { syncAllStates } = useCampaignStateSync();
       // Reset modular page
       setModularPage(createEmptyModularPage());
       
-      // Clear localStorage backgrounds for clean slate using CampaignStorage
+      // LocalStorage cleanup disabled (DB is the source of truth)
       try {
-        const screens: Array<'screen1' | 'screen2' | 'screen3'> = ['screen1','screen2','screen3'];
-        const devices: Array<'desktop' | 'tablet' | 'mobile'> = ['desktop','tablet','mobile'];
-        const newId = (campaignState as any)?.id;
-        if (newId) {
-          screens.forEach((s) => devices.forEach((d) => {
-            try { 
-              CampaignStorage.saveData(newId, `bg-${d}-${s}`, null);
-            } catch {}
-          }));
-        }
+        // no-op
       } catch {}
     }
     
