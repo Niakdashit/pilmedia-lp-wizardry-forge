@@ -101,10 +101,12 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
     setPreviewDevice,
     setIsLoading,
     setIsModified,
-    resetCampaign
+    resetCampaign,
+    initializeNewCampaignWithId
   } = useEditorStore();
   // Campagne centralisée (source de vérité pour les champs de contact)
   const campaignState = useEditorStore((s) => s.campaign);
+  const selectedCampaignId = useEditorStore((s) => s.selectedCampaignId);
   
   // Flag global: nouvelle campagne en cours (empêche auto-injections)
   const isNewCampaignGlobal = useEditorStore(s => s.isNewCampaignGlobal);
@@ -116,6 +118,24 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
   
   // Campaign state synchronization hook
   const { syncAllStates } = useCampaignStateSync();
+
+  // États déclarés AVANT les useEffect qui les utilisent
+  const [canvasElements, setCanvasElements] = useState<any[]>([]);
+  const [selectedDevice, setSelectedDevice] = useState<'desktop' | 'tablet' | 'mobile'>(actualDevice);
+  const defaultBackground = mode === 'template'
+    ? { type: 'color' as const, value: '#4ECDC4' }
+    : { type: 'color' as const, value: 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)' };
+  
+  type BackgroundValue = { type: 'color' | 'image'; value: string; devices?: Partial<Record<'desktop' | 'tablet' | 'mobile', { type: 'color' | 'image'; value: string }>> };
+  const [screenBackgrounds, setScreenBackgrounds] = useState<Record<'screen1' | 'screen2' | 'screen3', BackgroundValue>>({
+    screen1: defaultBackground,
+    screen2: defaultBackground,
+    screen3: defaultBackground
+  });
+  const [canvasBackground, setCanvasBackground] = useState<{ type: 'color' | 'image'; value: string }>(defaultBackground);
+  const [canvasZoom, setCanvasZoom] = useState(getDefaultZoom(selectedDevice));
+  const [modularPage, setModularPage] = useState<ModularPage>(createEmptyModularPage());
+  const [extractedColors, setExtractedColors] = useState<string[]>([]);
 
   // 🧹 CRITICAL: Reset store when leaving editor to prevent contamination
   useEffect(() => {
@@ -211,9 +231,9 @@ useEffect(() => {
           setCanvasBackground({ ...bg });
           
           const defaultScreens = {
-            screen1: defaultBackground,
-            screen2: defaultBackground,
-            screen3: defaultBackground
+            screen1: { type: 'color' as const, value: 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)' },
+            screen2: { type: 'color' as const, value: 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)' },
+            screen3: { type: 'color' as const, value: 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)' }
           };
           const loadedScreens = canvasCfg.screenBackgrounds || defaultScreens;
           setScreenBackgrounds({ ...loadedScreens });
@@ -255,8 +275,7 @@ useEffect(() => {
     clearTempCampaignData(tempId);
     
     // CRITICAL: Initialiser la campagne avec l'ID temporaire dans le store
-    const { initializeNewCampaign } = useEditorStore.getState();
-    initializeNewCampaign('wheel', tempId);
+    initializeNewCampaignWithId('wheel', tempId);
     
     // Mettre à jour l'URL pour inclure le temp ID
     navigate(`${location.pathname}?campaign=${tempId}${searchParams.get('mode') ? `&mode=${searchParams.get('mode')}` : ''}`, { replace: true });
@@ -322,39 +341,11 @@ useEffect(() => {
 }, [location.search]);
 
   
-
-  // État local pour la compatibilité existante
-  const [selectedDevice, setSelectedDevice] = useState<'desktop' | 'tablet' | 'mobile'>(actualDevice);
-
   // Gestionnaire de changement d'appareil avec ajustement automatique du zoom
   const handleDeviceChange = (device: 'desktop' | 'tablet' | 'mobile') => {
     setSelectedDevice(device);
     setCanvasZoom(getDefaultZoom(device));
   };
-
-  // États principaux
-  const [canvasElements, setCanvasElements] = useState<any[]>([]);
-  
-  // Background par écran - chaque écran a son propre background
-  const defaultBackground = mode === 'template'
-    ? { type: 'color' as const, value: '#4ECDC4' }
-    : { type: 'color' as const, value: 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)' };
-  
-  type BackgroundValue = { type: 'color' | 'image'; value: string; devices?: Partial<Record<'desktop' | 'tablet' | 'mobile', { type: 'color' | 'image'; value: string }>> };
-  const [screenBackgrounds, setScreenBackgrounds] = useState<Record<'screen1' | 'screen2' | 'screen3', BackgroundValue>>({
-    screen1: defaultBackground,
-    screen2: defaultBackground,
-    screen3: defaultBackground
-  });
-  
-  // Background global (fallback pour compatibilité)
-  const [canvasBackground, setCanvasBackground] = useState<{ type: 'color' | 'image'; value: string }>(defaultBackground);
-  
-  const [canvasZoom, setCanvasZoom] = useState(getDefaultZoom(selectedDevice));
-
-  // Modular editor JSON state - DOIT être déclaré AVANT les callbacks qui l'utilisent
-  const [modularPage, setModularPage] = useState<ModularPage>(createEmptyModularPage());
-  const [extractedColors, setExtractedColors] = useState<string[]>([]);
 
   // Persistant autosave (debounced) du background pour fiabiliser la sauvegarde sans changer l'UI
   const saveBgTimeoutRef = useRef<number | null>(null);

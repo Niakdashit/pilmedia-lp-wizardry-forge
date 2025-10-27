@@ -1079,6 +1079,37 @@ const handleSaveCampaignName = useCallback(async () => {
   //   }
   // }, [currentScreen, modularPage.screens.screen3, persistModular, screenHasCardButton, getDefaultButtonLabel]);
 
+  // Assurer la présence d'un bouton "Participer" sur l'écran 1
+  React.useEffect(() => {
+    if (currentScreen !== 'screen1') return;
+    
+    const screen1Modules = Array.isArray(modularPage.screens.screen1) ? modularPage.screens.screen1 : [];
+    const hasButton = screen1Modules.some((m) => m.type === 'BlocBouton');
+    
+    if (hasButton) return;
+    
+    const participerButton: BlocBouton = {
+      id: `BlocBouton-${Date.now()}`,
+      type: 'BlocBouton',
+      label: 'Participer',
+      href: '#',
+      background: '#000000',
+      textColor: '#ffffff',
+      borderRadius: 9999,
+      borderWidth: 0,
+      borderColor: '#000000',
+      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+      uppercase: false,
+      bold: false,
+      spacingTop: 0,
+      spacingBottom: 0
+    };
+    
+    const nextScreens: ModularPage['screens'] = { ...modularPage.screens };
+    nextScreens.screen1 = [...screen1Modules, participerButton];
+    persistModular({ screens: nextScreens, _updatedAt: Date.now() });
+  }, [currentScreen, modularPage.screens, persistModular]);
+
   // Modular handlers
   const handleAddModule = useCallback((screen: ScreenId, module: Module) => {
     // Logo : ajouté automatiquement sur tous les écrans en haut
