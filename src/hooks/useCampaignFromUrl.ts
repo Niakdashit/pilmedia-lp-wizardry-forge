@@ -51,18 +51,30 @@ export const useCampaignFromUrl = () => {
 
           // Instrumentation about modularPage
           const modular = loadedCampaign?.config?.modularPage || loadedCampaign?.design?.modularPage;
-          const screens = modular?.screens || [];
-          const modulesCount = screens.reduce((acc: number, s: any) => acc + (s?.modules?.length || 0), 0);
+          const rawScreens = modular?.screens as any;
+          let screensCount = 0;
+          let modulesCount = 0;
+          if (Array.isArray(rawScreens)) {
+            screensCount = rawScreens.length;
+            modulesCount = rawScreens.reduce((acc: number, s: any) => {
+              const list = Array.isArray(s?.modules) ? s.modules : (Array.isArray(s) ? s : []);
+              return acc + (list?.length || 0);
+            }, 0);
+          } else if (rawScreens && typeof rawScreens === 'object') {
+            const values = Object.values(rawScreens as Record<string, any>);
+            screensCount = values.length;
+            modulesCount = values.reduce((acc: number, arr: any) => acc + (Array.isArray(arr) ? arr.length : (Array.isArray(arr?.modules) ? arr.modules.length : 0)), 0);
+          }
           console.log('[useCampaignFromUrl] Campaign loaded', {
             id: loadedCampaign?.id || campaignId,
             type: loadedCampaign?.type,
-            screensCount: screens.length,
+            screensCount,
             modulesCount
           });
           (window as any).__campaignLoaded = {
             id: loadedCampaign?.id || campaignId,
             at: Date.now(),
-            screensCount: screens.length,
+            screensCount,
             modulesCount
           };
         } else {
