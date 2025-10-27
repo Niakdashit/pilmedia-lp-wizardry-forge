@@ -620,7 +620,8 @@ useEffect(() => {
         ...(campaignState || {}),
         type: 'scratch',
         extractedColors, // ✅ Include extracted colors
-        scratchConfig: transformScratchStateToGameConfig(scratchState),
+        // IMPORTANT: use campaign.scratchConfig as source of truth to avoid overwriting UI changes
+        scratchConfig: (campaignState as any)?.scratchConfig,
         modularPage,
         canvasElements,
         screenBackgrounds,
@@ -856,6 +857,32 @@ const handleSaveCampaignName = useCallback(async () => {
 }, [campaignState, newCampaignName, saveCampaign, setCampaign, upsertSettings, location.pathname, location.search, navigate, syncAllStates, canvasElements, modularPage, screenBackgrounds, extractedColors, selectedDevice, canvasZoom, setIsModified]);
   // Quiz config state
   const scratchState = useScratchCardStore((state) => state.config);
+  
+  // Sync store from campaign.scratchConfig so UI changes persist and preview reflects them
+  useEffect(() => {
+    const sc: any = (campaignState as any)?.scratchConfig;
+    if (!sc) return;
+    try {
+      const store = useScratchCardStore.getState();
+      const { updateMaxCards, updateGrid, updateBrush, updateThreshold, updateConfig } = store;
+      // Map grid layout to maxCards
+      if (sc.gridLayout) {
+        const max = sc.gridLayout === '3x2' ? 6 : sc.gridLayout === '2x2' ? 4 : 3;
+        updateMaxCards(max as 3 | 4 | 6);
+      }
+      if (typeof sc.gridSpacing === 'number') updateGrid({ gap: sc.gridSpacing });
+      if (typeof sc.gridRadius === 'number') updateGrid({ borderRadius: sc.gridRadius });
+      if (typeof sc.brushSize === 'number') updateBrush({ radius: sc.brushSize });
+      if (typeof sc.smoothness === 'number') updateBrush({ softness: Math.max(0, Math.min(1, sc.smoothness / 100)) });
+      if (typeof sc.revealThreshold === 'number') updateThreshold(Math.max(0, Math.min(1, sc.revealThreshold / 100)));
+      if (Array.isArray(sc.cards)) {
+        const cards = sc.cards.map((c: any, idx: number) => ({ id: c.id || String(idx + 1), isWinner: !!c.isWinner }));
+        updateConfig({ cards });
+      }
+    } catch (e) {
+      console.warn('⚠️ [ScratchEditor] Failed to sync scratch store from campaign.scratchConfig', e);
+    }
+  }, [campaignState?.scratchConfig]);
   
   const [quizConfig, setQuizConfig] = useState({
     questionCount: 5,
