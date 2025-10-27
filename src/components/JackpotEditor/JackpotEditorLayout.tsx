@@ -261,7 +261,11 @@ const { syncAllStates } = useCampaignStateSync();
   // 🔄 Auto-save to Supabase every 30 seconds (aligned with QuizEditor)
   useAutoSaveToSupabase(
     {
-      campaign: campaignState,
+      campaign: {
+        ...campaignState,
+        type: 'jackpot',
+        jackpotConfig: (campaignState as any)?.jackpotConfig
+      },
       canvasElements,
       modularPage,
       screenBackgrounds,

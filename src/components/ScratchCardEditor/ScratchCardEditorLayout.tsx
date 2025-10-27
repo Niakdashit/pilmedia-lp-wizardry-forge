@@ -467,7 +467,11 @@ useEffect(() => {
   // 🔄 Auto-save to Supabase every 30 seconds (aligned with QuizEditor)
   useAutoSaveToSupabase(
     {
-      campaign: campaignState,
+      campaign: {
+        ...campaignState,
+        type: 'scratch',
+        scratchConfig: (campaignState as any)?.scratchConfig
+      },
       canvasElements,
       modularPage,
       screenBackgrounds,
@@ -606,7 +610,7 @@ useEffect(() => {
   }
 }, [campaignState, selectedCampaignId]);
 
-// 🔗 Miroir local → store: conserve les éléments dans campaign.config.canvasConfig afin d'éviter toute perte
+// 🔄 Miroir local → store: conserve les éléments dans campaign.config.canvasConfig
 useEffect(() => {
   setCampaign((prev: any) => {
     if (!prev) return prev;
@@ -620,7 +624,8 @@ useEffect(() => {
           ...(prev.config?.canvasConfig || {}),
           elements: canvasElements,
           screenBackgrounds,
-          device: selectedDevice
+          device: selectedDevice,
+          zoom: canvasZoom
         },
         // compatibilité avec anciens loaders
         elements: canvasElements,
@@ -629,48 +634,7 @@ useEffect(() => {
     };
     return next as any;
   });
-}, [canvasElements, screenBackgrounds, selectedDevice, modularPage, setCampaign]);
-
-// 💾 Autosave complet: canvas + modules + tous les états
-useEffect(() => {
-  const id = (campaignState as any)?.id as string | undefined;
-  // Allow insert when no id yet; keep guard only when a selectedCampaignId is set and mismatched
-  if (selectedCampaignId && id && id !== selectedCampaignId) return;
-  const t = window.setTimeout(async () => {
-    try {
-      const payload: any = {
-        ...(campaignState || {}),
-        type: 'scratch',
-        extractedColors, // ✅ Include extracted colors
-        scratchConfig: transformScratchStateToGameConfig(scratchState),
-        modularPage,
-        canvasElements,
-        screenBackgrounds,
-        selectedDevice,
-        canvasConfig: {
-          ...(campaignState as any)?.canvasConfig,
-          elements: canvasElements,
-          screenBackgrounds,
-          device: selectedDevice,
-          zoom: canvasZoom
-        }
-      };
-      console.log('💾 [ScratchEditor] Autosave complet → DB', {
-        canvasElements: canvasElements.length,
-        modularScreens: Object.keys(modularPage?.screens || {}).length
-      });
-      const saved = await saveCampaignToDB(payload, saveCampaign);
-      // Update store with new UUID to avoid multiple inserts
-      if (saved?.id && (!id || id !== saved.id)) {
-        setCampaign((prev: any) => ({ ...(prev || {}), id: saved.id }));
-      }
-      setIsModified(false);
-    } catch (e) {
-      console.warn('⚠️ [ScratchEditor] Autosave failed', e);
-    }
-  }, 800);
-  return () => clearTimeout(t);
-}, [campaignState?.id, selectedCampaignId, canvasElements, screenBackgrounds, selectedDevice, modularPage]);
+}, [canvasElements, screenBackgrounds, selectedDevice, modularPage, canvasZoom, setCampaign]);
 
   // Écoute l'évènement global pour appliquer l'image de fond à tous les écrans par device (desktop/tablette/mobile distinct)
   useEffect(() => {
