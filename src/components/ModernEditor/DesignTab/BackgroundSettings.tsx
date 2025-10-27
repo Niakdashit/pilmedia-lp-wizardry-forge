@@ -49,27 +49,30 @@ const BackgroundSettings: React.FC<BackgroundSettingsProps> = ({
     }
   };
 
-  // Charger les fonds depuis localStorage au montage
+  // Charger les fonds depuis localStorage au montage (une seule fois)
   useEffect(() => {
+    // Ne charger que si les deux champs sont vides (nouveau chargement)
+    if (design.backgroundImage || design.mobileBackgroundImage) {
+      return;
+    }
+
     try {
       const desktopBg = localStorage.getItem('modern-bg-desktop');
       const mobileBg = localStorage.getItem('modern-bg-mobile');
       
       if (desktopBg || mobileBg) {
         const updates: any = {};
-        if (desktopBg && !design.backgroundImage) updates.backgroundImage = desktopBg;
-        if (mobileBg && !design.mobileBackgroundImage) updates.mobileBackgroundImage = mobileBg;
+        if (desktopBg) updates.backgroundImage = desktopBg;
+        if (mobileBg) updates.mobileBackgroundImage = mobileBg;
         
-        if (Object.keys(updates).length > 0) {
-          setCampaign((prev: any) => ({
-            ...prev,
-            design: {
-              ...prev.design,
-              ...updates
-            }
-          }));
-          updateDesign(updates);
-        }
+        setCampaign((prev: any) => ({
+          ...prev,
+          design: {
+            ...prev.design,
+            ...updates
+          }
+        }));
+        updateDesign(updates);
       }
     } catch (e) {
       console.warn('Erreur chargement localStorage:', e);
