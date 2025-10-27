@@ -416,6 +416,7 @@ useEffect(() => {
     if (!prev) return prev;
     const next = {
       ...prev,
+      modularPage, // ✅ CRITICAL: Sync modularPage to store
       config: {
         ...(prev.config || {}),
         canvasConfig: {
@@ -426,12 +427,13 @@ useEffect(() => {
           zoom: canvasZoom
         },
         // compat avec anciens loaders
-        elements: canvasElements
+        elements: canvasElements,
+        modularPage // ✅ Also sync in config for compatibility
       }
     };
     return next as any;
   });
-}, [selectedCampaignId, campaignState?.id, canvasElements, screenBackgrounds, selectedDevice, canvasZoom, setCampaign]);
+}, [selectedCampaignId, campaignState?.id, canvasElements, screenBackgrounds, selectedDevice, canvasZoom, modularPage, setCampaign]);
 
 // 💾 Autosave léger des éléments du canvas
 useEffect(() => {

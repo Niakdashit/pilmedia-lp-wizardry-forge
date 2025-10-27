@@ -475,6 +475,7 @@ useEffect(() => {
     if (!prev) return prev;
     const next = {
       ...prev,
+      modularPage, // ✅ CRITICAL: Sync modularPage to store
       config: {
         ...(prev.config || {}),
         canvasConfig: {
@@ -484,12 +485,13 @@ useEffect(() => {
           device: selectedDevice
         },
         // compatibilité avec anciens loaders
-        elements: canvasElements
+        elements: canvasElements,
+        modularPage // ✅ Also sync in config for compatibility
       }
     };
     return next as any;
   });
-}, [canvasElements, screenBackgrounds, selectedDevice, setCampaign]);
+}, [canvasElements, screenBackgrounds, selectedDevice, modularPage, setCampaign]);
 
 // 💾 Autosave léger et non intrusif des éléments du canvas
 useEffect(() => {
