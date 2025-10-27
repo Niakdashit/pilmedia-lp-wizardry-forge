@@ -53,7 +53,10 @@ export function clearTempCampaignData(campaignId: string): void {
       'quiz-modules-',
       'quiz-layer-',
       'form-bg-',
-      'editor-zoom-'
+      'editor-zoom-',
+      // Scratch/Jackpot backgrounds + modern editor backgrounds
+      'sc-bg-',
+      'modern-bg-'
     ];
 
     // Iterate through all localStorage keys and remove matches

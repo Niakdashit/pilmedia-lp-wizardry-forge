@@ -33,6 +33,11 @@ const EditorStateCleanup: React.FC = () => {
         // Spécifiques Form/Quiz si nécessaire
         if (editorType === 'form-editor') prefixes.push('form-bg-');
         if (editorType === 'quiz-editor') prefixes.push('quiz-bg-', 'quiz-bg-owner', 'quiz-modules-', 'quiz-layer-');
+        // Spécifiques Scratch/Jackpot (fonds de cartes et modern background)
+        if (editorType === 'scratch-editor' || editorType === 'jackpot-editor') {
+          prefixes.push('sc-bg-');
+          prefixes.push('modern-bg-');
+        }
 
         for (let i = localStorage.length - 1; i >= 0; i--) {
           const key = localStorage.key(i);
