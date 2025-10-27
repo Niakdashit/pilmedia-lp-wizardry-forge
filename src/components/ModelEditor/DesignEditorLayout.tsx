@@ -112,19 +112,12 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
     const campaignId = params.get('campaign');
     
     if (!campaignId) {
-      // 🆕 Nouvelle campagne : RESET COMPLET des états locaux
-      console.log('🆕 [ModelEditor] Mount: no campaign id → initializing fresh campaign');
-      
-      const freshBg = { type: 'color' as const, value: 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)' };
-      setCanvasBackground(freshBg);
-      setCanvasElements([]);
-      setModularPage(createEmptyModularPage());
-      setExtractedColors([]);
-      
+      // Nouvelle campagne : initialiser avec un état vierge
+      console.log(' [ModelEditor] Mount: no campaign id → initializing fresh campaign');
       initializeNewCampaign('wheel');
     } else {
       // Campagne existante : sera chargée par useCampaignFromUrl
-      console.log('📂 [ModelEditor] Mount: campaign id detected, will load from URL');
+      console.log(' [ModelEditor] Mount: campaign id detected, will load from URL');
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
