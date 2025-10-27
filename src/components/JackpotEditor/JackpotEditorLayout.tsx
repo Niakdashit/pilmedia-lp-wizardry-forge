@@ -383,7 +383,7 @@ useEffect(() => {
   if (selectedCampaignId && cid !== selectedCampaignId) return;
   
   const cfg = (campaignState as any)?.config?.canvasConfig || (campaignState as any)?.canvasConfig;
-  const mp = (campaignState as any)?.config?.modularPage || (campaignState as any)?.design?.quizModules;
+  const mp = (campaignState as any)?.modularPage || (campaignState as any)?.config?.modularPage || (campaignState as any)?.design?.quizModules;
   const topLevelElements = (campaignState as any)?.config?.elements;
 
   // N'hydrate que si on a des données utiles ET que le local est vide pour éviter l'écrasement
@@ -2402,7 +2402,7 @@ useEffect(() => {
   const handleSave = async () => {
     setIsLoading(true);
     try {
-      // 🔄 Synchroniser tous les états locaux avec le campaign avant la sauvegarde
+      // 🔄 Garder la sync store pour cohérence UI, mais construire un payload explicite pour éviter toute course
       syncAllStates({
         canvasElements,
         modularPage,
@@ -2411,11 +2411,36 @@ useEffect(() => {
         selectedDevice,
         canvasZoom
       });
-      
-      // Récupérer le campaign mis à jour après synchronisation
-      const updatedCampaign = useEditorStore.getState().campaign;
-      
-      const saved = await saveCampaignToDB(updatedCampaign, saveCampaign);
+
+      const base = (campaignState || {}) as any;
+      const payload: any = {
+        ...base,
+        modularPage,
+        canvasElements,
+        screenBackgrounds,
+        selectedDevice,
+        canvasConfig: {
+          ...(base.canvasConfig || {}),
+          elements: canvasElements,
+          screenBackgrounds,
+          device: selectedDevice,
+          zoom: canvasZoom
+        },
+        config: {
+          ...(base.config || {}),
+          canvasConfig: {
+            ...((base.config || {}).canvasConfig || {}),
+            elements: canvasElements,
+            screenBackgrounds,
+            device: selectedDevice,
+            zoom: canvasZoom
+          },
+          elements: canvasElements,
+          modularPage
+        }
+      };
+
+      const saved = await saveCampaignToDB(payload, saveCampaign);
       if (saved?.id && !(campaignState as any)?.id) {
         setCampaign((prev: any) => ({ ...prev, id: saved.id }));
       }
