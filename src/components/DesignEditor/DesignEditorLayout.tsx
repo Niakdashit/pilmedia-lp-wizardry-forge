@@ -281,7 +281,8 @@ useEffect(() => {
         // Restore canvas from config.canvasConfig
         try {
           const canvasCfg = (data as any)?.config?.canvasConfig || (data as any)?.canvasConfig || {};
-          if (Array.isArray(canvasCfg.elements)) {
+          // ✅ Hydrate safely: do not overwrite local edits if user already added content
+          if (Array.isArray(canvasCfg.elements) && (canvasElements.length === 0)) {
             setCanvasElements(canvasCfg.elements);
           }
           
@@ -295,15 +296,22 @@ useEffect(() => {
             || (designObj?.background ? { type: 'color', value: designObj.background } : undefined)
             || { type: 'color', value: '#ffffff' };
           
-          setCanvasBackground({ ...bg });
-          
+          // Only apply backgrounds if local screens are still in initial state
           const defaultScreens = {
             screen1: { type: 'color' as const, value: 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)' },
             screen2: { type: 'color' as const, value: 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)' },
             screen3: { type: 'color' as const, value: 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)' }
           };
           const loadedScreens = canvasCfg.screenBackgrounds || defaultScreens;
-          setScreenBackgrounds({ ...loadedScreens });
+          const isInitialScreens = (
+            screenBackgrounds.screen1?.value === defaultScreens.screen1.value &&
+            screenBackgrounds.screen2?.value === defaultScreens.screen2.value &&
+            screenBackgrounds.screen3?.value === defaultScreens.screen3.value
+          );
+          if (isInitialScreens) {
+            setCanvasBackground({ ...bg });
+            setScreenBackgrounds({ ...loadedScreens });
+          }
           
           if (canvasCfg.device && ['desktop','tablet','mobile'].includes(canvasCfg.device)) {
             setSelectedDevice(canvasCfg.device);
@@ -311,7 +319,10 @@ useEffect(() => {
           }
           
           if (canvasCfg.modularPage && canvasCfg.modularPage.screens) {
-            setModularPage(canvasCfg.modularPage);
+            const currentModulesCount = (Object.values(modularPage.screens) as any[]).flat().length;
+            if (currentModulesCount === 0) {
+              setModularPage(canvasCfg.modularPage);
+            }
           }
         } catch (e) {
           console.warn('[DesignEditor] Failed to restore canvasConfig from campaign', e);
