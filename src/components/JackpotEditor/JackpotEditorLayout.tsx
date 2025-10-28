@@ -259,7 +259,7 @@ const { syncAllStates } = useCampaignStateSync();
     gameConfig: (campaignState as any)?.jackpotConfig
   }, saveCampaign);
 
-  // 🔄 Auto-save to Supabase every 30 seconds (aligned with QuizEditor)
+  // 🔄 Auto-save to Supabase every 30 secondes (aligné avec QuizEditor)
   useAutoSaveToSupabase(
     {
       campaign: {
@@ -283,6 +283,30 @@ const { syncAllStates } = useCampaignStateSync();
       }
     }
   );
+
+  // 🔄 Listen for sync request from CampaignSettingsModal before saving
+  useEffect(() => {
+    const handler = () => {
+      console.log('🎯 [JackpotEditor] SYNC EVENT RECEIVED: campaign:sync:before-save');
+      // Sync all states to campaign object
+      syncAllStates({
+        canvasElements,
+        modularPage,
+        screenBackgrounds,
+        extractedColors,
+        selectedDevice,
+        canvasZoom
+      });
+      // Emit confirmation event after state updates
+      setTimeout(() => {
+        try { window.dispatchEvent(new CustomEvent('campaign:sync:completed')); } catch {}
+      }, 50);
+    };
+    window.addEventListener('campaign:sync:before-save', handler);
+    return () => {
+      window.removeEventListener('campaign:sync:before-save', handler);
+    };
+  }, [syncAllStates, canvasElements, modularPage, screenBackgrounds, extractedColors, selectedDevice, canvasZoom]);
 
 // 🔄 Load campaign data from Supabase when campaign ID is in URL
 useEffect(() => {

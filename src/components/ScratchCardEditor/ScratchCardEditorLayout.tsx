@@ -498,7 +498,7 @@ useEffect(() => {
     gameConfig: (campaignState as any)?.scratchConfig
   }, saveCampaign);
 
-  // 🔄 Auto-save to Supabase every 30 seconds (aligned with QuizEditor)
+  // 🔄 Auto-save to Supabase every 30 secondes (aligné avec QuizEditor)
   useAutoSaveToSupabase(
     {
       campaign: {
@@ -522,6 +522,30 @@ useEffect(() => {
       }
     }
   );
+
+  // 🔄 Listen for sync request from CampaignSettingsModal before saving
+  useEffect(() => {
+    const handler = () => {
+      console.log('🎯 [ScratchEditor] SYNC EVENT RECEIVED: campaign:sync:before-save');
+      // Sync all states to campaign object
+      syncAllStates({
+        canvasElements,
+        modularPage,
+        screenBackgrounds,
+        extractedColors,
+        selectedDevice,
+        canvasZoom
+      });
+      // Emit confirmation event after state updates
+      setTimeout(() => {
+        try { window.dispatchEvent(new CustomEvent('campaign:sync:completed')); } catch {}
+      }, 50);
+    };
+    window.addEventListener('campaign:sync:before-save', handler);
+    return () => {
+      window.removeEventListener('campaign:sync:before-save', handler);
+    };
+  }, [syncAllStates, canvasElements, modularPage, screenBackgrounds, extractedColors, selectedDevice, canvasZoom]);
 
   useEffect(() => {
     if (!canvasElements.length) return;
