@@ -13,6 +13,46 @@ export interface Campaign extends Omit<DatabaseCampaign, 'config' | 'game_config
   form_fields: any[];
 }
 
+// Lightweight cache with TTL (in-memory + localStorage fallback)
+const CAMPAIGN_CACHE_TTL_MS = 60_000; // 1 minute
+type CacheEntry = { data: any; expiresAt: number };
+const campaignCache = new Map<string, CacheEntry>();
+const slugCacheIndex = new Map<string, string>(); // slug -> id
+
+function getNow() {
+  return Date.now();
+}
+
+function makeCacheKeyById(id: string) {
+  return `campaign:id:${id}`;
+}
+
+function makeCacheKeyBySlug(slug: string) {
+  return `campaign:slug:${slug}`;
+}
+
+function readLocalCache(key: string): any | null {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as CacheEntry;
+    if (!parsed || typeof parsed.expiresAt !== 'number') return null;
+    if (parsed.expiresAt < getNow()) return null;
+    return parsed.data;
+  } catch {
+    return null;
+  }
+}
+
+function writeLocalCache(key: string, data: any) {
+  try {
+    const entry: CacheEntry = { data, expiresAt: getNow() + CAMPAIGN_CACHE_TTL_MS };
+    localStorage.setItem(key, JSON.stringify(entry));
+  } catch {
+    // best-effort
+  }
+}
+
 export const useCampaigns = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -128,13 +168,48 @@ export const useCampaigns = () => {
     setError(null);
     
     try {
+      // Cache hit (memory)
+      const mem = campaignCache.get(makeCacheKeyById(id));
+      if (mem && mem.expiresAt > getNow()) {
+        return mem.data as Campaign;
+      }
+
+      // Cache hit (localStorage)
+      const local = readLocalCache(makeCacheKeyById(id));
+      if (local) {
+        // Warm memory cache and return fast while refreshing in background
+        campaignCache.set(makeCacheKeyById(id), { data: local, expiresAt: getNow() + CAMPAIGN_CACHE_TTL_MS });
+        // Fire-and-forget refresh (no throw)
+        (async () => {
+          try {
+            await supabase
+              .from('campaigns')
+              .select(
+                'id,name,description,slug,type,status,created_by,created_at,updated_at,published_at,thumbnail_url,banner_url,start_date,end_date,config,game_config,design,form_fields'
+              )
+              .eq('id', id)
+              .single();
+          } catch {}
+        })();
+        return local as Campaign;
+      }
+
+      // Network fetch with explicit projection to reduce payload
       const { data, error } = await supabase
         .from('campaigns')
-        .select('*')
+        .select(
+          'id,name,description,slug,type,status,created_by,created_at,updated_at,published_at,thumbnail_url,banner_url,start_date,end_date,config,game_config,design,form_fields'
+        )
         .eq('id', id)
         .single();
       
       if (error) throw error;
+      // Update caches
+      const key = makeCacheKeyById(id);
+      const entry: CacheEntry = { data, expiresAt: getNow() + CAMPAIGN_CACHE_TTL_MS };
+      campaignCache.set(key, entry);
+      writeLocalCache(key, data);
+      if (data?.slug) slugCacheIndex.set(data.slug, id);
       return data as Campaign;
     } catch (err: any) {
       setError(err.message || 'Erreur lors du chargement');
@@ -149,13 +224,49 @@ export const useCampaigns = () => {
     setError(null);
     
     try {
+      const cachedId = slugCacheIndex.get(slug);
+      if (cachedId) {
+        const mem = campaignCache.get(makeCacheKeyById(cachedId));
+        if (mem && mem.expiresAt > getNow()) return mem.data as Campaign;
+      }
+
+      const local = readLocalCache(makeCacheKeyBySlug(slug));
+      if (local) {
+        // Rehydrate id mapping if present
+        if (local?.id) slugCacheIndex.set(slug, local.id);
+        campaignCache.set(makeCacheKeyById(local?.id || slug), { data: local, expiresAt: getNow() + CAMPAIGN_CACHE_TTL_MS });
+        // Background refresh
+        (async () => {
+          try {
+            await supabase
+              .from('campaigns')
+              .select(
+                'id,name,description,slug,type,status,created_by,created_at,updated_at,published_at,thumbnail_url,banner_url,start_date,end_date,config,game_config,design,form_fields'
+              )
+              .eq('slug', slug)
+              .single();
+          } catch {}
+        })();
+        return local as Campaign;
+      }
+
       const { data, error } = await supabase
         .from('campaigns')
-        .select('*')
+        .select(
+          'id,name,description,slug,type,status,created_by,created_at,updated_at,published_at,thumbnail_url,banner_url,start_date,end_date,config,game_config,design,form_fields'
+        )
         .eq('slug', slug)
         .single();
       
       if (error) throw error;
+      // Cache by slug and id
+      const idKey = makeCacheKeyById(data.id);
+      const slugKey = makeCacheKeyBySlug(slug);
+      const entry: CacheEntry = { data, expiresAt: getNow() + CAMPAIGN_CACHE_TTL_MS };
+      campaignCache.set(idKey, entry);
+      writeLocalCache(idKey, data);
+      writeLocalCache(slugKey, data);
+      slugCacheIndex.set(slug, data.id);
       return data as Campaign;
     } catch (err: any) {
       setError(err.message || 'Erreur lors du chargement');
@@ -175,7 +286,7 @@ export const useCampaigns = () => {
 
       const { data, error } = await supabase
         .from('campaigns')
-        .select('*')
+        .select('id,name,description,slug,type,status,created_by,created_at,updated_at,published_at,thumbnail_url,banner_url,start_date,end_date')
         .eq('created_by', user.id)
         .order('created_at', { ascending: false });
       

@@ -171,10 +171,15 @@ useEffect(() => {
         // Step 3: Redirect to editor with campaign ID
         if (campaign?.type) {
           const editorUrl = getEditorUrl(campaign.type, savedCampaignId);
+          // Build a snapshot of current modularPage to guard against stale reloads
+          const snapshotCampaign: any = useEditorStore.getState().campaign as any;
+          const snapshotMP = snapshotCampaign?.modularPage
+            || snapshotCampaign?.config?.modularPage
+            || snapshotCampaign?.design?.quizModules;
           console.log('🔄 [CampaignSettingsModal] Redirecting to:', editorUrl);
           
           onClose();
-          navigate(editorUrl);
+          navigate(editorUrl, { state: { modularPageSnapshot: snapshotMP, snapshotAt: Date.now() } });
         } else {
           onClose();
         }

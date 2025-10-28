@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Search, Plus, Filter, Eye, Copy, Archive, Trash2, ChevronDown, BarChart2, ExternalLink, MoreVertical } from 'lucide-react';
 import PageHeader from '../components/Layout/PageHeader';
 import { getCampaignTypeIcon, CampaignType } from '../utils/campaignTypes';
 import { useCampaignsList } from '../hooks/useCampaignsList';
+import { useCampaigns } from '@/hooks/useCampaigns';
 import { supabase } from '@/integrations/supabase/client';
 import ConfirmModal from '@/components/shared/ConfirmModal';
 import { getEditorUrl } from '@/utils/editorRouting';
@@ -72,6 +73,7 @@ const ActionModal: React.FC<ActionModalProps> = ({ isOpen, onClose, campaign, po
 const Campaigns: React.FC = () => {
   const navigate = useNavigate();
   const { campaigns, loading, error, updateCampaignStatus, deleteCampaign, refetch } = useCampaignsList();
+  const { getCampaign } = useCampaigns();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [sortBy, setSortBy] = useState('date');
@@ -89,7 +91,21 @@ const Campaigns: React.FC = () => {
     { name: 'Formulaire', path: '/form-editor', icon: '📝' }
   ];
 
-  const filteredCampaigns = campaigns
+  const prefetchedCampaignIdsRef = useRef<Set<string>>(new Set());
+  const prefetchCampaign = useCallback(
+    async (id: string | undefined | null) => {
+      if (!id || prefetchedCampaignIdsRef.current.has(id)) return;
+      try {
+        prefetchedCampaignIdsRef.current.add(id);
+        await getCampaign(id);
+      } catch {
+        // ignore prefetch errors; actual navigation will handle them
+      }
+    },
+    [getCampaign]
+  );
+
+  const filteredCampaigns = useMemo(() => campaigns
     .filter((campaign) => {
       const matchesSearch =
         campaign.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -104,7 +120,7 @@ const Campaigns: React.FC = () => {
           : new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
       }
       return 0;
-    });
+    }), [campaigns, filterStatus, searchTerm, sortBy, sortOrder]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -399,6 +415,8 @@ const Campaigns: React.FC = () => {
                         key={campaign.id} 
                         className="hover:bg-gray-50 transition-colors duration-200 cursor-pointer"
                         onClick={handleRowClick}
+                        onMouseEnter={() => prefetchCampaign(campaign.id)}
+                        onFocus={() => prefetchCampaign(campaign.id)}
                       >
                         <td className="px-6 py-4 whitespace-nowrap">
                           <input

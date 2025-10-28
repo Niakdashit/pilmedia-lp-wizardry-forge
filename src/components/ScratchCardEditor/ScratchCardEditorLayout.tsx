@@ -41,7 +41,6 @@ import { quizTemplates } from '../../types/quizTemplates';
 import { useScratchCardStore } from './state/scratchcard.store';
 import type { GameModalConfig } from '@/types/gameConfig';
 import { createGameConfigFromQuiz } from '@/types/gameConfig';
-import { supabase } from '@/integrations/supabase/client';
 import { generateTempCampaignId } from '@/utils/tempCampaignId';
 import { useAutoSaveToSupabase } from '@/hooks/useAutoSaveToSupabase';
 
@@ -50,6 +49,16 @@ const MobileStableEditor = lazy(() => import('./components/MobileStableEditor'))
 
 const SCRATCH_DEFAULT_COLOR = '#C0C0C0';
 const LAUNCH_BUTTON_FALLBACK_GRADIENT = '#000000';
+
+// Verbose logging gate
+const vlog = (...args: any[]) => {
+  try {
+    if ((window as any).__VERBOSE__) {
+      // eslint-disable-next-line no-console
+      console.log(...args);
+    }
+  } catch {}
+};
 
 // Transform scratch state to game config
 const transformScratchStateToGameConfig = (state?: any) => {
@@ -279,8 +288,12 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
   // Campagne centralisée (source de vérité pour les champs de contact)
   const campaignState = useEditorStore((s) => s.campaign);
 
+  // Guards to avoid StrictMode double-run churn
+  const loadedCampaignIdsRef = useRef<Set<string>>(new Set());
+  const didDeviceInitRef = useRef<boolean>(false);
+
   // Supabase campaigns API
-  const { saveCampaign } = useCampaigns();
+  const { saveCampaign, getCampaign } = useCampaigns();
   
 // Campaign state synchronization hook
 const { syncAllStates } = useCampaignStateSync();
@@ -293,66 +306,69 @@ useEffect(() => {
   
   // CRITICAL: Skip loading for temporary campaign IDs - they should remain blank
   if (isTempCampaignId(campaignId)) {
-    console.log('⏭️ [ScratchCardEditor] Skipping load for temporary campaign:', campaignId);
+    vlog('⏭️ [ScratchCardEditor] useEffect(loadFromDB) SKIP: temp campaign detected', { campaignId });
     return;
   }
   
-  if (!campaignId || !isUuid(campaignId)) return;
+  if (!campaignId || !isUuid(campaignId)) {
+    vlog('⏭️ [ScratchCardEditor] useEffect(loadFromDB) SKIP: no valid UUID in URL', { campaignId });
+    return;
+  }
+
+  // Run-once guard per campaignId
+  if (loadedCampaignIdsRef.current.has(campaignId)) {
+    vlog('⏭️ [ScratchCardEditor] loadFromDB guard: already loaded this id', { campaignId });
+    return;
+  }
   
   // Check if we're switching campaigns
   const currentCampaignId = (campaignState as any)?.id;
   if (currentCampaignId && currentCampaignId !== campaignId) {
-    console.log('🔄 [ScratchCardEditor] Switching campaigns');
+    vlog('🔄 [ScratchCardEditor] useEffect(loadFromDB): switching campaigns', { from: currentCampaignId, to: campaignId });
   }
   
   // Skip if this campaign is already loaded
   if (currentCampaignId === campaignId) {
-    console.log('✅ [ScratchCardEditor] Campaign already loaded:', campaignId);
+    vlog('✅ [ScratchCardEditor] useEffect(loadFromDB) SKIP: already loaded', { campaignId });
+    loadedCampaignIdsRef.current.add(campaignId);
     return;
   }
   
-  console.log('🔄 [ScratchCardEditor] Loading campaign:', campaignId);
+  vlog(' [ScratchCardEditor] useEffect(loadFromDB) LOADING', { campaignId });
   
-  // Load from Supabase
+  // Load via cached campaigns API
   const loadCampaignData = async () => {
     try {
-      const { data, error } = await supabase
-        .from('campaigns')
-        .select('*')
-        .eq('id', campaignId)
-        .maybeSingle();
-      
-      if (error) throw error;
-      
+      const data = await getCampaign(campaignId);
       if (data) {
-        console.log('✅ [ScratchCardEditor] Campaign loaded from DB:', {
-          id: data.id,
-          name: data.name,
-          hasConfig: !!data.config,
-          hasDesign: !!data.design,
-          hasModules: !!((data.design as any)?.scratchModules || (data.config as any)?.modularPage)
+        vlog(' [ScratchCardEditor] useEffect(loadFromDB) SUCCESS', {
+          id: (data as any).id,
+          name: (data as any).name,
+          hasConfig: !!(data as any).config,
+          hasDesign: !!(data as any).design,
         });
-        
-        // Transform database row to campaign format
+
+        // Normalize to editor campaign shape
         const campaignData: any = {
           ...data,
-          id: data.id,
-          name: data.name || 'Campaign',
-          type: data.type || 'scratch',
-          design: data.design || {},
-          gameConfig: (data.game_config || {}) as any,
+          id: (data as any).id,
+          name: (data as any).name || 'Campaign',
+          type: (data as any).type || 'scratch',
+          design: (data as any).design || {},
+          gameConfig: ((data as any).game_config || {}) as any,
           buttonConfig: {},
-          config: data.config || {},
-          formFields: data.form_fields || [],
+          config: (data as any).config || {},
+          formFields: (data as any).form_fields || [],
           _lastUpdate: Date.now(),
           _version: 1
         };
-        
-        // Update campaign state with loaded data
+
         setCampaign(campaignData);
+        // mark as loaded to avoid re-fetch
+        loadedCampaignIdsRef.current.add(campaignId);
       }
     } catch (error) {
-      console.error('❌ [ScratchCardEditor] Failed to load campaign:', error);
+      console.error(' [ScratchCardEditor] useEffect(loadFromDB) FAILED:', error);
     }
   };
   
@@ -365,41 +381,58 @@ useEffect(() => {
   const params = new URLSearchParams(location.search);
   const cid = params.get('campaign');
   if (!cid) {
-    console.log('🆕 [ScratchCardEditor] Creating new blank campaign');
+    console.log('🆕 [ScratchCardEditor] useEffect(initNewCampaign): creating blank campaign (no id in URL)');
     beginNewCampaign('scratch');
     // Générer un ID temporaire unique
     const tempId = generateTempCampaignId('scratch');
     
     // CRITICAL: Nettoyer TOUTES les données d'abord pour garantir une campagne vierge
+    console.log('🧹 [ScratchCardEditor] useEffect(initNewCampaign): clearTempCampaignData for tempId', { tempId });
     clearTempCampaignData(tempId);
     
     // CRITICAL: Initialiser la campagne avec l'ID temporaire dans le store
+    console.log('🏁 [ScratchCardEditor] useEffect(initNewCampaign): initializeNewCampaignWithId', { tempId });
     initializeNewCampaignWithId('scratch', tempId);
     
     // Mettre à jour l'URL pour inclure le temp ID
+    console.log('🔗 [ScratchCardEditor] useEffect(initNewCampaign): navigate to temp campaign URL');
     navigate(`${location.pathname}?campaign=${tempId}${searchParams.get('mode') ? `&mode=${searchParams.get('mode')}` : ''}`, { replace: true });
     
     requestAnimationFrame(() => clearNewCampaignFlag());
   } else {
     // S'assurer que le flag est désactivé quand on charge une campagne existante
-    if (isNewCampaignGlobal) clearNewCampaignFlag();
+    if (isNewCampaignGlobal) {
+      console.log('♻️ [ScratchCardEditor] useEffect(initNewCampaign): clearing new campaign flag (existing id found)');
+      clearNewCampaignFlag();
+    }
   }
 }, [location.pathname]);
 
 // 🧹 CRITICAL: Clean temporary campaigns - reset background images and local backgrounds
+// 🧹 CRITICAL: Clean temporary campaigns - reset background images and local backgrounds
+// Add guard to run this only once per temp campaign id
+const didTempCleanupIdSetRef = useRef<Set<string>>(new Set());
 useEffect(() => {
   const params = new URLSearchParams(location.search);
   const id = params.get('campaign');
   if (!id || !isTempCampaignId(id)) return;
-  
-  console.log('🧹 [ScratchEditor] Cleaning temp campaign:', id);
-  
+  // Guard: only clean once per temp id
+  if (didTempCleanupIdSetRef.current.has(id)) {
+    console.log('⏭️ [ScratchEditor] Temp campaign already cleaned:', id);
+    return;
+  }
+  didTempCleanupIdSetRef.current.add(id);
+
+  console.log('🧹 [ScratchEditor] useEffect(cleanTempCampaign): cleaning temp campaign', { id });
+
   // Clear localStorage namespaced temp data
+  console.log('🧽 [ScratchEditor] useEffect(cleanTempCampaign): clearTempCampaignData');
   clearTempCampaignData(id);
   
   // Reset background images in global campaign state
   setCampaign((prev: any) => {
     if (!prev) return prev;
+    console.log('🖼️ [ScratchEditor] useEffect(cleanTempCampaign): reset campaign design backgrounds');
     return {
       ...prev,
       design: {
@@ -412,6 +445,7 @@ useEffect(() => {
   
   // Reset editor backgrounds to empty color for all screens
   const defaultBg = { type: 'color' as const, value: '' };
+  console.log('🖌️ [ScratchEditor] useEffect(cleanTempCampaign): setCanvasBackground(defaultBg)');
   setCanvasBackground(defaultBg);
   setScreenBackgrounds({
     screen1: defaultBg,
@@ -529,6 +563,8 @@ useEffect(() => {
 
   // Synchronise l'état de l'appareil réel et sélectionné après le montage (corrige les différences entre Lovable et Safari)
   useEffect(() => {
+    if (didDeviceInitRef.current) return;
+    didDeviceInitRef.current = true;
     const device = detectDevice();
     setActualDevice(device);
     setSelectedDevice(device);
@@ -569,6 +605,9 @@ useEffect(() => {
     }
   }, [selectedDevice, campaignState?.design]);
 
+// Module-scoped guard to ensure we hydrate only once per campaign id
+const SCRATCH_HYDRATED = new Set<string>();
+
 // ✅ Hydrater les éléments/modularPage/backgrounds depuis la DB à l'ouverture
 useEffect(() => {
   const cid = (campaignState as any)?.id as string | undefined;
@@ -580,6 +619,10 @@ useEffect(() => {
   if (!cid) return;
   if (cid.startsWith('temp-')) return;
   if (selectedCampaignId && cid !== selectedCampaignId) return;
+  if (SCRATCH_HYDRATED.has(cid)) {
+    // Already hydrated for this campaign id in this session
+    return;
+  }
   
   const cfg = (campaignState as any)?.config?.canvasConfig || (campaignState as any)?.canvasConfig;
   const mp = (campaignState as any)?.modularPage || (campaignState as any)?.config?.modularPage || (campaignState as any)?.design?.quizModules;
@@ -608,13 +651,29 @@ useEffect(() => {
       setModularPage(mp);
     }
   }
+  // Mark hydrated for this campaign id
+  SCRATCH_HYDRATED.add(cid);
 }, [campaignState, selectedCampaignId]);
 
 // 🔄 Miroir local → store: conserve les éléments dans campaign.config.canvasConfig
 useEffect(() => {
+  // Only mirror to campaign when something actually changed to avoid churn/loops
+  const current = campaignState as any;
+  const currentCfg = current?.config?.canvasConfig || {};
+  const elementsChanged = JSON.stringify(currentCfg.elements || []) !== JSON.stringify(canvasElements);
+  const backgroundsChanged = JSON.stringify(currentCfg.screenBackgrounds || {}) !== JSON.stringify(screenBackgrounds);
+  const deviceChanged = currentCfg.device !== selectedDevice;
+  const zoomChanged = currentCfg.zoom !== canvasZoom;
+  const prevModular = (current?.modularPage || current?.config?.modularPage) || {};
+  const hasModules = !!modularPage && modularPage.screens && Object.values(modularPage.screens).some((arr: any) => Array.isArray(arr) && arr.length > 0);
+  const modularChanged = hasModules && JSON.stringify(prevModular) !== JSON.stringify(modularPage);
+
+  if (!elementsChanged && !backgroundsChanged && !deviceChanged && !zoomChanged && !modularChanged) {
+    return;
+  }
+
   setCampaign((prev: any) => {
     if (!prev) return prev;
-    const hasModules = !!modularPage && modularPage.screens && Object.values(modularPage.screens).some((arr: any) => Array.isArray(arr) && arr.length > 0);
     const next = {
       ...prev,
       modularPage: hasModules ? modularPage : (prev.modularPage || prev.config?.modularPage),

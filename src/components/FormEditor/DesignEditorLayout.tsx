@@ -597,10 +597,16 @@ useEffect(() => {
   if (cfg?.device) setSelectedDevice(cfg.device as any);
 
   if (mp && mp.screens) {
-    const total = Object.values(mp.screens || {}).reduce((n: number, arr: any) => n + (Array.isArray(arr) ? arr.length : 0), 0);
-    if (total > 0) {
-      console.log('🧩 [FormEditor] Hydration: applying modularPage from DB', total, 'modules');
-      setModularPage(mp);
+    const dbTotal = Object.values(mp.screens || {}).reduce((n: number, arr: any) => n + (Array.isArray(arr) ? arr.length : 0), 0);
+    const localTotal = Object.values(modularPage.screens || {}).reduce((n: number, arr: any) => n + (Array.isArray(arr) ? arr.length : 0), 0);
+    if (dbTotal > 0) {
+      // Only hydrate from DB if local is empty or DB has more modules
+      if (localTotal === 0 || dbTotal > localTotal) {
+        console.log('🧩 [FormEditor] Hydration: applying modularPage from DB', { dbTotal, localTotal });
+        setModularPage(mp);
+      } else {
+        console.log('🛡️ [FormEditor] Hydration skipped: local modularPage richer than DB', { dbTotal, localTotal });
+      }
     } else {
       console.log('🧩 [FormEditor] ModularPage has screens but no modules');
     }
@@ -1655,6 +1661,7 @@ useEffect(() => {
   useEffect(() => {
     const state = (location as any)?.state as any;
     const template = state?.templateCampaign;
+    const snapshotMP = state?.modularPageSnapshot as any | undefined;
     if (template) {
       const tplCanvas = template.canvasConfig || {};
       const bg = tplCanvas.background || template.design?.background || { type: 'color', value: '#ffffff' };
@@ -1681,6 +1688,16 @@ useEffect(() => {
       if (tplCanvas.device && ['desktop', 'tablet', 'mobile'].includes(tplCanvas.device)) {
         setSelectedDevice(tplCanvas.device);
         setCanvasZoom(getDefaultZoom(tplCanvas.device));
+      }
+    }
+
+    // 💾 Priorité au snapshot de modules (après redirection des paramètres)
+    if (snapshotMP && snapshotMP.screens) {
+      const snapshotCount = Object.values(snapshotMP.screens || {}).flat().length;
+      const localCount = Object.values(modularPage.screens || {}).flat().length;
+      if (snapshotCount > 0 && snapshotCount >= localCount) {
+        console.log('🧷 [FormEditor] Applying modularPage snapshot from navigation state', { snapshotCount, localCount });
+        setModularPage(snapshotMP);
       }
     }
   }, [location]);

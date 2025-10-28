@@ -43,36 +43,49 @@ export const useScratchCardStore = create<ScratchCardStore>()(
     config: DEFAULT_SCRATCH_CONFIG,
     
     // Actions de configuration
-    updateConfig: (updates) => set((state) => ({
-      config: {
-        ...state.config,
-        ...updates
-      }
-    })),
+    updateConfig: (updates) => set((state) => {
+      console.log('[ScratchStore] updateConfig', { updates, prev: state.config });
+      return {
+        config: {
+          ...state.config,
+          ...updates
+        }
+      };
+    }),
     
-    updateCardShape: (cardShape: CardShape) => set((state) => ({
-      config: {
-        ...state.config,
-        grid: { ...state.config.grid, cardShape }
-      }
-    })),
+    updateCardShape: (cardShape: CardShape) => set((state) => {
+      console.log('[ScratchStore] updateCardShape', { cardShape });
+      return {
+        config: {
+          ...state.config,
+          grid: { ...state.config.grid, cardShape }
+        }
+      };
+    }),
     
-    updateGrid: (grid) => set((state) => ({
-      config: {
-        ...state.config,
-        grid: { ...state.config.grid, ...grid }
-      }
-    })),
+    updateGrid: (grid) => set((state) => {
+      console.log('[ScratchStore] updateGrid', { grid });
+      return {
+        config: {
+          ...state.config,
+          grid: { ...state.config.grid, ...grid }
+        }
+      };
+    }),
     
-    updateBrush: (brush) => set((state) => ({
-      config: {
-        ...state.config,
-        brush: { ...state.config.brush, ...brush }
-      }
-    })),
+    updateBrush: (brush) => set((state) => {
+      console.log('[ScratchStore] updateBrush', { brush });
+      return {
+        config: {
+          ...state.config,
+          brush: { ...state.config.brush, ...brush }
+        }
+      };
+    }),
     
     updateThreshold: (threshold) => set((state) => {
       const clamped = Math.max(0, Math.min(1, threshold));
+      console.log('[ScratchStore] updateThreshold', { threshold, clamped });
       // Recompute revealed flags immediately so UI reflects new threshold without requiring further scratching
       const updatedCards = state.config.cards.map(card => {
         const effectiveThreshold = card.threshold ?? clamped;
@@ -91,22 +104,29 @@ export const useScratchCardStore = create<ScratchCardStore>()(
       };
     }),
     
-    updateGlobalCover: (cover) => set((state) => ({
-      config: {
-        ...state.config,
-        globalCover: cover
-      }
-    })),
+    updateGlobalCover: (cover) => set((state) => {
+      console.log('[ScratchStore] updateGlobalCover', { cover });
+      return {
+        config: {
+          ...state.config,
+          globalCover: cover
+        }
+      };
+    }),
     
-    updateGlobalReveal: (reveal) => set((state) => ({
-      config: {
-        ...state.config,
-        globalReveal: reveal
-      }
-    })),
+    updateGlobalReveal: (reveal) => set((state) => {
+      console.log('[ScratchStore] updateGlobalReveal', { reveal });
+      return {
+        config: {
+          ...state.config,
+          globalReveal: reveal
+        }
+      };
+    }),
 
     updateMaxCards: (max) => set((state) => {
       const normalizedMax: 3 | 4 | 6 = max === 6 ? 6 : max === 3 ? 3 : 4;
+      console.log('[ScratchStore] updateMaxCards', { max, normalizedMax });
       let cards = state.config.cards.slice(0, normalizedMax);
       // If increasing cap, auto-pad with new empty cards up to max
       while (cards.length < normalizedMax) {
@@ -133,23 +153,30 @@ export const useScratchCardStore = create<ScratchCardStore>()(
       };
     }),
     
-    updateLogic: (logic) => set((state) => ({
-      config: {
-        ...state.config,
-        logic: { ...state.config.logic, ...logic }
-      }
-    })),
+    updateLogic: (logic) => set((state) => {
+      console.log('[ScratchStore] updateLogic', { logic });
+      return {
+        config: {
+          ...state.config,
+          logic: { ...state.config.logic, ...logic }
+        }
+      };
+    }),
     
-    updateEffects: (effects) => set((state) => ({
-      config: {
-        ...state.config,
-        effects: { ...state.config.effects, ...effects }
-      }
-    })),
+    updateEffects: (effects) => set((state) => {
+      console.log('[ScratchStore] updateEffects', { effects });
+      return {
+        config: {
+          ...state.config,
+          effects: { ...state.config.effects, ...effects }
+        }
+      };
+    }),
     
     // Actions sur les cartes
     addCard: () => set((state) => {
       if (state.config.cards.length >= state.config.maxCards) {
+        console.log('[ScratchStore] addCard skipped: at max', { max: state.config.maxCards });
         return { config: { ...state.config } };
       }
       const newId = (state.config.cards.length + 1).toString();
@@ -159,6 +186,7 @@ export const useScratchCardStore = create<ScratchCardStore>()(
         progress: 0,
         revealed: false
       };
+      console.log('[ScratchStore] addCard', { newId, newCard });
       
       return {
         config: {
@@ -168,21 +196,27 @@ export const useScratchCardStore = create<ScratchCardStore>()(
       };
     }),
     
-    removeCard: (cardId) => set((state) => ({
-      config: {
-        ...state.config,
-        cards: state.config.cards.filter(card => card.id !== cardId)
-      }
-    })),
+    removeCard: (cardId) => set((state) => {
+      console.log('[ScratchStore] removeCard', { cardId });
+      return {
+        config: {
+          ...state.config,
+          cards: state.config.cards.filter(card => card.id !== cardId)
+        }
+      };
+    }),
     
-    updateCard: (cardId, updates) => set((state) => ({
-      config: {
-        ...state.config,
-        cards: state.config.cards.map(card =>
-          card.id === cardId ? { ...card, ...updates } : card
-        )
-      }
-    })),
+    updateCard: (cardId, updates) => set((state) => {
+      console.log('[ScratchStore] updateCard', { cardId, updates });
+      return {
+        config: {
+          ...state.config,
+          cards: state.config.cards.map(card =>
+            card.id === cardId ? { ...card, ...updates } : card
+          )
+        }
+      };
+    }),
     
     updateCardProgress: (cardId, progress) => set((state) => {
       const threshold = state.config.threshold;
@@ -213,27 +247,33 @@ export const useScratchCardStore = create<ScratchCardStore>()(
       };
     }),
     
-    revealCard: (cardId) => set((state) => ({
-      config: {
-        ...state.config,
-        cards: state.config.cards.map(card =>
-          card.id === cardId 
-            ? { ...card, revealed: true, progress: 1 }
-            : card
-        )
-      }
-    })),
+    revealCard: (cardId) => set((state) => {
+      console.log('[ScratchStore] revealCard', { cardId });
+      return {
+        config: {
+          ...state.config,
+          cards: state.config.cards.map(card =>
+            card.id === cardId 
+              ? { ...card, revealed: true, progress: 1 }
+              : card
+          )
+        }
+      };
+    }),
     
-    resetAllCards: () => set((state) => ({
-      config: {
-        ...state.config,
-        cards: state.config.cards.map(card => ({
-          ...card,
-          progress: 0,
-          revealed: false
-        }))
-      }
-    })),
+    resetAllCards: () => set((state) => {
+      console.log('[ScratchStore] resetAllCards');
+      return {
+        config: {
+          ...state.config,
+          cards: state.config.cards.map(card => ({
+            ...card,
+            progress: 0,
+            revealed: false
+          }))
+        }
+      };
+    }),
     
     // Utilitaires
     getCard: (cardId) => {
@@ -259,6 +299,7 @@ export const useScratchCardStore = create<ScratchCardStore>()(
     // Import/Export
     exportConfig: () => {
       const state = get();
+      console.log('[ScratchStore] exportConfig');
       return JSON.stringify(state.config, null, 2);
     },
     
@@ -268,9 +309,11 @@ export const useScratchCardStore = create<ScratchCardStore>()(
         
         // Validation basique
         if (!config.cards || !Array.isArray(config.cards)) {
+          console.warn('[ScratchStore] importConfig failed: invalid cards array');
           return false;
         }
         
+        console.log('[ScratchStore] importConfig success', { config });
         set({ config });
         return true;
       } catch (error) {
@@ -279,7 +322,10 @@ export const useScratchCardStore = create<ScratchCardStore>()(
       }
     },
     
-    resetToDefault: () => set({ config: DEFAULT_SCRATCH_CONFIG })
+    resetToDefault: () => {
+      console.log('[ScratchStore] resetToDefault', { DEFAULT_SCRATCH_CONFIG });
+      set({ config: DEFAULT_SCRATCH_CONFIG });
+    }
   }))
 );
 

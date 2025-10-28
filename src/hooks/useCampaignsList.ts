@@ -16,15 +16,67 @@ export interface CampaignListItem {
   endDate: string;
 }
 
+const CAMPAIGN_LIST_CACHE_TTL_MS = 30_000; // 30s is enough for dashboard refocus
+const CAMPAIGN_LIST_CACHE_KEY = 'campaign:list:default';
+type CampaignListCacheEntry = { data: CampaignListItem[]; expiresAt: number };
+const campaignListCache = new Map<string, CampaignListCacheEntry>();
+
+const getNow = () => Date.now();
+
+const readLocalListCache = (key: string): CampaignListItem[] | null => {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = window.localStorage.getItem(key);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as CampaignListCacheEntry;
+    if (!parsed || typeof parsed.expiresAt !== 'number') return null;
+    if (parsed.expiresAt < getNow()) return null;
+    return Array.isArray(parsed.data) ? (parsed.data as CampaignListItem[]) : null;
+  } catch {
+    return null;
+  }
+};
+
+const writeLocalListCache = (key: string, data: CampaignListItem[]) => {
+  if (typeof window === 'undefined') return;
+  try {
+    const entry: CampaignListCacheEntry = { data, expiresAt: getNow() + CAMPAIGN_LIST_CACHE_TTL_MS };
+    window.localStorage.setItem(key, JSON.stringify(entry));
+  } catch {
+    // best-effort only
+  }
+};
+
 export const useCampaignsList = () => {
   const { profile } = useProfile();
   const [campaigns, setCampaigns] = useState<CampaignListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchCampaigns = async () => {
+  const hydrateFromCache = () => {
+    const mem = campaignListCache.get(CAMPAIGN_LIST_CACHE_KEY);
+    if (mem && mem.expiresAt > getNow()) {
+      setCampaigns(mem.data);
+      return true;
+    }
+    const local = readLocalListCache(CAMPAIGN_LIST_CACHE_KEY);
+    if (local) {
+      campaignListCache.set(CAMPAIGN_LIST_CACHE_KEY, {
+        data: local,
+        expiresAt: getNow() + CAMPAIGN_LIST_CACHE_TTL_MS,
+      });
+      setCampaigns(local);
+      return true;
+    }
+    return false;
+  };
+
+  const fetchCampaigns = async (options: { suppressLoading?: boolean } = {}) => {
+    const { suppressLoading = false } = options;
     try {
-      setLoading(true);
+      if (!suppressLoading) {
+        setLoading(true);
+      }
       setError(null);
 
       // For admin: see all campaigns
@@ -33,7 +85,17 @@ export const useCampaignsList = () => {
       let query = supabase
         .from('campaigns')
         .select(`
-          *,
+          id,
+          name,
+          description,
+          type,
+          status,
+          created_at,
+          created_by,
+          banner_url,
+          start_date,
+          end_date,
+          config,
           campaign_stats (
             participations,
             views
@@ -105,6 +167,11 @@ export const useCampaignsList = () => {
       });
 
       setCampaigns(transformedCampaigns);
+      campaignListCache.set(CAMPAIGN_LIST_CACHE_KEY, {
+        data: transformedCampaigns,
+        expiresAt: getNow() + CAMPAIGN_LIST_CACHE_TTL_MS,
+      });
+      writeLocalListCache(CAMPAIGN_LIST_CACHE_KEY, transformedCampaigns);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Unknown error');
     } finally {
@@ -153,7 +220,8 @@ export const useCampaignsList = () => {
 
   useEffect(() => {
     if (profile?.id) {
-      fetchCampaigns();
+      const hadCache = hydrateFromCache();
+      fetchCampaigns({ suppressLoading: hadCache });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile?.id]);

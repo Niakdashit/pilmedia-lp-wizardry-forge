@@ -30,7 +30,11 @@ const ScratchCardGamePanel: React.FC<ScratchCardGamePanelProps> = ({
   const isInitialMount = React.useRef(true);
   
   React.useEffect(() => {
+    if (isInitialMount.current) {
+      console.log('[ScratchPanel] mount: isInitialMount=true; has campaign.scratchConfig =', !!campaign?.scratchConfig);
+    }
     if (isInitialMount.current && campaign?.scratchConfig) {
+      console.log('[ScratchPanel] initializing store from campaign.scratchConfig');
       updateStoreConfig(campaign.scratchConfig);
       isInitialMount.current = false;
     }
@@ -43,17 +47,27 @@ const ScratchCardGamePanel: React.FC<ScratchCardGamePanelProps> = ({
     if (!setCampaign) return;
     
     // Vérifier si les données ont vraiment changé
-    if (JSON.stringify(prevScratchConfig.current) === JSON.stringify(scratchConfig)) {
+    const prevStr = JSON.stringify(prevScratchConfig.current);
+    const nextStr = JSON.stringify(scratchConfig);
+    if (prevStr === nextStr) {
+      console.log('[ScratchPanel] no-op sync: store config unchanged');
       return;
     }
     
+    const prevLen = prevStr.length;
+    const nextLen = nextStr.length;
+    console.log('[ScratchPanel] syncing store -> campaign.scratchConfig', { prevLen, nextLen });
     prevScratchConfig.current = scratchConfig;
     
-    setCampaign((prev: any) => ({
-      ...prev,
-      name: prev?.name || 'Campaign',
-      scratchConfig: { ...scratchConfig }
-    }));
+    setCampaign((prev: any) => {
+      const merged = {
+        ...prev,
+        name: prev?.name || 'Campaign',
+        scratchConfig: { ...scratchConfig }
+      };
+      console.log('[ScratchPanel] setCampaign called (store -> campaign)');
+      return merged;
+    });
   }, [scratchConfig, setCampaign]);
   
   // Mise à jour de la configuration via le store

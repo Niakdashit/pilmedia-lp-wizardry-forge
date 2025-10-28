@@ -287,6 +287,10 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
   const isUserTabSwitchingRef = React.useRef(false);
   // Short-lived guard to ignore external setActiveTab calls (e.g. onOpenElementsTab) after manual tab switch
   const ignoreExternalUntilRef = React.useRef<number>(0);
+  // Prevent redundant onActiveTabChange emissions
+  const lastSentTabRef = React.useRef<string | null>(null);
+  // Reentrancy guard when deriving active tab from panel flags
+  const derivingTabRef = React.useRef(false);
 
   React.useEffect(() => {
     if (activeTab !== undefined && activeTab !== internalActiveTab) {
@@ -308,24 +312,30 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
         ignoreExternalUntilRef.current = 0;
       }
 
-      setInternalActiveTab(tab);
-      onActiveTabChange?.(tab);
+      // Avoid redundant tab sets
+      if (tab !== internalActiveTab) {
+        setInternalActiveTab(tab);
+        if (lastSentTabRef.current !== tab) {
+          lastSentTabRef.current = tab;
+          onActiveTabChange?.(tab);
+        }
+      }
       // Mettre à jour les états des panneaux en fonction de l'onglet sélectionné
       if (tab === 'background') {
-        onDesignPanelChange?.(true);
+        if (!showDesignPanel) onDesignPanelChange?.(true);
       } else if (tab === 'effects') {
-        onEffectsPanelChange?.(true);
+        if (!showEffectsPanel) onEffectsPanelChange?.(true);
       } else if (tab === 'animations') {
-        onAnimationsPanelChange?.(true);
+        if (!showAnimationsPanel) onAnimationsPanelChange?.(true);
       } else if (tab === 'position') {
-        onPositionPanelChange?.(true);
+        if (!showPositionPanel) onPositionPanelChange?.(true);
       } else if (tab === 'quiz') {
-        onQuizPanelChange?.(true);
+        if (!showQuizPanel) onQuizPanelChange?.(true);
       } else if (tab === 'wheel') {
-        onWheelPanelChange?.(true);
+        if (!showWheelPanel) onWheelPanelChange?.(true);
       }
     }
-  }), [onDesignPanelChange, onEffectsPanelChange, onAnimationsPanelChange, onPositionPanelChange, onQuizPanelChange, onWheelPanelChange, setIsCollapsed]);
+  }), [onDesignPanelChange, onEffectsPanelChange, onAnimationsPanelChange, onPositionPanelChange, onQuizPanelChange, onWheelPanelChange, setIsCollapsed, internalActiveTab, showDesignPanel, showEffectsPanel, showAnimationsPanel, showPositionPanel, showQuizPanel, showWheelPanel]);
 
   // Removed event-based auto-switching to avoid flicker and unintended returns to Elements.
 
@@ -357,8 +367,12 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
 
   // Fonction interne pour gérer le changement d'onglet
   const setActiveTab = (tab: string | null) => {
+    if (tab === internalActiveTab) return;
     setInternalActiveTab(tab);
-    onActiveTabChange?.(tab);
+    if (lastSentTabRef.current !== tab) {
+      lastSentTabRef.current = tab;
+      onActiveTabChange?.(tab);
+    }
   };
   
   // Référence pour suivre les états précédents
@@ -417,9 +431,16 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
       }
     }
 
-    // Mettre à jour l'état si nécessaire
+    // Mettre à jour l'état si nécessaire (avec garde anti-réentrance)
     if (shouldUpdate && newActiveTab !== internalActiveTab) {
-      setActiveTab(newActiveTab);
+      if (derivingTabRef.current) {
+        // Skip re-entrant derive within the same tick
+      } else {
+        derivingTabRef.current = true;
+        setActiveTab(newActiveTab);
+        // Release guard next tick
+        setTimeout(() => { derivingTabRef.current = false; }, 0);
+      }
     }
 
     // Mettre à jour la référence des états précédents
@@ -444,7 +465,8 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
     showQuizPanel,
     showWheelPanel,
     showDesignPanel,
-    onDesignPanelChange
+    onDesignPanelChange,
+    internalActiveTab
   ]);
 
   // Fermer automatiquement le panneau d'effets si aucun élément texte n'est sélectionné
@@ -561,13 +583,13 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
     ignoreExternalUntilRef.current = Date.now() + 2000;
     setTimeout(() => { isUserTabSwitchingRef.current = false; }, 300);
     
-    // TOUJOURS fermer TOUS les panneaux temporaires lors d'un changement d'onglet
-    onEffectsPanelChange?.(false);
-    onAnimationsPanelChange?.(false);
-    onPositionPanelChange?.(false);
-    onQuizPanelChange?.(false);
-    onWheelPanelChange?.(false);
-    onDesignPanelChange?.(false);
+    // Fermer uniquement les panneaux ouverts pour éviter des re-renders inutiles
+    if (showEffectsPanel) onEffectsPanelChange?.(false);
+    if (showAnimationsPanel) onAnimationsPanelChange?.(false);
+    if (showPositionPanel) onPositionPanelChange?.(false);
+    if (showQuizPanel) onQuizPanelChange?.(false);
+    if (showWheelPanel) onWheelPanelChange?.(false);
+    if (showDesignPanel) onDesignPanelChange?.(false);
     
     // Si la cible N'EST PAS 'elements', toujours désélectionner le module pour éviter que le panel temporaire reste ouvert
     if (tabId !== 'elements' && onSelectedModuleChange) {
@@ -576,17 +598,17 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
 
     // Ouvrir explicitement le panneau correspondant au tab ciblé
     if (tabId === 'background') {
-      onDesignPanelChange?.(true);
+      if (!showDesignPanel) onDesignPanelChange?.(true);
     } else if (tabId === 'effects') {
-      onEffectsPanelChange?.(true);
+      if (!showEffectsPanel) onEffectsPanelChange?.(true);
     } else if (tabId === 'animations') {
-      onAnimationsPanelChange?.(true);
+      if (!showAnimationsPanel) onAnimationsPanelChange?.(true);
     } else if (tabId === 'position') {
-      onPositionPanelChange?.(true);
+      if (!showPositionPanel) onPositionPanelChange?.(true);
     } else if (tabId === 'quiz') {
-      onQuizPanelChange?.(true);
+      if (!showQuizPanel) onQuizPanelChange?.(true);
     } else if (tabId === 'wheel') {
-      onWheelPanelChange?.(true);
+      if (!showWheelPanel) onWheelPanelChange?.(true);
     }
     
     if (internalActiveTab === tabId) {

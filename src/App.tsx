@@ -50,6 +50,7 @@ function App() {
         import('./pages/TemplatesEditor');
         import('./pages/ModelEditor');
         import('./pages/FormEditor');
+        import('./pages/ScratchCardEditor');
       } catch (_) {
         // best-effort
       }
