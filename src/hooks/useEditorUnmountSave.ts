@@ -82,5 +82,18 @@ export const useEditorUnmountSave = (
       
       resetCampaign();
     };
-  }, [resetCampaign]); // Minimal dependencies to avoid re-creating
+  }, [
+    campaignType,
+    states.canvasElements,
+    states.modularPage,
+    states.screenBackgrounds,
+    states.extractedColors,
+    states.selectedDevice,
+    states.canvasZoom,
+    states.gameConfig,
+    campaignState,
+    syncAllStates,
+    saveCampaign,
+    resetCampaign
+  ]); // CRITICAL: Include all state dependencies to capture latest values
 };
