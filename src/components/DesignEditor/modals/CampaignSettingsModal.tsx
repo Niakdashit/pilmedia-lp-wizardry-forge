@@ -95,6 +95,7 @@ useEffect(() => {
       });
       
       // Trigger sync
+      console.log('🚀 [CampaignSettingsModal] Dispatching campaign:sync:before-save event');
       window.dispatchEvent(new CustomEvent('campaign:sync:before-save'));
       
       // Wait for sync to complete

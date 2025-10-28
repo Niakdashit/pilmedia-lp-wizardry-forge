@@ -1071,7 +1071,11 @@ useEffect(() => {
 
   // 🔄 Listen for sync request from CampaignSettingsModal before saving
   useEffect(() => {
+    console.log('🎧 [FormEditor] Setting up sync event listener');
+    
     const handler = () => {
+      console.log('🎯 [FormEditor] SYNC EVENT RECEIVED: campaign:sync:before-save');
+      
       console.log('🔄 [FormEditor] Received sync request, syncing all states...', {
         canvasElements: canvasElements.length,
         modularPageModules: modularPage ? Object.values(modularPage.screens || {}).flat().length : 0,
@@ -1098,12 +1102,17 @@ useEffect(() => {
         });
         
         // Emit confirmation event
+        console.log('📡 [FormEditor] Emitting campaign:sync:completed event');
         window.dispatchEvent(new CustomEvent('campaign:sync:completed'));
       }, 50);
     };
     
+    console.log('➕ [FormEditor] Adding event listener for campaign:sync:before-save');
     window.addEventListener('campaign:sync:before-save', handler);
-    return () => window.removeEventListener('campaign:sync:before-save', handler);
+    return () => {
+      console.log('➖ [FormEditor] Removing event listener for campaign:sync:before-save');
+      window.removeEventListener('campaign:sync:before-save', handler);
+    };
   }, [syncAllStates, canvasElements, modularPage, screenBackgrounds, extractedColors, selectedDevice, canvasZoom]);
 
   // Quiz config state
