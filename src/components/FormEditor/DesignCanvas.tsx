@@ -129,8 +129,8 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   editorMode = 'fullscreen',
   screenId = 'screen1',
   selectedDevice,
-  elements,
-  onElementsChange,
+  elements = [],
+  onElementsChange = () => {},
   background,
   campaign,
   overlayElements,
@@ -139,8 +139,8 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   onZoomChange,
   selectedElement: externalSelectedElement,
   onSelectedElementChange,
-  selectedElements,
-  onSelectedElementsChange,
+  selectedElements = [],
+  onSelectedElementsChange = () => {},
   onElementUpdate: externalOnElementUpdate,
   // Props pour la gestion des groupes
   selectedGroupId,
@@ -275,16 +275,27 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   // Intégration du système auto-responsive (doit être défini avant effectiveCanvasSize)
   const { applyAutoResponsive, getPropertiesForDevice, DEVICE_DIMENSIONS } = useAutoResponsive();
 
-  // Taille du canvas memoized
+  // Taille du canvas mémoïsée avec fallback robuste
   const canvasSize = useMemo(() => {
-    return DEVICE_DIMENSIONS[selectedDevice];
+    const fallback = { width: 810, height: 1440 };
+    try {
+      const map = DEVICE_DIMENSIONS || {} as any;
+      const val = map[selectedDevice as any];
+      if (val && typeof val.width === 'number' && typeof val.height === 'number') return val;
+    } catch {}
+    return fallback;
   }, [selectedDevice, DEVICE_DIMENSIONS]);
 
   // Forcer un format mobile selon les dimensions de l'iPhone 14 Pro Max
   const effectiveCanvasSize = useMemo(() => {
+    const mobileFallback = { width: 430, height: 932 };
+    const defaultFallback = { width: 810, height: 1440 };
     if (selectedDevice === 'mobile') {
-      // iPhone 14 Pro Max dimensions (correspond à Chrome DevTools)
-      return { width: 430, height: 932 };
+      return mobileFallback;
+    }
+    // Sécuriser quand canvasSize est indéfini
+    if (!canvasSize || typeof canvasSize.width !== 'number' || typeof canvasSize.height !== 'number') {
+      return defaultFallback;
     }
     return canvasSize;
   }, [selectedDevice, canvasSize]);

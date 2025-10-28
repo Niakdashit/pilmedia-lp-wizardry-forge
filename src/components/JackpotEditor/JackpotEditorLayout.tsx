@@ -385,13 +385,24 @@ useEffect(() => {
   }
 }, [location.pathname]);
 
+  // Temp campaign cleanup guard - MUST be declared before useEffect
+  const didTempCleanupRef = useRef<Set<string>>(new Set());
+
 // 🧹 CRITICAL: Clean temporary campaigns - reset background images and local backgrounds
+// ✅ FIX: Only clean once per campaign ID to prevent constant resets
 useEffect(() => {
   const params = new URLSearchParams(location.search);
   const id = params.get('campaign');
   if (!id || !isTempCampaignId(id)) return;
   
-  console.log('🧹 [JackpotEditor] Cleaning temp campaign:', id);
+  // ✅ GUARD: Skip if already cleaned this campaign ID
+  if (didTempCleanupRef.current.has(id)) {
+    console.log('⏭️ [JackpotEditor] Already cleaned temp campaign:', id);
+    return;
+  }
+  
+  console.log('🧹 [JackpotEditor] Cleaning temp campaign (first time):', id);
+  didTempCleanupRef.current.add(id);
   
   // Clear localStorage namespaced temp data
   clearTempCampaignData(id);
@@ -418,9 +429,6 @@ useEffect(() => {
     screen3: defaultBg
   });
 }, [location.search]);
-
-  // Temp campaign cleanup guard
-  const didTempCleanupRef = useRef(false);
   
   // Gestionnaire de changement d'appareil avec ajustement automatique du zoom
   const handleDeviceChange = (device: 'desktop' | 'tablet' | 'mobile') => {
@@ -510,6 +518,7 @@ useEffect(() => {
 }, [selectedDevice, campaignState?.design]);
 
 // ✅ Hydrater les éléments/modularPage/backgrounds depuis la DB à l'ouverture
+// ✅ FIX: Ne pas déclencher lors de simples changements de background
 useEffect(() => {
   const cid = (campaignState as any)?.id as string | undefined;
   
@@ -544,14 +553,28 @@ useEffect(() => {
       setModularPage(mp);
     }
   }
-}, [campaignState, selectedCampaignId]);
+}, [campaignState?.id, campaignState?.config?.canvasConfig, campaignState?.config?.elements, campaignState?.modularPage, campaignState?.design?.quizModules, selectedCampaignId]); // ✅ Dépendances précises : éviter les changements de background
 
 // 🔗 Miroir local → store: conserve les éléments dans campaign.config.canvasConfig afin d'éviter toute perte
+// ✅ FIX: Éviter les cascades lors des changements de background
 useEffect(() => {
   const id = (campaignState as any)?.id as string | undefined;
   // Ne PAS bloquer quand l'id n'existe pas encore (nouvelle campagne)
   // On garde uniquement la garde de cohérence quand un selectedCampaignId est présent
   if (selectedCampaignId && id && id !== selectedCampaignId) return;
+
+  // ✅ GUARD: Ne pas mettre à jour si les éléments n'ont pas changé depuis le dernier update
+  const currentElements = (campaignState as any)?.config?.canvasConfig?.elements;
+  const elementsChanged = JSON.stringify(currentElements) !== JSON.stringify(canvasElements);
+  const backgroundsChanged = JSON.stringify((campaignState as any)?.config?.canvasConfig?.screenBackgrounds) !== JSON.stringify(screenBackgrounds);
+  const deviceChanged = (campaignState as any)?.config?.canvasConfig?.device !== selectedDevice;
+  const zoomChanged = (campaignState as any)?.config?.canvasConfig?.zoom !== canvasZoom;
+
+  // Ne mettre à jour que si quelque chose a réellement changé
+  if (!elementsChanged && !backgroundsChanged && !deviceChanged && !zoomChanged) {
+    return;
+  }
+
   setCampaign((prev: any) => {
     if (!prev) return prev;
     const hasModules = !!modularPage && modularPage.screens && Object.values(modularPage.screens).some((arr: any) => Array.isArray(arr) && arr.length > 0);
@@ -578,11 +601,22 @@ useEffect(() => {
 }, [selectedCampaignId, campaignState?.id, canvasElements, screenBackgrounds, selectedDevice, canvasZoom, modularPage, setCampaign]);
 
 // 💾 Autosave complet: canvas + modules + tous les états
+// ✅ FIX: Éviter l'autosave lors des simples changements de background
 useEffect(() => {
   const id = (campaignState as any)?.id as string | undefined;
   if (!id) return;
   // Guard: ne sauver que la campagne sélectionnée
   if (selectedCampaignId && id !== selectedCampaignId) return;
+
+  // ✅ GUARD: Ne pas autosaver si seul le background a changé
+  const lastSavedElements = (campaignState as any)?.config?.canvasConfig?.elements;
+  const elementsActuallyChanged = JSON.stringify(lastSavedElements) !== JSON.stringify(canvasElements);
+
+  // Si seuls les backgrounds ont changé, ne pas autosaver immédiatement
+  if (!elementsActuallyChanged && canvasElements.length > 0) {
+    return;
+  }
+
   const t = window.setTimeout(async () => {
     try {
       const payload: any = {
@@ -613,7 +647,7 @@ useEffect(() => {
     }
   }, 1000);
   return () => clearTimeout(t);
-}, [campaignState?.id, selectedCampaignId, canvasElements, screenBackgrounds, selectedDevice, modularPage]);
+}, [campaignState?.id, selectedCampaignId, canvasElements, screenBackgrounds, selectedDevice, modularPage]); // ✅ Retiré canvasZoom pour éviter les sauvegardes à chaque zoom
 
   // Écoute l'évènement global pour appliquer l'image de fond à tous les écrans par device (desktop/tablette/mobile distinct)
   useEffect(() => {

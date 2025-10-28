@@ -173,7 +173,7 @@ export const saveCampaignToDB = async (
     name: campaign?.name || 'Nouvelle campagne',
     description: campaign?.description,
     slug: campaign?.slug,
-    type: campaign?.type || 'wheel',
+    type: campaign?.type || 'form',
     status: campaign?.status || 'draft',
     
     // Complete configuration

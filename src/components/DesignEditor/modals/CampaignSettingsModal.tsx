@@ -74,18 +74,59 @@ useEffect(() => {
 
   const handleSaveAndClose = async () => {
     try {
+      // Step 0: Trigger state synchronization in the editor BEFORE saving
+      console.log('🔄 [CampaignSettingsModal] Requesting state sync from editor...');
+      
+      // Wait for sync completion event from editor
+      const syncCompleted = new Promise<void>((resolve) => {
+        const handler = () => {
+          console.log('✅ [CampaignSettingsModal] Sync completed event received');
+          window.removeEventListener('campaign:sync:completed', handler);
+          resolve();
+        };
+        window.addEventListener('campaign:sync:completed', handler);
+        
+        // Fallback timeout in case event doesn't fire
+        setTimeout(() => {
+          console.warn('⚠️ [CampaignSettingsModal] Sync timeout, proceeding anyway');
+          window.removeEventListener('campaign:sync:completed', handler);
+          resolve();
+        }, 500);
+      });
+      
+      // Trigger sync
+      window.dispatchEvent(new CustomEvent('campaign:sync:before-save'));
+      
+      // Wait for sync to complete
+      await syncCompleted;
+      
+      // Get the updated campaign from store after sync
+      const updatedCampaign = useEditorStore.getState().campaign as any;
+      
+      // Verify sync worked by checking if modularPage exists
+      const hasModules = updatedCampaign?.modularPage || 
+                        updatedCampaign?.config?.modularPage || 
+                        updatedCampaign?.design?.modularPage ||
+                        updatedCampaign?.design?.quizModules;
+      
+      console.log('🔍 [CampaignSettingsModal] Campaign after sync:', {
+        id: updatedCampaign?.id,
+        hasModularPage: !!hasModules,
+        modulesCount: hasModules?.screens ? Object.values(hasModules.screens).flat().length : 0
+      });
+      
       // Step 1: Save the campaign itself (with all design, config, etc.)
       let savedCampaignId = effectiveCampaignId;
       
       // If no campaign ID yet, save campaign to DB first to get ID
       if (!effectiveCampaignId || effectiveCampaignId === 'new' || effectiveCampaignId === 'preview') {
-        if (!campaign) {
+        if (!updatedCampaign && !campaign) {
           alert('Aucune campagne à sauvegarder');
           return;
         }
         
-        console.log('💾 [CampaignSettingsModal] Saving new campaign to DB...');
-        const savedCampaign = await saveCampaignToDB(campaign, saveCampaign);
+        console.log('💾 [CampaignSettingsModal] Saving campaign to DB...');
+        const savedCampaign = await saveCampaignToDB(updatedCampaign || campaign, saveCampaign);
         
         if (!savedCampaign?.id) {
           alert('Erreur lors de la sauvegarde de la campagne');

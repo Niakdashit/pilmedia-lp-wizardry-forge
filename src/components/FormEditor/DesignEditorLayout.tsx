@@ -227,6 +227,33 @@ const FormEditorLayout: React.FC<FormEditorLayoutProps> = ({ mode = 'campaign', 
   // Selected campaign ID from store (used by guards below)
   const selectedCampaignId = useEditorStore((s) => s.selectedCampaignId);
 
+  // Utilitaire: vérifier si un modularPage contient au moins un module
+  const isNonEmptyModularPage = useCallback((mp: any) => {
+    try {
+      if (!mp || !mp.screens) return false;
+      const s1 = Array.isArray(mp.screens?.screen1) ? mp.screens.screen1.length : 0;
+      const s2 = Array.isArray(mp.screens?.screen2) ? mp.screens.screen2.length : 0;
+      const s3 = Array.isArray(mp.screens?.screen3) ? mp.screens.screen3.length : 0;
+      return (s1 + s2 + s3) > 0;
+    } catch { return false; }
+  }, []);
+
+  // Fusion non-destructive par écran (préserver l'existant quand l'entrant est vide)
+  const deepMergeModularPage = useCallback((prev: any, next: any) => {
+    const ensure = (v: any) => v && v.screens ? v : { screens: { screen1: [], screen2: [], screen3: [] } };
+    const p = ensure(prev);
+    const n = ensure(next);
+    const merged = {
+      screens: {
+        screen1: Array.isArray(n.screens.screen1) && n.screens.screen1.length > 0 ? n.screens.screen1 : (p.screens.screen1 || []),
+        screen2: Array.isArray(n.screens.screen2) && n.screens.screen2.length > 0 ? n.screens.screen2 : (p.screens.screen2 || []),
+        screen3: Array.isArray(n.screens.screen3) && n.screens.screen3.length > 0 ? n.screens.screen3 : (p.screens.screen3 || [])
+      },
+      _updatedAt: Date.now()
+    };
+    return merged;
+  }, []);
+
   // Supabase campaigns API
   const { saveCampaign } = useCampaigns();
 
@@ -235,6 +262,7 @@ const { syncAllStates } = useCampaignStateSync();
 
 // 🔄 Load campaign data from Supabase when campaign ID is in URL
 const dataHydratedRef = useRef(false);
+const isLoadingCampaignRef = useRef(false);
 useEffect(() => {
   const sp = new URLSearchParams(location.search);
   const campaignId = sp.get('campaign');
@@ -281,6 +309,7 @@ useEffect(() => {
   // Otherwise, load from Supabase
   const loadCampaignData = async () => {
     try {
+      isLoadingCampaignRef.current = true;
       const { data, error } = await supabase
         .from('campaigns')
         .select('*')
@@ -318,7 +347,8 @@ useEffect(() => {
         
         // Restore canvasElements, backgrounds, modularPage, and zoom
         const cfg = campaignData.config?.canvasConfig || campaignData.canvasConfig;
-        const mp = campaignData.config?.modularPage || campaignData.design?.modularPage;
+        // Restaure aussi depuis design.quizModules (champ utilisé par persistModular)
+        const mp = campaignData.config?.modularPage || campaignData.design?.modularPage || (campaignData.design as any)?.quizModules;
         
         if (cfg?.elements && Array.isArray(cfg.elements) && cfg.elements.length > 0) {
           setCanvasElements(cfg.elements);
@@ -333,13 +363,30 @@ useEffect(() => {
           setCanvasZoom(cfg.zoom);
         }
         if (mp && mp.screens) {
-          setModularPage(mp);
+          // Ne pas écraser un état non vide par un mp vide + fusionner par écran
+          setModularPage((prev: any) => {
+            const incomingNonEmpty = isNonEmptyModularPage(mp);
+            const prevNonEmpty = isNonEmptyModularPage(prev);
+            const merged = deepMergeModularPage(prev, mp);
+            console.debug('[FormEditor][Load] setModularPage', {
+              prevS1: Array.isArray(prev?.screens?.screen1) ? prev.screens.screen1.length : 0,
+              nextS1: Array.isArray(mp?.screens?.screen1) ? mp.screens.screen1.length : 0,
+              mergedS1: merged.screens.screen1.length,
+              prevNonEmpty,
+              incomingNonEmpty
+            });
+            if (prevNonEmpty && !incomingNonEmpty) return prev;
+            return merged;
+          });
         }
         
         dataHydratedRef.current = true;
       }
     } catch (error) {
       console.error('❌ [FormEditor] Failed to load campaign:', error);
+    }
+    finally {
+      isLoadingCampaignRef.current = false;
     }
   };
   
@@ -498,21 +545,46 @@ useEffect(() => {
 
 // ✅ Hydrater les éléments/modularPage/backgrounds depuis la DB à l'ouverture
 useEffect(() => {
+  console.log('🧩 [FormEditor] DB loading effect triggered', {
+    cid: (campaignState as any)?.id,
+    selectedCampaignId,
+    isTemp: (campaignState as any)?.id?.startsWith('temp-') || isTempCampaignId((campaignState as any)?.id),
+    campaignStateKeys: campaignState ? Object.keys(campaignState) : []
+  });
+
   const cid = (campaignState as any)?.id as string | undefined;
   
   // 🛡️ GUARD: Ne pas hydrater si :
   // - Pas de campagne chargée
   // - C'est une nouvelle campagne (temp ID ou pas d'ID)
   // - L'ID ne correspond pas à celui sélectionné
-  if (!cid) return;
-  if (cid.startsWith('temp-') || isTempCampaignId(cid)) return;
-  if (selectedCampaignId && cid !== selectedCampaignId) return;
+  if (!cid) {
+    console.log('🧩 [FormEditor] No campaign ID, skipping hydration');
+    return;
+  }
+  if (cid.startsWith('temp-') || isTempCampaignId(cid)) {
+    console.log('🧩 [FormEditor] Temp campaign, skipping hydration');
+    return;
+  }
+  if (selectedCampaignId && cid !== selectedCampaignId) {
+    console.log('🧩 [FormEditor] Wrong campaign ID, skipping hydration');
+    return;
+  }
   
   const cfg = (campaignState as any)?.config?.canvasConfig || (campaignState as any)?.canvasConfig;
   const mp = (campaignState as any)?.config?.modularPage || (campaignState as any)?.design?.quizModules;
   const topLevelElements = (campaignState as any)?.config?.elements;
 
-  // N'hydrate que si on a des données utiles ET que le local est vide
+  console.log('🧩 [FormEditor] Hydration data check', {
+    hasCanvasConfig: !!cfg,
+    hasModularPage: !!mp,
+    mpScreens: mp?.screens ? Object.keys(mp.screens) : [],
+    mpTotalModules: mp?.screens ? Object.values(mp.screens || {}).reduce((total: number, arr: any) => total + (Array.isArray(arr) ? arr.length : 0), 0) : 0,
+    hasTopLevelElements: !!topLevelElements,
+    canvasElementsLength: canvasElements.length
+  });
+
+  // N'hydrate que si on a des données utiles ET que le local est vide pour éviter l'écrasement
   if (Array.isArray(cfg?.elements) && cfg.elements.length > 0 && canvasElements.length === 0) {
     console.log('🧩 [FormEditor] Hydration: applying canvas elements (canvasConfig)', cfg.elements.length);
     setCanvasElements(cfg.elements);
@@ -527,18 +599,36 @@ useEffect(() => {
   if (mp && mp.screens) {
     const total = Object.values(mp.screens || {}).reduce((n: number, arr: any) => n + (Array.isArray(arr) ? arr.length : 0), 0);
     if (total > 0) {
-      console.log('🧩 [FormEditor] Hydration: applying modularPage', total);
+      console.log('🧩 [FormEditor] Hydration: applying modularPage from DB', total, 'modules');
       setModularPage(mp);
+    } else {
+      console.log('🧩 [FormEditor] ModularPage has screens but no modules');
     }
+  } else {
+    console.log('🧩 [FormEditor] No modularPage in campaign data');
   }
-}, [campaignState, selectedCampaignId]);
+}, [campaignState?.id, campaignState?.config?.canvasConfig, campaignState?.config?.elements, campaignState?.modularPage, campaignState?.design?.quizModules, selectedCampaignId]);
 
 // 🔗 Miroir local → store: conserve les éléments dans campaign.config.canvasConfig
+// ✅ FIX: Éviter les cascades lors des changements de background
 useEffect(() => {
   // Ne pas écrire dans le store tant que la campagne n'est pas sélectionnée
   const id = (campaignState as any)?.id as string | undefined;
   if (!id) return;
   if (selectedCampaignId && id !== selectedCampaignId) return;
+
+  // ✅ GUARD: Ne pas mettre à jour si les éléments n'ont pas changé depuis le dernier update
+  const currentElements = (campaignState as any)?.config?.canvasConfig?.elements;
+  const elementsChanged = JSON.stringify(currentElements) !== JSON.stringify(canvasElements);
+  const backgroundsChanged = JSON.stringify((campaignState as any)?.config?.canvasConfig?.screenBackgrounds) !== JSON.stringify(screenBackgrounds);
+  const deviceChanged = (campaignState as any)?.config?.canvasConfig?.device !== selectedDevice;
+  const zoomChanged = (campaignState as any)?.config?.canvasConfig?.zoom !== canvasZoom;
+
+  // Ne mettre à jour que si quelque chose a réellement changé
+  if (!elementsChanged && !backgroundsChanged && !deviceChanged && !zoomChanged) {
+    return;
+  }
+
   setCampaign((prev: any) => {
     if (!prev) return prev;
     const next = {
@@ -560,18 +650,37 @@ useEffect(() => {
 }, [selectedCampaignId, campaignState?.id, canvasElements, screenBackgrounds, selectedDevice, canvasZoom, setCampaign]);
 
 // 💾 Autosave léger des éléments du canvas
+// ✅ FIX: Éviter l'autosave lors des simples changements de background
 useEffect(() => {
   const id = (campaignState as any)?.id as string | undefined;
   if (!id) return;
   // Guard: ensure we only persist for the selected campaign slice
   if (selectedCampaignId && id !== selectedCampaignId) return;
+  // Ne pas autosaver pendant le chargement initial
+  if (!dataHydratedRef.current || isLoadingCampaignRef.current) return;
+
+  // ✅ GUARD: Ne pas autosaver si seul le background a changé
+  const lastSavedElements = (campaignState as any)?.config?.canvasConfig?.elements;
+  const elementsActuallyChanged = JSON.stringify(lastSavedElements) !== JSON.stringify(canvasElements);
+
+  // Si seuls les backgrounds ont changé, ne pas autosaver immédiatement
+  if (!elementsActuallyChanged && canvasElements.length > 0) {
+    return;
+  }
+
   const t = window.setTimeout(async () => {
     try {
+      // ✅ FIX: Toujours inclure le modularPage actuel pour éviter l'écrasement
+      // Ne jamais sauvegarder un modularPage vide si on en a un rempli en mémoire
+      const currentModularPage = modularPage && Object.keys(modularPage.screens || {}).length > 0 
+        ? modularPage 
+        : (campaignState as any)?.config?.modularPage || (campaignState as any)?.design?.modularPage;
+
       const payload: any = {
         ...(campaignState || {}),
         type: 'form',
         extractedColors, // ✅ Include extracted colors
-        modularPage,
+        modularPage: currentModularPage, // ✅ Préserver les modules existants
         canvasElements,
         screenBackgrounds,
         selectedDevice,
@@ -583,7 +692,10 @@ useEffect(() => {
           zoom: canvasZoom
         }
       };
-      console.log('💾 [FormEditor] Autosave complete state → DB', canvasElements.length);
+      console.log('💾 [FormEditor] Autosave complete state → DB', {
+        elements: canvasElements.length,
+        modules: currentModularPage ? Object.values(currentModularPage.screens || {}).flat().length : 0
+      });
       await saveCampaignToDB(payload, saveCampaign);
       setIsModified(false);
     } catch (e) {
@@ -591,7 +703,77 @@ useEffect(() => {
     }
   }, 1000);
   return () => clearTimeout(t);
-}, [campaignState?.id, selectedCampaignId, canvasElements, screenBackgrounds, selectedDevice]);
+}, [campaignState?.id, selectedCampaignId, canvasElements, screenBackgrounds, selectedDevice, modularPage, campaignState?.config?.modularPage, campaignState?.design?.modularPage]); // ✅ Retiré canvasZoom pour éviter les sauvegardes à chaque zoom
+
+// 💾 Autosave des modules séparément pour éviter les conflits
+useEffect(() => {
+  console.log('🧩 [FormEditor] Modules autosave effect triggered', {
+    hasId: !!(campaignState as any)?.id,
+    selectedCampaignId,
+    dataHydrated: dataHydratedRef.current,
+    isLoadingCampaign: isLoadingCampaignRef.current,
+    hasModules: !!modularPage && Object.keys(modularPage.screens || {}).length > 0,
+    totalModules: modularPage ? Object.values(modularPage.screens || {}).flat().length : 0
+  });
+
+  const id = (campaignState as any)?.id as string | undefined;
+  if (!id) {
+    console.log('🧩 [FormEditor] No campaign ID, skipping autosave');
+    return;
+  }
+  if (selectedCampaignId && id !== selectedCampaignId) {
+    console.log('🧩 [FormEditor] Wrong campaign ID, skipping autosave');
+    return;
+  }
+  if (!dataHydratedRef.current || isLoadingCampaignRef.current) {
+    console.log('🧩 [FormEditor] Data not hydrated or loading, skipping autosave');
+    return;
+  }
+
+  // Ne sauvegarder que si on a des modules
+  const hasModules = modularPage && Object.keys(modularPage.screens || {}).length > 0;
+  if (!hasModules) {
+    console.log('🧩 [FormEditor] No modules to save, skipping autosave');
+    return;
+  }
+
+  const totalModules = Object.values(modularPage.screens || {}).flat().length;
+  if (totalModules === 0) {
+    console.log('🧩 [FormEditor] No modules in screens, skipping autosave');
+    return;
+  }
+
+  console.log('🧩 [FormEditor] Starting modules autosave in 1.5s...');
+
+  const t = window.setTimeout(async () => {
+    console.log('🧩 [FormEditor] Executing modules autosave now');
+    try {
+      const payload: any = {
+        ...(campaignState || {}),
+        type: 'form',
+        modularPage,
+        config: {
+          ...(campaignState as any)?.config,
+          modularPage
+        },
+        design: {
+          ...(campaignState as any)?.design,
+          modularPage,
+          quizModules: modularPage
+        }
+      };
+      console.log('🧩 [FormEditor] Autosave modules → DB', totalModules, 'modules');
+      await saveCampaignToDB(payload, saveCampaign);
+      console.log('🧩 [FormEditor] Modules autosave completed successfully');
+    } catch (e) {
+      console.warn('⚠️ [FormEditor] Module autosave failed', e);
+    }
+  }, 1500);
+  return () => {
+    console.log('🧩 [FormEditor] Clearing modules autosave timeout');
+    clearTimeout(t);
+  };
+}, [campaignState?.id, selectedCampaignId, modularPage, campaignState?.config, campaignState?.design]);
 
   // Détection de la taille de fenêtre
   useEffect(() => {
@@ -886,6 +1068,44 @@ useEffect(() => {
       setIsModified(false);
     }
   }, [campaignState, newCampaignName, saveCampaign, setCampaign, upsertSettings, location.pathname, location.search, navigate, syncAllStates, canvasElements, modularPage, screenBackgrounds, extractedColors, selectedDevice, canvasZoom, setIsModified]);
+
+  // 🔄 Listen for sync request from CampaignSettingsModal before saving
+  useEffect(() => {
+    const handler = () => {
+      console.log('🔄 [FormEditor] Received sync request, syncing all states...', {
+        canvasElements: canvasElements.length,
+        modularPageModules: modularPage ? Object.values(modularPage.screens || {}).flat().length : 0,
+        screenBackgrounds: Object.keys(screenBackgrounds).length
+      });
+      
+      // Sync all states to campaign object
+      syncAllStates({
+        canvasElements,
+        modularPage,
+        screenBackgrounds,
+        extractedColors,
+        selectedDevice,
+        canvasZoom
+      });
+      
+      // Force immediate update to Zustand store to prevent race conditions
+      // Wait a tick to ensure the setState has propagated
+      setTimeout(() => {
+        const updatedCampaign = useEditorStore.getState().campaign as any;
+        console.log('✅ [FormEditor] All states synced to campaign object', {
+          modulesInStore: updatedCampaign?.modularPage?.screens ? 
+            Object.values(updatedCampaign.modularPage.screens).flat().length : 0
+        });
+        
+        // Emit confirmation event
+        window.dispatchEvent(new CustomEvent('campaign:sync:completed'));
+      }, 50);
+    };
+    
+    window.addEventListener('campaign:sync:before-save', handler);
+    return () => window.removeEventListener('campaign:sync:before-save', handler);
+  }, [syncAllStates, canvasElements, modularPage, screenBackgrounds, extractedColors, selectedDevice, canvasZoom]);
+
   // Quiz config state
   const [quizConfig, setQuizConfig] = useState({
     questionCount: 5,
@@ -1000,16 +1220,19 @@ useEffect(() => {
     };
   }, []);
 
-  // Initialize modular page from campaignConfig if present
-  useEffect(() => {
-    const mp = (campaignConfig as any)?.design?.quizModules as ModularPage | undefined;
-    if (mp && mp.screens) {
-      setModularPage(mp);
-    }
-  }, [campaignConfig]);
-
   // Helper to persist modularPage into campaignConfig (and mark modified)
+  // ✅ FIX: Éviter les re-rendus inutiles avec des guards et optimisations
   const persistModular = useCallback((next: ModularPage) => {
+    // ✅ GUARD: Éviter les appels inutiles si modularPage n'a pas changé
+    if (JSON.stringify(next) === JSON.stringify(modularPage)) {
+      return;
+    }
+
+    console.log('🧩 [FormEditor] persistModular: saving modules', {
+      screen1: next.screens.screen1?.length || 0,
+      screen2: next.screens.screen2?.length || 0
+    });
+
     setModularPage(next);
     setCampaignConfig((prev: any) => {
       const updated = {
@@ -1017,12 +1240,26 @@ useEffect(() => {
         design: {
           ...(prev?.design || {}),
           quizModules: { ...next, _updatedAt: Date.now() }
+        },
+        config: {
+          ...(prev?.config || {}),
+          modularPage: { ...next, _updatedAt: Date.now() }
         }
       };
+
+      // ✅ GUARD: Ne pas mettre à jour si campaignConfig n'a pas réellement changé
+      if (JSON.stringify(updated) === JSON.stringify(prev)) {
+        return prev;
+      }
+
       return updated;
     });
-    try { setIsModified(true); } catch {}
-  }, [setIsModified]);
+
+    // ✅ DELAY: Marquer modifié seulement après un délai pour éviter les appels répétés
+    setTimeout(() => {
+      try { setIsModified(true); } catch {}
+    }, 100);
+  }, [modularPage, setIsModified]);
 
   const scrollToScreen = useCallback((screen: ScreenId): boolean => {
     const canvasScrollArea = document.querySelector('.canvas-scroll-area') as HTMLElement | null;
@@ -1301,25 +1538,37 @@ useEffect(() => {
     console.log(`✅ Module dupliqué avec succès (${id} → ${duplicatedModule.id})`);
   }, [modularPage.screens, persistModular]);
   
-  // Fonction pour sélectionner tous les éléments (textes, images, etc.)
+  // ✅ OPTIMISATION: Mémoiser les modules par écran pour éviter re-rendus constants
+  const screen1Modules = useMemo(() => modularPage.screens.screen1 || [], [modularPage.screens.screen1]);
+  const screen2Modules = useMemo(() => modularPage.screens.screen2 || [], [modularPage.screens.screen2]);
+  
+  // ✅ OPTIMISATION: Mémoiser les backgrounds pour éviter re-rendus constants
+  const screen1Background = useMemo(() => 
+    screenBackgrounds.screen1?.devices?.[selectedDevice] || screenBackgrounds.screen1,
+    [screenBackgrounds.screen1, selectedDevice]
+  );
+  const screen2Background = useMemo(() => 
+    screenBackgrounds.screen2?.devices?.[selectedDevice] || screenBackgrounds.screen2,
+    [screenBackgrounds.screen2, selectedDevice]
+  );
+  
+  // ✅ OPTIMISATION: Mémoiser une version légère du campaign pour les props stables
+  // Renommé en memoCampaignData pour éviter la collision avec la variable campaignData plus bas
+  const memoCampaignData = useMemo(() => ({
+    ...campaignState,
+    type: 'form',
+    formConfig: (campaignState as any)?.formConfig
+  }), [campaignState]);
+
+  // ✅ Restauré: Sélectionner tous les éléments visibles sur le canvas
   const handleSelectAll = useCallback(() => {
-    // Filtrer tous les éléments visibles sur le canvas (textes, images, formes, etc.)
     const selectableElements = canvasElements.filter(element => 
       element && element.id && (element.type === 'text' || element.type === 'image' || element.type === 'shape' || element.type)
     );
-    
+
     if (selectableElements.length > 0) {
       setSelectedElements([...selectableElements]);
-      setSelectedElement(null); // Désélectionner l'élément unique
-      console.log('🎯 Selected all canvas elements:', {
-        total: selectableElements.length,
-        types: selectableElements.reduce((acc, el) => {
-          acc[el.type] = (acc[el.type] || 0) + 1;
-          return acc;
-        }, {} as Record<string, number>)
-      });
-    } else {
-      console.log('🎯 No selectable elements found on canvas');
+      setSelectedElement(null);
     }
   }, [canvasElements]);
   const [showFunnel, setShowFunnel] = useState(false);
@@ -2279,8 +2528,9 @@ useEffect(() => {
     });
     
     return {
-      id: 'form-preview-campaign',
-      type: 'quiz',
+      // Ne jamais injecter un faux ID dans le store; garder l'ID actuel si présent
+      id: (campaignState as any)?.id,
+      type: 'form',
       design: {
         background: canvasBackground,
         screenBackgrounds: screenBackgrounds, // Backgrounds par écran pour le preview
@@ -2416,36 +2666,41 @@ useEffect(() => {
     backgroundUpdateTrigger
   ]);
   
-  // Log pour vérifier que campaignData contient bien les éléments
-  console.log('📊 [DesignEditorLayout] campaignData construit:', {
-    canvasElementsCount: canvasElements.length,
-    campaignDataCanvasConfigElements: campaignData?.canvasConfig?.elements?.length || 0,
-    customTextsCount: campaignData?.design?.customTexts?.length || 0,
-    customImagesCount: campaignData?.design?.customImages?.length || 0,
-    backgroundType: canvasBackground?.type,
-    backgroundValue: canvasBackground?.value?.substring(0, 50),
-    designBackgroundImage: campaignData?.design?.backgroundImage?.substring(0, 50),
-    designMobileBackgroundImage: campaignData?.design?.mobileBackgroundImage?.substring(0, 50),
-    campaignConfigBackgroundImage: campaignConfig?.design?.backgroundImage?.substring(0, 50),
-    showFunnel
-  });
-
-  // Synchronisation avec le store (éviter les boucles d'updates)
+  // Référence pour mémoriser la dernière signature synchronisée avec le store
   const lastTransformedSigRef = useRef<string>('');
-  useEffect(() => {
-    if (!campaignData) return;
 
+  useEffect(() => {
+    // Guards: do not sync during initial load or when not in preview mode
+    if (!campaignData) return;
+    if (!dataHydratedRef.current) return;
+    if (isLoadingCampaignRef.current) return;
+    if (!showFunnel) return;
+
+    // Log pour vérifier que campaignData contient bien les éléments
+    console.log('📊 [DesignEditorLayout] campaignData construit:', {
+      canvasElementsCount: canvasElements.length,
+      campaignDataCanvasConfigElements: campaignData?.canvasConfig?.elements?.length || 0,
+      customTextsCount: campaignData?.design?.customTexts?.length || 0,
+      customImagesCount: campaignData?.design?.customImages?.length || 0,
+      backgroundType: canvasBackground?.type,
+      backgroundValue: canvasBackground?.value?.substring(0, 50),
+      designBackgroundImage: campaignData?.design?.backgroundImage?.substring(0, 50),
+      designMobileBackgroundImage: campaignData?.design?.mobileBackgroundImage?.substring(0, 50),
+      campaignId: (campaignState as any)?.id,
+      showFunnel
+    });
+
+    // Construire une version transformée pour le preview tout en préservant l'ID réel et le type form
     const transformedCampaign = {
       ...campaignData,
+      id: (useEditorStore.getState().campaign as any)?.id || (campaignState as any)?.id,
       name: 'Ma Campagne',
-      type: (campaignData.type || 'wheel') as 'wheel' | 'scratch' | 'jackpot' | 'quiz' | 'dice' | 'form' | 'memory' | 'puzzle',
-      // Important: preserve background as an object for preview so FunnelQuizParticipate
-      // can detect image backgrounds (type === 'image'). Do not flatten to string.
+      type: (campaignData.type || 'form') as 'wheel' | 'scratch' | 'jackpot' | 'quiz' | 'dice' | 'form' | 'memory' | 'puzzle',
       design: {
         ...campaignData.design,
         background: campaignData.design?.background ?? { type: 'color', value: '#ffffff' }
       }
-    };
+    } as any;
 
     // Signature stable pour éviter les mises à jour redondantes
     const signature = (() => {
@@ -2523,9 +2778,9 @@ useEffect(() => {
         console.debug('[DesignEditorLayout] Skipping setCampaign: no material change');
       }
     }
-  }, [campaignData, setCampaign]);
+  }, [campaignData, setCampaign, showFunnel]);
 
-  // Actions optimisées
+  // Sauvegarde consolidée (modules, fonds, éléments, champs)
   const handleSave = async () => {
     setIsLoading(true);
     try {
@@ -2538,11 +2793,41 @@ useEffect(() => {
         selectedDevice,
         canvasZoom
       });
-      
+
       // Récupérer le campaign mis à jour après synchronisation
-      const updatedCampaign = useEditorStore.getState().campaign;
-      
-      const saved = await saveCampaignToDB(updatedCampaign, saveCampaign);
+      const updatedCampaign = useEditorStore.getState().campaign || {};
+
+      // Construire un objet consolidé pour garantir la persistance des données critiques
+      const toSave: any = {
+        ...updatedCampaign,
+        type: (updatedCampaign as any)?.type || 'form',
+        // Canvas elements et config
+        canvasElements: [...canvasElements],
+        canvasConfig: {
+          ...(updatedCampaign as any)?.canvasConfig,
+          elements: [...canvasElements],
+          background: canvasBackground,
+          screenBackgrounds: { ...screenBackgrounds },
+          device: selectedDevice,
+          zoom: canvasZoom
+        },
+        // Modules
+        modularPage: { ...(modularPage || { screens: { screen1: [], screen2: [], screen3: [] } }) },
+        // Design (fonds + couleurs extraites)
+        design: {
+          ...(updatedCampaign as any)?.design,
+          screenBackgrounds: { ...screenBackgrounds },
+          background: canvasBackground,
+          backgroundImage: (updatedCampaign as any)?.design?.backgroundImage || (canvasBackground?.type === 'image' ? canvasBackground.value : (updatedCampaign as any)?.design?.backgroundImage),
+          mobileBackgroundImage: (updatedCampaign as any)?.design?.mobileBackgroundImage || (canvasBackground?.type === 'image' ? canvasBackground.value : (updatedCampaign as any)?.design?.mobileBackgroundImage),
+          extractedColors: [...extractedColors]
+        },
+        // Champs formulaire
+        formFields: (campaignState as any)?.formFields || (updatedCampaign as any)?.formFields || []
+      };
+
+      // Sauvegarder via le mapper centralisé
+      const saved = await saveCampaignToDB(toSave, saveCampaign);
       if (saved?.id && !(campaignState as any)?.id) {
         setCampaign((prev: any) => ({ ...prev, id: saved.id }));
       }
@@ -2605,14 +2890,15 @@ useEffect(() => {
       return;
     }
     
-    // ✅ CRITICAL: Vérifier si le nom est valide AVANT de sauvegarder
+    // ✅ CRITICAL: Ne demander un nom que pour un brouillon SANS id et sans nom explicite
+    const hasId = !!((campaignState as any)?.id);
     const currentName = (campaignState as any)?.name || '';
-    const isValidName = currentName && currentName.trim() && 
-                       !currentName.includes('Nouvelle campagne') && 
-                       !currentName.includes('New Campaign');
-    
-    if (!isValidName) {
-      console.log('❌ [FormEditor] Invalid campaign name, opening name modal before save');
+    const isNameProvided = typeof currentName === 'string' && currentName.trim().length > 0;
+    const isDefaultName = /nouvelle campagne|new campaign/i.test(currentName || '');
+    const mustPromptForName = !hasId && (!isNameProvided || isDefaultName);
+
+    if (mustPromptForName) {
+      console.log('❌ [FormEditor] Draft without proper name, opening name modal before save');
       setIsNameModalOpen(true);
       return;
     }
@@ -3061,7 +3347,7 @@ useEffect(() => {
                     />
                   ) : (
                     <PreviewRenderer
-                      campaign={campaignData}
+                      campaign={memoCampaignData}
                       previewMode="mobile"
                       wheelModalConfig={wheelModalConfig}
                       constrainedHeight={true}
@@ -3092,7 +3378,7 @@ useEffect(() => {
                 </div>
               ) : (
                 <PreviewRenderer
-                  campaign={campaignData}
+                  campaign={memoCampaignData}
                   previewMode={actualDevice === 'desktop' && selectedDevice === 'desktop' ? 'desktop' : selectedDevice}
                   wheelModalConfig={wheelModalConfig}
                 />
@@ -3516,8 +3802,8 @@ useEffect(() => {
                     selectedDevice={selectedDevice}
                     elements={canvasElements}
                     onElementsChange={setCanvasElements}
-                    background={screenBackgrounds.screen1?.devices?.[selectedDevice] || screenBackgrounds.screen1}
-                    campaign={campaignData}
+                    background={screen1Background}
+                    campaign={memoCampaignData}
                     onCampaignChange={handleCampaignConfigChange}
                     zoom={canvasZoom}
                     enableInternalAutoFit={true}
@@ -3591,7 +3877,7 @@ useEffect(() => {
                     showQuizPanel={showQuizPanel}
                     onQuizPanelChange={setShowQuizPanel}
                     // Modular page (screen1)
-                    modularModules={modularPage.screens.screen1}
+                    modularModules={screen1Modules}
                     onModuleUpdate={handleUpdateModule}
                     onModuleDelete={handleDeleteModule}
                     onModuleMove={handleMoveModule}
@@ -3621,21 +3907,6 @@ useEffect(() => {
                   />
                   <div className="relative z-10">
                     <DesignCanvas
-                      editorMode={editorMode}
-                      screenId="screen2"
-                      selectedDevice={selectedDevice}
-                      elements={canvasElements}
-                      onElementsChange={setCanvasElements}
-                      background={screenBackgrounds.screen2?.devices?.[selectedDevice] || screenBackgrounds.screen2}
-                      campaign={campaignData}
-                      onCampaignChange={handleCampaignConfigChange}
-                      zoom={canvasZoom}
-                      onZoomChange={setCanvasZoom}
-                      enableInternalAutoFit={true}
-                      selectedElement={selectedElement}
-                      onSelectedElementChange={setSelectedElement}
-                      selectedElements={selectedElements}
-                      onSelectedElementsChange={setSelectedElements}
                       onElementUpdate={handleElementUpdate}
                       // Quiz sync props - DISABLED for screen2 (exit message only)
                       extractedColors={extractedColors}
