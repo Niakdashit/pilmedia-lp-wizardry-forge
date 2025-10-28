@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useEditorStore } from '@/stores/editorStore';
 import { useCampaignStateSync } from './useCampaignStateSync';
 import { saveCampaignToDB } from './useModernCampaignEditor/saveHandler';
@@ -26,6 +26,18 @@ export const useEditorUnmountSave = (
   const { resetCampaign } = useEditorStore();
   const campaignState = useEditorStore(s => s.campaign);
 
+  // Use refs to capture latest values without triggering re-creation
+  const statesRef = useRef(states);
+  const saveCampaignRef = useRef(saveCampaign);
+  const syncAllStatesRef = useRef(syncAllStates);
+
+  // Update refs on each render
+  useEffect(() => {
+    statesRef.current = states;
+    saveCampaignRef.current = saveCampaign;
+    syncAllStatesRef.current = syncAllStates;
+  });
+
   useEffect(() => {
     return () => {
       console.log(`🧹 [${campaignType}Editor] Unmounting - saving before reset`);
@@ -36,45 +48,47 @@ export const useEditorUnmountSave = (
           !!v && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v);
         
         if (isUuid(id)) {
+          const currentStates = statesRef.current;
+          
           // 1. Sync local → store
-          syncAllStates({
-            canvasElements: states.canvasElements,
-            modularPage: states.modularPage,
-            screenBackgrounds: states.screenBackgrounds,
-            extractedColors: states.extractedColors,
-            selectedDevice: states.selectedDevice,
-            canvasZoom: states.canvasZoom
+          syncAllStatesRef.current({
+            canvasElements: currentStates.canvasElements,
+            modularPage: currentStates.modularPage,
+            screenBackgrounds: currentStates.screenBackgrounds,
+            extractedColors: currentStates.extractedColors,
+            selectedDevice: currentStates.selectedDevice,
+            canvasZoom: currentStates.canvasZoom
           });
 
           // 2. Build complete payload
-          const base = useEditorStore.getState().campaign || campaignState || {};
+          const base = useEditorStore.getState().campaign || {};
           const payload: any = {
             ...base,
             type: campaignType,
-            extractedColors: states.extractedColors,
-            modularPage: states.modularPage,
-            canvasElements: states.canvasElements,
-            screenBackgrounds: states.screenBackgrounds,
-            selectedDevice: states.selectedDevice,
-            canvasZoom: states.canvasZoom,
+            extractedColors: currentStates.extractedColors,
+            modularPage: currentStates.modularPage,
+            canvasElements: currentStates.canvasElements,
+            screenBackgrounds: currentStates.screenBackgrounds,
+            selectedDevice: currentStates.selectedDevice,
+            canvasZoom: currentStates.canvasZoom,
             canvasConfig: {
               ...(base as any)?.canvasConfig,
-              elements: states.canvasElements,
-              screenBackgrounds: states.screenBackgrounds,
-              device: states.selectedDevice,
-              zoom: states.canvasZoom
+              elements: currentStates.canvasElements,
+              screenBackgrounds: currentStates.screenBackgrounds,
+              device: currentStates.selectedDevice,
+              zoom: currentStates.canvasZoom
             }
           };
 
           // Add game-specific config
-          if (states.gameConfig) {
+          if (currentStates.gameConfig) {
             const configKey = `${campaignType}Config`;
-            payload[configKey] = states.gameConfig;
+            payload[configKey] = currentStates.gameConfig;
           }
 
           // 3. Save then reset
           console.log(`💾 [${campaignType}Editor] Saving complete state before unmount`);
-          void saveCampaignToDB(payload, saveCampaign);
+          void saveCampaignToDB(payload, saveCampaignRef.current);
         }
       } catch (e) {
         console.error(`❌ [${campaignType}Editor] Failed to save on unmount:`, e);
@@ -84,16 +98,6 @@ export const useEditorUnmountSave = (
     };
   }, [
     campaignType,
-    states.canvasElements,
-    states.modularPage,
-    states.screenBackgrounds,
-    states.extractedColors,
-    states.selectedDevice,
-    states.canvasZoom,
-    states.gameConfig,
-    campaignState,
-    syncAllStates,
-    saveCampaign,
     resetCampaign
-  ]); // CRITICAL: Include all state dependencies to capture latest values
+  ]); // Minimal deps - refs capture latest values
 };
