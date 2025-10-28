@@ -36,6 +36,7 @@ import { saveCampaignToDB } from '@/hooks/useModernCampaignEditor/saveHandler';
 import { useCampaignStateSync } from '@/hooks/useCampaignStateSync';
 import { generateTempCampaignId, isTempCampaignId, clearTempCampaignData } from '@/utils/tempCampaignId';
 import { supabase } from '@/integrations/supabase/client';
+import { useAutoSaveToSupabase } from '@/hooks/useAutoSaveToSupabase';
 
 // Local helper to generate unique IDs for modular elements/buttons
 // Uses crypto.randomUUID when available, with a robust fallback
@@ -160,6 +161,32 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
     canvasZoom,
     gameConfig: (campaignState as any)?.wheelConfig
   }, saveCampaign);
+
+  // 🔄 Auto-save to Supabase every 30 seconds (aligned with QuizEditor)
+  useAutoSaveToSupabase(
+    {
+      campaign: {
+        ...campaignState,
+        type: 'wheel',
+        wheelConfig: (campaignState as any)?.wheelConfig
+      },
+      canvasElements,
+      modularPage,
+      screenBackgrounds,
+      extractedColors,
+      canvasZoom
+    },
+    {
+      enabled: true,
+      interval: 30000, // 30 seconds
+      onSave: () => {
+        console.log('✅ [DesignEditor AutoSave] Campaign auto-saved to Supabase');
+      },
+      onError: (error) => {
+        console.error('❌ [DesignEditor AutoSave] Auto-save failed:', error);
+      }
+    }
+  );
 
 // 🔄 Load campaign data from Supabase when campaign ID is in URL
 useEffect(() => {
