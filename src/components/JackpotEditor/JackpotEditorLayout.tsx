@@ -1022,9 +1022,6 @@ useEffect(() => {
   // Helper to persist modularPage into campaignConfig (and mark modified)
   const persistModular = useCallback((next: ModularPage) => {
     setModularPage(next);
-  // Helper to persist modularPage into campaignConfig (and mark modified)
-  const persistModular = useCallback((next: ModularPage) => {
-    setModularPage(next);
     setCampaignConfig((prev: any) => {
       const updated = {
         ...(prev || {}),
@@ -1037,7 +1034,6 @@ useEffect(() => {
       return updated;
     });
     try { setIsModified(true); } catch {}
-  }, [setIsModified]);
   }, [setIsModified]);
 
   const scrollToScreen = useCallback((screen: ScreenId): boolean => {
