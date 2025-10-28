@@ -668,26 +668,6 @@ useEffect(() => {
   const hasModules = !!modularPage && modularPage.screens && Object.values(modularPage.screens).some((arr: any) => Array.isArray(arr) && arr.length > 0);
   const modularChanged = hasModules && JSON.stringify(prevModular) !== JSON.stringify(modularPage);
 
-  // ✅ Important : ne pas écraser les données récupérées tant que l'hydratation locale n'a pas eu lieu
-  const cid = current?.id as string | undefined;
-  const isPersistedCampaign = !!cid && !cid.startsWith('temp-');
-  const remoteHasElements = Array.isArray(currentCfg.elements) && currentCfg.elements.length > 0;
-  const remoteHasModular = prevModular && Object.values(prevModular).some((arr: any) => Array.isArray(arr) && arr.length > 0);
-  const localHasElements = canvasElements.length > 0;
-  const localHasModules = hasModules;
-
-  if (isPersistedCampaign) {
-    const hydrated = cid ? SCRATCH_HYDRATED.has(cid) : false;
-    if (!hydrated) {
-      if (remoteHasElements && !localHasElements) {
-        return;
-      }
-      if (remoteHasModular && !localHasModules) {
-        return;
-      }
-    }
-  }
-
   if (!elementsChanged && !backgroundsChanged && !deviceChanged && !zoomChanged && !modularChanged) {
     return;
   }
@@ -713,7 +693,7 @@ useEffect(() => {
     };
     return next as any;
   });
-}, [canvasElements, screenBackgrounds, selectedDevice, modularPage, canvasZoom, setCampaign, campaignState]);
+}, [canvasElements, screenBackgrounds, selectedDevice, modularPage, canvasZoom, setCampaign]);
 
   // Écoute l'évènement global pour appliquer l'image de fond à tous les écrans par device (desktop/tablette/mobile distinct)
   useEffect(() => {
