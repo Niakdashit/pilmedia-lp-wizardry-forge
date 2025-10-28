@@ -408,49 +408,51 @@ useEffect(() => {
   }
 }, [location.pathname]);
 
-// 🧹 DISABLED: Temp campaign cleanup was causing instant reset of all added elements
-// const didTempCleanupIdSetRef = useRef<Set<string>>(new Set());
-// useEffect(() => {
-//   const params = new URLSearchParams(location.search);
-//   const id = params.get('campaign');
-//   if (!id || !isTempCampaignId(id)) return;
-//   // Guard: only clean once per temp id
-//   if (didTempCleanupIdSetRef.current.has(id)) {
-//     console.log('⏭️ [ScratchEditor] Temp campaign already cleaned:', id);
-//     return;
-//   }
-//   didTempCleanupIdSetRef.current.add(id);
+// 🧹 CRITICAL: Clean temporary campaigns - reset background images and local backgrounds
+// 🧹 CRITICAL: Clean temporary campaigns - reset background images and local backgrounds
+// Add guard to run this only once per temp campaign id
+const didTempCleanupIdSetRef = useRef<Set<string>>(new Set());
+useEffect(() => {
+  const params = new URLSearchParams(location.search);
+  const id = params.get('campaign');
+  if (!id || !isTempCampaignId(id)) return;
+  // Guard: only clean once per temp id
+  if (didTempCleanupIdSetRef.current.has(id)) {
+    console.log('⏭️ [ScratchEditor] Temp campaign already cleaned:', id);
+    return;
+  }
+  didTempCleanupIdSetRef.current.add(id);
 
-//   console.log('🧹 [ScratchEditor] useEffect(cleanTempCampaign): cleaning temp campaign', { id });
+  console.log('🧹 [ScratchEditor] useEffect(cleanTempCampaign): cleaning temp campaign', { id });
 
-//   // Clear localStorage namespaced temp data
-//   console.log('🧽 [ScratchEditor] useEffect(cleanTempCampaign): clearTempCampaignData');
-//   clearTempCampaignData(id);
-//   
-//   // Reset background images in global campaign state
-//   setCampaign((prev: any) => {
-//     if (!prev) return prev;
-//     console.log('🖼️ [ScratchEditor] useEffect(cleanTempCampaign): reset campaign design backgrounds');
-//     return {
-//       ...prev,
-//       design: {
-//         ...(prev.design || {}),
-//         backgroundImage: undefined,
-//         mobileBackgroundImage: undefined
-//       }
-//     };
-//   });
-//   
-//   // Reset editor backgrounds to empty color for all screens
-//   const defaultBg = { type: 'color' as const, value: '' };
-//   console.log('🖌️ [ScratchEditor] useEffect(cleanTempCampaign): setCanvasBackground(defaultBg)');
-//   setCanvasBackground(defaultBg);
-//   setScreenBackgrounds({
-//     screen1: defaultBg,
-//     screen2: defaultBg,
-//     screen3: defaultBg
-//   });
-// }, [location.search]);
+  // Clear localStorage namespaced temp data
+  console.log('🧽 [ScratchEditor] useEffect(cleanTempCampaign): clearTempCampaignData');
+  clearTempCampaignData(id);
+  
+  // Reset background images in global campaign state
+  setCampaign((prev: any) => {
+    if (!prev) return prev;
+    console.log('🖼️ [ScratchEditor] useEffect(cleanTempCampaign): reset campaign design backgrounds');
+    return {
+      ...prev,
+      design: {
+        ...(prev.design || {}),
+        backgroundImage: undefined,
+        mobileBackgroundImage: undefined
+      }
+    };
+  });
+  
+  // Reset editor backgrounds to empty color for all screens
+  const defaultBg = { type: 'color' as const, value: '' };
+  console.log('🖌️ [ScratchEditor] useEffect(cleanTempCampaign): setCanvasBackground(defaultBg)');
+  setCanvasBackground(defaultBg);
+  setScreenBackgrounds({
+    screen1: defaultBg,
+    screen2: defaultBg,
+    screen3: defaultBg
+  });
+}, [location.search]);
 
   // État local pour la compatibilité existante
   const [selectedDevice, setSelectedDevice] = useState<'desktop' | 'tablet' | 'mobile'>(actualDevice);
@@ -496,7 +498,7 @@ useEffect(() => {
     gameConfig: (campaignState as any)?.scratchConfig
   }, saveCampaign);
 
-  // 🔄 Auto-save to Supabase every 30 secondes (aligné avec QuizEditor)
+  // 🔄 Auto-save to Supabase every 30 seconds (aligned with QuizEditor)
   useAutoSaveToSupabase(
     {
       campaign: {
@@ -520,30 +522,6 @@ useEffect(() => {
       }
     }
   );
-
-  // 🔄 Listen for sync request from CampaignSettingsModal before saving
-  useEffect(() => {
-    const handler = () => {
-      console.log('🎯 [ScratchEditor] SYNC EVENT RECEIVED: campaign:sync:before-save');
-      // Sync all states to campaign object
-      syncAllStates({
-        canvasElements,
-        modularPage,
-        screenBackgrounds,
-        extractedColors,
-        selectedDevice,
-        canvasZoom
-      });
-      // Emit confirmation event after state updates
-      setTimeout(() => {
-        try { window.dispatchEvent(new CustomEvent('campaign:sync:completed')); } catch {}
-      }, 50);
-    };
-    window.addEventListener('campaign:sync:before-save', handler);
-    return () => {
-      window.removeEventListener('campaign:sync:before-save', handler);
-    };
-  }, [syncAllStates, canvasElements, modularPage, screenBackgrounds, extractedColors, selectedDevice, canvasZoom]);
 
   useEffect(() => {
     if (!canvasElements.length) return;

@@ -36,7 +36,6 @@ import { saveCampaignToDB } from '@/hooks/useModernCampaignEditor/saveHandler';
 import { useCampaignStateSync } from '@/hooks/useCampaignStateSync';
 import { generateTempCampaignId, isTempCampaignId, clearTempCampaignData } from '@/utils/tempCampaignId';
 import { supabase } from '@/integrations/supabase/client';
-import { useAutoSaveToSupabase } from '@/hooks/useAutoSaveToSupabase';
 
 // Local helper to generate unique IDs for modular elements/buttons
 // Uses crypto.randomUUID when available, with a robust fallback
@@ -162,56 +161,6 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
     gameConfig: (campaignState as any)?.wheelConfig
   }, saveCampaign);
 
-  // 🔄 Auto-save to Supabase every 30 secondes (aligné avec QuizEditor)
-  useAutoSaveToSupabase(
-    {
-      campaign: {
-        ...campaignState,
-        type: 'wheel',
-        wheelConfig: (campaignState as any)?.wheelConfig
-      },
-      canvasElements,
-      modularPage,
-      screenBackgrounds,
-      extractedColors,
-      canvasZoom
-    },
-    {
-      enabled: true,
-      interval: 30000, // 30 seconds
-      onSave: () => {
-        console.log('✅ [DesignEditor AutoSave] Campaign auto-saved to Supabase');
-      },
-      onError: (error) => {
-        console.error('❌ [DesignEditor AutoSave] Auto-save failed:', error);
-      }
-    }
-  );
-
-  // 🔄 Listen for sync request from CampaignSettingsModal before saving
-  useEffect(() => {
-    const handler = () => {
-      console.log('🎯 [DesignEditor] SYNC EVENT RECEIVED: campaign:sync:before-save');
-      // Sync all states to campaign object
-      syncAllStates({
-        canvasElements,
-        modularPage,
-        screenBackgrounds,
-        extractedColors,
-        selectedDevice,
-        canvasZoom
-      });
-      // Emit confirmation event after state updates
-      setTimeout(() => {
-        try { window.dispatchEvent(new CustomEvent('campaign:sync:completed')); } catch {}
-      }, 50);
-    };
-    window.addEventListener('campaign:sync:before-save', handler);
-    return () => {
-      window.removeEventListener('campaign:sync:before-save', handler);
-    };
-  }, [syncAllStates, canvasElements, modularPage, screenBackgrounds, extractedColors, selectedDevice, canvasZoom]);
-
 // 🔄 Load campaign data from Supabase when campaign ID is in URL
 useEffect(() => {
   const sp = new URLSearchParams(location.search);
@@ -281,8 +230,7 @@ useEffect(() => {
         // Restore canvas from config.canvasConfig
         try {
           const canvasCfg = (data as any)?.config?.canvasConfig || (data as any)?.canvasConfig || {};
-          // ✅ Hydrate safely: do not overwrite local edits if user already added content
-          if (Array.isArray(canvasCfg.elements) && (canvasElements.length === 0)) {
+          if (Array.isArray(canvasCfg.elements)) {
             setCanvasElements(canvasCfg.elements);
           }
           
@@ -296,22 +244,15 @@ useEffect(() => {
             || (designObj?.background ? { type: 'color', value: designObj.background } : undefined)
             || { type: 'color', value: '#ffffff' };
           
-          // Only apply backgrounds if local screens are still in initial state
+          setCanvasBackground({ ...bg });
+          
           const defaultScreens = {
             screen1: { type: 'color' as const, value: 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)' },
             screen2: { type: 'color' as const, value: 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)' },
             screen3: { type: 'color' as const, value: 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)' }
           };
           const loadedScreens = canvasCfg.screenBackgrounds || defaultScreens;
-          const isInitialScreens = (
-            screenBackgrounds.screen1?.value === defaultScreens.screen1.value &&
-            screenBackgrounds.screen2?.value === defaultScreens.screen2.value &&
-            screenBackgrounds.screen3?.value === defaultScreens.screen3.value
-          );
-          if (isInitialScreens) {
-            setCanvasBackground({ ...bg });
-            setScreenBackgrounds({ ...loadedScreens });
-          }
+          setScreenBackgrounds({ ...loadedScreens });
           
           if (canvasCfg.device && ['desktop','tablet','mobile'].includes(canvasCfg.device)) {
             setSelectedDevice(canvasCfg.device);
@@ -319,10 +260,7 @@ useEffect(() => {
           }
           
           if (canvasCfg.modularPage && canvasCfg.modularPage.screens) {
-            const currentModulesCount = (Object.values(modularPage.screens) as any[]).flat().length;
-            if (currentModulesCount === 0) {
-              setModularPage(canvasCfg.modularPage);
-            }
+            setModularPage(canvasCfg.modularPage);
           }
         } catch (e) {
           console.warn('[DesignEditor] Failed to restore canvasConfig from campaign', e);
@@ -365,58 +303,58 @@ useEffect(() => {
   }
 }, [location.pathname]);
 
-// 🧹 DISABLED: Temp campaign cleanup was causing instant reset of all added elements
-// useEffect(() => {
-//   const params = new URLSearchParams(location.search);
-//   const id = params.get('campaign');
-//   if (!id || !isTempCampaignId(id)) return;
-//   
-//   console.log('🧹 [DesignEditor] Cleaning temp campaign:', id);
-//   
-//   // Clear localStorage
-//   clearTempCampaignData(id);
-//   
-//   // Reset background images
-//   setCampaign((prev: any) => {
-//     if (!prev) return prev;
-//     return {
-//       ...prev,
-//       design: {
-//         ...(prev.design || {}),
-//         backgroundImage: undefined,
-//         mobileBackgroundImage: undefined
-//       }
-//     };
-//   });
-//   
-//   // Reset backgrounds to color only
-//   const defaultBg = { type: 'color' as const, value: '' };
-//   setCanvasBackground(defaultBg);
-//   setScreenBackgrounds({
-//     screen1: defaultBg,
-//     screen2: defaultBg,
-//     screen3: defaultBg
-//   });
-//   
-//   // Filter modularPage to keep only Participer and Rejouer
-//   setModularPage((prev: ModularPage) => {
-//     const participerButton = prev.screens.screen1?.find((m: Module) => 
-//       m.type === 'BlocBouton' && m.label?.toLowerCase().includes('participer')
-//     );
-//     const rejouerButton = prev.screens.screen3?.find((m: Module) => 
-//       m.type === 'BlocBouton' && m.label?.toLowerCase().includes('rejouer')
-//     );
-//     
-//     return {
-//       ...prev,
-//       screens: {
-//         screen1: participerButton ? [participerButton] : [],
-//         screen2: [],
-//         screen3: rejouerButton ? [rejouerButton] : []
-//       }
-//     };
-//   });
-// }, [location.search]);
+// 🧹 CRITICAL: Clean temporary campaigns - keep only Participer and Rejouer buttons
+useEffect(() => {
+  const params = new URLSearchParams(location.search);
+  const id = params.get('campaign');
+  if (!id || !isTempCampaignId(id)) return;
+  
+  console.log('🧹 [DesignEditor] Cleaning temp campaign:', id);
+  
+  // Clear localStorage
+  clearTempCampaignData(id);
+  
+  // Reset background images
+  setCampaign((prev: any) => {
+    if (!prev) return prev;
+    return {
+      ...prev,
+      design: {
+        ...(prev.design || {}),
+        backgroundImage: undefined,
+        mobileBackgroundImage: undefined
+      }
+    };
+  });
+  
+  // Reset backgrounds to color only
+  const defaultBg = { type: 'color' as const, value: '' };
+  setCanvasBackground(defaultBg);
+  setScreenBackgrounds({
+    screen1: defaultBg,
+    screen2: defaultBg,
+    screen3: defaultBg
+  });
+  
+  // Filter modularPage to keep only Participer and Rejouer
+  setModularPage((prev: ModularPage) => {
+    const participerButton = prev.screens.screen1?.find((m: Module) => 
+      m.type === 'BlocBouton' && m.label?.toLowerCase().includes('participer')
+    );
+    const rejouerButton = prev.screens.screen3?.find((m: Module) => 
+      m.type === 'BlocBouton' && m.label?.toLowerCase().includes('rejouer')
+    );
+    
+    return {
+      ...prev,
+      screens: {
+        screen1: participerButton ? [participerButton] : [],
+        screen2: [],
+        screen3: rejouerButton ? [rejouerButton] : []
+      }
+    };
+  });
+}, [location.search]);
 
   
   // Gestionnaire de changement d'appareil avec ajustement automatique du zoom

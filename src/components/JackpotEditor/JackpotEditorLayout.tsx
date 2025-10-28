@@ -259,7 +259,7 @@ const { syncAllStates } = useCampaignStateSync();
     gameConfig: (campaignState as any)?.jackpotConfig
   }, saveCampaign);
 
-  // 🔄 Auto-save to Supabase every 30 secondes (aligné avec QuizEditor)
+  // 🔄 Auto-save to Supabase every 30 seconds (aligned with QuizEditor)
   useAutoSaveToSupabase(
     {
       campaign: {
@@ -283,30 +283,6 @@ const { syncAllStates } = useCampaignStateSync();
       }
     }
   );
-
-  // 🔄 Listen for sync request from CampaignSettingsModal before saving
-  useEffect(() => {
-    const handler = () => {
-      console.log('🎯 [JackpotEditor] SYNC EVENT RECEIVED: campaign:sync:before-save');
-      // Sync all states to campaign object
-      syncAllStates({
-        canvasElements,
-        modularPage,
-        screenBackgrounds,
-        extractedColors,
-        selectedDevice,
-        canvasZoom
-      });
-      // Emit confirmation event after state updates
-      setTimeout(() => {
-        try { window.dispatchEvent(new CustomEvent('campaign:sync:completed')); } catch {}
-      }, 50);
-    };
-    window.addEventListener('campaign:sync:before-save', handler);
-    return () => {
-      window.removeEventListener('campaign:sync:before-save', handler);
-    };
-  }, [syncAllStates, canvasElements, modularPage, screenBackgrounds, extractedColors, selectedDevice, canvasZoom]);
 
 // 🔄 Load campaign data from Supabase when campaign ID is in URL
 useEffect(() => {
@@ -1049,10 +1025,9 @@ useEffect(() => {
     setCampaignConfig((prev: any) => {
       const updated = {
         ...(prev || {}),
-        modularPage: { ...next, _updatedAt: Date.now() }, // Save in config.modularPage for consistency
         design: {
           ...(prev?.design || {}),
-          quizModules: { ...next, _updatedAt: Date.now() } // Keep for compatibility
+          quizModules: { ...next, _updatedAt: Date.now() }
         }
       };
       return updated;
@@ -2456,50 +2431,50 @@ useEffect(() => {
     launchButtonText
 ]);
 
-// 🧹 DISABLED: Temp campaign cleanup was causing instant reset of all added elements
-// useEffect(() => {
-//   const id = (campaignState as any)?.id as string | undefined;
-//   if (!id || didTempCleanupRef.current) return;
-//   if (!isTempCampaignId(id)) return;
+// Ensure temp campaigns show no background image and only core buttons
+useEffect(() => {
+  const id = (campaignState as any)?.id as string | undefined;
+  if (!id || didTempCleanupRef.current) return;
+  if (!isTempCampaignId(id)) return;
 
-//   // Guard: do NOT cleanup if user already added modules/backgrounds
-//   const s1 = modularPage?.screens?.screen1 || [];
-//   const s2 = modularPage?.screens?.screen2 || [];
-//   const s3 = modularPage?.screens?.screen3 || [];
-//   const hasCustomModules = (
-//     s1.some((m: any) => m?.type !== 'BlocBouton' || (m?.label || '').trim().toLowerCase() !== 'participer') ||
-//     s2.length > 0 ||
-//     s3.some((m: any) => m?.type !== 'BlocBouton' || (m?.label || '').trim().toLowerCase() !== 'rejouer') ||
-//     (canvasElements?.length || 0) > 0
-//   );
-//   if (hasCustomModules) return;
+  // Guard: do NOT cleanup if user already added modules/backgrounds
+  const s1 = modularPage?.screens?.screen1 || [];
+  const s2 = modularPage?.screens?.screen2 || [];
+  const s3 = modularPage?.screens?.screen3 || [];
+  const hasCustomModules = (
+    s1.some((m: any) => m?.type !== 'BlocBouton' || (m?.label || '').trim().toLowerCase() !== 'participer') ||
+    s2.length > 0 ||
+    s3.some((m: any) => m?.type !== 'BlocBouton' || (m?.label || '').trim().toLowerCase() !== 'rejouer') ||
+    (canvasElements?.length || 0) > 0
+  );
+  if (hasCustomModules) return;
 
-//   didTempCleanupRef.current = true;
+  didTempCleanupRef.current = true;
 
-//   try { clearTempCampaignData(id); } catch {}
+  try { clearTempCampaignData(id); } catch {}
 
-//   setCampaign((prev: any) => {
-//     if (!prev) return prev;
-//     const next = {
-//       ...prev,
-//       design: {
-//         ...(prev.design || {}),
-//         backgroundImage: undefined,
-//         mobileBackgroundImage: undefined
-//       }
-//     };
-//     return next as any;
-//   });
+  setCampaign((prev: any) => {
+    if (!prev) return prev;
+    const next = {
+      ...prev,
+      design: {
+        ...(prev.design || {}),
+        backgroundImage: undefined,
+        mobileBackgroundImage: undefined
+      }
+    };
+    return next as any;
+  });
 
-//   setCanvasBackground(defaultBackground);
-//   setScreenBackgrounds({ screen1: defaultBackground, screen2: defaultBackground, screen3: defaultBackground });
+  setCanvasBackground(defaultBackground);
+  setScreenBackgrounds({ screen1: defaultBackground, screen2: defaultBackground, screen3: defaultBackground });
 
-//   setModularPage((prev) => {
-//     const s1 = (prev?.screens?.screen1 || []).filter((m: any) => m?.type === 'BlocBouton' && ((m.label || '').trim().toLowerCase() === 'participer'));
-//     const s3 = (prev?.screens?.screen3 || []).filter((m: any) => m?.type === 'BlocBouton' && ((m.label || '').trim().toLowerCase() === 'rejouer'));
-//     return { screens: { screen1: s1, screen2: [], screen3: s3 }, _updatedAt: Date.now() } as ModularPage;
-//   });
-// }, [campaignState?.id]);
+  setModularPage((prev) => {
+    const s1 = (prev?.screens?.screen1 || []).filter((m: any) => m?.type === 'BlocBouton' && ((m.label || '').trim().toLowerCase() === 'participer'));
+    const s3 = (prev?.screens?.screen3 || []).filter((m: any) => m?.type === 'BlocBouton' && ((m.label || '').trim().toLowerCase() === 'rejouer'));
+    return { screens: { screen1: s1, screen2: [], screen3: s3 }, _updatedAt: Date.now() } as ModularPage;
+  });
+}, [campaignState?.id]);
   // Log pour vérifier que campaignData contient bien les éléments
   console.log('📊 [DesignEditorLayout] campaignData construit:', {
     canvasElementsCount: canvasElements.length,
