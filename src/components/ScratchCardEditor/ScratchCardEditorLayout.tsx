@@ -3182,9 +3182,9 @@ const handleSaveCampaignName = useCallback(async () => {
       className="min-h-screen w-full"
       style={{
         backgroundImage: showFunnel ? 'none' : 
-          'radial-gradient(130% 130% at 12% 20%, rgba(235, 155, 100, 0.8) 0%, rgba(235, 155, 100, 0) 55%), radial-gradient(120% 120% at 78% 18%, rgba(128, 82, 180, 0.85) 0%, rgba(128, 82, 180, 0) 60%), radial-gradient(150% 150% at 55% 82%, rgba(68, 52, 128, 0.75) 0%, rgba(68, 52, 128, 0) 65%), linear-gradient(90deg, #E07A3A 0%, #9A5CA9 50%, #3D2E72 100%)',
+          'radial-gradient(130% 130% at 12% 20%, rgba(168, 70, 20, 0.85) 0%, rgba(168, 70, 20, 0) 52%), radial-gradient(120% 120% at 78% 18%, rgba(90, 35, 120, 0.9) 0%, rgba(90, 35, 120, 0) 58%), radial-gradient(150% 150% at 55% 82%, rgba(35, 30, 80, 0.85) 0%, rgba(35, 30, 80, 0) 60%), linear-gradient(90deg, #4b1548 0%, #271056 50%, #0b0d2d 100%)',
         backgroundBlendMode: showFunnel ? 'normal' : 'screen, screen, lighten, normal',
-        backgroundColor: showFunnel ? 'transparent' : '#3D2E72',
+        backgroundColor: showFunnel ? 'transparent' : '#0b0d2d',
         padding: showFunnel ? '0' : (isWindowMobile ? '9px' : '0 9px 9px 9px'),
         boxSizing: 'border-box'
       }}
