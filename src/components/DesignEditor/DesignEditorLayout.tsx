@@ -354,58 +354,58 @@ useEffect(() => {
   }
 }, [location.pathname]);
 
-// 🧹 CRITICAL: Clean temporary campaigns - keep only Participer and Rejouer buttons
-useEffect(() => {
-  const params = new URLSearchParams(location.search);
-  const id = params.get('campaign');
-  if (!id || !isTempCampaignId(id)) return;
-  
-  console.log('🧹 [DesignEditor] Cleaning temp campaign:', id);
-  
-  // Clear localStorage
-  clearTempCampaignData(id);
-  
-  // Reset background images
-  setCampaign((prev: any) => {
-    if (!prev) return prev;
-    return {
-      ...prev,
-      design: {
-        ...(prev.design || {}),
-        backgroundImage: undefined,
-        mobileBackgroundImage: undefined
-      }
-    };
-  });
-  
-  // Reset backgrounds to color only
-  const defaultBg = { type: 'color' as const, value: '' };
-  setCanvasBackground(defaultBg);
-  setScreenBackgrounds({
-    screen1: defaultBg,
-    screen2: defaultBg,
-    screen3: defaultBg
-  });
-  
-  // Filter modularPage to keep only Participer and Rejouer
-  setModularPage((prev: ModularPage) => {
-    const participerButton = prev.screens.screen1?.find((m: Module) => 
-      m.type === 'BlocBouton' && m.label?.toLowerCase().includes('participer')
-    );
-    const rejouerButton = prev.screens.screen3?.find((m: Module) => 
-      m.type === 'BlocBouton' && m.label?.toLowerCase().includes('rejouer')
-    );
-    
-    return {
-      ...prev,
-      screens: {
-        screen1: participerButton ? [participerButton] : [],
-        screen2: [],
-        screen3: rejouerButton ? [rejouerButton] : []
-      }
-    };
-  });
-}, [location.search]);
+// 🧹 DISABLED: Temp campaign cleanup was causing instant reset of all added elements
+// useEffect(() => {
+//   const params = new URLSearchParams(location.search);
+//   const id = params.get('campaign');
+//   if (!id || !isTempCampaignId(id)) return;
+//   
+//   console.log('🧹 [DesignEditor] Cleaning temp campaign:', id);
+//   
+//   // Clear localStorage
+//   clearTempCampaignData(id);
+//   
+//   // Reset background images
+//   setCampaign((prev: any) => {
+//     if (!prev) return prev;
+//     return {
+//       ...prev,
+//       design: {
+//         ...(prev.design || {}),
+//         backgroundImage: undefined,
+//         mobileBackgroundImage: undefined
+//       }
+//     };
+//   });
+//   
+//   // Reset backgrounds to color only
+//   const defaultBg = { type: 'color' as const, value: '' };
+//   setCanvasBackground(defaultBg);
+//   setScreenBackgrounds({
+//     screen1: defaultBg,
+//     screen2: defaultBg,
+//     screen3: defaultBg
+//   });
+//   
+//   // Filter modularPage to keep only Participer and Rejouer
+//   setModularPage((prev: ModularPage) => {
+//     const participerButton = prev.screens.screen1?.find((m: Module) => 
+//       m.type === 'BlocBouton' && m.label?.toLowerCase().includes('participer')
+//     );
+//     const rejouerButton = prev.screens.screen3?.find((m: Module) => 
+//       m.type === 'BlocBouton' && m.label?.toLowerCase().includes('rejouer')
+//     );
+//     
+//     return {
+//       ...prev,
+//       screens: {
+//         screen1: participerButton ? [participerButton] : [],
+//         screen2: [],
+//         screen3: rejouerButton ? [rejouerButton] : []
+//       }
+//     };
+//   });
+// }, [location.search]);
 
   
   // Gestionnaire de changement d'appareil avec ajustement automatique du zoom

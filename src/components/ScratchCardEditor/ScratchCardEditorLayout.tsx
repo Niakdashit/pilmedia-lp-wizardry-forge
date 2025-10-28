@@ -408,51 +408,49 @@ useEffect(() => {
   }
 }, [location.pathname]);
 
-// 🧹 CRITICAL: Clean temporary campaigns - reset background images and local backgrounds
-// 🧹 CRITICAL: Clean temporary campaigns - reset background images and local backgrounds
-// Add guard to run this only once per temp campaign id
-const didTempCleanupIdSetRef = useRef<Set<string>>(new Set());
-useEffect(() => {
-  const params = new URLSearchParams(location.search);
-  const id = params.get('campaign');
-  if (!id || !isTempCampaignId(id)) return;
-  // Guard: only clean once per temp id
-  if (didTempCleanupIdSetRef.current.has(id)) {
-    console.log('⏭️ [ScratchEditor] Temp campaign already cleaned:', id);
-    return;
-  }
-  didTempCleanupIdSetRef.current.add(id);
+// 🧹 DISABLED: Temp campaign cleanup was causing instant reset of all added elements
+// const didTempCleanupIdSetRef = useRef<Set<string>>(new Set());
+// useEffect(() => {
+//   const params = new URLSearchParams(location.search);
+//   const id = params.get('campaign');
+//   if (!id || !isTempCampaignId(id)) return;
+//   // Guard: only clean once per temp id
+//   if (didTempCleanupIdSetRef.current.has(id)) {
+//     console.log('⏭️ [ScratchEditor] Temp campaign already cleaned:', id);
+//     return;
+//   }
+//   didTempCleanupIdSetRef.current.add(id);
 
-  console.log('🧹 [ScratchEditor] useEffect(cleanTempCampaign): cleaning temp campaign', { id });
+//   console.log('🧹 [ScratchEditor] useEffect(cleanTempCampaign): cleaning temp campaign', { id });
 
-  // Clear localStorage namespaced temp data
-  console.log('🧽 [ScratchEditor] useEffect(cleanTempCampaign): clearTempCampaignData');
-  clearTempCampaignData(id);
-  
-  // Reset background images in global campaign state
-  setCampaign((prev: any) => {
-    if (!prev) return prev;
-    console.log('🖼️ [ScratchEditor] useEffect(cleanTempCampaign): reset campaign design backgrounds');
-    return {
-      ...prev,
-      design: {
-        ...(prev.design || {}),
-        backgroundImage: undefined,
-        mobileBackgroundImage: undefined
-      }
-    };
-  });
-  
-  // Reset editor backgrounds to empty color for all screens
-  const defaultBg = { type: 'color' as const, value: '' };
-  console.log('🖌️ [ScratchEditor] useEffect(cleanTempCampaign): setCanvasBackground(defaultBg)');
-  setCanvasBackground(defaultBg);
-  setScreenBackgrounds({
-    screen1: defaultBg,
-    screen2: defaultBg,
-    screen3: defaultBg
-  });
-}, [location.search]);
+//   // Clear localStorage namespaced temp data
+//   console.log('🧽 [ScratchEditor] useEffect(cleanTempCampaign): clearTempCampaignData');
+//   clearTempCampaignData(id);
+//   
+//   // Reset background images in global campaign state
+//   setCampaign((prev: any) => {
+//     if (!prev) return prev;
+//     console.log('🖼️ [ScratchEditor] useEffect(cleanTempCampaign): reset campaign design backgrounds');
+//     return {
+//       ...prev,
+//       design: {
+//         ...(prev.design || {}),
+//         backgroundImage: undefined,
+//         mobileBackgroundImage: undefined
+//       }
+//     };
+//   });
+//   
+//   // Reset editor backgrounds to empty color for all screens
+//   const defaultBg = { type: 'color' as const, value: '' };
+//   console.log('🖌️ [ScratchEditor] useEffect(cleanTempCampaign): setCanvasBackground(defaultBg)');
+//   setCanvasBackground(defaultBg);
+//   setScreenBackgrounds({
+//     screen1: defaultBg,
+//     screen2: defaultBg,
+//     screen3: defaultBg
+//   });
+// }, [location.search]);
 
   // État local pour la compatibilité existante
   const [selectedDevice, setSelectedDevice] = useState<'desktop' | 'tablet' | 'mobile'>(actualDevice);
