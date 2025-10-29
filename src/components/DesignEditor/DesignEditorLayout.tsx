@@ -255,11 +255,15 @@ useEffect(() => {
           
           if (canvasCfg.device && ['desktop','tablet','mobile'].includes(canvasCfg.device)) {
             setSelectedDevice(canvasCfg.device);
-            setCanvasZoom(getDefaultZoom(canvasCfg.device));
+            setCanvasZoom(typeof canvasCfg.zoom === 'number' ? canvasCfg.zoom : getDefaultZoom(canvasCfg.device));
           }
           
-          if (canvasCfg.modularPage && canvasCfg.modularPage.screens) {
-            setModularPage(canvasCfg.modularPage);
+          // Restore modularPage from multiple possible locations
+          const loadedModular = (data as any)?.config?.modularPage 
+            || (data as any)?.design?.designModules 
+            || (canvasCfg && canvasCfg.modularPage);
+          if (loadedModular && loadedModular.screens) {
+            setModularPage(loadedModular);
           }
         } catch (e) {
           console.warn('[DesignEditor] Failed to restore canvasConfig from campaign', e);
