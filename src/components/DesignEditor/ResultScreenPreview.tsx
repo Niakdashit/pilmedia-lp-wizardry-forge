@@ -68,15 +68,17 @@ const ResultScreenPreview: React.FC<ResultScreenPreviewProps> = ({
   const getButtonStyles = () => {
     // Chercher dans plusieurs emplacements possibles selon l'éditeur
     const screen1Modules = 
-      campaign?.design?.designModules?.screens?.screen1 || // DesignEditor
-      campaign?.modularPage?.screens?.screen1 || // ScratchCardEditor
+      campaign?.design?.designModules?.screens?.screen1 || // DesignEditor (legacy)
+      campaign?.modularPage?.screens?.screen1 || // Top-level modularPage
+      campaign?.config?.modularPage?.screens?.screen1 || // Fallback from DB config
       [];
     
     console.log('🔍 [ResultScreenPreview] Recherche du bouton:', {
       screen1ModulesCount: screen1Modules.length,
       modules: screen1Modules,
       hasDesignModules: !!campaign?.design?.designModules,
-      hasModularPage: !!campaign?.modularPage
+      hasModularPage: !!campaign?.modularPage,
+      hasConfigModularPage: !!campaign?.config?.modularPage
     });
     
     // Trouver le premier BlocBouton
