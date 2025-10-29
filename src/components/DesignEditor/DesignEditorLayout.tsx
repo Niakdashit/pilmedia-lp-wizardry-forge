@@ -150,6 +150,8 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
   const [canvasZoom, setCanvasZoom] = useState(getDefaultZoom(selectedDevice));
   const [modularPage, setModularPage] = useState<ModularPage>(createEmptyModularPage());
   const [extractedColors, setExtractedColors] = useState<string[]>([]);
+  const isRestoringRef = useRef(false);
+  const didRestoreDeviceRef = useRef(false);
 
   // 🧹 CRITICAL: Save complete state before unmount to prevent data loss
   useEditorUnmountSave('wheel', {
@@ -191,6 +193,7 @@ useEffect(() => {
   // Load from Supabase
   const loadCampaignData = async () => {
     try {
+      isRestoringRef.current = true;
       const { data, error } = await supabase
         .from('campaigns')
         .select('*')
@@ -268,6 +271,7 @@ useEffect(() => {
           if (canvasCfg.device && ['desktop','tablet','mobile'].includes(canvasCfg.device)) {
             setSelectedDevice(canvasCfg.device);
             setCanvasZoom(typeof canvasCfg.zoom === 'number' ? canvasCfg.zoom : getDefaultZoom(canvasCfg.device));
+            didRestoreDeviceRef.current = true;
           }
           
           // Restore modularPage from multiple possible locations
@@ -276,6 +280,21 @@ useEffect(() => {
             || (canvasCfg && canvasCfg.modularPage);
           if (loadedModular && loadedModular.screens) {
             setModularPage(loadedModular);
+            // Mirror into store for compatibility (design.designModules + config.modularPage)
+            setCampaign((prev: any) => {
+              if (!prev) return prev;
+              return {
+                ...prev,
+                config: {
+                  ...(prev.config || {}),
+                  modularPage: loadedModular,
+                },
+                design: {
+                  ...(prev.design || {}),
+                  designModules: loadedModular
+                }
+              };
+            });
           }
         } catch (e) {
           console.warn('[DesignEditor] Failed to restore canvasConfig from campaign', e);
@@ -285,6 +304,8 @@ useEffect(() => {
       }
     } catch (error) {
       console.error('❌ [DesignEditor] Failed to load campaign:', error);
+    } finally {
+      isRestoringRef.current = false;
     }
   };
   
@@ -381,6 +402,7 @@ useEffect(() => {
   // Persistant autosave (debounced) du background pour fiabiliser la sauvegarde sans changer l'UI
   const saveBgTimeoutRef = useRef<number | null>(null);
   const persistBackground = useCallback((bg: { type: 'color' | 'image'; value: string }, nextScreens?: Record<'screen1' | 'screen2' | 'screen3', BackgroundValue>) => {
+    if (isRestoringRef.current) return;
     if (!campaignState?.id) return;
     if (saveBgTimeoutRef.current) {
       clearTimeout(saveBgTimeoutRef.current);
@@ -391,11 +413,9 @@ useEffect(() => {
         ...campaignState,
         design: {
           ...(campaignState?.design || {}),
-          // Double écriture pour compatibilité
           background: bg.type === 'color' ? bg.value : (campaignState?.design as any)?.background,
           backgroundImage: bg.type === 'image' ? bg.value : (campaignState?.design as any)?.backgroundImage,
         },
-        // canvasConfig est fusionné dans saveHandler → config.canvasConfig côté DB
         canvasConfig: {
           ...(campaignState as any)?.canvasConfig,
           background: bg,
@@ -411,10 +431,11 @@ useEffect(() => {
         console.error('❌ [DesignEditor] Auto-save background failed:', e);
       }
     }, 400);
-}, [campaignState, saveCampaign, screenBackgrounds, selectedDevice, setIsModified]);
+  }, [campaignState, saveCampaign, screenBackgrounds, selectedDevice, setIsModified]);
 
 // 🔗 Miroir local → store: conserve les éléments dans campaign.config.canvasConfig afin d'éviter toute perte
 useEffect(() => {
+  if (isRestoringRef.current) return;
   setCampaign((prev: any) => {
     if (!prev) return prev;
     const next = {
@@ -428,7 +449,6 @@ useEffect(() => {
           device: selectedDevice,
           zoom: canvasZoom
         },
-        // compatibilité avec anciens loaders
         elements: canvasElements
       }
     };
