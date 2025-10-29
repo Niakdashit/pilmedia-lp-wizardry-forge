@@ -250,9 +250,21 @@ useEffect(() => {
             screen2: { type: 'color' as const, value: 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)' },
             screen3: { type: 'color' as const, value: 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)' }
           };
-          const loadedScreens = canvasCfg.screenBackgrounds || defaultScreens;
+
+          const normalizeBg = (bg: any) => {
+            if (!bg) return null;
+            if ((bg.type === 'color' || bg.type === 'image') && (!bg.value || bg.value === '')) return null;
+            return bg;
+          };
+
+          const rawScreens = (canvasCfg?.screenBackgrounds as any) || (designObj?.screenBackgrounds as any) || {};
+          const loadedScreens = {
+            screen1: normalizeBg(rawScreens.screen1) || defaultScreens.screen1,
+            screen2: normalizeBg(rawScreens.screen2) || defaultScreens.screen2,
+            screen3: normalizeBg(rawScreens.screen3) || defaultScreens.screen3
+          };
           setScreenBackgrounds({ ...loadedScreens });
-          
+
           if (canvasCfg.device && ['desktop','tablet','mobile'].includes(canvasCfg.device)) {
             setSelectedDevice(canvasCfg.device);
             setCanvasZoom(typeof canvasCfg.zoom === 'number' ? canvasCfg.zoom : getDefaultZoom(canvasCfg.device));
@@ -427,7 +439,7 @@ useEffect(() => {
 // 💾 Autosave léger et non intrusif des éléments du canvas
 useEffect(() => {
   const id = (campaignState as any)?.id as string | undefined;
-  if (!id) return;
+  if (!id || isRestoringRef.current) return;
   const t = window.setTimeout(async () => {
     try {
       const payload: any = {
@@ -443,7 +455,8 @@ useEffect(() => {
           elements: canvasElements,
           screenBackgrounds,
           device: selectedDevice,
-          zoom: canvasZoom
+          zoom: canvasZoom,
+          background: canvasBackground
         }
       };
       console.log('💾 [DesignEditor] Autosave complete state → DB', {
@@ -457,7 +470,7 @@ useEffect(() => {
     }
   }, 1000);
   return () => clearTimeout(t);
-}, [campaignState?.id, canvasElements, screenBackgrounds, selectedDevice]);
+}, [campaignState?.id, canvasElements, screenBackgrounds, selectedDevice, canvasZoom, canvasBackground]);
 
 
   // État pour tracker la position de scroll (quel écran est visible)
