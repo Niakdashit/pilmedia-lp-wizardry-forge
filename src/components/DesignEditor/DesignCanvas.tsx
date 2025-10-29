@@ -2600,8 +2600,8 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                 onDelete={onModuleDelete || (() => {})}
                 onMove={onModuleMove || (() => {})}
                 onDuplicate={onModuleDuplicate}
-                onSelect={onSelectedModuleChange}
-                selectedModuleId={selectedModuleId}
+                onSelect={(module) => onSelectedModuleChange?.(module.id)}
+                selectedModuleId={selectedModuleId || undefined}
                 device={selectedDevice}
               />
             )}
