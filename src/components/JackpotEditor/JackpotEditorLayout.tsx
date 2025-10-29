@@ -306,8 +306,12 @@ useEffect(() => {
   
   // Skip if this campaign is already loaded
   if (currentCampaignId === campaignId) {
-    console.log('✅ [JackpotEditor] Campaign already loaded:', campaignId);
-    return;
+    const hasPayload = campaignState && Object.keys(campaignState).length > 0;
+    if (hasPayload) {
+      console.log('✅ [JackpotEditor] Campaign already loaded:', campaignId);
+      return;
+    }
+    console.log('⚠️ [JackpotEditor] Campaign id matches but store empty, forcing reload');
   }
   
   console.log('🔄 [JackpotEditor] Loading campaign:', campaignId);
@@ -803,6 +807,7 @@ useEffect(() => {
 
     // 🔄 CRITICAL: Synchroniser TOUS les états locaux avant la sauvegarde
     syncAllStates({
+      campaignId: (campaignState as any)?.id,
       canvasElements,
       modularPage,
       screenBackgrounds,
@@ -1092,6 +1097,7 @@ useEffect(() => {
 
   // Modular handlers
   const handleAddModule = useCallback((screen: ScreenId, module: Module) => {
+
     // Logo : ajouté automatiquement sur tous les écrans en haut
     if (module.type === 'BlocLogo') {
       const logoId = module.id || `BlocLogo-${Date.now()}`;
@@ -1161,7 +1167,7 @@ useEffect(() => {
         } as Module;
       }
     }
-    
+
     const isParticiperButton = processedModule.type === 'BlocBouton' && (processedModule.label || '').trim().toLowerCase() === 'participer';
 
     let updatedModules: Module[];
@@ -2039,6 +2045,12 @@ useEffect(() => {
 
   const campaignQuizStyle = (campaignConfig?.design?.quizConfig?.style ?? {}) as Record<string, any>;
 
+  const currentJackpotConfig = useMemo(() => {
+    return (campaignState as any)?.jackpotConfig
+      || (campaignConfig as any)?.gameConfig?.jackpot
+      || {};
+  }, [campaignState, campaignConfig]);
+
   const launchButtonStyles = useMemo(() => {
     const base = buildLaunchButtonStyles(buttonModule, quizStyleOverrides, {
       buttonBackgroundColor:
@@ -2365,7 +2377,7 @@ useEffect(() => {
     };
 
     return {
-      id: 'jackpot-design-preview',
+      id: (campaignState as any)?.id || (campaignConfig as any)?.id || 'jackpot-design-preview',
       type: 'jackpot',
       design: {
         background: canvasBackground,
@@ -2489,8 +2501,11 @@ useEffect(() => {
   useEffect(() => {
     if (!campaignData) return;
 
+    const existingId = (campaignState as any)?.id || (useEditorStore.getState().campaign as any)?.id;
+
     const transformedCampaign = {
       ...campaignData,
+      id: existingId || campaignData.id,
       name: 'Ma Campagne',
       type: (campaignData.type || 'wheel') as 'wheel' | 'scratch' | 'jackpot' | 'quiz' | 'dice' | 'form' | 'memory' | 'puzzle',
       design: {
@@ -2517,18 +2532,18 @@ useEffect(() => {
       // Preserve existing wheel segments (including prizeId) to avoid overwriting
       // them with generated/fallback segments during preview sync.
       setCampaign((prev: any) => {
-        if (!prev) return transformedCampaign as any;
+        const base = prev ? { ...prev } : {};
 
-        const prevSegments = (prev?.gameConfig?.wheel?.segments?.length
-          ? prev.gameConfig.wheel.segments
-          : (prev?.config?.roulette?.segments || [])) as any[];
+        const prevSegments = (base?.gameConfig?.wheel?.segments?.length
+          ? base.gameConfig.wheel.segments
+          : (base?.config?.roulette?.segments || [])) as any[];
         const nextSegments = (transformedCampaign as any)?.gameConfig?.wheel?.segments as any[] | undefined;
         const mergedSegments = (prevSegments && prevSegments.length) ? prevSegments : (nextSegments || []);
 
         if (process.env.NODE_ENV !== 'production') {
           try {
             const hasPrizeIds = Array.isArray(mergedSegments) && mergedSegments.some((s: any) => s && 'prizeId' in s && s.prizeId);
-            console.debug('🎯 [DesignEditorLayout] Preserving wheel segments during merge', {
+            console.debug('🎯 [JackpotEditorLayout] Preserving wheel segments during merge', {
               prevCount: Array.isArray(prevSegments) ? prevSegments.length : 0,
               nextCount: Array.isArray(nextSegments) ? nextSegments.length : 0,
               used: (prevSegments && prevSegments.length) ? 'prev' : 'next',
@@ -2537,36 +2552,37 @@ useEffect(() => {
           } catch {}
         }
 
-        return {
-          ...prev,
+        const mergedCampaign: any = {
+          id: existingId || (transformedCampaign as any)?.id,
+          ...base,
           ...transformedCampaign,
           gameConfig: {
-            ...prev.gameConfig,
+            ...(base?.gameConfig || {}),
             ...(transformedCampaign as any).gameConfig,
             wheel: {
-              ...prev.gameConfig?.wheel,
+              ...(base?.gameConfig?.wheel || {}),
               ...(transformedCampaign as any)?.gameConfig?.wheel,
               segments: mergedSegments
             }
           },
-          // Mirror segments to legacy config.roulette as well for compatibility
           config: {
-            ...prev.config,
+            ...(base?.config || {}),
             ...(transformedCampaign as any).config,
             roulette: {
-              ...prev.config?.roulette,
+              ...(base?.config?.roulette || {}),
               ...(transformedCampaign as any)?.config?.roulette,
               segments: mergedSegments
             }
           },
-          // Préserver modularPage pour la synchronisation avec le preview
-          modularPage: (transformedCampaign as any).modularPage || prev.modularPage,
-          // Préserver design.quizModules si présent
+          modularPage: (transformedCampaign as any).modularPage || base?.modularPage,
           design: {
+            ...(base?.design || {}),
             ...(transformedCampaign as any).design,
-            quizModules: (transformedCampaign as any).modularPage || prev.design?.quizModules
+            quizModules: (transformedCampaign as any).modularPage || base?.design?.quizModules
           }
-        } as any;
+        };
+
+        return mergedCampaign;
       });
       lastTransformedSigRef.current = signature;
     } else {
@@ -2694,7 +2710,7 @@ useEffect(() => {
   // Sync and save before opening settings
   const handleBeforeOpenSettings = useCallback(async () => {
     console.log('🔄 [JackpotEditor] Preparing to open settings - syncing all states...');
-    
+
     // Synchroniser tous les états locaux avec le store
     syncAllStates({
       canvasElements,
@@ -2704,7 +2720,7 @@ useEffect(() => {
       selectedDevice,
       canvasZoom
     });
-    
+
     console.log('📊 [JackpotEditor] States to sync:', {
       modularPageScreens: Object.keys(modularPage?.screens || {}),
       screen1ModulesCount: modularPage?.screens?.screen1?.length || 0,
@@ -2713,12 +2729,12 @@ useEffect(() => {
       canvasElementsCount: canvasElements.length,
       hasScreenBackgrounds: Object.keys(screenBackgrounds).length > 0
     });
-    
+
     // Si la campagne existe déjà, sauvegarder immédiatement
     const campaignId = (campaignState as any)?.id;
     if (campaignId && !campaignId.startsWith('temp-')) {
       console.log('💾 [JackpotEditor] Saving existing campaign before opening settings...');
-      
+
       const payload: any = {
         ...(campaignState || {}),
         modularPage,
@@ -2745,14 +2761,14 @@ useEffect(() => {
           modularPage
         }
       };
-      
+
       console.log('💾 [JackpotEditor] Payload to save:', {
         id: payload.id,
         hasModularPage: !!payload.modularPage,
         modularPageInConfig: !!payload.config?.modularPage,
         screen1Modules: payload.modularPage?.screens?.screen1?.length || 0
       });
-      
+
       try {
         const saved = await saveCampaignToDB(payload, saveCampaign);
         console.log('✅ [JackpotEditor] Campaign saved before opening settings:', saved?.id);
@@ -2761,6 +2777,54 @@ useEffect(() => {
       }
     }
   }, [syncAllStates, canvasElements, modularPage, screenBackgrounds, extractedColors, selectedDevice, canvasZoom, campaignState, saveCampaign]);
+
+  // Listen to global sync requests (campaign settings modal)
+  useEffect(() => {
+    const handleSyncRequest = () => {
+      console.log('🎯 [JackpotEditor] SYNC EVENT RECEIVED: campaign:sync:before-save');
+
+      syncAllStates({
+        campaignId: (campaignState as any)?.id,
+        canvasElements,
+        modularPage,
+        screenBackgrounds,
+        extractedColors,
+        selectedDevice,
+        canvasZoom,
+        jackpotConfig: currentJackpotConfig,
+        quizConfig,
+        campaignConfig,
+        buttonConfig: campaignData?.buttonConfig,
+        screens: campaignData?.screens
+      });
+
+      setTimeout(() => {
+        try {
+          window.dispatchEvent(new CustomEvent('campaign:sync:completed'));
+        } catch (error) {
+          console.warn('⚠️ [JackpotEditor] Failed to dispatch campaign:sync:completed', error);
+        }
+      }, 50);
+    };
+
+    window.addEventListener('campaign:sync:before-save', handleSyncRequest);
+    return () => {
+      window.removeEventListener('campaign:sync:before-save', handleSyncRequest);
+    };
+  }, [
+    syncAllStates,
+    canvasElements,
+    modularPage,
+    screenBackgrounds,
+    extractedColors,
+    selectedDevice,
+    canvasZoom,
+    currentJackpotConfig,
+    quizConfig,
+    campaignConfig,
+    campaignData?.buttonConfig,
+    campaignData?.screens
+  ]);
 
   // Navigate to settings without saving (same destination as Save & Continue)
   const handleNavigateToSettings = useCallback(() => {
@@ -3802,7 +3866,14 @@ useEffect(() => {
                     onQuizPanelChange={setShowQuizPanel}
                     // Modular page (screen1)
                     modularModules={(() => {
-                      return modularPage.screens.screen1;
+                      const modules = modularPage.screens.screen1;
+                      console.log('📦 [JackpotEditor] Passing modularModules to screen1 DesignCanvas:', {
+                        totalModules: Array.isArray(modules) ? modules.length : 0,
+                        moduleTypes: Array.isArray(modules) ? modules.map(m => m?.type).filter(Boolean) : [],
+                        screen1Modules: modularPage.screens.screen1?.length || 0,
+                        campaignType: campaignState?.type
+                      });
+                      return modules;
                     })()}
                     onModuleUpdate={handleUpdateModule}
                     onModuleDelete={handleDeleteModule}

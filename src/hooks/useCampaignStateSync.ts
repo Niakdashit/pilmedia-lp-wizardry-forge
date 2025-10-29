@@ -16,6 +16,7 @@ export const useCampaignStateSync = () => {
    * À appeler avant chaque sauvegarde pour garantir la persistance complète
    */
   const syncAllStates = useCallback((editorStates: {
+    campaignId?: string;
     canvasElements?: any[];
     modularPage?: any;
     screenBackgrounds?: any;
@@ -32,6 +33,16 @@ export const useCampaignStateSync = () => {
   }) => {
     setCampaign((prev: any) => {
       if (!prev) return prev;
+
+      if (editorStates.campaignId && prev?.id && prev.id !== editorStates.campaignId) {
+        if (process.env.NODE_ENV !== 'production') {
+          console.debug('[useCampaignStateSync] Ignoring sync for mismatched campaign', {
+            currentId: prev.id,
+            requestedId: editorStates.campaignId
+          });
+        }
+        return prev;
+      }
 
       const updated = {
         ...prev,

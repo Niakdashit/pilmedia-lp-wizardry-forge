@@ -285,8 +285,12 @@ useEffect(() => {
   
   // Skip if this campaign is already loaded
   if (currentCampaignId === campaignId) {
-    console.log('✅ [FormEditor] Campaign already loaded:', campaignId);
-    return;
+    const hasPayload = campaignState && Object.keys(campaignState).length > 0;
+    if (hasPayload) {
+      console.log('✅ [FormEditor] Campaign already loaded:', campaignId);
+      return;
+    }
+    console.log('⚠️ [FormEditor] Campaign id matches but store empty, forcing reload');
   }
   
   console.log('🔄 [FormEditor] Loading campaign:', campaignId);
@@ -2555,7 +2559,7 @@ useEffect(() => {
     
     return {
       // Ne jamais injecter un faux ID dans le store; garder l'ID actuel si présent
-      id: (campaignState as any)?.id,
+      id: (campaignState as any)?.id || (campaignConfig as any)?.id || (useEditorStore.getState().campaign as any)?.id,
       type: 'form',
       design: {
         background: canvasBackground,

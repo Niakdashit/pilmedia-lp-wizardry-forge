@@ -20,6 +20,7 @@ interface EditorState {
   // Core state
   campaign: OptimizedCampaign | null;
   selectedCampaignId: string | null;
+  campaignsById: Record<string, OptimizedCampaign>;
   activeTab: string;
   previewDevice: 'desktop' | 'tablet' | 'mobile';
   
@@ -80,6 +81,8 @@ interface EditorActions {
 
   // Campaign actions
   setCampaign: (updater: OptimizedCampaign | null | ((prev: OptimizedCampaign | null) => OptimizedCampaign | null)) => void;
+  setCampaignSlice: (campaignId: string, updater: OptimizedCampaign | null | ((prev: OptimizedCampaign | null) => OptimizedCampaign | null)) => void;
+  getCampaignSlice: (campaignId: string) => OptimizedCampaign | null;
   updateCampaignField: (field: keyof OptimizedCampaign, value: OptimizedCampaign[keyof OptimizedCampaign]) => void;
   updateDesign: (designUpdates: Partial<OptimizedCampaign['design']>) => void;
   updateGameConfig: (gameConfigUpdates: Partial<OptimizedCampaign['gameConfig']>) => void;
@@ -151,6 +154,7 @@ export const useEditorStore = create<EditorStore>()(
     // Initial state
     campaign: null,
     selectedCampaignId: null,
+    campaignsById: {},
     activeTab: 'general',
     previewDevice: 'desktop',
     isNewCampaignGlobal: false,
@@ -177,32 +181,126 @@ export const useEditorStore = create<EditorStore>()(
     // Campaign actions with batching
     setCampaign: (updater) => {
       const state = get();
-      const newCampaign = typeof updater === 'function' ? updater(state.campaign) : updater;
-      
-      if (newCampaign) {
-        // Deep clone to ensure complete isolation between campaigns
-        const clonedCampaign = JSON.parse(JSON.stringify({
-          ...newCampaign,
-          _lastUpdate: Date.now(),
-          _version: (state.campaign?._version || 0) + 1
-        }));
-        
-        set({
-          campaign: clonedCampaign,
-          isModified: true,
-          updateCounter: state.updateCounter + 1,
-          lastUpdateTime: Date.now()
+      const now = Date.now();
+
+      const currentId = state.selectedCampaignId ?? state.campaign?.id ?? undefined;
+      const previous = currentId
+        ? state.campaignsById[currentId] ?? state.campaign
+        : state.campaign;
+
+      const next = typeof updater === 'function' ? updater(previous) : updater;
+
+      // When we receive null, drop the current slice entirely
+      if (!next) {
+        if (!currentId) {
+          set({
+            campaign: null,
+            isModified: false,
+            selectedCampaignId: null,
+            selectedElementId: null,
+            updateCounter: state.updateCounter + 1,
+            lastUpdateTime: now
+          });
+          return;
+        }
+
+        set((store) => {
+          const newMap = { ...store.campaignsById };
+          delete newMap[currentId];
+
+          const stillSelected = store.selectedCampaignId === currentId ? null : store.selectedCampaignId;
+          const fallbackCampaign = stillSelected ? newMap[stillSelected] ?? null : null;
+
+          return {
+            campaign: fallbackCampaign,
+            campaignsById: newMap,
+            selectedCampaignId: stillSelected,
+            isModified: false,
+            selectedElementId: null,
+            updateCounter: store.updateCounter + 1,
+            lastUpdateTime: now
+          };
         });
-      } else {
-        // If setting to null, fully reset
-        set({
-          campaign: null,
-          isModified: false,
-          selectedElementId: null,
-          updateCounter: 0,
-          lastUpdateTime: Date.now()
-        });
+        return;
       }
+
+      const providedId = typeof next?.id === 'string' && next.id.length ? next.id : undefined;
+      const resolvedId = providedId || currentId || `temp-${now}`;
+
+      const previousVersion = (previous?._version ?? 0);
+      const clonedCampaign = JSON.parse(JSON.stringify({
+        ...next,
+        id: resolvedId,
+        _lastUpdate: now,
+        _version: previousVersion + 1
+      }));
+
+      set((store) => {
+        const newMap = { ...store.campaignsById, [resolvedId]: clonedCampaign };
+        const nextSelectedId = resolvedId;
+
+        return {
+          campaign: clonedCampaign,
+          campaignsById: newMap,
+          selectedCampaignId: nextSelectedId,
+          isModified: true,
+          updateCounter: store.updateCounter + 1,
+          lastUpdateTime: now
+        };
+      });
+    },
+
+    setCampaignSlice: (campaignId, updater) => {
+      if (!campaignId) return;
+
+      const sliceUpdater = typeof updater === 'function'
+        ? updater
+        : () => updater;
+
+      set((store) => {
+        const prevSlice = store.campaignsById[campaignId] ?? null;
+        const nextSlice = sliceUpdater(prevSlice as any);
+
+        if (!nextSlice) {
+          if (!(campaignId in store.campaignsById)) {
+            return {} as Partial<EditorStore>;
+          }
+
+          const newMap = { ...store.campaignsById };
+          delete newMap[campaignId];
+
+          const isCurrent = store.selectedCampaignId === campaignId;
+          return {
+            campaignsById: newMap,
+            campaign: isCurrent ? null : store.campaign,
+            selectedCampaignId: isCurrent ? null : store.selectedCampaignId
+          };
+        }
+
+        const now = Date.now();
+        const nextVersion = (prevSlice?._version ?? 0) + 1;
+        const normalizedSlice = JSON.parse(JSON.stringify({
+          ...nextSlice,
+          id: campaignId,
+          _lastUpdate: now,
+          _version: nextVersion
+        }));
+
+        const newMap = { ...store.campaignsById, [campaignId]: normalizedSlice };
+        const isCurrent = store.selectedCampaignId === campaignId || (!store.selectedCampaignId && !store.campaign?.id);
+
+        return {
+          campaignsById: newMap,
+          campaign: isCurrent ? normalizedSlice : store.campaign,
+          selectedCampaignId: isCurrent ? campaignId : store.selectedCampaignId
+        };
+      });
+    },
+
+    getCampaignSlice: (campaignId) => {
+      if (!campaignId) return null;
+      const state = get();
+      return state.campaignsById[campaignId] ?? null;
     },
 
     updateCampaignField: (field, value) => {

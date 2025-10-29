@@ -53,6 +53,32 @@ function writeLocalCache(key: string, data: any) {
   }
 }
 
+function removeLocalCache(key: string) {
+  try {
+    localStorage.removeItem(key);
+  } catch {
+    // best-effort
+  }
+}
+
+function clearCampaignCacheEntries(id?: string | null, slug?: string | null) {
+  if (id) {
+    const idKey = makeCacheKeyById(id);
+    campaignCache.delete(idKey);
+    if (typeof window !== 'undefined') {
+      removeLocalCache(idKey);
+    }
+  }
+
+  if (slug) {
+    const slugKey = makeCacheKeyBySlug(slug);
+    slugCacheIndex.delete(slug);
+    if (typeof window !== 'undefined') {
+      removeLocalCache(slugKey);
+    }
+  }
+}
+
 export const useCampaigns = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -152,6 +178,10 @@ export const useCampaigns = () => {
           .single();
         if (error) throw error;
         result = data;
+      }
+
+      if (result?.id) {
+        clearCampaignCacheEntries(result.id, result.slug);
       }
 
       return result as Campaign;

@@ -2476,7 +2476,7 @@ const handleSaveCampaignName = useCallback(async () => {
     });
 
     return {
-      id: 'scratch-design-preview',
+      id: (campaignState as any)?.id || (campaignConfig as any)?.id || (useEditorStore.getState().campaign as any)?.id,
       type: 'scratch',
       design: {
         background: canvasBackground,
@@ -2556,8 +2556,15 @@ const handleSaveCampaignName = useCallback(async () => {
   useEffect(() => {
     if (!campaignData) return;
 
+    const storeCampaign = useEditorStore.getState().campaign as any;
+    const storeCampaignId = storeCampaign?.type === 'scratch' ? storeCampaign?.id : undefined;
+    const existingId = (campaignState as any)?.type === 'scratch'
+      ? (campaignState as any)?.id
+      : storeCampaignId;
+
     const transformedCampaign = {
       ...campaignData,
+      id: existingId || campaignData.id,
       name: 'Ma Campagne',
       type: (campaignData.type || 'wheel') as 'wheel' | 'scratch' | 'jackpot' | 'quiz' | 'dice' | 'form' | 'memory' | 'puzzle',
       design: {
@@ -2584,18 +2591,18 @@ const handleSaveCampaignName = useCallback(async () => {
       // Preserve existing wheel segments (including prizeId) to avoid overwriting
       // them with generated/fallback segments during preview sync.
       setCampaign((prev: any) => {
-        if (!prev) return transformedCampaign as any;
+        const base = prev ? { ...prev } : {};
 
-        const prevSegments = (prev?.gameConfig?.wheel?.segments?.length
-          ? prev.gameConfig.wheel.segments
-          : (prev?.config?.roulette?.segments || [])) as any[];
+        const prevSegments = (base?.gameConfig?.wheel?.segments?.length
+          ? base.gameConfig.wheel.segments
+          : (base?.config?.roulette?.segments || [])) as any[];
         const nextSegments = (transformedCampaign as any)?.gameConfig?.wheel?.segments as any[] | undefined;
         const mergedSegments = (prevSegments && prevSegments.length) ? prevSegments : (nextSegments || []);
 
         if (process.env.NODE_ENV !== 'production') {
           try {
             const hasPrizeIds = Array.isArray(mergedSegments) && mergedSegments.some((s: any) => s && 'prizeId' in s && s.prizeId);
-            console.debug('🎯 [DesignEditorLayout] Preserving wheel segments during merge', {
+            console.debug('🎯 [ScratchEditorLayout] Preserving wheel segments during merge', {
               prevCount: Array.isArray(prevSegments) ? prevSegments.length : 0,
               nextCount: Array.isArray(nextSegments) ? nextSegments.length : 0,
               used: (prevSegments && prevSegments.length) ? 'prev' : 'next',
@@ -2604,36 +2611,37 @@ const handleSaveCampaignName = useCallback(async () => {
           } catch {}
         }
 
-        return {
-          ...prev,
+        const mergedCampaign: any = {
+          id: existingId || (transformedCampaign as any)?.id,
+          ...base,
           ...transformedCampaign,
           gameConfig: {
-            ...prev.gameConfig,
+            ...(base?.gameConfig || {}),
             ...(transformedCampaign as any).gameConfig,
             wheel: {
-              ...prev.gameConfig?.wheel,
+              ...(base?.gameConfig?.wheel || {}),
               ...(transformedCampaign as any)?.gameConfig?.wheel,
               segments: mergedSegments
             }
           },
-          // Mirror segments to legacy config.roulette as well for compatibility
           config: {
-            ...prev.config,
+            ...(base?.config || {}),
             ...(transformedCampaign as any).config,
             roulette: {
-              ...prev.config?.roulette,
+              ...(base?.config?.roulette || {}),
               ...(transformedCampaign as any)?.config?.roulette,
               segments: mergedSegments
             }
           },
-          // Préserver modularPage pour la synchronisation avec le preview
-          modularPage: (transformedCampaign as any).modularPage || prev.modularPage,
-          // Préserver design.quizModules si présent
+          modularPage: (transformedCampaign as any).modularPage || base?.modularPage,
           design: {
+            ...(base?.design || {}),
             ...(transformedCampaign as any).design,
-            quizModules: (transformedCampaign as any).modularPage || prev.design?.quizModules
+            quizModules: (transformedCampaign as any).modularPage || base?.design?.quizModules
           }
-        } as any;
+        };
+
+        return mergedCampaign;
       });
       lastTransformedSigRef.current = signature;
     } else {
@@ -2649,6 +2657,7 @@ const handleSaveCampaignName = useCallback(async () => {
     try {
       // 🔄 Garder la sync store pour cohérence UI, mais construire un payload explicite pour éviter toute course
       syncAllStates({
+        campaignId: (campaignState as any)?.id,
         canvasElements,
         modularPage,
         screenBackgrounds,
@@ -2746,6 +2755,7 @@ const handleSaveCampaignName = useCallback(async () => {
     
     // 🔄 Synchroniser tous les états locaux avec le campaign avant la sauvegarde
     syncAllStates({
+      campaignId: (campaignState as any)?.id,
       canvasElements,
       modularPage,
       screenBackgrounds,
@@ -2764,6 +2774,7 @@ const handleSaveCampaignName = useCallback(async () => {
     
     // Synchroniser tous les états locaux avec le store
     syncAllStates({
+      campaignId: (campaignState as any)?.id,
       canvasElements,
       modularPage,
       screenBackgrounds,
@@ -2824,10 +2835,59 @@ const handleSaveCampaignName = useCallback(async () => {
         const saved = await saveCampaignToDB(payload, saveCampaign);
         console.log('✅ [ScratchEditor] Campaign saved before opening settings:', saved?.id);
       } catch (e) {
-        console.error('❌ [ScratchEditor] Failed to save before opening settings:', e);
+        console.error(' [ScratchEditor] Failed to save before opening settings:', e);
       }
     }
   }, [syncAllStates, canvasElements, modularPage, screenBackgrounds, extractedColors, selectedDevice, canvasZoom, campaignState, saveCampaign]);
+
+  // Listen to global sync requests coming from CampaignSettingsModal
+  useEffect(() => {
+    const handleSyncRequest = () => {
+      console.log(' [ScratchEditor] SYNC EVENT RECEIVED: campaign:sync:before-save');
+
+      syncAllStates({
+        campaignId: (campaignState as any)?.id,
+        canvasElements,
+        modularPage,
+        screenBackgrounds,
+        extractedColors,
+        selectedDevice,
+        canvasZoom,
+        scratchConfig: scratchState,
+        quizConfig,
+        campaignConfig,
+        buttonConfig: campaignData?.buttonConfig,
+        screens: campaignData?.screens
+      });
+
+      // Allow zustand flush before notifying completion
+      setTimeout(() => {
+        try {
+          window.dispatchEvent(new CustomEvent('campaign:sync:completed'));
+        } catch (error) {
+          console.warn(' [ScratchEditor] Failed to dispatch campaign:sync:completed', error);
+        }
+      }, 50);
+    };
+
+    window.addEventListener('campaign:sync:before-save', handleSyncRequest);
+    return () => {
+      window.removeEventListener('campaign:sync:before-save', handleSyncRequest);
+    };
+  }, [
+    syncAllStates,
+    canvasElements,
+    modularPage,
+    screenBackgrounds,
+    extractedColors,
+    selectedDevice,
+    canvasZoom,
+    scratchState,
+    quizConfig,
+    campaignConfig,
+    campaignData?.buttonConfig,
+    campaignData?.screens
+  ]);
 
   // Navigate to settings without saving (same destination as Save & Continue)
   const handleNavigateToSettings = useCallback(() => {

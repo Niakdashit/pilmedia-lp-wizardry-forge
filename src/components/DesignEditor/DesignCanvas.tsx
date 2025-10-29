@@ -2581,6 +2581,40 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
               );
             })}
 
+            {/* Render Modular Modules if present */}
+            {(() => {
+              console.log('🎨 [DesignCanvas] Checking modularModules:', {
+                modularModules,
+                isArray: Array.isArray(modularModules),
+                length: modularModules?.length,
+                isDefined: modularModules !== undefined,
+                isTruthy: !!modularModules
+              });
+              return null;
+            })()}
+            {modularModules && modularModules.length > 0 && (
+              <ModularCanvas
+                screen={screenId}
+                modules={modularModules}
+                onUpdate={onModuleUpdate || (() => {})}
+                onDelete={onModuleDelete || (() => {})}
+                onMove={onModuleMove || (() => {})}
+                onDuplicate={onModuleDuplicate}
+                onSelect={onSelectedModuleChange}
+                selectedModuleId={selectedModuleId}
+                device={selectedDevice}
+              />
+            )}
+            {(() => {
+              console.log('🎨 [DesignCanvas] Render check:', {
+                screenId,
+                modularModulesCount: modularModules?.length || 0,
+                hasModularModules: !!(modularModules && modularModules.length > 0),
+                modularModules: modularModules?.map(m => ({ id: m.id, type: m.type }))
+              });
+              return null;
+            })()}
+
             {/* Marquee selection overlay */}
             {marqueeRect && (
               <div

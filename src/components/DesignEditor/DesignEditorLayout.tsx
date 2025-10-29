@@ -185,8 +185,12 @@ useEffect(() => {
   // CRITICAL FIX: Only load if this is actually a different campaign than what's currently loaded
   // and prevent reloading the same campaign multiple times
   if (currentCampaignId === campaignId) {
-    console.log('✅ [DesignEditor] Campaign already loaded:', campaignId);
-    return;
+    const hasPayload = campaignState && Object.keys(campaignState).length > 0;
+    if (hasPayload) {
+      console.log('✅ [DesignEditor] Campaign already loaded:', campaignId);
+      return;
+    }
+    console.log('⚠️ [DesignEditor] Campaign id matches but store empty, forcing reload');
   }
 
   console.log('🔄 [DesignEditor] Loading campaign:', campaignId);
@@ -204,12 +208,32 @@ useEffect(() => {
       if (error) throw error;
       
       if (data) {
+        const normalizeJsonField = (value: any) => {
+          if (!value) return {};
+          if (typeof value === 'string') {
+            try {
+              return JSON.parse(value);
+            } catch (e) {
+              console.warn('⚠️ [DesignEditor] Failed to parse JSON field', e);
+              return {};
+            }
+          }
+          return value;
+        };
+
+        const normalizedConfig = normalizeJsonField((data as any).config);
+        const normalizedGameConfig = normalizeJsonField((data as any).game_config);
+        const normalizedDesign = normalizeJsonField((data as any).design);
+        const normalizedFormFields = Array.isArray((data as any).form_fields)
+          ? (data as any).form_fields
+          : normalizeJsonField((data as any).form_fields);
+
         console.log('✅ [DesignEditor] Campaign loaded from DB:', {
           id: data.id,
           name: data.name,
-          hasConfig: !!data.config,
-          hasDesign: !!data.design,
-          hasModules: !!((data.design as any)?.designModules || (data.config as any)?.modularPage)
+          hasConfig: !!normalizedConfig,
+          hasDesign: !!normalizedDesign,
+          hasModules: !!(normalizedDesign?.designModules || normalizedConfig?.modularPage)
         });
         
         // Transform database row to campaign format
@@ -218,11 +242,11 @@ useEffect(() => {
           id: data.id,
           name: data.name || 'Campaign',
           type: data.type || 'wheel',
-          design: data.design || {},
-          gameConfig: (data.game_config || {}) as any,
+          design: normalizedDesign || {},
+          gameConfig: normalizedGameConfig || {},
           buttonConfig: {},
-          config: data.config || {},
-          formFields: data.form_fields || [],
+          config: normalizedConfig || {},
+          formFields: normalizedFormFields || [],
           _lastUpdate: Date.now(),
           _version: 1
         };
@@ -230,14 +254,17 @@ useEffect(() => {
         // Update campaign state with loaded data
         setCampaign(campaignData);
         
-        // Restore canvas from config.canvasConfig
+        // Restore canvas from config.canvasConfig (with fallbacks)
         try {
-          const canvasCfg = (data as any)?.config?.canvasConfig || (data as any)?.canvasConfig || {};
-          if (Array.isArray(canvasCfg.elements)) {
-            setCanvasElements(canvasCfg.elements);
-          }
+          const canvasCfg = (normalizedConfig as any)?.canvasConfig || (data as any)?.canvasConfig || {};
+          const resolvedElements = Array.isArray(canvasCfg.elements)
+            ? canvasCfg.elements
+            : Array.isArray((campaignData as any)?.canvasElements)
+              ? (campaignData as any).canvasElements
+              : [];
+          setCanvasElements(resolvedElements);
           
-          const designObj = (data as any)?.design || {};
+          const designObj = normalizedDesign || {};
           const isImageUrl = (url: string) => url && (url.startsWith('http') || url.startsWith('/') || url.includes('supabase.co/storage'));
           
           const bg = (designObj?.backgroundImage ? { type: 'image', value: designObj.backgroundImage } : undefined)
@@ -261,7 +288,10 @@ useEffect(() => {
             return bg;
           };
 
-          const rawScreens = (canvasCfg?.screenBackgrounds as any) || (designObj?.screenBackgrounds as any) || {};
+          const rawScreens = (canvasCfg?.screenBackgrounds as any)
+            || (designObj?.screenBackgrounds as any)
+            || ((campaignData as any)?.screenBackgrounds as any)
+            || {};
           const loadedScreens = {
             screen1: normalizeBg(rawScreens.screen1) || defaultScreens.screen1,
             screen2: normalizeBg(rawScreens.screen2) || defaultScreens.screen2,
@@ -276,9 +306,11 @@ useEffect(() => {
           }
           
           // Restore modularPage from multiple possible locations
-          const loadedModular = (data as any)?.config?.modularPage 
-            || (data as any)?.design?.designModules 
-            || (canvasCfg && canvasCfg.modularPage);
+          const loadedModular = (normalizedConfig as any)?.modularPage
+            || (normalizedDesign as any)?.designModules
+            || (normalizedDesign as any)?.modularPage
+            || (canvasCfg && canvasCfg.modularPage)
+            || (campaignData as any)?.modularPage;
           if (loadedModular && loadedModular.screens) {
             setModularPage(loadedModular);
             // Mirror into store for compatibility (design.designModules + design.quizModules + config.modularPage + top-level modularPage)
@@ -1966,7 +1998,7 @@ useEffect(() => {
     }
 
     return {
-      id: 'wheel-design-preview',
+      id: (campaignState as any)?.id || 'wheel-design-preview',
       type: 'wheel',
       articleConfig: (campaignState as any)?.articleConfig,
       design: {

@@ -277,8 +277,12 @@ useEffect(() => {
   
   // Skip if this campaign is already loaded
   if (currentCampaignId === campaignId) {
-    console.log('✅ [QuizEditor] Campaign already loaded:', campaignId);
-    return;
+    const hasPayload = campaignState && Object.keys(campaignState).length > 0;
+    if (hasPayload) {
+      console.log('✅ [QuizEditor] Campaign already loaded:', campaignId);
+      return;
+    }
+    console.log('⚠️ [QuizEditor] Campaign id matches but store empty, forcing reload');
   }
   
   console.log('🔄 [QuizEditor] Loading campaign:', campaignId);
@@ -2740,7 +2744,7 @@ const handleSaveCampaignName = useCallback(async () => {
     });
     
     return {
-      id: (campaignState as any)?.id || (campaignConfig as any)?.id || 'quiz-preview-campaign',
+      id: (campaignState as any)?.id || (campaignConfig as any)?.id || (useEditorStore.getState().campaign as any)?.id,
       type: 'quiz',
       // Fournir la configuration Article pour le mode article
       articleConfig: (campaignConfig as any)?.articleConfig,

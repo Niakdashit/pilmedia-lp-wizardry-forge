@@ -951,7 +951,7 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
     });
 
     return {
-      id: 'jackpot-design-preview',
+      id: (campaignState as any)?.id || (campaignConfig as any)?.id || 'jackpot-design-preview',
       type: 'jackpot',
       design: {
         background: canvasBackground,
