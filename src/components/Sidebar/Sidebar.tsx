@@ -58,7 +58,7 @@ const Sidebar: React.FC = () => {
       {/* Logo section */}
       <div className="flex items-center justify-between h-16 px-4 border-b border-gray-600/30">
         <div className="w-full flex items-center justify-center">
-          <img src={logoIcon} alt="Prosplay Icon" className="h-12 w-12 object-contain brightness-0 invert" style={{maxWidth: '48px'}} />
+          <img src={logoIcon} alt="Prosplay Icon" className="h-9 w-9 object-contain brightness-0 invert" style={{maxWidth: '36px'}} />
         </div>
       </div>
 
