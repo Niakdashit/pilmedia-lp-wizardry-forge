@@ -121,36 +121,6 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
     zoom
   });
 
-  useEffect(() => {
-    const updateViewportMetrics = () => {
-      if (!containerRef.current) return;
-      const viewport = window.visualViewport;
-      const height = viewport?.height ?? window.innerHeight;
-      const width = viewport?.width ?? window.innerWidth;
-      containerRef.current.style.setProperty('--mobile-viewport-height', `${height}px`);
-      containerRef.current.style.setProperty('--mobile-viewport-width', `${width}px`);
-    };
-
-    const handleOrientation = () => {
-      setTimeout(updateViewportMetrics, 150);
-    };
-
-    updateViewportMetrics();
-    window.addEventListener('resize', updateViewportMetrics);
-    window.addEventListener('orientationchange', handleOrientation);
-
-    const viewport = window.visualViewport;
-    viewport?.addEventListener('resize', updateViewportMetrics);
-    viewport?.addEventListener('scroll', updateViewportMetrics);
-
-    return () => {
-      window.removeEventListener('resize', updateViewportMetrics);
-      window.removeEventListener('orientationchange', handleOrientation);
-      viewport?.removeEventListener('resize', updateViewportMetrics);
-      viewport?.removeEventListener('scroll', updateViewportMetrics);
-    };
-  }, []);
-
   // Gestion de la visibilité de la toolbar mobile
   useEffect(() => {
     if (selectedElement && selectedElement.type !== 'text' && showMobileUI) {
@@ -286,9 +256,12 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
           /* Canvas toujours visible entièrement */
           display: flex;
           flex-direction: column;
-          height: var(--mobile-viewport-height, 100dvh);
-          max-height: var(--mobile-viewport-height, 100dvh);
-          min-height: var(--mobile-viewport-height, 100dvh);
+          height: 100vh;
+          max-height: 100vh;
+          min-height: 100vh;
+          height: 100dvh;
+          max-height: 100dvh;
+          min-height: 100dvh;
 
           /* Empêcher le scroll */
           overscroll-behavior: none;
@@ -348,8 +321,8 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
           width: 100%;
           height: 100%;
           flex: 1;
-          max-width: calc(var(--mobile-viewport-width, 100vw) - 8px); /* Account for minimal padding */
-          max-height: max(0px, calc(var(--mobile-viewport-height, 100dvh) - 48px)); /* Preserve full canvas visibility */
+          max-width: calc(100vw - 8px); /* Account for minimal padding */
+          max-height: calc(100vh - 120px); /* Account for safe areas and UI */
         }
 
         /* Canvas bloqué sur mobile - empêcher les interactions non désirées */
@@ -428,7 +401,7 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
         .tablet-layout {
           /* Comportement hybride entre mobile et desktop */
           display: flex;
-          height: var(--mobile-viewport-height, 100vh);
+          height: 100vh;
           overflow: hidden;
           
           /* Optimisations tactiles réduites */
@@ -452,7 +425,7 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
         .desktop-layout {
           /* Comportement normal */
           display: flex;
-          height: var(--mobile-viewport-height, 100vh);
+          height: 100vh;
           overflow: hidden;
         }
 

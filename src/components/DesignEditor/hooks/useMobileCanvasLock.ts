@@ -18,13 +18,8 @@ export const useMobileCanvasLock = ({
   const isMobileDevice = isMobile || isTablet || isRealDevice;
   const isDraggingRef = useRef(false);
   const lastTouchRef = useRef<{ x: number; y: number } | null>(null);
-  const lastAdjustmentRef = useRef<{
-    viewportWidth: number;
-    viewportHeight: number;
-    canvasWidth: number;
-    canvasHeight: number;
-    appliedZoom: number;
-  } | null>(null);
+  // Ne faire l'auto-fit qu'une seule fois à l'arrivée sur la page
+  const hasAutoAdjustedRef = useRef(false);
 
   // Helper: whether the canvas is currently running a marquee selection
   const isMarqueeActive = () => !!canvasRef.current?.getAttribute('data-marquee');
@@ -127,76 +122,35 @@ export const useMobileCanvasLock = ({
   }, [isMobileDevice]);
 
   // Fonction pour assurer la visibilité complète du canvas
-  const ensureCanvasVisibility = useCallback((options: { force?: boolean } = {}) => {
-    if (!canvasRef.current || !isMobileDevice) return;
+  const ensureCanvasVisibility = useCallback(() => {
+    if (!canvasRef.current || !isMobileDevice || hasAutoAdjustedRef.current) return;
 
-    const { force = false } = options;
     const canvas = canvasRef.current;
     const canvasRect = canvas.getBoundingClientRect();
+    const viewportHeight = window.innerHeight;
+    const viewportWidth = window.innerWidth;
 
-    if (canvasRect.width === 0 || canvasRect.height === 0) {
-      return;
-    }
+    // Vérifier si le canvas est entièrement visible
+    const isFullyVisible = 
+      canvasRect.top >= 0 && 
+      canvasRect.left >= 0 && 
+      canvasRect.bottom <= viewportHeight && 
+      canvasRect.right <= viewportWidth;
 
-    const viewport = window.visualViewport;
-    const viewportHeight = viewport?.height ?? window.innerHeight;
-    const viewportWidth = viewport?.width ?? window.innerWidth;
+    if (!isFullyVisible) {
+      // Ajuster le zoom pour que le canvas soit entièrement visible
+      const scaleX = (viewportWidth - 40) / canvasRect.width; // 40px de marge
+      const scaleY = (viewportHeight - 100) / canvasRect.height; // 100px pour l'interface
+      const optimalZoom = Math.min(scaleX, scaleY, 1); // Ne pas zoomer au-delà de 100%
 
-    const wrapper = canvas.closest('.design-canvas-wrapper') as HTMLElement | null;
-    const containerRect = wrapper?.getBoundingClientRect() ?? canvas.parentElement?.getBoundingClientRect();
-
-    const availableWidth = Math.max(
-      0,
-      Math.min(containerRect?.width ?? viewportWidth, viewportWidth)
-    );
-    const availableHeight = Math.max(
-      0,
-      Math.min(containerRect?.height ?? viewportHeight, viewportHeight)
-    );
-
-    const horizontalPadding = 32;
-    const verticalPadding = 48;
-
-    const targetWidth = Math.max(availableWidth - horizontalPadding, 0);
-    const targetHeight = Math.max(availableHeight - verticalPadding, 0);
-
-    const scaleX = targetWidth > 0 ? targetWidth / canvasRect.width : 1;
-    const scaleY = targetHeight > 0 ? targetHeight / canvasRect.height : 1;
-    const optimalZoom = Math.min(scaleX, scaleY, 1);
-
-    const previous = lastAdjustmentRef.current;
-    const hasChanged =
-      force ||
-      !previous ||
-      Math.abs(previous.viewportWidth - viewportWidth) > 1 ||
-      Math.abs(previous.viewportHeight - viewportHeight) > 1 ||
-      Math.abs(previous.canvasWidth - canvasRect.width) > 1 ||
-      Math.abs(previous.canvasHeight - canvasRect.height) > 1 ||
-      Math.abs(previous.appliedZoom - optimalZoom) > 0.01;
-
-    if (!hasChanged) {
-      return;
-    }
-
-    lastAdjustmentRef.current = {
-      viewportWidth,
-      viewportHeight,
-      canvasWidth: canvasRect.width,
-      canvasHeight: canvasRect.height,
-      appliedZoom: optimalZoom
-    };
-
-    const fitsWithoutScaling =
-      canvasRect.width <= targetWidth &&
-      canvasRect.height <= targetHeight;
-
-    if (!fitsWithoutScaling || optimalZoom < 0.999) {
-      const clampedZoom = Math.max(Math.min(optimalZoom, 1), 0.1);
+      // Émettre un événement pour ajuster le zoom
       const adjustZoomEvent = new CustomEvent('adjustCanvasZoom', {
-        detail: { zoom: clampedZoom }
+        detail: { zoom: optimalZoom }
       });
       window.dispatchEvent(adjustZoomEvent);
     }
+    // Marquer comme fait pour ne pas réappliquer
+    hasAutoAdjustedRef.current = true;
   }, [canvasRef, isMobileDevice]);
 
   // Installation des écouteurs d'événements
@@ -287,7 +241,8 @@ export const useMobileCanvasLock = ({
 
   // Vérifier la visibilité du canvas lors des changements
   useEffect(() => {
-    ensureCanvasVisibility({ force: true });
+    // N'exécuter qu'au montage; le garde interne évite toute réapplication
+    ensureCanvasVisibility();
   }, [ensureCanvasVisibility]);
 
   // Vérifier la visibilité lors du redimensionnement
@@ -295,13 +250,11 @@ export const useMobileCanvasLock = ({
     if (!isMobileDevice) return;
 
     const handleResize = () => {
-      lastAdjustmentRef.current = null;
-      setTimeout(() => ensureCanvasVisibility({ force: true }), 100); // Délai pour laisser le temps au redimensionnement
+      setTimeout(ensureCanvasVisibility, 100); // Délai pour laisser le temps au redimensionnement
     };
 
     const handleOrientationChange = () => {
-      lastAdjustmentRef.current = null;
-      setTimeout(() => ensureCanvasVisibility({ force: true }), 300); // Délai plus long pour l'orientation
+      setTimeout(ensureCanvasVisibility, 300); // Délai plus long pour l'orientation
     };
 
     window.addEventListener('resize', handleResize);
@@ -312,47 +265,6 @@ export const useMobileCanvasLock = ({
       window.removeEventListener('orientationchange', handleOrientationChange);
     };
   }, [isMobileDevice, ensureCanvasVisibility]);
-
-  useEffect(() => {
-    if (!isMobileDevice) return;
-    const viewport = window.visualViewport;
-    if (!viewport) return;
-
-    const handleViewportChange = () => {
-      lastAdjustmentRef.current = null;
-      ensureCanvasVisibility({ force: true });
-    };
-
-    viewport.addEventListener('resize', handleViewportChange);
-    viewport.addEventListener('scroll', handleViewportChange);
-
-    return () => {
-      viewport.removeEventListener('resize', handleViewportChange);
-      viewport.removeEventListener('scroll', handleViewportChange);
-    };
-  }, [isMobileDevice, ensureCanvasVisibility]);
-
-  useEffect(() => {
-    if (!isMobileDevice || !canvasRef.current || typeof ResizeObserver === 'undefined') {
-      return;
-    }
-
-    const canvas = canvasRef.current;
-    const wrapper = canvas.closest('.design-canvas-wrapper') as HTMLElement | null;
-    const observer = new ResizeObserver(() => {
-      lastAdjustmentRef.current = null;
-      ensureCanvasVisibility({ force: true });
-    });
-
-    observer.observe(canvas);
-    if (wrapper) {
-      observer.observe(wrapper);
-    }
-
-    return () => {
-      observer.disconnect();
-    };
-  }, [canvasRef, isMobileDevice, ensureCanvasVisibility]);
 
   return {
     isDragging: isDraggingRef.current,
