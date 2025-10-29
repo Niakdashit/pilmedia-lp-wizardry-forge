@@ -17,14 +17,14 @@ export const useModernCampaignEditor = () => {
   const [searchParams] = useSearchParams();
   const location = window.location.pathname;
   
-  // Supporte aussi l'ID via query param (?id=...) pour retour explicite depuis les paramètres
-  const queryId = searchParams.get('id') || undefined;
+  // Supporte aussi l'ID via query param (?id=..., ?campaign=..., ?campaignId=...)
+  const queryId = searchParams.get('id') || searchParams.get('campaign') || searchParams.get('campaignId') || undefined;
   const rawId = routeId ?? queryId;
   
   // Gestion spéciale pour quick-preview
   const isQuickPreview = location.includes('quick-preview') || rawId === 'quick-preview';
   const actualId = isQuickPreview ? 'quick-preview' : rawId;
-  const isNewCampaign = actualId === 'new' || isTempCampaignId(actualId || undefined);
+  const isNewCampaign = !actualId || actualId === 'new' || isTempCampaignId(actualId);
   const campaignType = searchParams.get('type') as CampaignType || 'wheel';
   
   const [activeTab, setActiveTab] = useState('general');
