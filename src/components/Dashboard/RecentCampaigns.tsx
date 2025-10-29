@@ -99,7 +99,7 @@ const RecentCampaigns: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {duplicatedCampaigns.map((campaign, index) => {
           const IconComponent = getCampaignTypeIcon(campaign.type);
-          return <div key={campaign.id} className="group relative overflow-hidden rounded-xl shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 hover:scale-[1.02]">
+          return <div key={campaign.id} className="group relative overflow-hidden rounded-[18px] shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 hover:scale-[1.02]">
                 {/* Main Campaign Card */}
                 <div className="relative h-64 w-full overflow-hidden bg-gradient-to-br from-gray-900 to-gray-700">
                   {/* Background Image with Parallax Effect */}
@@ -119,7 +119,7 @@ const RecentCampaigns: React.FC = () => {
                   <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-black/20 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
 
                   {/* Neon Border Glow Effect */}
-                  <div className="absolute inset-0 rounded-xl border border-white/20 group-hover:border-[#841b60]/50 group-hover:shadow-[0_0_30px_rgba(132,27,96,0.3)] transition-all duration-500"></div>
+                  <div className="absolute inset-0 rounded-[18px] border border-white/20 group-hover:border-[#841b60]/50 group-hover:shadow-[0_0_30px_rgba(132,27,96,0.3)] transition-all duration-500"></div>
 
                   {/* Campaign Type Badge */}
                   <div className="absolute top-4 left-4 z-20">
@@ -171,11 +171,11 @@ const RecentCampaigns: React.FC = () => {
                     </div>
 
                     {/* Hover Reveal: Action Gradient */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#841b60]/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-b-xl"></div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#841b60]/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-b-[18px]"></div>
                   </div>
 
                   {/* Animated Light Streak */}
-                  <div className="absolute inset-0 overflow-hidden rounded-xl">
+                  <div className="absolute inset-0 overflow-hidden rounded-[18px]">
                     <div className="absolute -top-full -left-full w-full h-full bg-gradient-to-br from-transparent via-white/10 to-transparent transform rotate-45 group-hover:top-full group-hover:left-full transition-all duration-1000 ease-out"></div>
                   </div>
                 </div>
