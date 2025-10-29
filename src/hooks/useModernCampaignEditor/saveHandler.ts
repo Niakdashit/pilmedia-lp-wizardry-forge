@@ -84,7 +84,11 @@ export const saveCampaignToDB = async (
       (campaign?.design?.mobileBackgroundImage ? { type: 'image', value: campaign.design.mobileBackgroundImage } : undefined),
     
     // Screen-specific backgrounds
-    screenBackgrounds: campaign?.screenBackgrounds || campaign?.design?.screenBackgrounds || {},
+    screenBackgrounds: campaign?.screenBackgrounds 
+      || campaign?.design?.screenBackgrounds 
+      || campaign?.canvasConfig?.screenBackgrounds 
+      || campaign?.config?.canvasConfig?.screenBackgrounds 
+      || {},
     
     // Current device and zoom state
     device: campaign?.selectedDevice || 'desktop',
