@@ -34,7 +34,7 @@ import { useEditorUnmountSave } from '@/hooks/useEditorUnmountSave';
 import { useCampaigns } from '@/hooks/useCampaigns';
 import { saveCampaignToDB } from '@/hooks/useModernCampaignEditor/saveHandler';
 import { useCampaignStateSync } from '@/hooks/useCampaignStateSync';
-import { generateTempCampaignId, isTempCampaignId, clearTempCampaignData } from '@/utils/tempCampaignId';
+import { generateTempCampaignId, isTempCampaignId, clearTempCampaignData, replaceTempWithPersistedId } from '@/utils/tempCampaignId';
 import { supabase } from '@/integrations/supabase/client';
 
 // Local helper to generate unique IDs for modular elements/buttons
@@ -115,7 +115,8 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
     setIsLoading,
     setIsModified,
     resetCampaign,
-    initializeNewCampaignWithId
+    initializeNewCampaignWithId,
+    selectCampaign
   } = useEditorStore();
   // Campagne centralisée (source de vérité pour les champs de contact)
   const campaignState = useEditorStore((s) => s.campaign);
@@ -2086,9 +2087,24 @@ useEffect(() => {
       // Récupérer le campaign mis à jour après synchronisation
       const updatedCampaign = useEditorStore.getState().campaign;
       
-      // Injecter canvasConfig pour persister les images de fond et les éléments
-      const payload = {
+      // Build complete payload with modules in all required locations (aligné avec QuizEditor)
+      const payload: any = {
         ...updatedCampaign,
+        modularPage,
+        design: {
+          ...((updatedCampaign as any)?.design || {}),
+          designModules: modularPage
+        },
+        config: {
+          ...((updatedCampaign as any)?.config || {}),
+          modularPage,
+          canvasConfig: {
+            elements: canvasElements,
+            background: canvasBackground,
+            screenBackgrounds,
+            device: selectedDevice
+          }
+        },
         canvasConfig: {
           elements: canvasElements,
           background: canvasBackground,
@@ -2096,10 +2112,27 @@ useEffect(() => {
           device: selectedDevice
         }
       };
+
+      const wasTempId = isTempCampaignId(payload.id);
+      const tempId = wasTempId ? payload.id : undefined;
+
       const saved = await saveCampaignToDB(payload, saveCampaign);
-      if (saved?.id && !(campaignState as any)?.id) {
+
+      if (saved?.id) {
+        // Update campaign with saved ID
         setCampaign((prev: any) => ({ ...prev, id: saved.id }));
+
+        // If we just saved a temporary campaign, replace temp ID with real ID
+        if (wasTempId && tempId) {
+          const currentMode = searchParams.get('mode');
+          replaceTempWithPersistedId(tempId, saved.id, (newId) => {
+            const newUrl = `${location.pathname}?campaign=${newId}${currentMode ? `&mode=${currentMode}` : ''}`;
+            navigate(newUrl, { replace: true });
+            selectCampaign(newId, 'wheel');
+          });
+        }
       }
+
       setIsModified(false);
     } catch (e) {
       console.error('[DesignEditorLayout] Save failed', e);
