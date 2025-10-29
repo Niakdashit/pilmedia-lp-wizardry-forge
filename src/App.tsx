@@ -1,10 +1,12 @@
-import { Suspense, lazy, useEffect } from 'react';
+import { lazy, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AppProvider } from './context/AppContext';
 import { BrandThemeProvider } from './contexts/BrandThemeContext';
 import { AuthProvider } from './contexts/AuthContext';
 import { ProtectedRoute } from './components/Auth/ProtectedRoute';
 import Layout from './components/Layout/Layout';
+import { LoadingBoundary, EditorLoader, MinimalLoader } from './components/shared/LoadingBoundary';
+import { routePrefetcher, ROUTE_LOADERS, ROUTE_NEIGHBORS } from './utils/routePrefetch';
 
 // Lazy-loaded pages to prevent import-time crashes from heavy modules at startup
 const Dashboard = lazy(() => import('./pages/Dashboard'));
@@ -32,40 +34,43 @@ const MediaPortal = lazy(() => import('./pages/MediaPortal'));
 const CampaignSettings = lazy(() => import('./pages/CampaignSettings'));
 
 function App() {
-  // Idle prefetch heavy editor routes to smooth first navigation without impacting TTI
+  // Enregistrement des routes pour le prefetching intelligent
   useEffect(() => {
-    const win: any = typeof window !== 'undefined' ? window : undefined;
-    const schedule = (cb: () => void) =>
-      win && typeof win.requestIdleCallback === 'function'
-        ? win.requestIdleCallback(cb, { timeout: 2500 })
-        : setTimeout(cb, 1500);
-    const cancel = (id: any) =>
-      win && typeof win.cancelIdleCallback === 'function' ? win.cancelIdleCallback(id) : clearTimeout(id);
-
-    const id = schedule(() => {
-      try {
-        // These are already lazy; dynamic import here warms their chunks
-        import('./pages/DesignEditor');
-        import('./pages/TemplateEditor');
-        import('./pages/TemplatesEditor');
-        import('./pages/ModelEditor');
-        import('./pages/FormEditor');
-        import('./pages/ScratchCardEditor');
-      } catch (_) {
-        // best-effort
-      }
+    // Enregistrer toutes les routes dans le prefetcher
+    Object.entries(ROUTE_LOADERS).forEach(([route, loader]) => {
+      const priority = route.includes('editor') ? 'medium' : 'low';
+      routePrefetcher.register(route, loader, { priority });
     });
-    return () => cancel(id);
+
+    // Nettoyer le localStorage des anciennes données (> 7 jours)
+    if (typeof window !== 'undefined') {
+      import('./utils/compressedStorage').then(({ compressedStorage }) => {
+        compressedStorage.cleanOldEntries();
+      });
+    }
+  }, []);
+
+  // Détecter la route actuelle et précharger les voisins
+  useEffect(() => {
+    const currentPath = window.location.pathname;
+    const neighbors = ROUTE_NEIGHBORS[currentPath];
+    if (neighbors) {
+      routePrefetcher.prefetchNeighbors(currentPath, neighbors);
+    }
   }, []);
   return (
     <AppProvider>
       <AuthProvider>
         <BrandThemeProvider>
           <Router>
-            <Suspense fallback={<div style={{ padding: 16 }}>Loading…</div>}>
+            <LoadingBoundary fallback={<MinimalLoader />}>
               <Routes>
                 {/* Route d'authentification */}
-                <Route path="/auth" element={<Auth />} />
+                <Route path="/auth" element={
+                  <LoadingBoundary minHeight="100vh">
+                    <Auth />
+                  </LoadingBoundary>
+                } />
 
                 {/* Routes principales avec sidebar de navigation */}
                 <Route path="/" element={
@@ -88,23 +93,59 @@ function App() {
                 </Route>
 
               {/* Routes éditeur en plein écran */}
-              <Route path="/design-editor" element={<DesignEditor />} />
-              <Route path="/quiz-editor" element={<QuizEditor />} />
-              <Route path="/model-editor" element={<ModelEditor />} />
-              <Route path="/jackpot-editor" element={<JackpotEditor />} />
-              <Route path="/form-editor" element={<FormEditor />} />
-              <Route path="/scratch-editor" element={<ScratchCardEditor />} />
-              <Route path="/scratch-card-2" element={<ScratchCard2 />} />
-              <Route path="/template-editor" element={<TemplateEditor />} />
+              <Route path="/design-editor" element={
+                <LoadingBoundary fallback={<EditorLoader />}>
+                  <DesignEditor />
+                </LoadingBoundary>
+              } />
+              <Route path="/quiz-editor" element={
+                <LoadingBoundary fallback={<EditorLoader />}>
+                  <QuizEditor />
+                </LoadingBoundary>
+              } />
+              <Route path="/model-editor" element={
+                <LoadingBoundary fallback={<EditorLoader />}>
+                  <ModelEditor />
+                </LoadingBoundary>
+              } />
+              <Route path="/jackpot-editor" element={
+                <LoadingBoundary fallback={<EditorLoader />}>
+                  <JackpotEditor />
+                </LoadingBoundary>
+              } />
+              <Route path="/form-editor" element={
+                <LoadingBoundary fallback={<EditorLoader />}>
+                  <FormEditor />
+                </LoadingBoundary>
+              } />
+              <Route path="/scratch-editor" element={
+                <LoadingBoundary fallback={<EditorLoader />}>
+                  <ScratchCardEditor />
+                </LoadingBoundary>
+              } />
+              <Route path="/scratch-card-2" element={
+                <LoadingBoundary fallback={<EditorLoader />}>
+                  <ScratchCard2 />
+                </LoadingBoundary>
+              } />
+              <Route path="/template-editor" element={
+                <LoadingBoundary fallback={<EditorLoader />}>
+                  <TemplateEditor />
+                </LoadingBoundary>
+              } />
               <Route path="/mobile-test" element={<MobileTestPage />} />
               <Route path="/mobile-complete-test" element={<MobileCompleteTestPage />} />
               
               {/* Campaign Settings - Standalone page */}
-              <Route path="/campaign/:id/settings" element={<CampaignSettings />} />
-            </Routes>
-          </Suspense>
-        </Router>
-      </BrandThemeProvider>
+              <Route path="/campaign/:id/settings" element={
+                <LoadingBoundary>
+                  <CampaignSettings />
+                </LoadingBoundary>
+              } />
+              </Routes>
+            </LoadingBoundary>
+          </Router>
+        </BrandThemeProvider>
       </AuthProvider>
     </AppProvider>
   );
