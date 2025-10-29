@@ -280,18 +280,21 @@ useEffect(() => {
             || (canvasCfg && canvasCfg.modularPage);
           if (loadedModular && loadedModular.screens) {
             setModularPage(loadedModular);
-            // Mirror into store for compatibility (design.designModules + config.modularPage)
+            // Mirror into store for compatibility (design.designModules + design.quizModules + config.modularPage + top-level modularPage)
             setCampaign((prev: any) => {
               if (!prev) return prev;
               return {
                 ...prev,
+                // Top-level for maximum compatibility across previews
+                modularPage: loadedModular,
                 config: {
                   ...(prev.config || {}),
                   modularPage: loadedModular,
                 },
                 design: {
                   ...(prev.design || {}),
-                  designModules: loadedModular
+                  designModules: loadedModular,
+                  quizModules: loadedModular,
                 }
               };
             });
@@ -2022,11 +2025,12 @@ useEffect(() => {
   // Synchronisation avec le store (éviter les boucles d'updates)
   const lastTransformedSigRef = useRef<string>('');
   useEffect(() => {
-    // Ne pas synchroniser en mode preview pour éviter les boucles infinies
-    if (!campaignData || showFunnel) return;
+  // Ne pas synchroniser en mode preview pour éviter les boucles infinies
+  // Et ne pas écraser pendant la restauration initiale
+  if (!campaignData || showFunnel || isRestoringRef.current) return;
 
-    // Do not feed articleConfig back into the store here to avoid feedback loops in article mode
-    const { articleConfig: _skipArticleConfig, ...dataForSync } = campaignData as any;
+  // Do not feed articleConfig back into the store here to avoid feedback loops in article mode
+  const { articleConfig: _skipArticleConfig, ...dataForSync } = campaignData as any;
     const transformedCampaign = {
       ...dataForSync,
       name: 'Ma Campagne',
