@@ -2106,14 +2106,16 @@ useEffect(() => {
             elements: canvasElements,
             background: canvasBackground,
             screenBackgrounds,
-            device: selectedDevice
+            device: selectedDevice,
+            zoom: canvasZoom
           }
         },
         canvasConfig: {
           elements: canvasElements,
           background: canvasBackground,
           screenBackgrounds,
-          device: selectedDevice
+          device: selectedDevice,
+          zoom: canvasZoom
         }
       };
 

@@ -120,7 +120,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   editorMode = 'fullscreen',
   screenId = 'screen1',
   selectedDevice,
-  elements,
+  elements = [],
   onElementsChange,
   background,
   campaign,
@@ -129,7 +129,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   onZoomChange,
   selectedElement: externalSelectedElement,
   onSelectedElementChange,
-  selectedElements,
+  selectedElements = [],
   onSelectedElementsChange,
   onElementUpdate: externalOnElementUpdate,
   // Props pour la gestion des groupes
@@ -165,7 +165,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   updateWheelConfig,
   getCanonicalConfig,
   // modular editor
-  modularModules,
+  modularModules = [],
   onModuleUpdate,
   onModuleDelete,
   onModuleMove,
