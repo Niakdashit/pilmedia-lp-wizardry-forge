@@ -2158,7 +2158,6 @@ useEffect(() => {
   const validation = validateCampaign();
 
   const handleSaveAndQuit = useCallback(async () => {
-    // 1) Validation
     const result = validateCampaign();
     if (!result.isValid) {
       setIsValidationModalOpen(true);
@@ -2187,37 +2186,9 @@ useEffect(() => {
       canvasZoom
     });
     
-    try {
-      // Récupérer l'ID depuis l'URL en priorité (UUID garanti)
-      const params = new URLSearchParams(location.search);
-      const urlId = params.get('campaign') || undefined;
-      
-      // Récupérer le campaign mis à jour après synchronisation
-      const updatedCampaign = useEditorStore.getState().campaign;
-
-      // Collecter TOUT l'état de l'éditeur
-      const fullCampaignData = {
-        ...(updatedCampaign || {}),
-        id: urlId || (updatedCampaign as any)?.id,
-        design: updatedCampaign?.design || {},
-        config: updatedCampaign?.config || {},
-        game_config: updatedCampaign?.gameConfig || {},
-        form_fields: updatedCampaign?.formFields || []
-      };
-
-      console.log('💾 [DesignEditor] Saving full campaign data (Save & Quit):', fullCampaignData);
-      const saved = await saveCampaignToDB(fullCampaignData as any, saveCampaign);
-      const finalId = urlId || saved?.id;
-      if (finalId) {
-        setCampaign((prev: any) => ({ ...prev, id: finalId }));
-      }
-      // 3) Quitter vers dashboard
-      navigate('/dashboard');
-    } catch (error) {
-      console.error('❌ [DesignEditor] Error saving campaign (Save & Quit):', error);
-      alert('Erreur lors de la sauvegarde');
-    }
-  }, [campaignState, saveCampaign, navigate, setCampaign, location.search, validateCampaign, syncAllStates, canvasElements, modularPage, screenBackgrounds, extractedColors, selectedDevice, canvasZoom]);
+    await handleSave();
+    navigate('/dashboard');
+  }, [validateCampaign, handleSave, navigate, syncAllStates, canvasElements, modularPage, screenBackgrounds, extractedColors, selectedDevice, canvasZoom, campaignState]);
 
   // Navigate to settings without saving (same destination as Save & Continue)
   const handleNavigateToSettings = useCallback(() => {
