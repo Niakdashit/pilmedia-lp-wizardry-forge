@@ -152,6 +152,7 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
   const [extractedColors, setExtractedColors] = useState<string[]>([]);
   const isRestoringRef = useRef(false);
   const didRestoreDeviceRef = useRef(false);
+  const didHydrateModularRef = useRef(false);
 
   // 🧹 CRITICAL: Save complete state before unmount to prevent data loss
   useEditorUnmountSave('wheel', {
