@@ -21,7 +21,7 @@ const Auth: React.FC = () => {
   // Afficher un loader pendant la vérification
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#841b60] via-[#9a5ca9] to-[#3d2e72] flex items-center justify-center p-4">
+      <div className="min-h-screen flex items-center justify-center p-4" style={{ background: 'radial-gradient(circle at 0% 0%, #943c56, rgba(50, 14, 75, 0.885), #320e4b)', height: '100vh', margin: 0 }}>
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
           <p className="text-white">Vérification de la connexion...</p>
@@ -33,7 +33,7 @@ const Auth: React.FC = () => {
   // Si l'utilisateur est connecté, ne rien afficher (il sera redirigé)
   if (user) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#841b60] via-[#9a5ca9] to-[#3d2e72] flex items-center justify-center p-4">
+      <div className="min-h-screen flex items-center justify-center p-4" style={{ background: 'radial-gradient(circle at 0% 0%, #943c56, rgba(50, 14, 75, 0.885), #320e4b)', height: '100vh', margin: 0 }}>
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
           <p className="text-white">Redirection en cours...</p>
@@ -48,7 +48,7 @@ const Auth: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#841b60] via-[#9a5ca9] to-[#3d2e72] flex items-center justify-center p-4">
+    <div className="min-h-screen flex items-center justify-center p-4" style={{ background: 'radial-gradient(circle at 0% 0%, #943c56, rgba(50, 14, 75, 0.885), #320e4b)', height: '100vh', margin: 0 }}>
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
