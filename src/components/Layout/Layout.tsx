@@ -27,10 +27,9 @@ const Layout: React.FC = () => {
       className="flex min-h-screen w-full relative"
       style={{
         overflow: 'hidden',
-        backgroundImage:
-          'radial-gradient(130% 130% at 12% 20%, rgba(168, 70, 20, 0.85) 0%, rgba(168, 70, 20, 0) 52%), radial-gradient(120% 120% at 78% 18%, rgba(90, 35, 120, 0.9) 0%, rgba(90, 35, 120, 0) 58%), radial-gradient(150% 150% at 55% 82%, rgba(35, 30, 80, 0.85) 0%, rgba(35, 30, 80, 0) 60%), linear-gradient(90deg, #4b1548 0%, #271056 50%, #0b0d2d 100%)',
-        backgroundBlendMode: 'screen, screen, lighten, normal',
-        backgroundColor: '#0b0d2d',
+        background: 'radial-gradient(circle at 0% 0%, #943c56, rgba(50, 14, 75, 0.885), #320e4b)',
+        height: '100vh',
+        margin: 0,
       }}
     >
       <header
