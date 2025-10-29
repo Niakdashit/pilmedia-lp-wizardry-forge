@@ -29,44 +29,12 @@ const DashboardHeader: React.FC = () => {
     setSelectedEditorType(type);
     setIsModalOpen(true);
   };
-  return <div className="relative w-full mt-2 pb-4 px-6 select-text sm:px-8 lg:px-10 z-10 overflow-hidden">
-      {/* Fond glassmorphique pastel bleu, identique à PageHeader */}
-      <div className="relative max-w-7xl mx-auto rounded-b-[18px] overflow-hidden">
-        <div className="
-            relative
-            bg-white/60
-            bg-gradient-to-br
-            from-[#ede9fe]/85
-            via-[#e0f2fe]/80
-            to-[#eef2ff]/85
-            backdrop-blur-xl
-            rounded-b-[18px]
-            border-b border-white/25
-          ">
-          {/* Overlay coloré pour contraste subtil */}
-          <div className="absolute inset-0 bg-gradient-to-br from-[#7c3aed]/16 via-transparent to-[#2563eb]/12 pointer-events-none rounded-b-[18px]" />
-          {/* Décorations géométriques flottantes style PageHeader */}
-          <div className="absolute top-6 right-10 w-24 h-24 bg-gradient-to-br from-violet-300/25 to-blue-300/25 rounded-full blur-xl pointer-events-none"></div>
-          <div className="absolute bottom-8 left-14 w-20 h-20 bg-gradient-to-br from-indigo-300/25 to-sky-300/25 rounded-full blur-lg pointer-events-none"></div>
-          {/* SVG décoratif éditorial, moins saturé/opacité */}
-          <div className="absolute top-0 right-0 w-96 h-full opacity-30 pointer-events-none">
-            <svg viewBox="0 0 400 200" className="w-full h-full">
-              <defs>
-                <linearGradient id="grad1-dh" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#7c3aed" stopOpacity="0.16" />
-                  <stop offset="50%" stopColor="#6366f1" stopOpacity="0.13" />
-                  <stop offset="100%" stopColor="#2563eb" stopOpacity="0.10" />
-                </linearGradient>
-              </defs>
-              <path d="M300,20 Q350,60 320,100 T280,140 Q320,160 360,120 T400,80 L400,0 Z" fill="url(#grad1-dh)" />
-              <circle cx="350" cy="40" r="15" fill="#7c3aed" fillOpacity="0.10" />
-              <circle cx="320" cy="80" r="8" fill="#6366f1" fillOpacity="0.12" />
-              <path d="M280,120 Q300,100 320,120 T360,140" stroke="#2563eb" strokeWidth="2" strokeOpacity="0.14" fill="none" />
-            </svg>
-          </div>
-          
+  return (
+    <>
+      <div className="relative w-full mt-2 pb-4 px-6 select-text sm:px-8 lg:px-10 z-10">
+        <div className="max-w-7xl mx-auto">
           {/* Contenu principal */}
-          <div className="relative z-10 flex flex-col items-center text-center pt-10 pb-10 px-6">
+          <div className="flex flex-col items-center text-center pt-10 pb-10 px-6">
             
             
             {/* Section "Qu'allez-vous créer aujourd'hui ?" */}
@@ -164,8 +132,6 @@ const DashboardHeader: React.FC = () => {
             </div>
           </div>
 
-          {/* Gradient border en bas */}
-          <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent"></div>
         </div>
       </div>
       
@@ -205,6 +171,7 @@ const DashboardHeader: React.FC = () => {
           editorType={selectedEditorType as 'wheel' | 'quiz' | 'scratch' | 'jackpot' | 'form' | 'dice' | 'memory' | 'puzzle'}
         />
       )}
-    </div>;
+    </>
+  );
 };
 export default DashboardHeader;

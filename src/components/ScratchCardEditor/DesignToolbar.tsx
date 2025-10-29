@@ -156,7 +156,7 @@ const ScratchToolbar: React.FC<ScratchToolbarProps> = React.memo(({
         errors={validation.errors}
         onOpenSettings={() => setIsSettingsModalOpen(true)}
       />
-    <div className="bg-white border-b border-gray-200 px-4 py-2 flex items-center justify-between shadow-sm rounded-tl-[28px] rounded-tr-[28px]">
+    <div className="bg-white border-b border-gray-200 px-4 py-2 flex items-center justify-between shadow-sm rounded-tl-[18px] rounded-tr-[18px]">
       {/* Left Section - Logo/Title */}
       <div className="flex items-center space-x-3">
         <h1 className="text-lg font-bold text-gray-900 font-inter hidden">Design Editor</h1>

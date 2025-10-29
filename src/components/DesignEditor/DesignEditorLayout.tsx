@@ -166,27 +166,25 @@ useEffect(() => {
   const sp = new URLSearchParams(location.search);
   const campaignId = sp.get('campaign');
   const isUuid = (v?: string | null) => !!v && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v);
-  
+
   // CRITICAL: Skip loading for temporary campaign IDs - they should remain blank
   if (isTempCampaignId(campaignId)) {
     console.log('⏭️ [DesignEditor] Skipping load for temporary campaign:', campaignId);
     return;
   }
-  
+
   if (!campaignId || !isUuid(campaignId)) return;
-  
-  // Check if we're switching campaigns
+
+  // Check if we're switching campaigns - use a ref to avoid dependency on campaignState
   const currentCampaignId = (campaignState as any)?.id;
-  if (currentCampaignId && currentCampaignId !== campaignId) {
-    console.log('🔄 [DesignEditor] Switching campaigns');
-  }
-  
-  // Skip if this campaign is already loaded
+
+  // CRITICAL FIX: Only load if this is actually a different campaign than what's currently loaded
+  // and prevent reloading the same campaign multiple times
   if (currentCampaignId === campaignId) {
     console.log('✅ [DesignEditor] Campaign already loaded:', campaignId);
     return;
   }
-  
+
   console.log('🔄 [DesignEditor] Loading campaign:', campaignId);
   
   // Load from Supabase
@@ -275,7 +273,7 @@ useEffect(() => {
   
   loadCampaignData();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-}, [location.search, campaignState, setCampaign]);
+}, [location.search, setCampaign]);
 
 // Nouvelle campagne via header: si aucun id dans l'URL, créer une campagne vierge et activer le flag global
 useEffect(() => {
@@ -529,6 +527,17 @@ useEffect(() => {
   // 🔄 MIGRATION AUTOMATIQUE : Recalcule le scaling mobile (-48.2%) pour les modules existants
   const [hasRecalculated, setHasRecalculated] = useState(false);
   useEffect(() => {
+    // PROTECTION: Ne pas recalculer si l'utilisateur a déjà fait des modifications
+    // Cela évite d'écraser les changements utilisateur avec des valeurs recalculées
+    const hasUserModifications = canvasElements.some(el => el?._userModified === true) ||
+                                (campaignState as any)?._hasUserModifications === true;
+
+    if (hasUserModifications) {
+      console.log('⏭️ [Migration Canvas] Skipping recalculation - user has made modifications');
+      setHasRecalculated(true);
+      return;
+    }
+
     // Recalculer les éléments canvas (si présents)
     if (canvasElements.length > 0 && !hasRecalculated) {
       console.log('🔄 [Migration Canvas] Recalcul automatique du scaling mobile pour', canvasElements.length, 'éléments...');
@@ -1339,7 +1348,12 @@ useEffect(() => {
       || (currentScreen === 'screen2'
         ? 'screen2'
         : currentScreen === 'screen3' ? 'screen3' : 'screen1');
-    const enrichedElement = element?.screenId ? element : { ...element, screenId: resolvedScreenId };
+    const enrichedElement = {
+      ...element,
+      screenId: resolvedScreenId,
+      // MARQUER COMME MODIFIÉ PAR L'UTILISATEUR pour éviter les recalculs automatiques
+      _userModified: true
+    };
     setCanvasElements(prev => {
       const newArr = [...prev, enrichedElement];
       setTimeout(() => {
@@ -1352,6 +1366,9 @@ useEffect(() => {
       return newArr;
     });
     setSelectedElement(enrichedElement);
+
+    // Marquer la campagne comme modifiée par l'utilisateur
+    setCampaign((prev: any) => prev ? { ...prev, _hasUserModifications: true } : prev);
   };
 
   // Ajoute à l'historique + auto-persist lors du changement de background (invisible côté UI)
@@ -1529,6 +1546,8 @@ useEffect(() => {
       const updatedElement = {
         ...selectedElement,
         ...workingUpdates,
+        // MARQUER COMME MODIFIÉ PAR L'UTILISATEUR pour éviter les recalculs automatiques
+        _userModified: true,
         ...(isDeviceScoped
           ? {
               [selectedDevice]: {
@@ -1553,6 +1572,9 @@ useEffect(() => {
         return newArr;
       });
       setSelectedElement(updatedElement);
+
+      // Marquer la campagne comme modifiée par l'utilisateur
+      setCampaign((prev: any) => prev ? { ...prev, _hasUserModifications: true } : prev);
     }
   };
 
@@ -2505,7 +2527,7 @@ useEffect(() => {
         boxSizing: 'border-box'
       }}
     >
-    <MobileStableEditor className={showFunnel ? "h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden" : (isWindowMobile ? "h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden pb-[6px] rounded-tl-[28px] rounded-tr-[28px] rounded-br-[28px] transform -translate-y-[0.4vh]" : "h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden pt-[1.25cm] pb-[6px] rounded-tl-[28px] rounded-tr-[28px] rounded-br-[28px] transform -translate-y-[0.4vh]")}>
+    <MobileStableEditor className={showFunnel ? "h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden" : (isWindowMobile ? "h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden pb-[6px] rounded-tl-[18px] rounded-tr-[18px] rounded-br-[18px] transform -translate-y-[0.4vh]" : "h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden pt-[1.25cm] pb-[6px] rounded-tl-[18px] rounded-tr-[18px] rounded-br-[18px] transform -translate-y-[0.4vh]")}>
 
       {/* Top Toolbar - Hidden only in preview mode */}
       {!showFunnel && (

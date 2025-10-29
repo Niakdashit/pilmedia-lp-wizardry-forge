@@ -1602,7 +1602,7 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
         boxSizing: 'border-box'
       }}
     >
-    <MobileStableEditor className={isWindowMobile ? "h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden pb-[6px] rounded-tl-[28px] rounded-tr-[28px] rounded-br-[28px] transform -translate-y-[0.4vh]" : "h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden pt-[1.25cm] pb-[6px] rounded-tl-[28px] rounded-tr-[28px] rounded-br-[28px] transform -translate-y-[0.4vh]"}>
+    <MobileStableEditor className={isWindowMobile ? "h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden pb-[6px] rounded-tl-[18px] rounded-tr-[18px] rounded-br-[18px] transform -translate-y-[0.4vh]" : "h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden pt-[1.25cm] pb-[6px] rounded-tl-[18px] rounded-tr-[18px] rounded-br-[18px] transform -translate-y-[0.4vh]"}>
       {/* Nettoyage des états d'éditeur */}
       <EditorStateCleanup />
       
@@ -1635,7 +1635,7 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
       )}
       
       {/* Main Content */}
-      <div className="flex-1 flex overflow-hidden relative rounded-br-[28px]">
+      <div className="flex-1 flex overflow-hidden relative rounded-br-[18px]">
           {/* Overlay Preview: full live funnel (matches other editors) */}
           {showFunnel && (() => {
             const previewCampaign = {

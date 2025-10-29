@@ -21,31 +21,29 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMo
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
-      <div className="flex min-h-screen items-center justify-center px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-        {/* Background overlay */}
-        <div
-          className="fixed inset-0 transition-opacity"
-          onClick={onClose}
-        />
+    <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+      {/* Background overlay */}
+      <div
+        className="absolute inset-0"
+        onClick={onClose}
+      />
 
-        {/* Modal panel */}
-        <div className="inline-block transform overflow-hidden rounded-2xl bg-white text-left align-bottom shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:align-middle">
-          <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-            <div className="flex items-center justify-center min-h-[500px]">
-              {mode === 'login' && (
-                <LoginForm
-                  onSwitchToRegister={switchToRegister}
-                  onSwitchToReset={switchToReset}
-                />
-              )}
-              {mode === 'register' && (
-                <RegisterForm onSwitchToLogin={switchToLogin} />
-              )}
-              {mode === 'reset' && (
-                <ResetPasswordForm onSwitchToLogin={switchToLogin} />
-              )}
-            </div>
+      {/* Modal panel */}
+      <div className="relative w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-xl">
+        <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+          <div className="flex items-center justify-center min-h-[500px]">
+            {mode === 'login' && (
+              <LoginForm
+                onSwitchToRegister={switchToRegister}
+                onSwitchToReset={switchToReset}
+              />
+            )}
+            {mode === 'register' && (
+              <RegisterForm onSwitchToLogin={switchToLogin} />
+            )}
+            {mode === 'reset' && (
+              <ResetPasswordForm onSwitchToLogin={switchToLogin} />
+            )}
           </div>
         </div>
       </div>

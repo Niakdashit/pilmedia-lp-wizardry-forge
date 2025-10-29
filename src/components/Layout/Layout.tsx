@@ -73,7 +73,7 @@ const Layout: React.FC = () => {
       <div 
         className="fixed z-20"
         style={{
-          borderRadius: '28px',
+          borderRadius: '18px',
           margin: '0',
           top: '1.16cm', /* Augmenté de 15% supplémentaire par rapport à 1.37cm */
           bottom: '9px',
@@ -90,7 +90,7 @@ const Layout: React.FC = () => {
         height: 'calc(100vh - 1.16cm - 9px)',
         overflowY: 'auto',
         overflowX: 'hidden',
-        borderRadius: '28px',
+        borderRadius: '18px',
         overflow: 'hidden',
         marginLeft: '9px',
         marginRight: '9px'

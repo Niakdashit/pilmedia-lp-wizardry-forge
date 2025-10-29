@@ -49,7 +49,7 @@ const Auth: React.FC = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4" style={{ background: 'radial-gradient(circle at 0% 0%, #943c56, rgba(50, 14, 75, 0.885), #320e4b)', height: '100vh', margin: 0 }}>
-      <div className="w-full max-w-md">
+      <div className="max-w-md mx-auto">
         {/* Logo */}
         <div className="text-center mb-8">
           <img
