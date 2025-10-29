@@ -31,7 +31,7 @@ const DashboardHeader: React.FC = () => {
   };
   return <div className="relative w-full mt-2 pb-4 px-6 select-text sm:px-8 lg:px-10 z-10 overflow-hidden">
       {/* Fond glassmorphique pastel bleu, identique à PageHeader */}
-      <div className="relative max-w-7xl mx-auto rounded-b-3xl overflow-hidden">
+      <div className="relative max-w-7xl mx-auto rounded-b-[18px] overflow-hidden">
         <div className="
             relative
             bg-white/60
@@ -40,11 +40,11 @@ const DashboardHeader: React.FC = () => {
             via-[#e0f2fe]/80
             to-[#eef2ff]/85
             backdrop-blur-xl
-            rounded-b-3xl
+            rounded-b-[18px]
             border-b border-white/25
           ">
           {/* Overlay coloré pour contraste subtil */}
-          <div className="absolute inset-0 bg-gradient-to-br from-[#7c3aed]/16 via-transparent to-[#2563eb]/12 pointer-events-none rounded-b-3xl" />
+          <div className="absolute inset-0 bg-gradient-to-br from-[#7c3aed]/16 via-transparent to-[#2563eb]/12 pointer-events-none rounded-b-[18px]" />
           {/* Décorations géométriques flottantes style PageHeader */}
           <div className="absolute top-6 right-10 w-24 h-24 bg-gradient-to-br from-violet-300/25 to-blue-300/25 rounded-full blur-xl pointer-events-none"></div>
           <div className="absolute bottom-8 left-14 w-20 h-20 bg-gradient-to-br from-indigo-300/25 to-sky-300/25 rounded-full blur-lg pointer-events-none"></div>
