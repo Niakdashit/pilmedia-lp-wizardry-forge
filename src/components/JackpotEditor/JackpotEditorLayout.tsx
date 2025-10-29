@@ -2668,9 +2668,8 @@ useEffect(() => {
     
     // ✅ CRITICAL: Vérifier si le nom est valide AVANT de sauvegarder
     const currentName = (campaignState as any)?.name || '';
-    const isValidName = currentName && currentName.trim() && 
-                       !currentName.includes('Nouvelle campagne') && 
-                       !currentName.includes('New Campaign');
+    const nameTrim = (currentName || '').trim();
+    const isValidName = !!nameTrim && !['nouvelle campagne','new campaign'].includes(nameTrim.toLowerCase());
     
     if (!isValidName) {
       console.log('❌ [JackpotEditor] Invalid campaign name, opening name modal before save');
