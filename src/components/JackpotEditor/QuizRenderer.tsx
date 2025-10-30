@@ -775,7 +775,11 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
           }
         `
       }} />
-      {modules.map(renderModule)}
+      {modules.map((module, index) => (
+        <React.Fragment key={module?.id || `module-${index}`}>
+          {renderModule(module)}
+        </React.Fragment>
+      ))}
     </div>
   );
 };

@@ -1,13 +1,13 @@
 // @ts-nocheck
-import React, { useState, useMemo, useEffect, useRef, useCallback, lazy } from 'react';
+import React, { useState, useMemo, useEffect, useRef, useCallback, lazy, Suspense } from 'react';
 import CampaignValidationModal from '@/components/shared/CampaignValidationModal';
 import { useCampaignValidation } from '@/hooks/useCampaignValidation';
 // Align routing with QuizEditor via router adapter
 import { useLocation, useNavigate } from '@/lib/router-adapter';
 import { Save, X } from 'lucide-react';
 
-const HybridSidebar = lazy(() => import('./HybridSidebar'));
-const DesignToolbar = lazy(() => import('./DesignToolbar'));
+import HybridSidebar from './HybridSidebar';
+import DesignToolbar from './DesignToolbar';
 const FunnelUnlockedGame = lazy(() => import('@/components/funnels/FunnelUnlockedGame'));
 const FunnelQuizParticipate = lazy(() => import('../funnels/FunnelQuizParticipate'));
 // Scratch editor uses FunnelUnlockedGame for preview
@@ -18,7 +18,7 @@ import PreviewRenderer from '@/components/preview/PreviewRenderer';
 import ArticleCanvas from '@/components/ArticleEditor/ArticleCanvas';
 import ZoomSlider from './components/ZoomSlider';
 import EditorHeader from '@/components/shared/EditorHeader';
-const DesignCanvas = lazy(() => import('./DesignCanvas'));
+import DesignCanvas from './DesignCanvas';
 import { useEditorStore } from '../../stores/editorStore';
 import { useKeyboardShortcuts } from '../ModernEditor/hooks/useKeyboardShortcuts';
 import { useUndoRedo, useUndoRedoShortcuts } from '../../hooks/useUndoRedo';
@@ -45,8 +45,8 @@ import { generateTempCampaignId } from '@/utils/tempCampaignId';
 import { useAutoSaveToSupabase } from '@/hooks/useAutoSaveToSupabase';
 import { useEditorUnmountSave } from '@/hooks/useEditorUnmountSave';
 
-const KeyboardShortcutsHelp = lazy(() => import('../shared/KeyboardShortcutsHelp'));
-const MobileStableEditor = lazy(() => import('./components/MobileStableEditor'));
+import KeyboardShortcutsHelp from '../shared/KeyboardShortcutsHelp';
+import MobileStableEditor from './components/MobileStableEditor';
 import { useCampaignFromUrl } from '@/hooks/useCampaignFromUrl';
 
 const LAUNCH_BUTTON_FALLBACK_GRADIENT = '#000000';
@@ -1240,18 +1240,22 @@ useEffect(() => {
   }, [modularPage, persistModular]);
 
   const ensuredBlocBoutonRef = useRef(false);
-  const createDefaultBlocBouton = useCallback((screen: ScreenId = 'screen1'): BlocBouton => ({
-    id: `BlocBouton-${Date.now()}-${performance.now().toFixed(3).replace('.', '')}-${Math.random().toString(36).slice(2, 8)}`,
-    type: 'BlocBouton',
-    label: getDefaultButtonLabel(screen),
-    href: '#',
-    align: 'center',
-    borderRadius: 9999,
-    background: LAUNCH_BUTTON_FALLBACK_GRADIENT,
-    textColor: LAUNCH_BUTTON_DEFAULT_TEXT_COLOR,
-    padding: LAUNCH_BUTTON_DEFAULT_PADDING,
-    boxShadow: LAUNCH_BUTTON_DEFAULT_SHADOW
-  }), [getDefaultButtonLabel]);
+  const buttonIdCounterRef = useRef(0);
+  const createDefaultBlocBouton = useCallback((screen: ScreenId = 'screen1'): BlocBouton => {
+    buttonIdCounterRef.current += 1;
+    return {
+      id: `BlocBouton-${Date.now()}-${performance.now().toFixed(3).replace('.', '')}-${buttonIdCounterRef.current}-${Math.random().toString(36).slice(2, 8)}`,
+      type: 'BlocBouton',
+      label: getDefaultButtonLabel(screen),
+      href: '#',
+      align: 'center',
+      borderRadius: 9999,
+      background: LAUNCH_BUTTON_FALLBACK_GRADIENT,
+      textColor: LAUNCH_BUTTON_DEFAULT_TEXT_COLOR,
+      padding: LAUNCH_BUTTON_DEFAULT_PADDING,
+      boxShadow: LAUNCH_BUTTON_DEFAULT_SHADOW
+    };
+  }, [getDefaultButtonLabel]);
 
   useEffect(() => {
     if (ensuredBlocBoutonRef.current) return;
@@ -3206,35 +3210,40 @@ useEffect(() => {
   });
 
   return (
-    <div
-      className="min-h-screen w-full"
-      style={{
-        background: 'linear-gradient(180deg, #943c56, #370e4b)',
-        padding: showFunnel ? '0' : (isWindowMobile ? '9px' : '0 9px 9px 9px'),
-        boxSizing: 'border-box'
-      }}
-    >
-      {!showFunnel && <EditorHeader />}
-      {!showFunnel && (
-        <div
-          className="fixed z-20"
-          style={{
-            borderRadius: '18px',
-            margin: '0',
-            top: '1.16cm',
-            bottom: '9px',
-            left: '9px',
-            right: '9px',
-            boxSizing: 'border-box',
-            backgroundColor: '#f9fafb'
-          }}
-        />
-      )}
-      <MobileStableEditor
+    <Suspense fallback={
+      <div className="min-h-screen w-full flex items-center justify-center" style={{ background: 'linear-gradient(180deg, #943c56, #370e4b)' }}>
+        <div className="text-white text-lg">Chargement...</div>
+      </div>
+    }>
+      <div
+        className="min-h-screen w-full"
+        style={{
+          background: 'linear-gradient(180deg, #943c56, #370e4b)',
+          padding: showFunnel ? '0' : (isWindowMobile ? '9px' : '0 9px 9px 9px'),
+          boxSizing: 'border-box'
+        }}
+      >
+        {!showFunnel && <EditorHeader />}
+        {!showFunnel && (
+          <div
+            className="fixed z-10"
+            style={{
+              borderRadius: '18px',
+              margin: '0',
+              top: '1.16cm',
+              bottom: '9px',
+              left: '9px',
+              right: '9px',
+              boxSizing: 'border-box',
+              backgroundColor: '#f9fafb'
+            }}
+          />
+        )}
+        <MobileStableEditor
         className={
           showFunnel
-            ? "h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden"
-            : (isWindowMobile ? "h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden pb-[6px] rounded-tl-[18px] rounded-tr-[18px] rounded-br-[18px] transform -translate-y-[0.4vh]" : "h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden pt-[1.25cm] pb-[6px] rounded-tl-[18px] rounded-tr-[18px] rounded-br-[18px] transform -translate-y-[0.4vh]")
+            ? "h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden relative z-30"
+            : (isWindowMobile ? "h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden pb-[6px] rounded-tl-[18px] rounded-tr-[18px] rounded-br-[18px] transform -translate-y-[0.4vh] relative z-30" : "h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden pt-[1.25cm] pb-[6px] rounded-tl-[18px] rounded-tr-[18px] rounded-br-[18px] transform -translate-y-[0.4vh] relative z-30")
         }
       >
 
@@ -3745,10 +3754,9 @@ useEffect(() => {
               <div className="min-h-full flex flex-col">
                 {/* Premier Canvas */}
                 <div data-screen-anchor="screen1" className="relative">
-                  <div className="flex-1 flex flex-col items-center justify-center overflow-hidden relative">
-                    {editorMode === 'article' ? (
-                      /* Article Mode: Show ArticleCanvas with funnel */
-                      <div className="w-full h-full flex items-start justify-center bg-gray-100 overflow-y-auto p-8">
+                  {editorMode === 'article' ? (
+                    /* Article Mode: Show ArticleCanvas with funnel */
+                    <div className="w-full h-full flex items-start justify-center bg-gray-100 overflow-y-auto p-8">
                         <ArticleCanvas
                           articleConfig={(campaignState as any)?.articleConfig || {}}
                           onBannerChange={(imageUrl) => {
@@ -3822,7 +3830,6 @@ useEffect(() => {
                         />
                       </div>
                     ) : null}
-                  </div>
                   {editorMode !== 'article' && (
                   <DesignCanvas
                     editorMode={editorMode}
@@ -4272,6 +4279,7 @@ useEffect(() => {
       )}
     </MobileStableEditor>
     </div>
+    </Suspense>
   );
 };
 

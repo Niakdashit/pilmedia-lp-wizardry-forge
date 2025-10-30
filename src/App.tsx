@@ -135,7 +135,7 @@ function App() {
               } />
               <Route path="/mobile-test" element={<MobileTestPage />} />
               <Route path="/mobile-complete-test" element={<MobileCompleteTestPage />} />
-              
+
               {/* Campaign Settings - Standalone page */}
               <Route path="/campaign/:id/settings" element={
                 <LoadingBoundary>

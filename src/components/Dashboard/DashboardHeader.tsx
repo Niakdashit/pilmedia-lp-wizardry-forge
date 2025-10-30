@@ -16,7 +16,7 @@ const DashboardHeader: React.FC = () => {
     label: 'Quiz'
   }, {
     type: 'scratch',
-    label: 'Grattage'
+    label: 'Carte à gratter'
   }, {
     type: 'jackpot',
     label: 'Jackpot'
@@ -62,13 +62,13 @@ const DashboardHeader: React.FC = () => {
                     animationFillMode: 'forwards'
                   }}
                 >
-                      <div className="w-[3.5625rem] h-[3.5625rem] bg-transparent rounded-full overflow-hidden shadow-xl shadow-purple-500/15 flex items-center justify-center group-hover:shadow-2xl group-hover:shadow-purple-500/25 transform group-hover:scale-110 transition-all duration-300">
+                      <div className="w-[6.25rem] h-[6.25rem] bg-transparent rounded-lg overflow-hidden flex items-center justify-center group-hover:scale-110 transition-all duration-300">
                         <img
                           src={iconByType[game.type]}
                           alt={game.label}
                           loading="lazy"
                           decoding="async"
-                          className="w-[3.375rem] h-[3.375rem] rounded-full"
+                          className="w-[6rem] h-[6rem] rounded-lg"
                         />
                       </div>
                       <span className="mt-2 text-xs font-medium text-gray-700 group-hover:text-[#841b60] transition-colors text-center drop-shadow-sm">
@@ -102,13 +102,13 @@ const DashboardHeader: React.FC = () => {
                       animationFillMode: 'forwards'
                     }}
                   >
-                        <div className="w-[3.5625rem] h-[3.5625rem] bg-transparent rounded-full overflow-hidden shadow-xl shadow-purple-500/15 flex items-center justify-center group-hover:shadow-2xl group-hover:shadow-purple-500/25 transform group-hover:scale-110 transition-all duration-300">
+                        <div className="w-[6.25rem] h-[6.25rem] bg-transparent rounded-lg overflow-hidden flex items-center justify-center group-hover:scale-110 transition-all duration-300">
                           <img
                             src={iconByType[game.type]}
                             alt={game.label}
                             loading="lazy"
                             decoding="async"
-                            className="w-[3.375rem] h-[3.375rem] rounded-full"
+                            className="w-[6rem] h-[6rem] rounded-lg"
                           />
                         </div>
                         <span className="mt-2 text-xs font-medium text-gray-700 group-hover:text-[#841b60] transition-colors text-center drop-shadow-sm">
