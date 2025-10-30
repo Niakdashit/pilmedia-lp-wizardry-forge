@@ -2645,6 +2645,7 @@ useEffect(() => {
       const base = (campaignState || {}) as any;
       const payload: any = {
         ...base,
+        editorMode, // Ajouter le mode éditeur (article ou fullscreen)
         modularPage,
         canvasElements,
         screenBackgrounds,
@@ -2773,6 +2774,7 @@ useEffect(() => {
 
       const payload: any = {
         ...(campaignState || {}),
+        editorMode, // Ajouter le mode éditeur (article ou fullscreen)
         modularPage,
         canvasElements,
         screenBackgrounds,

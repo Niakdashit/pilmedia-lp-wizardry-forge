@@ -1084,6 +1084,7 @@ const handleSaveCampaignName = useCallback(async () => {
   // Créer le payload complet avec le nom ET toutes les configurations
   const payload: any = {
     ...(updatedCampaign || {}),
+    editorMode, // Ajouter le mode éditeur (article ou fullscreen)
     id: isUuid(currentId) ? currentId : undefined,
     name,
     type: 'quiz'
@@ -1297,6 +1298,7 @@ const handleSaveCampaignName = useCallback(async () => {
         console.log('💾 [QuizEditor] Autosave START for campaign:', id);
         const payload: any = {
           ...(campaignState || {}),
+          editorMode, // Ajouter le mode éditeur (article ou fullscreen)
           // Save modules in multiple locations for compatibility
           modularPage,
           design: {
@@ -3005,6 +3007,7 @@ const handleSaveCampaignName = useCallback(async () => {
       // Build complete payload with modules in all required locations
       const payload = {
         ...updatedCampaign,
+        editorMode, // Ajouter le mode éditeur (article ou fullscreen)
         // Save modules at multiple locations for compatibility
         modularPage,
         design: {

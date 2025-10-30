@@ -875,6 +875,7 @@ const handleSaveCampaignName = useCallback(async () => {
   // Créer le payload complet avec le nom ET toutes les configurations
   const payload: any = {
     ...(updatedCampaign || {}),
+    editorMode, // Ajouter le mode éditeur (article ou fullscreen)
     id: isUuid(currentId) ? currentId : undefined,
     name,
     type: 'scratch'
@@ -2686,6 +2687,7 @@ const handleSaveCampaignName = useCallback(async () => {
       const base = (campaignState || {}) as any;
       const payload: any = {
         ...base,
+        editorMode, // Ajouter le mode éditeur (article ou fullscreen)
         modularPage,
         canvasElements,
         screenBackgrounds,
@@ -2816,6 +2818,7 @@ const handleSaveCampaignName = useCallback(async () => {
       
       const payload: any = {
         ...(campaignState || {}),
+        editorMode, // Ajouter le mode éditeur (article ou fullscreen)
         modularPage,
         canvasElements,
         screenBackgrounds,

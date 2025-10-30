@@ -2203,6 +2203,7 @@ useEffect(() => {
       // Build complete payload with modules in all required locations (aligné avec QuizEditor)
       const payload: any = {
         ...updatedCampaign,
+        editorMode, // Ajouter le mode éditeur (article ou fullscreen)
         modularPage,
         design: {
           ...((updatedCampaign as any)?.design || {}),

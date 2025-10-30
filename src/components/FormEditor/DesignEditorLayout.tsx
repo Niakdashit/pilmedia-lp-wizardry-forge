@@ -707,6 +707,7 @@ useEffect(() => {
 
       const payload: any = {
         ...(campaignState || {}),
+        editorMode, // Ajouter le mode éditeur (article ou fullscreen)
         type: 'form',
         extractedColors, // ✅ Include extracted colors
         modularPage: currentModularPage, // ✅ Préserver les modules existants
@@ -779,6 +780,7 @@ useEffect(() => {
     try {
       const payload: any = {
         ...(campaignState || {}),
+        editorMode, // Ajouter le mode éditeur (article ou fullscreen)
         type: 'form',
         modularPage,
         config: {
@@ -1067,6 +1069,7 @@ useEffect(() => {
       // Créer le payload complet avec le nom ET toutes les configurations
       const payload: any = {
         ...(updatedCampaign || {}),
+        editorMode, // Ajouter le mode éditeur (article ou fullscreen)
         id: isUuid(currentId) ? currentId : undefined,
         name,
         type: 'form'

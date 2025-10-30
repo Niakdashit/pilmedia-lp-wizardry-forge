@@ -200,6 +200,36 @@ export const saveCampaignToDB = async (
     ...(campaign?.type === 'jackpot' && campaign?.jackpotConfig ? { jackpot: campaign.jackpotConfig } : {})
   };
 
+  // Detect editor mode (article vs fullscreen)
+  const editorMode = campaign?.editorMode || 'fullscreen';
+  const isArticleMode = editorMode === 'article';
+  
+  console.log('📝 [saveCampaignToDB] Editor mode detected:', {
+    editorMode,
+    isArticleMode,
+    hasArticleConfig: !!campaign?.articleConfig
+  });
+
+  // Build article configuration if in article mode
+  const articleConfig = isArticleMode ? {
+    ...(campaign?.articleConfig || {}),
+    banner: {
+      ...(campaign?.articleConfig?.banner || {}),
+      imageUrl: campaign?.articleConfig?.banner?.imageUrl || campaign?.banner_url
+    },
+    title: campaign?.articleConfig?.title || '',
+    description: campaign?.articleConfig?.description || '',
+    cta: {
+      ...(campaign?.articleConfig?.cta || {}),
+      text: campaign?.articleConfig?.cta?.text || 'PARTICIPER',
+      style: campaign?.articleConfig?.cta?.style || {}
+    },
+    layout: {
+      ...(campaign?.articleConfig?.layout || {}),
+      maxWidth: campaign?.articleConfig?.layout?.maxWidth || 810
+    }
+  } : undefined;
+
   // Build final payload with ALL campaign data
   const payload: any = {
     id: isUuid(campaign?.id) ? campaign?.id : undefined,
@@ -209,6 +239,9 @@ export const saveCampaignToDB = async (
     type: campaign?.type || 'form',
     status: campaign?.status || 'draft',
     
+    // Editor mode (article or fullscreen)
+    editor_mode: editorMode,
+    
     // Complete configuration
     config: mergedConfig,
     
@@ -217,6 +250,9 @@ export const saveCampaignToDB = async (
     
     // Complete design with all visual elements
     design: mergedDesign,
+    
+    // Article configuration (only for article mode)
+    ...(isArticleMode && articleConfig ? { article_config: articleConfig } : {}),
     
     // Form fields
     form_fields: normalizedFormFields,
@@ -234,6 +270,9 @@ export const saveCampaignToDB = async (
       id: payload.id,
       name: payload.name,
       type: payload.type,
+      editorMode: payload.editor_mode,
+      hasArticleConfig: !!payload.article_config,
+      articleConfigKeys: payload.article_config ? Object.keys(payload.article_config) : [],
       configKeys: Object.keys(payload.config || {}),
       designKeys: Object.keys(payload.design || {}),
       gameConfigKeys: Object.keys(payload.game_config || {}),
