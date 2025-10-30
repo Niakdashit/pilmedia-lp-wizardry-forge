@@ -2,8 +2,20 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import PillButton from '../shared/PillButton';
 import { FolderOpen, Layers } from 'lucide-react';
-import { getCampaignTypeIcon } from '../../utils/campaignTypes';
 import { GameType } from './types';
+
+const shortcutIconMap: Record<string, string> = {
+  wheel: '/gamification/shortcuts/wheel.svg',
+  quiz: '/gamification/shortcuts/quiz.svg',
+  scratch: '/gamification/shortcuts/scratch.svg',
+  dice: '/gamification/shortcuts/dice.svg',
+  jackpot: '/gamification/shortcuts/jackpot.svg',
+  memory: '/gamification/shortcuts/memory.svg',
+  puzzle: '/gamification/shortcuts/puzzle.svg',
+  form: '/gamification/shortcuts/form.svg',
+};
+
+const getShortcutIcon = (type: string) => shortcutIconMap[type] ?? shortcutIconMap.wheel;
 const QuickCreationSection: React.FC = () => {
   const gameTypes: GameType[] = [{
     type: 'wheel',
@@ -49,19 +61,31 @@ const QuickCreationSection: React.FC = () => {
             {/* Container pour desktop avec flex center */}
             <div className="hidden md:flex items-center justify-center space-x-8 max-w-5xl">
               {gameTypes.map((game, index) => {
-              const IconComponent = getCampaignTypeIcon(game.type);
-              return <Link key={game.type} to={`/quick-campaign?type=${game.type}`} className="flex flex-col items-center group cursor-pointer opacity-0 animate-fade-in" style={{
-                animationDelay: `${index * 0.1}s`,
-                animationFillMode: 'forwards'
-              }}>
+                const iconSrc = getShortcutIcon(game.type);
+                return (
+                  <Link
+                    key={game.type}
+                    to={`/quick-campaign?type=${game.type}`}
+                    className="flex flex-col items-center group cursor-pointer opacity-0 animate-fade-in"
+                    style={{
+                      animationDelay: `${index * 0.1}s`,
+                      animationFillMode: 'forwards',
+                    }}
+                  >
                     <div className="w-16 h-16 bg-white/80 backdrop-blur-sm rounded-full shadow-xl shadow-purple-500/15 flex items-center justify-center group-hover:shadow-2xl group-hover:shadow-purple-500/25 transform group-hover:scale-110 transition-all duration-300 border border-white/50 group-hover:bg-white/90">
-                      <IconComponent className="w-8 h-8 text-[#841b60] group-hover:text-[#6d164f] transition-colors drop-shadow-sm" />
+                      <img
+                        src={iconSrc}
+                        alt={game.label}
+                        className="w-10 h-10 object-contain drop-shadow-sm"
+                        loading="lazy"
+                      />
                     </div>
                     <span className="mt-2 text-sm font-medium text-gray-700 group-hover:text-[#841b60] transition-colors text-center drop-shadow-sm">
                       {game.label}
                     </span>
-                  </Link>;
-            })}
+                  </Link>
+                );
+              })}
             </div>
 
             {/* Container pour mobile avec scroll horizontal */}
@@ -72,19 +96,31 @@ const QuickCreationSection: React.FC = () => {
               msOverflowStyle: 'none'
             }}>
                 {gameTypes.map((game, index) => {
-                const IconComponent = getCampaignTypeIcon(game.type);
-                return <Link key={game.type} to={`/quick-campaign?type=${game.type}`} className="flex flex-col items-center group cursor-pointer opacity-0 animate-fade-in flex-shrink-0" style={{
-                  animationDelay: `${index * 0.1}s`,
-                  animationFillMode: 'forwards'
-                }}>
-                        <div className="w-16 h-16 bg-white/80 backdrop-blur-sm rounded-full shadow-xl shadow-purple-500/15 flex items-center justify-center group-hover:shadow-2xl group-hover:shadow-purple-500/25 transform group-hover:scale-110 transition-all duration-300 border border-white/50 group-hover:bg-white/90">
-                          <IconComponent className="w-8 h-8 text-[#841b60] group-hover:text-[#6d164f] transition-colors drop-shadow-sm" />
-                        </div>
-                        <span className="mt-2 text-sm font-medium text-gray-700 group-hover:text-[#841b60] transition-colors text-center drop-shadow-sm">
-                          {game.label}
-                        </span>
-                      </Link>;
-              })}
+                  const iconSrc = getShortcutIcon(game.type);
+                  return (
+                    <Link
+                      key={game.type}
+                      to={`/quick-campaign?type=${game.type}`}
+                      className="flex flex-col items-center group cursor-pointer opacity-0 animate-fade-in flex-shrink-0"
+                      style={{
+                        animationDelay: `${index * 0.1}s`,
+                        animationFillMode: 'forwards',
+                      }}
+                    >
+                      <div className="w-16 h-16 bg-white/80 backdrop-blur-sm rounded-full shadow-xl shadow-purple-500/15 flex items-center justify-center group-hover:shadow-2xl group-hover:shadow-purple-500/25 transform group-hover:scale-110 transition-all duration-300 border border-white/50 group-hover:bg-white/90">
+                        <img
+                          src={iconSrc}
+                          alt={game.label}
+                          className="w-10 h-10 object-contain drop-shadow-sm"
+                          loading="lazy"
+                        />
+                      </div>
+                      <span className="mt-2 text-sm font-medium text-gray-700 group-hover:text-[#841b60] transition-colors text-center drop-shadow-sm">
+                        {game.label}
+                      </span>
+                    </Link>
+                  );
+                })}
               </div>
             </div>
           </div>

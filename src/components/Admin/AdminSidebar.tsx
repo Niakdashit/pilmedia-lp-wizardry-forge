@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
   Users,
@@ -22,6 +22,7 @@ const logoIcon = '/prosplay-icon.svg';
 const AdminSidebar: React.FC = () => {
   const location = useLocation();
   const { sidebarCollapsed, toggleSidebar } = useAppContext();
+  const navigate = useNavigate();
 
   const navItems = [
     { name: 'Dashboard', path: '/admin', icon: <LayoutDashboard className="w-5 h-5" /> },
@@ -42,14 +43,22 @@ const AdminSidebar: React.FC = () => {
       {/* Logo section */}
       <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200/50">
         {!sidebarCollapsed ? (
-          <div className="flex items-center space-x-2">
+          <button
+            onClick={() => navigate('/dashboard')}
+            className="flex items-center space-x-2 cursor-pointer transition-opacity hover:opacity-80"
+            title="Retour au dashboard"
+          >
             <img src={sidebarLogo} alt="Prosplay Logo" className="h-8 w-auto" />
             <span className="text-red-600 font-bold text-sm">ADMIN</span>
-          </div>
+          </button>
         ) : (
-          <div className="w-full flex items-center justify-center">
+          <button
+            onClick={() => navigate('/dashboard')}
+            className="w-full flex items-center justify-center cursor-pointer transition-opacity hover:opacity-80"
+            title="Retour au dashboard"
+          >
             <img src={logoIcon} alt="Prosplay Icon" className="h-8 w-8 object-contain" />
-          </div>
+          </button>
         )}
         <button
           onClick={toggleSidebar}

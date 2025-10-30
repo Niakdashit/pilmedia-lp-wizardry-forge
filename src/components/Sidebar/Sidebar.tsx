@@ -1,12 +1,13 @@
 
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, Target, Gamepad2, BarChart3, Handshake, Shield, Globe } from 'lucide-react';
 import { useProfile } from '../../hooks/useProfile';
 const logoIcon = '/prosplay-icon.svg';
 
 const Sidebar: React.FC = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const { profile } = useProfile();
   // Sidebar is permanently collapsed (no toggle)
 
@@ -57,9 +58,18 @@ const Sidebar: React.FC = () => {
     >
       {/* Logo section */}
       <div className="flex items-center justify-between h-16 px-4 border-b border-gray-600/30">
-        <div className="w-full flex items-center justify-center">
+        <button
+          onClick={() => {
+            if (location.pathname !== '/dashboard') {
+              prefetchRoute('/dashboard');
+              navigate('/dashboard');
+            }
+          }}
+          className="w-full flex items-center justify-center cursor-pointer transition-opacity hover:opacity-80"
+          title="Retour au dashboard"
+        >
           <img src={logoIcon} alt="Prosplay Icon" className="h-9 w-9 object-contain brightness-0 invert" style={{maxWidth: '36px'}} />
-        </div>
+        </button>
       </div>
 
       {/* Navigation section */}

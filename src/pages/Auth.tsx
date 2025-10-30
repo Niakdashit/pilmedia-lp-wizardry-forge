@@ -21,24 +21,50 @@ const Auth: React.FC = () => {
   // Afficher un loader pendant la vérification
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4" style={{ background: 'radial-gradient(circle at 0% 0%, #943c56, rgba(50, 14, 75, 0.885), #320e4b)', height: '100vh', margin: 0 }}>
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
-          <p className="text-white">Vérification de la connexion...</p>
+      <>
+        <style>{`
+          body {
+            background: linear-gradient(
+              180deg,
+              #943c56,
+              #370e4b
+            );
+            height: 100vh;
+            margin: 0;
+          }
+        `}</style>
+        <div className="min-h-screen flex items-center justify-center p-4" style={{ height: '100vh', margin: 0 }}>
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+            <p className="text-white">Vérification de la connexion...</p>
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 
   // Si l'utilisateur est connecté, ne rien afficher (il sera redirigé)
   if (user) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4" style={{ background: 'radial-gradient(circle at 0% 0%, #943c56, rgba(50, 14, 75, 0.885), #320e4b)', height: '100vh', margin: 0 }}>
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
-          <p className="text-white">Redirection en cours...</p>
+      <>
+        <style>{`
+          body {
+            background: linear-gradient(
+              180deg,
+              #943c56,
+              #370e4b
+            );
+            height: 100vh;
+            margin: 0;
+          }
+        `}</style>
+        <div className="min-h-screen flex items-center justify-center p-4" style={{ height: '100vh', margin: 0 }}>
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+            <p className="text-white">Redirection en cours...</p>
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 
@@ -48,26 +74,39 @@ const Auth: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4" style={{ background: 'radial-gradient(circle at 0% 0%, #943c56, rgba(50, 14, 75, 0.885), #320e4b)', height: '100vh', margin: 0 }}>
-      <div className="max-w-md mx-auto">
-        {/* Logo */}
-        <div className="text-center mb-8">
-          <img
-            src="/logos/prosplay-header-logo.svg"
-            alt="Prosplay Logo"
-            className="h-16 mx-auto mb-4 filter brightness-0 invert"
-          />
-          <h1 className="text-4xl font-bold text-white mb-2">Prosplay</h1>
-          <p className="text-white/80">Plateforme de marketing digital</p>
-        </div>
+    <>
+      <style>{`
+        body {
+          background: linear-gradient(
+            180deg,
+            #943c56,
+            #370e4b
+          );
+          height: 100vh;
+          margin: 0;
+        }
+      `}</style>
+      <div className="min-h-screen flex items-center justify-center p-4" style={{ height: '100vh', margin: 0 }}>
+        <div className="max-w-md mx-auto">
+          {/* Logo */}
+          <div className="text-center mb-8">
+            <img
+              src="/logos/prosplay-header-logo.svg"
+              alt="Prosplay Logo"
+              className="h-16 mx-auto mb-4 filter brightness-0 invert"
+            />
+            <h1 className="text-4xl font-bold text-white mb-2">Prosplay</h1>
+            <p className="text-white/80">Plateforme de marketing digital</p>
+          </div>
 
-        <AuthModal
-          isOpen={isModalOpen}
-          onClose={handleClose}
-          initialMode="login"
-        />
+          <AuthModal
+            isOpen={isModalOpen}
+            onClose={handleClose}
+            initialMode="login"
+          />
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 

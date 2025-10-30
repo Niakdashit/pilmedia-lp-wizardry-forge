@@ -10,12 +10,13 @@ import { Save, X } from 'lucide-react';
 const HybridSidebar = lazy(() => import('./HybridSidebar'));
 const DesignToolbar = lazy(() => import('./DesignToolbar'));
 import PreviewRenderer from '@/components/preview/PreviewRenderer';
-import ArticleCanvas from '@/components/ArticleEditor/ArticleCanvas';
+import ArticleFunnelView from '@/components/ArticleEditor/ArticleFunnelView';
 import type { ModularPage, ScreenId, BlocBouton, Module } from '@/types/modularEditor';
 import { createEmptyModularPage } from '@/types/modularEditor';
 
 import ZoomSlider from './components/ZoomSlider';
 const DesignCanvas = lazy(() => import('./DesignCanvas'));
+import EditorHeader from '@/components/shared/EditorHeader';
 import { useEditorStore } from '../../stores/editorStore';
 import { useKeyboardShortcuts } from '../ModernEditor/hooks/useKeyboardShortcuts';
 import { useUndoRedo, useUndoRedoShortcuts } from '../../hooks/useUndoRedo';
@@ -126,6 +127,22 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
   const editorMode: 'article' | 'fullscreen' = searchParams.get('mode') === 'article' ? 'article' : 'fullscreen';
   
   console.log('🎨 [QuizEditorLayout] Editor Mode:', editorMode);
+
+  useEffect(() => {
+    const previousBackground = document.body.style.background;
+    const previousHeight = document.body.style.height;
+    const previousMargin = document.body.style.margin;
+
+    document.body.style.background = 'linear-gradient(180deg, #943c56, #370e4b)';
+    document.body.style.height = '100vh';
+    document.body.style.margin = '0';
+
+    return () => {
+      document.body.style.background = previousBackground;
+      document.body.style.height = previousHeight;
+      document.body.style.margin = previousMargin;
+    };
+  }, []);
   const getTemplateBaseWidths = useCallback((templateId?: string) => {
     const template = quizTemplates.find((tpl) => tpl.id === templateId) || quizTemplates[0];
     const width = template?.style?.containerWidth ?? 450;
@@ -1753,6 +1770,7 @@ const handleSaveCampaignName = useCallback(async () => {
     }
   }, [canvasElements]);
   const [showFunnel, setShowFunnel] = useState(false);
+  const isArticlePreview = editorMode === 'article' && showFunnel;
   const [currentStep, setCurrentStep] = useState<'article' | 'form' | 'game' | 'result'>('article');
   const [previewButtonSide, setPreviewButtonSide] = useState<'left' | 'right'>(() =>
     (typeof window !== 'undefined' && localStorage.getItem('previewButtonSide') === 'left') ? 'left' : 'right'
@@ -3063,10 +3081,15 @@ const handleSaveCampaignName = useCallback(async () => {
       }
     }));
     
-    setShowFunnel(!showFunnel);
-    // Reset to article step when entering preview
-    if (!showFunnel) {
-      setCurrentStep('article');
+    const nextShowFunnel = !showFunnel;
+    setShowFunnel(nextShowFunnel);
+
+    if (editorMode === 'article') {
+      if (!nextShowFunnel) {
+        setCurrentStep('article');
+      }
+    } else if (nextShowFunnel) {
+      setCurrentScreen('screen1');
     }
   };
 
@@ -3477,16 +3500,37 @@ const handleSaveCampaignName = useCallback(async () => {
     <div
       className="min-h-screen w-full"
       style={{
-        backgroundImage: showFunnel ? 'none' : 
-          'radial-gradient(130% 130% at 12% 20%, rgba(168, 70, 20, 0.85) 0%, rgba(168, 70, 20, 0) 52%), radial-gradient(120% 120% at 78% 18%, rgba(90, 35, 120, 0.9) 0%, rgba(90, 35, 120, 0) 58%), radial-gradient(150% 150% at 55% 82%, rgba(35, 30, 80, 0.85) 0%, rgba(35, 30, 80, 0) 60%), linear-gradient(90deg, #4b1548 0%, #271056 50%, #0b0d2d 100%)',
-        backgroundBlendMode: showFunnel ? 'normal' : 'screen, screen, lighten, normal',
-        backgroundColor: showFunnel ? 'transparent' : '#0b0d2d',
+        background: 'linear-gradient(180deg, #943c56, #370e4b)',
         padding: showFunnel ? '0' : (isWindowMobile ? '9px' : '0 9px 9px 9px'),
         boxSizing: 'border-box'
       }}
     >
-    <MobileStableEditor className={showFunnel ? "h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden" : (isWindowMobile ? "h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden pb-[6px] rounded-tl-[18px] rounded-tr-[18px] rounded-br-[18px] transform -translate-y-[0.4vh]" : "h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden pt-[1.25cm] pb-[6px] rounded-tl-[18px] rounded-tr-[18px] rounded-br-[18px] transform -translate-y-[0.4vh]")}>
-
+      {!showFunnel && <EditorHeader />}
+      {!showFunnel && (
+        <div
+          className="fixed z-20"
+          style={{
+            borderRadius: '18px',
+            margin: '0',
+            top: '1.16cm',
+            bottom: '9px',
+            left: '9px',
+            right: '9px',
+            boxSizing: 'border-box',
+            backgroundColor: '#f9fafb',
+            pointerEvents: 'none'
+          }}
+        />
+      )}
+      <MobileStableEditor
+        className={
+          showFunnel
+            ? 'relative z-30 h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden'
+            : isWindowMobile
+              ? 'relative z-30 h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden pb-[6px] rounded-tl-[18px] rounded-tr-[18px] rounded-br-[18px] transform -translate-y-[0.4vh]'
+              : 'relative z-30 h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden pt-[1.25cm] pb-[6px] rounded-tl-[18px] rounded-tr-[18px] rounded-br-[18px] transform -translate-y-[0.4vh]'
+        }
+      >
       {/* Top Toolbar - Hidden only in preview mode */}
       {!showFunnel && (
         <>
@@ -3538,24 +3582,21 @@ const handleSaveCampaignName = useCallback(async () => {
                   }}
                 >
                   {editorMode === 'article' ? (
-                    <ArticleCanvas
+                    <ArticleFunnelView
                       articleConfig={(campaignState as any)?.articleConfig || {}}
-                      onBannerChange={() => {}}
-                      onBannerRemove={() => {}}
-                      onTitleChange={() => {}}
-                      onDescriptionChange={() => {}}
-                      onCTAClick={handleCTAClick}
-                      onFormSubmit={handleFormSubmit}
-                      onGameComplete={handleGameComplete}
-                      currentStep={currentStep}
-                      editable={false}
-                      maxWidth={810}
                       campaignType={(campaignState as any)?.type || 'quiz'}
-                      formFields={(campaignState as any)?.formFields}
                       campaign={campaignData}
                       wheelModalConfig={wheelModalConfig}
                       gameModalConfig={quizModalConfig}
+                      currentStep={currentStep}
+                      editable={false}
+                      formFields={(campaignState as any)?.formFields}
+                      onCTAClick={handleCTAClick}
+                      onFormSubmit={handleFormSubmit}
+                      onGameComplete={handleGameComplete}
                       onStepChange={setCurrentStep}
+                      containerClassName="p-0"
+                      containerStyle={{ backgroundColor: 'transparent' }}
                     />
                   ) : (
                     <PreviewRenderer
@@ -3570,27 +3611,22 @@ const handleSaveCampaignName = useCallback(async () => {
             ) : (
               /* Desktop/Tablet Preview OU Mobile physique: Fullscreen sans cadre */
               editorMode === 'article' ? (
-                <div className="w-full h-full flex items-start justify-center bg-gray-100 overflow-y-auto py-8" style={{ backgroundColor: '#2c2c35' }}>
-                  <ArticleCanvas
-                    articleConfig={(campaignState as any)?.articleConfig || {}}
-                    onBannerChange={() => {}}
-                    onBannerRemove={() => {}}
-                    onTitleChange={() => {}}
-                    onDescriptionChange={() => {}}
-                    onCTAClick={handleCTAClick}
-                    onFormSubmit={handleFormSubmit}
-                    onGameComplete={handleGameComplete}
-                    currentStep={currentStep}
-                    editable={false}
-                    maxWidth={810}
-                    campaignType={(campaignState as any)?.type || 'quiz'}
-                    formFields={(campaignState as any)?.formFields}
-                    campaign={campaignData}
-                    wheelModalConfig={wheelModalConfig}
-                    gameModalConfig={quizModalConfig}
-                    onStepChange={setCurrentStep}
-                  />
-                </div>
+                <ArticleFunnelView
+                  articleConfig={(campaignState as any)?.articleConfig || {}}
+                  campaignType={(campaignState as any)?.type || 'quiz'}
+                  campaign={campaignData}
+                  wheelModalConfig={wheelModalConfig}
+                  gameModalConfig={quizModalConfig}
+                  currentStep={currentStep}
+                  editable={false}
+                  formFields={(campaignState as any)?.formFields}
+                  onCTAClick={handleCTAClick}
+                  onFormSubmit={handleFormSubmit}
+                  onGameComplete={handleGameComplete}
+                  onStepChange={setCurrentStep}
+                  containerClassName="py-8"
+                  containerStyle={{ backgroundColor: '#2c2c35' }}
+                />
               ) : (
                 <PreviewRenderer
                   campaign={campaignData}

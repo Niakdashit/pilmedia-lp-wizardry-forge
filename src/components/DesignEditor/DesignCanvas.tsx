@@ -1050,10 +1050,15 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
 
   // Clear any current selection (single and multi)
   const handleClearSelection = useCallback(() => {
+    const isModularSelection = (selectedElement as any)?.role?.startsWith?.('module-');
+    if (isModularSelection) {
+      return;
+    }
+
     setSelectedElement(null);
     onSelectedElementChange?.(null);
     onSelectedElementsChange?.([]);
-  }, [onSelectedElementChange, onSelectedElementsChange]);
+  }, [onSelectedElementChange, onSelectedElementsChange, selectedElement]);
 
   // Move multiple selected elements by delta (canvas-space)
   const moveSelectedElements = useCallback((deltaX: number, deltaY: number) => {
@@ -1518,18 +1523,17 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
       currentSelectedElements: selectedElements?.length || 0,
       hasOnSelectedElementsChange: !!onSelectedElementsChange
     });
-    
+
     if (isMultiSelect && elementId) {
-      // Sélection multiple avec Ctrl/Cmd + clic
       const currentSelectedElements = selectedElements || [];
       const isAlreadySelected = currentSelectedElements.some((el: any) => el.id === elementId);
-      
+
       console.log('🔥 Multi-select logic:', {
         currentCount: currentSelectedElements.length,
         isAlreadySelected,
         targetElementId: elementId
       });
-      
+
       if (isAlreadySelected) {
         // Désélectionner l'élément s'il est déjà sélectionné
         const newSelectedElements = currentSelectedElements.filter((el: any) => el.id !== elementId);
@@ -1571,6 +1575,109 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
       onSelectedElementsChange?.([]);
     }
   }, [elementById, onSelectedElementChange, selectedElements, onSelectedElementsChange]);
+
+  const handleModularSelection = useCallback((module: Module | null | undefined) => {
+    if (!module) return;
+
+    onSelectedModuleChange?.(module.id);
+
+    const basePayload = {
+      moduleId: module.id,
+      screenId
+    } as const;
+
+    switch (module.type) {
+      case 'BlocBouton':
+        onSelectedElementChange?.({
+          id: `modular-button-${module.id}`,
+          type: 'button',
+          role: 'module-button',
+          ...basePayload
+        } as any);
+        onOpenElementsTab?.();
+        return;
+      case 'BlocImage':
+        onSelectedElementChange?.({
+          id: `modular-image-${module.id}`,
+          type: 'image',
+          role: 'module-image',
+          ...basePayload
+        } as any);
+        onOpenElementsTab?.();
+        return;
+      case 'BlocReseauxSociaux':
+        onSelectedElementChange?.({
+          id: `modular-social-${module.id}`,
+          type: 'social',
+          role: 'module-social',
+          ...basePayload
+        } as any);
+        onOpenElementsTab?.();
+        return;
+      case 'BlocVideo':
+        onSelectedElementChange?.({
+          id: `modular-video-${module.id}`,
+          type: 'video',
+          role: 'module-video',
+          ...basePayload
+        } as any);
+        onOpenElementsTab?.();
+        return;
+      case 'BlocHtml':
+        onSelectedElementChange?.({
+          id: `modular-html-${module.id}`,
+          type: 'html',
+          role: 'module-html',
+          ...basePayload
+        } as any);
+        onOpenElementsTab?.();
+        return;
+      case 'BlocCarte':
+        onSelectedElementChange?.({
+          id: `modular-carte-${module.id}`,
+          type: 'carte',
+          role: 'module-carte',
+          ...basePayload
+        } as any);
+        onOpenElementsTab?.();
+        return;
+      case 'BlocLogo':
+        onSelectedElementChange?.({
+          id: `modular-logo-${module.id}`,
+          type: 'logo',
+          role: 'module-logo',
+          ...basePayload
+        } as any);
+        onOpenElementsTab?.();
+        return;
+      case 'BlocPiedDePage':
+        onSelectedElementChange?.({
+          id: `modular-footer-${module.id}`,
+          type: 'footer',
+          role: 'module-footer',
+          ...basePayload
+        } as any);
+        onOpenElementsTab?.();
+        return;
+      case 'BlocTexte':
+        onSelectedElementChange?.({
+          id: `modular-text-${module.id}`,
+          type: 'text',
+          role: 'module-text',
+          ...basePayload
+        } as any);
+        onShowDesignPanel?.();
+        return;
+      default:
+        onSelectedElementChange?.({
+          id: `modular-generic-${module.id}`,
+          type: 'module',
+          role: 'module-generic',
+          ...basePayload
+        } as any);
+        onOpenElementsTab?.();
+    }
+  }, [onOpenElementsTab, onSelectedElementChange, onSelectedModuleChange, onShowDesignPanel, screenId]);
 
   // (removed) calculateAbsolutePosition was unused after adopting DOM-measured bounds exclusively for group frames
 
@@ -2259,98 +2366,8 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                             const evt = new CustomEvent('modularModuleSelected', { detail: { module: m } });
                             window.dispatchEvent(evt);
                           } catch {}
-                          
-                          // Mettre à jour l'ID du module sélectionné
-                          onSelectedModuleChange?.(m.id);
-                          
-                          if (m.type === 'BlocBouton') {
-                            onSelectedElementChange?.({
-                              id: `modular-button-${m.id}`,
-                              type: 'button',
-                              role: 'module-button',
-                              moduleId: m.id,
-                              screenId
-                            } as any);
-                            return;
-                          }
-                          if (m.type === 'BlocImage') {
-                            onSelectedElementChange?.({
-                              id: `modular-image-${m.id}`,
-                              type: 'image',
-                              role: 'module-image',
-                              moduleId: m.id,
-                              screenId
-                            } as any);
-                            return;
-                          }
-                          if (m.type === 'BlocReseauxSociaux') {
-                            onSelectedElementChange?.({
-                              id: `modular-social-${m.id}`,
-                              type: 'social',
-                              role: 'module-social',
-                              moduleId: m.id,
-                              screenId
-                            } as any);
-                            return;
-                          }
-                          if (m.type === 'BlocVideo') {
-                            onSelectedElementChange?.({
-                              id: `modular-video-${m.id}`,
-                              type: 'video',
-                              role: 'module-video',
-                              moduleId: m.id,
-                              screenId
-                            } as any);
-                            return;
-                          }
-                          if (m.type === 'BlocHtml') {
-                            onSelectedElementChange?.({
-                              id: `modular-html-${m.id}`,
-                              type: 'html',
-                              role: 'module-html',
-                              moduleId: m.id,
-                              screenId
-                            } as any);
-                            return;
-                          }
-                          if (m.type === 'BlocCarte') {
-                            onSelectedElementChange?.({
-                              id: `modular-carte-${m.id}`,
-                              type: 'carte',
-                              role: 'module-carte',
-                              moduleId: m.id,
-                              screenId
-                            } as any);
-                            return;
-                          }
-                          if (m.type === 'BlocLogo') {
-                            onSelectedElementChange?.({
-                              id: `modular-logo-${m.id}`,
-                              type: 'logo',
-                              role: 'module-logo',
-                              moduleId: m.id,
-                              screenId
-                            } as any);
-                            return;
-                          }
-                          if (m.type === 'BlocPiedDePage') {
-                            onSelectedElementChange?.({
-                              id: `modular-footer-${m.id}`,
-                              type: 'footer',
-                              role: 'module-footer',
-                              moduleId: m.id,
-                              screenId
-                            } as any);
-                            return;
-                          }
-                          onSelectedElementChange?.({
-                            id: `modular-text-${m.id}`,
-                            type: 'text',
-                            role: 'module-text',
-                            moduleId: m.id,
-                            screenId
-                          } as any);
-                          onShowDesignPanel?.();
+
+                          handleModularSelection(m);
                         }}
                         selectedModuleId={selectedModuleId ?? undefined}
                       />
@@ -2406,14 +2423,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                               moduleId,
                               screenId
                             });
-                            onSelectedElementChange?.({
-                              id: `modular-logo-${moduleId}`,
-                              type: 'logo',
-                              role: 'module-logo',
-                              moduleId,
-                              screenId
-                            } as any);
-                            onOpenElementsTab?.();
+                            handleModularSelection(mod);
                           }}
                           selectedModuleId={selectedModuleId ?? undefined}
                         />
@@ -2459,14 +2469,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                               const evt = new CustomEvent('modularModuleSelected', { detail: { module: mod } });
                               window.dispatchEvent(evt);
                             } catch {}
-                            onSelectedElementChange?.({
-                              id: `modular-footer-${moduleId}`,
-                              type: 'footer',
-                              role: 'module-footer',
-                              moduleId,
-                              screenId
-                            } as any);
-                            onOpenElementsTab?.();
+                            handleModularSelection(mod);
                           }}
                           selectedModuleId={selectedModuleId ?? undefined}
                         />
@@ -2600,7 +2603,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                 onDelete={onModuleDelete || (() => {})}
                 onMove={onModuleMove || (() => {})}
                 onDuplicate={onModuleDuplicate}
-                onSelect={(module) => onSelectedModuleChange?.(module.id)}
+                onSelect={handleModularSelection}
                 selectedModuleId={selectedModuleId || undefined}
                 device={selectedDevice}
               />

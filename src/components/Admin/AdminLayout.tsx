@@ -45,7 +45,13 @@ const AdminLayout: React.FC = () => {
             <Menu className="w-6 h-6" />
           </button>
           <div className="flex items-center space-x-2">
-            <img src={headerLogo} alt="Prosplay Logo" className="h-8 w-auto" />
+            <button
+              onClick={() => window.location.pathname !== '/dashboard' && (window.location.href = '/dashboard')}
+              className="cursor-pointer transition-opacity hover:opacity-80"
+              title="Retour au dashboard"
+            >
+              <img src={headerLogo} alt="Prosplay Logo" className="h-8 w-auto" />
+            </button>
             <span className="text-red-600 font-bold text-sm">ADMIN</span>
           </div>
         </header>

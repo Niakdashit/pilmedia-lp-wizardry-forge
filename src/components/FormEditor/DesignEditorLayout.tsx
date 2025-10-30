@@ -10,7 +10,7 @@ import { Save, X } from 'lucide-react';
 const HybridSidebar = lazy(() => import('./HybridSidebar'));
 const DesignToolbar = lazy(() => import('./DesignToolbar'));
 import PreviewRenderer from '@/components/preview/PreviewRenderer';
-import ArticleCanvas from '@/components/ArticleEditor/ArticleCanvas';
+import ArticleFunnelView from '@/components/ArticleEditor/ArticleFunnelView';
 import type { ModularPage, ScreenId, BlocBouton, Module } from '@/types/modularEditor';
 import { createEmptyModularPage } from '@/types/modularEditor';
 
@@ -124,6 +124,23 @@ const FormEditorLayout: React.FC<FormEditorLayoutProps> = ({ mode = 'campaign', 
   const editorMode: 'article' | 'fullscreen' = searchParams.get('mode') === 'article' ? 'article' : 'fullscreen';
   
   console.log('🎨 [FormEditorLayout] Editor Mode:', editorMode);
+
+  useEffect(() => {
+    const previousBackground = document.body.style.background;
+    const previousHeight = document.body.style.height;
+    const previousMargin = document.body.style.margin;
+
+    document.body.style.background = 'linear-gradient(180deg, #943c56, #370e4b)';
+    document.body.style.height = '100vh';
+    document.body.style.margin = '0';
+
+    return () => {
+      document.body.style.background = previousBackground;
+      document.body.style.height = previousHeight;
+      document.body.style.margin = previousMargin;
+    };
+  }, []);
+
   const getTemplateBaseWidths = useCallback((templateId?: string) => {
     const template = quizTemplates.find((tpl) => tpl.id === templateId) || quizTemplates[0];
     const width = template?.style?.containerWidth ?? 450;
@@ -1608,8 +1625,9 @@ useEffect(() => {
     }
   }, [canvasElements]);
   const [showFunnel, setShowFunnel] = useState(false);
+  const isArticlePreview = editorMode === 'article' && showFunnel;
   // For form campaigns, start directly with the form (no article step)
-  const [currentStep, setCurrentStep] = useState<'article' | 'form' | 'game' | 'result'>('form');
+  const [currentStep, setCurrentStep] = useState<'article' | 'form' | 'game' | 'result'>(editorMode === 'article' ? 'form' : 'article');
   const [previewButtonSide, setPreviewButtonSide] = useState<'left' | 'right'>(() =>
     (typeof window !== 'undefined' && localStorage.getItem('previewButtonSide') === 'left') ? 'left' : 'right'
   );
@@ -3315,10 +3333,7 @@ useEffect(() => {
     <div
       className="min-h-screen w-full"
       style={{
-        backgroundImage: showFunnel ? 'none' : 
-          'radial-gradient(130% 130% at 12% 20%, rgba(168, 70, 20, 0.85) 0%, rgba(168, 70, 20, 0) 52%), radial-gradient(120% 120% at 78% 18%, rgba(90, 35, 120, 0.9) 0%, rgba(90, 35, 120, 0) 58%), radial-gradient(150% 150% at 55% 82%, rgba(35, 30, 80, 0.85) 0%, rgba(35, 30, 80, 0) 60%), linear-gradient(90deg, #4b1548 0%, #271056 50%, #0b0d2d 100%)',
-        backgroundBlendMode: showFunnel ? 'normal' : 'screen, screen, lighten, normal',
-        backgroundColor: showFunnel ? 'transparent' : '#0b0d2d',
+        background: 'linear-gradient(180deg, #943c56, #370e4b)',
         padding: showFunnel ? '0' : (isWindowMobile ? '9px' : '0 9px 9px 9px'),
         boxSizing: 'border-box'
       }}
@@ -3356,7 +3371,10 @@ useEffect(() => {
       <div className="flex-1 flex overflow-hidden relative">
         {showFunnel ? (
           /* Funnel Preview Mode */
-          <div className="group fixed inset-0 z-40 w-full h-[100dvh] min-h-[100dvh] overflow-hidden bg-[#2c2c35] flex items-center justify-center">
+          <div 
+            className="group fixed inset-0 z-40 w-full h-[100dvh] min-h-[100dvh] overflow-hidden flex items-center justify-center"
+            style={{ backgroundColor: editorMode === 'article' ? '#2c2c35' : 'transparent' }}
+          >
             {/* Floating Edit Mode Button */}
             <button
               onClick={() => setShowFunnel(false)}
@@ -3364,72 +3382,59 @@ useEffect(() => {
             >
               Mode édition
             </button>
-            {(selectedDevice === 'mobile' && actualDevice !== 'mobile') ? (
-              /* Mobile Preview sur Desktop: Canvas centré avec fond #2c2c35 - Dimensions identiques au mode édition */
-              <div className="flex items-center justify-center w-full h-full">
-                <div 
-                  className="relative overflow-y-auto rounded-[32px] shadow-2xl"
-                  style={{
-                    width: '430px',
-                    height: '932px',
-                    maxHeight: '90vh'
-                  }}
-                >
-                  {editorMode === 'article' ? (
-                    <ArticleCanvas
+            {editorMode === 'article' ? (
+              selectedDevice === 'mobile' ? (
+                <div className="flex items-center justify-center w-full h-full">
+                  <div 
+                    className="relative overflow-hidden rounded-[32px] shadow-2xl"
+                    style={{
+                      width: '430px',
+                      height: '932px',
+                      maxHeight: '90vh'
+                    }}
+                  >
+                    <ArticleFunnelView
                       articleConfig={(campaignState as any)?.articleConfig || {}}
-                      onBannerChange={() => {}}
-                      onBannerRemove={() => {}}
-                      onTitleChange={() => {}}
-                      onDescriptionChange={() => {}}
+                      campaignType={(campaignState as any)?.type || 'form'}
+                      campaign={campaignData}
+                      wheelModalConfig={wheelModalConfig}
+                      gameModalConfig={wheelModalConfig}
+                      currentStep={currentStep}
+                      editable={false}
+                      formFields={(campaignState as any)?.formFields}
                       onCTAClick={handleCTAClick}
                       onFormSubmit={handleFormSubmit}
                       onGameComplete={handleGameComplete}
-                      currentStep={currentStep}
-                      editable={false}
-                      maxWidth={810}
-                      campaignType="form"
-                      formFields={(campaignState as any)?.formFields}
                       onStepChange={setCurrentStep}
+                      containerClassName="p-0"
+                      containerStyle={{ backgroundColor: 'transparent' }}
                     />
-                  ) : (
-                    <PreviewRenderer
-                      campaign={memoCampaignData}
-                      previewMode="mobile"
-                      wheelModalConfig={wheelModalConfig}
-                      constrainedHeight={true}
-                    />
-                  )}
-                </div>
-              </div>
-            ) : (
-              /* Desktop/Tablet Preview OU Mobile physique: Fullscreen sans cadre */
-              editorMode === 'article' ? (
-                <div className="w-full h-full flex items-start justify-center overflow-y-auto py-8" style={{ backgroundColor: '#2c2c35' }}>
-                  <ArticleCanvas
-                    articleConfig={(campaignState as any)?.articleConfig || {}}
-                    onBannerChange={() => {}}
-                    onBannerRemove={() => {}}
-                    onTitleChange={() => {}}
-                    onDescriptionChange={() => {}}
-                    onCTAClick={handleCTAClick}
-                    onFormSubmit={handleFormSubmit}
-                    onGameComplete={handleGameComplete}
-                    currentStep={currentStep}
-                    editable={false}
-                    maxWidth={810}
-                    campaignType="form"
-                    formFields={(campaignState as any)?.formFields}
-                    onStepChange={setCurrentStep}
-                  />
+                  </div>
                 </div>
               ) : (
-                <PreviewRenderer
-                  campaign={memoCampaignData}
-                  previewMode={actualDevice === 'desktop' && selectedDevice === 'desktop' ? 'desktop' : selectedDevice}
+                <ArticleFunnelView
+                  articleConfig={(campaignState as any)?.articleConfig || {}}
+                  campaignType={(campaignState as any)?.type || 'form'}
+                  campaign={campaignData}
                   wheelModalConfig={wheelModalConfig}
+                  gameModalConfig={wheelModalConfig}
+                  currentStep={currentStep}
+                  editable={false}
+                  formFields={(campaignState as any)?.formFields}
+                  onCTAClick={handleCTAClick}
+                  onFormSubmit={handleFormSubmit}
+                  onGameComplete={handleGameComplete}
+                  onStepChange={setCurrentStep}
+                  containerClassName="py-8"
+                  containerStyle={{ backgroundColor: '#2c2c35' }}
                 />
               )
+            ) : (
+              <PreviewRenderer
+                campaign={campaignData}
+                previewMode={selectedDevice}
+                wheelModalConfig={wheelModalConfig}
+              />
             )}
           </div>
         ) : (
@@ -3772,8 +3777,15 @@ useEffect(() => {
                   {editorMode === 'article' ? (
                     /* Article Mode: Show ArticleCanvas with funnel */
                     <div className="w-full flex items-start justify-center bg-gray-100 overflow-y-auto p-8">
-                      <ArticleCanvas
+                      <ArticleFunnelView
                         articleConfig={(campaignState as any)?.articleConfig || {}}
+                        campaignType={(campaignState as any)?.type || 'form'}
+                        campaign={campaignData}
+                        wheelModalConfig={wheelModalConfig}
+                        gameModalConfig={wheelModalConfig}
+                        currentStep={currentStep}
+                        editable={true}
+                        formFields={(campaignState as any)?.formFields}
                         onBannerChange={(imageUrl) => {
                           if (campaignState) {
                             setCampaign({
@@ -3833,11 +3845,6 @@ useEffect(() => {
                         onCTAClick={handleCTAClick}
                         onFormSubmit={handleFormSubmit}
                         onGameComplete={handleGameComplete}
-                        currentStep={currentStep}
-                        editable={true}
-                        maxWidth={810}
-                        campaignType="form"
-                        formFields={(campaignState as any)?.formFields}
                         onStepChange={setCurrentStep}
                       />
                     </div>
