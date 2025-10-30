@@ -6,7 +6,8 @@ import { AuthProvider } from './contexts/AuthContext';
 import { ProtectedRoute } from './components/Auth/ProtectedRoute';
 import Layout from './components/Layout/Layout';
 import { LoadingBoundary, EditorLoader, MinimalLoader } from './components/shared/LoadingBoundary';
-import { routePrefetcher, ROUTE_LOADERS, ROUTE_NEIGHBORS } from './utils/routePrefetch';
+// Prefetch temporarily disabled for stability
+// import { routePrefetcher, ROUTE_LOADERS, ROUTE_NEIGHBORS } from './utils/routePrefetch';
 
 // Lazy-loaded pages to prevent import-time crashes from heavy modules at startup
 const Dashboard = lazy(() => import('./pages/Dashboard'));
@@ -36,27 +37,12 @@ const CampaignSettings = lazy(() => import('./pages/CampaignSettings'));
 function App() {
   // Enregistrement des routes pour le prefetching intelligent
   useEffect(() => {
-    // Enregistrer toutes les routes dans le prefetcher
-    Object.entries(ROUTE_LOADERS).forEach(([route, loader]) => {
-      const priority = route.includes('editor') ? 'medium' : 'low';
-      routePrefetcher.register(route, loader, { priority });
-    });
-
-    // Nettoyer le localStorage des anciennes données (> 7 jours)
-    if (typeof window !== 'undefined') {
-      import('./utils/compressedStorage').then(({ compressedStorage }) => {
-        compressedStorage.cleanOldEntries();
-      });
-    }
+    // Prefetch & storage clean disabled temporarily for stability
+    // If needed, re-enable after performance issues are resolved.
   }, []);
 
-  // Détecter la route actuelle et précharger les voisins
   useEffect(() => {
-    const currentPath = window.location.pathname;
-    const neighbors = ROUTE_NEIGHBORS[currentPath];
-    if (neighbors) {
-      routePrefetcher.prefetchNeighbors(currentPath, neighbors);
-    }
+    // Neighbor prefetch disabled temporarily
   }, []);
   return (
     <AppProvider>
