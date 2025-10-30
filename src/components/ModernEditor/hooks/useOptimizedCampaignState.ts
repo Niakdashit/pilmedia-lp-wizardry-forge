@@ -17,8 +17,6 @@ export const useOptimizedCampaignState = (
   const [isSaving, setIsSaving] = useState(false);
   const lastSavedRef = useRef<string>('');
   const updateCounterRef = useRef(0);
-  const rafIdRef = useRef<number | null>(null);
-  const pendingUpdateRef = useRef<any>(null);
 
   // Debounced auto-save
   const debouncedSave = useCallback(
@@ -42,29 +40,23 @@ export const useOptimizedCampaignState = (
     [onSave, onError, autosaveDelay]
   );
 
-  // Optimized campaign setter with frame-throttling to prevent UI lockups
+  // Optimized campaign setter with change tracking
   const setCampaign = useCallback((updater: any) => {
-    pendingUpdateRef.current = updater;
-    if (rafIdRef.current != null) return; // already scheduled this frame
-
-    rafIdRef.current = requestAnimationFrame(() => {
-      setCampaignState((prev: any) => {
-        const effectiveUpdater = pendingUpdateRef.current;
-        const newCampaign = typeof effectiveUpdater === 'function' ? effectiveUpdater(prev) : effectiveUpdater;
-        const updateId = ++updateCounterRef.current;
-
-        const optimizedCampaign = {
-          ...newCampaign,
-          _lastUpdate: Date.now(),
-          _updateId: updateId,
-          _version: (prev._version || 0) + 1
-        };
-
-        setIsModified(true);
-        debouncedSave(optimizedCampaign);
-        return optimizedCampaign;
-      });
-      rafIdRef.current = null;
+    setCampaignState((prev: any) => {
+      const newCampaign = typeof updater === 'function' ? updater(prev) : updater;
+      const updateId = ++updateCounterRef.current;
+      
+      const optimizedCampaign = {
+        ...newCampaign,
+        _lastUpdate: Date.now(),
+        _updateId: updateId,
+        _version: (prev._version || 0) + 1
+      };
+      
+      setIsModified(true);
+      debouncedSave(optimizedCampaign);
+      
+      return optimizedCampaign;
     });
   }, [debouncedSave]);
 

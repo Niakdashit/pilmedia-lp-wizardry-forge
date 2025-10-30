@@ -10,24 +10,23 @@ const Sidebar: React.FC = () => {
   const { profile } = useProfile();
   // Sidebar is permanently collapsed (no toggle)
 
-  // Prefetch map disabled for stability
-  // const routePrefetchers: Record<string, () => Promise<any>> = {
-  //   '/dashboard': () => import('../../pages/Dashboard'),
-  //   '/campaigns': () => import('../../pages/Campaigns'),
-  //   '/gamification': () => import('../../pages/Gamification'),
-  //   '/statistics': () => import('../../pages/Statistics'),
-  //   '/partnerships': () => import('../../pages/Partnerships'),
-  //   '/admin': () => import('../../pages/Admin'),
-  //   '/media': () => import('../../pages/MediaPortal'),
-  // };
+  // Prefetch map for lazy routes defined in App.tsx
+  const routePrefetchers: Record<string, () => Promise<any>> = {
+    '/dashboard': () => import('../../pages/Dashboard'),
+    '/campaigns': () => import('../../pages/Campaigns'),
+    '/gamification': () => import('../../pages/Gamification'),
+    '/statistics': () => import('../../pages/Statistics'),
+    '/partnerships': () => import('../../pages/Partnerships'),
+    '/admin': () => import('../../pages/Admin'),
+    '/media': () => import('../../pages/MediaPortal'),
+    // '/templates-editor': () => import('../../pages/TemplatesEditor'), // Add if linked in sidebar later
+  };
 
   const prefetchRoute = (path: string) => {
-    // Disabled prefetch temporarily for stability
-    return;
-    // const loader = routePrefetchers[path];
-    // if (loader) {
-    //   try { loader(); } catch (_) { /* best-effort */ }
-    // }
+    const loader = routePrefetchers[path];
+    if (loader) {
+      try { loader(); } catch (_) { /* best-effort */ }
+    }
   };
 
   const baseNavItems = [
