@@ -663,7 +663,9 @@ useEffect(() => {
 // ✅ FIX: Éviter l'autosave lors des simples changements de background
 useEffect(() => {
   const id = (campaignState as any)?.id as string | undefined;
-  if (!id) return;
+  const isUuid = (v?: string) => !!v && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v);
+  // Only autosave once campaign is persisted (UUID)
+  if (!isUuid(id)) return;
   // Guard: ensure we only persist for the selected campaign slice
   if (selectedCampaignId && id !== selectedCampaignId) return;
   // Ne pas autosaver pendant le chargement initial

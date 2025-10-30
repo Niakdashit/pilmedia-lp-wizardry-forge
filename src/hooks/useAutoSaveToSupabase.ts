@@ -56,10 +56,13 @@ export const useAutoSaveToSupabase = (
     }
   };
 
-  useEffect(() => {
-    if (!enabled || !campaignData.campaign?.id) return;
+useEffect(() => {
+    const isUuid = (v?: string) => !!v && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v);
+    const currentId = campaignData.campaign?.id as string | undefined;
+    // Only autosave for persisted campaigns (UUID). Skip temp ids to avoid duplicate INSERTs
+    if (!enabled || !isUuid(currentId)) return;
 
-    const campaignId = campaignData.campaign.id;
+    const campaignId = currentId;
     const currentHash = getCampaignHash(campaignData);
 
     // Skip if no changes detected
