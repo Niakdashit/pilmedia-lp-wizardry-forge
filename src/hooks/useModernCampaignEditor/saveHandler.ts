@@ -1,5 +1,23 @@
 import { extractAllCampaignImages } from '@/utils/extractImagesFromModules';
 
+// Global save lock to prevent concurrent saves creating duplicates
+const activeSaves = new Set<string>();
+
+const acquireSaveLock = (campaignId: string): boolean => {
+  if (activeSaves.has(campaignId)) {
+    console.warn('⚠️ [SaveHandler] Save already in progress for campaign:', campaignId);
+    return false;
+  }
+  activeSaves.add(campaignId);
+  console.log('🔒 [SaveHandler] Acquired save lock for:', campaignId);
+  return true;
+};
+
+const releaseSaveLock = (campaignId: string) => {
+  activeSaves.delete(campaignId);
+  console.log('🔓 [SaveHandler] Released save lock for:', campaignId);
+};
+
 export const createSaveHandler = (
   campaign: any,
   saveCampaign: (data: any) => Promise<any>,
@@ -43,14 +61,25 @@ export const saveCampaignToDB = async (
   saveCampaignFn: (data: any) => Promise<any>
 ) => {
   const isUuid = (v?: string) => !!v && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v);
-  // Hard guard: never persist preview-only campaign objects
-  if (typeof campaign?.id === 'string' && !isUuid(campaign.id)) {
-    if (campaign.id.includes('preview')) {
-      console.warn('⛔ [saveCampaignToDB] Skipping save for preview-only campaign id:', campaign.id);
-      return { ...campaign };
-    }
+  
+  // Generate campaign identifier for lock
+  const campaignIdentifier = campaign?.id || `new-${campaign?.type || 'campaign'}-${campaign?.name || 'unnamed'}`;
+  
+  // 🔒 CRITICAL: Prevent concurrent saves creating duplicates
+  if (!acquireSaveLock(campaignIdentifier)) {
+    console.warn('⚠️ [saveCampaignToDB] Duplicate save prevented for:', campaignIdentifier);
+    return campaign; // Return existing campaign without saving
   }
-  console.log('💾 [saveCampaignToDB] Saving campaign with complete state:', {
+  
+  try {
+    // Hard guard: never persist preview-only campaign objects
+    if (typeof campaign?.id === 'string' && !isUuid(campaign.id)) {
+      if (campaign.id.includes('preview')) {
+        console.warn('⛔ [saveCampaignToDB] Skipping save for preview-only campaign id:', campaign.id);
+        return { ...campaign };
+      }
+    }
+    console.log('💾 [saveCampaignToDB] Saving campaign with complete state:', {
     id: campaign?.id,
     name: campaign?.name,
     type: campaign?.type,
@@ -201,27 +230,31 @@ export const saveCampaignToDB = async (
     banner_url: campaign?.banner_url,
   };
 
-  console.log('💾 [saveCampaignToDB] Complete payload structure:', {
-    id: payload.id,
-    name: payload.name,
-    type: payload.type,
-    configKeys: Object.keys(payload.config || {}),
-    designKeys: Object.keys(payload.design || {}),
-    gameConfigKeys: Object.keys(payload.game_config || {}),
-    canvasElements: payload.config?.canvasConfig?.elements?.length || 0,
-    modularPageScreens: Object.keys(payload.config?.modularPage?.screens || {}).length,
-    formFieldsCount: payload.form_fields?.length || 0
-  });
+    console.log('💾 [saveCampaignToDB] Complete payload structure:', {
+      id: payload.id,
+      name: payload.name,
+      type: payload.type,
+      configKeys: Object.keys(payload.config || {}),
+      designKeys: Object.keys(payload.design || {}),
+      gameConfigKeys: Object.keys(payload.game_config || {}),
+      canvasElements: payload.config?.canvasConfig?.elements?.length || 0,
+      modularPageScreens: Object.keys(payload.config?.modularPage?.screens || {}).length,
+      formFieldsCount: payload.form_fields?.length || 0
+    });
 
-  const saved = await saveCampaignFn(payload);
-  
-  console.log('✅ [saveCampaignToDB] Campaign saved successfully:', {
-    id: saved?.id,
-    name: saved?.name,
-    type: saved?.type
-  });
-  
-  return saved;
+    const saved = await saveCampaignFn(payload);
+    
+    console.log('✅ [saveCampaignToDB] Campaign saved successfully:', {
+      id: saved?.id,
+      name: saved?.name,
+      type: saved?.type
+    });
+    
+    return saved;
+  } finally {
+    // 🔓 Always release lock, even on error
+    releaseSaveLock(campaignIdentifier);
+  }
 };
 
 // Save and continue: persist then navigate to /campaign/:id/settings, with localStorage fallback

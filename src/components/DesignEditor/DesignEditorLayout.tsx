@@ -737,69 +737,84 @@ useEffect(() => {
   }, [campaignState?.id, campaignState?.name]);
 
   const { upsertSettings } = useCampaignSettings();
+  
+  // 🔒 Guard against concurrent saves
+  const isSavingRef = useRef(false);
 
   const handleSaveCampaignName = useCallback(async () => {
     const currentId = (campaignState as any)?.id as string | undefined;
     const name = (newCampaignName || '').trim();
     if (!name) return;
-
-    // 🔄 CRITICAL: Synchroniser TOUS les états locaux avant la sauvegarde
-    syncAllStates({
-      canvasElements,
-      modularPage,
-      screenBackgrounds,
-      extractedColors,
-      selectedDevice,
-      canvasZoom
-    });
-
-    // Récupérer le campaign mis à jour après synchronisation
-    const updatedCampaign = useEditorStore.getState().campaign;
-
-    const isUuid = (v?: string) => !!v && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v);
     
-    // Créer le payload complet avec le nom ET toutes les configurations
-    const payload: any = {
-      ...(updatedCampaign || {}),
-      id: isUuid(currentId) ? currentId : undefined,
-      name,
-      type: 'wheel'
-    };
-
-    let saved: any = null;
-    try { 
-      saved = await saveCampaignToDB(payload, saveCampaign);
-    } catch (e) { 
-      console.warn('saveCampaignToDB failed', e); 
+    // 🔒 Prevent concurrent saves
+    if (isSavingRef.current) {
+      console.warn('⚠️ [DesignEditor] Save already in progress, skipping duplicate call');
+      return;
     }
-    
-    if (saved) {
-      setCampaign({
-        ...campaignState,
-        ...saved
-      } as any);
+    isSavingRef.current = true;
 
-      // Ensure URL contains the real campaign UUID so next saves work
-      try {
-        const cid = (saved as any)?.id || currentId;
-        if (cid && !isUuid(currentId)) {
-          const sp = new URLSearchParams(location.search);
-          const modeParam = sp.get('mode');
-          const newUrl = modeParam ? `${location.pathname}?campaign=${cid}&mode=${modeParam}` : `${location.pathname}?campaign=${cid}`;
-          navigate(newUrl, { replace: true });
-        }
-      } catch {}
+    try {
+      // 🔄 CRITICAL: Synchroniser TOUS les états locaux avant la sauvegarde
+      syncAllStates({
+        canvasElements,
+        modularPage,
+        screenBackgrounds,
+        extractedColors,
+        selectedDevice,
+        canvasZoom
+      });
 
-      // Notify settings modal and persist to campaign_settings
-      try {
-        const cid = (saved as any)?.id || currentId;
-        window.dispatchEvent(new CustomEvent('campaign:name:update', { detail: { campaignId: cid, name } }));
-        if (cid) await upsertSettings(cid, { publication: { name } });
-      } catch {}
+      // Récupérer le campaign mis à jour après synchronisation
+      const updatedCampaign = useEditorStore.getState().campaign;
 
-      try { localStorage.setItem(`campaign:name:prompted:${(saved as any)?.id || currentId || 'new:design'}`, '1'); } catch {}
-      setIsNameModalOpen(false);
-      setIsModified(false);
+      const isUuid = (v?: string) => !!v && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v);
+      
+      // Créer le payload complet avec le nom ET toutes les configurations
+      const payload: any = {
+        ...(updatedCampaign || {}),
+        id: isUuid(currentId) ? currentId : undefined,
+        name,
+        type: 'wheel'
+      };
+
+      let saved: any = null;
+      try { 
+        saved = await saveCampaignToDB(payload, saveCampaign);
+      } catch (e) { 
+        console.warn('saveCampaignToDB failed', e); 
+      }
+      
+      if (saved) {
+        setCampaign({
+          ...campaignState,
+          ...saved
+        } as any);
+
+        // Ensure URL contains the real campaign UUID so next saves work
+        try {
+          const cid = (saved as any)?.id || currentId;
+          if (cid && !isUuid(currentId)) {
+            const sp = new URLSearchParams(location.search);
+            const modeParam = sp.get('mode');
+            const newUrl = modeParam ? `${location.pathname}?campaign=${cid}&mode=${modeParam}` : `${location.pathname}?campaign=${cid}`;
+            navigate(newUrl, { replace: true });
+          }
+        } catch {}
+
+        // Notify settings modal and persist to campaign_settings
+        try {
+          const cid = (saved as any)?.id || currentId;
+          window.dispatchEvent(new CustomEvent('campaign:name:update', { detail: { campaignId: cid, name } }));
+          if (cid) await upsertSettings(cid, { publication: { name } });
+        } catch {}
+
+        try { localStorage.setItem(`campaign:name:prompted:${(saved as any)?.id || currentId || 'new:design'}`, '1'); } catch {}
+        setIsNameModalOpen(false);
+        setIsModified(false);
+      }
+    } finally {
+      // 🔓 Always release save lock
+      isSavingRef.current = false;
     }
   }, [campaignState, newCampaignName, saveCampaign, setCampaign, upsertSettings, location.pathname, location.search, navigate, syncAllStates, canvasElements, modularPage, screenBackgrounds, extractedColors, selectedDevice, canvasZoom, setIsModified]);
 
