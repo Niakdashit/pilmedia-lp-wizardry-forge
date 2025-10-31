@@ -9,13 +9,23 @@ import {
   Gift,
   Image,
   Type,
-  Upload
+  Upload,
+  Gamepad2
 } from 'lucide-react';
 
 interface GameManagementPanelProps {
   campaign: any;
   setCampaign: (campaign: any) => void;
 }
+
+// Types de jeux disponibles
+const GAME_TYPES = [
+  { value: 'wheel', label: 'Roue de la Fortune', icon: '🎡' },
+  { value: 'jackpot', label: 'Jackpot', icon: '🎰' },
+  { value: 'scratch', label: 'Carte à Gratter', icon: '🎫' },
+  { value: 'quiz', label: 'Quiz', icon: '📝' },
+  { value: 'form', label: 'Formulaire', icon: '📋' },
+];
 
 interface WheelSegment {
   id: string;
@@ -47,7 +57,15 @@ const GameManagementPanel: React.FC<GameManagementPanelProps> = ({
   setCampaign
 }) => {
   const [activeSection, setActiveSection] = useState<'segments' | 'prizes'>('segments');
+  const [localGameType, setLocalGameType] = useState(campaign?.type || 'wheel');
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Synchroniser le type local avec la campagne
+  React.useEffect(() => {
+    if (campaign?.type) {
+      setLocalGameType(campaign.type);
+    }
+  }, [campaign?.type]);
 
   // Fonction pour mettre à jour les couleurs des segments existants
   const updateSegmentColorsFromExtractedColors = () => {
@@ -213,6 +231,31 @@ const GameManagementPanel: React.FC<GameManagementPanelProps> = ({
     ));
   };
 
+  const handleGameTypeChange = (newType: string) => {
+    console.log('🎮 Changing game type from', localGameType, 'to', newType);
+    console.log('📦 Current campaign:', campaign);
+    
+    // Mettre à jour le state local immédiatement
+    setLocalGameType(newType);
+    
+    // Créer une nouvelle campagne avec le type mis à jour
+    const updatedCampaign = {
+      ...campaign,
+      type: newType,
+      // Réinitialiser les configs spécifiques si on change de type
+      ...(newType !== 'wheel' && { wheelConfig: undefined }),
+      ...(newType !== 'quiz' && { quizConfig: undefined }),
+      ...(newType !== 'scratch' && { scratchConfig: undefined }),
+    };
+    
+    console.log('📦 Updated campaign:', updatedCampaign);
+    
+    // Mettre à jour la campagne
+    setCampaign(updatedCampaign);
+    
+    console.log('✅ Game type changed to', newType);
+  };
+
   return (
     <div className="p-6 space-y-6 min-h-full overflow-y-auto text-[hsl(var(--sidebar-text-primary))]">
       {/* En-tête */}
@@ -223,34 +266,59 @@ const GameManagementPanel: React.FC<GameManagementPanelProps> = ({
         </p>
       </div>
 
-      {/* Navigation des sections */}
-      <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg">
-        <button
-          onClick={() => setActiveSection('segments')}
-          className={`flex-1 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-            activeSection === 'segments'
-              ? 'bg-white text-gray-900 shadow-sm'
-              : 'text-gray-600 hover:text-gray-900'
-          }`}
+      {/* Sélecteur de mécanique de jeu */}
+      <div className="space-y-2">
+        <label className="flex items-center text-sm font-medium text-gray-700">
+          <Gamepad2 className="w-4 h-4 mr-2" />
+          Mécanique de jeu
+        </label>
+        <select
+          value={localGameType}
+          onChange={(e) => handleGameTypeChange(e.target.value)}
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
         >
-          <RotateCcw className="w-4 h-4 inline mr-2" />
-          Segments
-        </button>
-        <button
-          onClick={() => setActiveSection('prizes')}
-          className={`flex-1 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-            activeSection === 'prizes'
-              ? 'bg-white text-gray-900 shadow-sm'
-              : 'text-gray-600 hover:text-gray-900'
-          }`}
-        >
-          <Gift className="w-4 h-4 inline mr-2" />
-          Lots
-        </button>
+          {GAME_TYPES.map((gameType) => (
+            <option key={gameType.value} value={gameType.value}>
+              {gameType.icon} {gameType.label}
+            </option>
+          ))}
+        </select>
+        <p className="text-xs text-gray-500">
+          Changez la mécanique de jeu pour ce template
+        </p>
       </div>
 
-      {/* Section Segments */}
-      {activeSection === 'segments' && (
+      {/* Configuration spécifique selon le type de jeu */}
+      {localGameType === 'wheel' && (
+        <>
+          {/* Navigation des sections pour la roue */}
+          <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg">
+            <button
+              onClick={() => setActiveSection('segments')}
+              className={`flex-1 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                activeSection === 'segments'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              <RotateCcw className="w-4 h-4 inline mr-2" />
+              Segments
+            </button>
+            <button
+              onClick={() => setActiveSection('prizes')}
+              className={`flex-1 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                activeSection === 'prizes'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              <Gift className="w-4 h-4 inline mr-2" />
+              Lots
+            </button>
+          </div>
+
+          {/* Section Segments */}
+          {activeSection === 'segments' && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-medium text-gray-900">
@@ -599,6 +667,56 @@ const GameManagementPanel: React.FC<GameManagementPanelProps> = ({
               ))}
             </div>
           )}
+        </div>
+      )}
+        </>
+      )}
+
+      {/* Configuration pour Jackpot */}
+      {localGameType === 'jackpot' && (
+        <div className="space-y-4">
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <h3 className="text-lg font-medium text-gray-900 mb-2">🎰 Configuration Jackpot</h3>
+            <p className="text-sm text-gray-600">
+              Le jackpot est un jeu de machine à sous avec des symboles qui tournent. Configurez les symboles et les gains dans l'éditeur principal.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Configuration pour Carte à Gratter */}
+      {localGameType === 'scratch' && (
+        <div className="space-y-4">
+          <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+            <h3 className="text-lg font-medium text-gray-900 mb-2">🎫 Configuration Carte à Gratter</h3>
+            <p className="text-sm text-gray-600">
+              Les cartes à gratter permettent aux joueurs de gratter virtuellement pour découvrir s'ils ont gagné. Configurez les cartes et les gains dans l'éditeur principal.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Configuration pour Quiz */}
+      {localGameType === 'quiz' && (
+        <div className="space-y-4">
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+            <h3 className="text-lg font-medium text-gray-900 mb-2">📝 Configuration Quiz</h3>
+            <p className="text-sm text-gray-600">
+              Le quiz permet de poser des questions aux participants. Configurez les questions, les réponses et le scoring dans l'éditeur principal.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Configuration pour Formulaire */}
+      {localGameType === 'form' && (
+        <div className="space-y-4">
+          <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+            <h3 className="text-lg font-medium text-gray-900 mb-2">📋 Configuration Formulaire</h3>
+            <p className="text-sm text-gray-600">
+              Le formulaire permet de collecter des informations auprès des participants. Configurez les champs dans l'onglet "Formulaire".
+            </p>
+          </div>
         </div>
       )}
     </div>

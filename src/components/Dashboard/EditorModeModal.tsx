@@ -71,6 +71,12 @@ const EditorModeModal: React.FC<EditorModeModalProps> = ({
     onClose();
   };
 
+  // Icon URLs (SVG first with PNG fallback). Place files in public/icons.
+  const fullscreenIconSvg = '/icons/editor-mode-fullscreen.svg';
+  const fullscreenIconPng = '/icons/editor-mode-fullscreen.png';
+  const articleIconSvg = '/icons/editor-mode-article.svg';
+  const articleIconPng = '/icons/editor-mode-article.png';
+
   return (
     <>
       {/* Backdrop */}
@@ -110,9 +116,23 @@ const EditorModeModal: React.FC<EditorModeModalProps> = ({
                 onClick={() => handleModeSelect('fullscreen')}
                 className="group flex items-center gap-4 rounded-xl border border-gray-200/80 bg-white hover:border-[#841b60] hover:shadow-lg transition-all text-left p-3"
               >
-                <div className="relative flex-shrink-0 h-16 w-24 rounded-lg overflow-hidden bg-gradient-to-br from-[#fdf6ff] via-[#f6f7ff] to-[#ffeef5]">
-                  <div className="absolute inset-0 opacity-35 bg-[radial-gradient(circle_at_15%_20%,rgba(132,27,96,0.12),transparent_55%)]" />
-                  <div className="absolute inset-[6px] rounded-md border border-[#cdb7e6]/40 bg-white/60 backdrop-blur-[2px]" />
+                <div className="relative flex-shrink-0 h-16 w-24 rounded-lg overflow-hidden bg-gradient-to-br from-[#fdf6ff] via-[#f6f7ff] to-[#ffeef5] flex items-center justify-center">
+                  {/* Icon image (optional). If missing, the gradient box remains as fallback */}
+                  <img
+                    src={fullscreenIconSvg}
+                    alt="Full Screen"
+                    className="h-full w-full object-contain p-2"
+                    onError={(e) => {
+                      const img = e.target as HTMLImageElement;
+                      // Try PNG fallback once; if that fails, hide image to keep gradient box
+                      if (img.src.endsWith('.svg')) {
+                        img.src = fullscreenIconPng;
+                      } else {
+                        img.style.display = 'none';
+                      }
+                    }}
+                  />
+                  <div className="pointer-events-none absolute inset-[6px] rounded-md border border-[#cdb7e6]/40" />
                 </div>
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
@@ -134,13 +154,22 @@ const EditorModeModal: React.FC<EditorModeModalProps> = ({
                 onClick={() => handleModeSelect('article')}
                 className="group flex items-center gap-4 rounded-xl border border-purple-200/80 bg-white hover:border-[#841b60] hover:shadow-lg transition-all text-left p-3"
               >
-                <div className="relative flex-shrink-0 h-16 w-24 rounded-lg overflow-hidden bg-gradient-to-br from-[#fdf6ff] via-[#f6f7ff] to-[#ffeef5]">
-                  <div className="absolute inset-0 opacity-45 bg-[radial-gradient(circle_at_80%_20%,rgba(132,27,96,0.12),transparent_60%)]" />
-                  <div className="absolute inset-[6px] rounded-md border border-[#cdb7e6]/40 bg-white/85" />
-                  <div className="absolute inset-x-[10px] top-[10px] h-3 rounded bg-[#841b60]/45" />
-                  <div className="absolute inset-x-[10px] top-[22px] h-2 rounded bg-[#841b60]/20" />
-                  <div className="absolute inset-x-[10px] top-[28px] h-2 rounded bg-[#841b60]/15" />
-                  <div className="absolute inset-x-[10px] bottom-[10px] h-6 rounded bg-[#f8d9ea]" />
+                <div className="relative flex-shrink-0 h-16 w-24 rounded-lg overflow-hidden bg-gradient-to-br from-[#fdf6ff] via-[#f6f7ff] to-[#ffeef5] flex items-center justify-center">
+                  {/* Icon image (optional). If missing, the gradient box remains as fallback */}
+                  <img
+                    src={articleIconSvg}
+                    alt="Article"
+                    className="h-full w-full object-contain p-2"
+                    onError={(e) => {
+                      const img = e.target as HTMLImageElement;
+                      if (img.src.endsWith('.svg')) {
+                        img.src = articleIconPng;
+                      } else {
+                        img.style.display = 'none';
+                      }
+                    }}
+                  />
+                  <div className="pointer-events-none absolute inset-[6px] rounded-md border border-[#cdb7e6]/40" />
                 </div>
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">

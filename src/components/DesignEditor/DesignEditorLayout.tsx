@@ -2900,6 +2900,9 @@ useEffect(() => {
                 // Ignore clicks inside any canvas root
                 const isInsideCanvas = target.closest('[data-canvas-root="true"]');
                 if (isInsideCanvas) return;
+                // Ignore clicks on modules (they handle their own selection)
+                const isModule = target.closest('[data-module-id]') || target.closest('[data-quiz-module]');
+                if (isModule) return;
                 // Ignore UI controls to avoid disrupting interactions
                 const interactive = target.closest('button, [role="button"], input, textarea, select, [contenteditable="true"]');
                 if (interactive) return;

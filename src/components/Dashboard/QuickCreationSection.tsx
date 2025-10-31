@@ -1,7 +1,5 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import PillButton from '../shared/PillButton';
-import { FolderOpen, Layers } from 'lucide-react';
 import { GameType } from './types';
 
 const shortcutIconMap: Record<string, string> = {
@@ -123,11 +121,6 @@ const QuickCreationSection: React.FC = () => {
                 })}
               </div>
             </div>
-          </div>
-
-          <div className="flex flex-col md:flex-row justify-center items-center gap-4">
-            <PillButton to="/campaigns" icon={<FolderOpen className="w-4 h-4" />}>Mes campagnes</PillButton>
-            <PillButton to="/templates-editor" icon={<Layers className="w-4 h-4" />}>Modèles</PillButton>
           </div>
         </div>
 

@@ -755,6 +755,7 @@ const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate
                   : modulePaddingClass;
 
                 const handleModulePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
+                  console.log('⚡ [ModularCanvas] handleModulePointerDown called!', { id: m.id, type: m.type });
                   if (event.button !== 0 && event.pointerType !== 'touch' && event.pointerType !== 'pen') {
                     return;
                   }
@@ -777,7 +778,9 @@ const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate
                   if (m.type === 'BlocHtml') {
                     return;
                   }
-                  startModuleDrag(event as unknown as React.PointerEvent<HTMLElement>, m, originalIndex);
+                  // TEMPORAIREMENT COMMENTÉ POUR TESTER
+                  console.log('🚫 [ModularCanvas] startModuleDrag DISABLED for testing');
+                  // startModuleDrag(event as unknown as React.PointerEvent<HTMLElement>, m, originalIndex);
                 };
 
                 const handleDragHandlePointerDown = (event: React.PointerEvent<HTMLElement>) => {
@@ -932,6 +935,7 @@ const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate
                     tabIndex={0}
                     onPointerDown={handleModulePointerDown}
                     onClick={(event) => {
+                      console.log('🎯 [ModularCanvas] Module container clicked!', { id: m.id, type: m.type });
                       event.stopPropagation();
                       onSelect?.(m);
                     }}

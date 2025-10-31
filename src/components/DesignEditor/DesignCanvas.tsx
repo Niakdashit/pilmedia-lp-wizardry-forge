@@ -2352,7 +2352,30 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                     {logoModules.length > 0 && (
                       <div style={{ height: logoVisualHeight }} />
                     )}
-                    <div className="w-full max-w-[1500px] flex" style={{ minHeight: effectiveCanvasSize?.height || 640 }}>
+                    <div 
+                      className="w-full max-w-[1500px] flex" 
+                      style={{ minHeight: effectiveCanvasSize?.height || 640 }}
+                      onMouseDown={(e) => {
+                        // SOLUTION RADICALE: Détection directe des clics sur modules
+                        const target = e.target as HTMLElement;
+                        const moduleContainer = target.closest('[data-module-id]') as HTMLElement;
+                        if (moduleContainer) {
+                          const moduleId = moduleContainer.getAttribute('data-module-id');
+                          console.log('🎯🎯🎯 [DesignCanvas] DIRECT MODULE CLICK DETECTED!', moduleId);
+                          if (moduleId) {
+                            const module = regularModules.find(m => m.id === moduleId);
+                            if (module) {
+                              try {
+                                const evt = new CustomEvent('modularModuleSelected', { detail: { module } });
+                                window.dispatchEvent(evt);
+                              } catch (err) {
+                                console.error('❌ Error dispatching event:', err);
+                              }
+                            }
+                          }
+                        }
+                      }}
+                    >
                       <ModularCanvas
                         screen={screenId as any}
                         modules={regularModules}
@@ -2362,6 +2385,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                         onMove={(id, dir) => onModuleMove?.(id, dir)}
                         onDuplicate={(id) => onModuleDuplicate?.(id)}
                         onSelect={(m) => {
+                          console.log('📢 [DesignCanvas] ModularCanvas onSelect called', m.id);
                           try {
                             const evt = new CustomEvent('modularModuleSelected', { detail: { module: m } });
                             window.dispatchEvent(evt);
@@ -2381,7 +2405,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                   {logoModules.length > 0 && (
                     <div 
                       className="absolute left-0 top-0 w-full z-[9999] group" 
-                      style={{ pointerEvents: 'none' }}
+                      style={{ pointerEvents: 'auto' }}
                       onClick={() => console.log('🎯 [DesignCanvas] Logo container clicked!')}
                     >
                       {/* Bouton de suppression toujours visible au survol */}
@@ -2435,7 +2459,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                   {footerModules.length > 0 && (
                     <div 
                       className="absolute left-0 bottom-0 w-full z-[9999] group" 
-                      style={{ pointerEvents: 'none' }}
+                      style={{ pointerEvents: 'auto' }}
                       onClick={() => console.log('🎯 [DesignCanvas] Footer container clicked!')}
                     >
                       {/* Bouton de suppression toujours visible au survol */}

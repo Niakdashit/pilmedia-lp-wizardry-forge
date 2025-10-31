@@ -1,6 +1,4 @@
 import React, { useState } from 'react';
-import { FolderOpen, Layers } from 'lucide-react';
-import PillButton from '../shared/PillButton';
 import EditorModeModal from './EditorModeModal';
  
 import { GameType } from './types';
@@ -119,16 +117,7 @@ const DashboardHeader: React.FC = () => {
                 </div>
               </div>
 
-              {/* Boutons pills */}
-              <div className="flex flex-col md:flex-row justify-center items-center gap-4">
-                <PillButton to="/campaigns" icon={<FolderOpen className="w-4 h-4" />}>
-                  Mes campagnes
-                </PillButton>
-
-                <PillButton to="/modeles" icon={<Layers className="w-4 h-4" />}>
-                  Modèles
-                </PillButton>
-              </div>
+              {/* Anciennes actions supprimées: Mes campagnes / Modèles */}
             </div>
           </div>
 

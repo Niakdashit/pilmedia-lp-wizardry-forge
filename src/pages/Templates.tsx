@@ -1,13 +1,19 @@
 // @ts-nocheck
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Sparkles, Search } from 'lucide-react';
+import { Search, Plus } from 'lucide-react';
 import { useTemplates } from '@/hooks/useTemplates';
+import PageContainer from '../components/Layout/PageContainer';
 
 export default function Templates() {
   const { templates, loading } = useTemplates();
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedFormat, setSelectedFormat] = useState('Tous');
+  const [selectedCategory, setSelectedCategory] = useState('Tout');
+
+  const formats = ['Tous', '9:16 (Portrait)', '16:9 (Paysage)'];
+  const categories = ['Tout', 'Logo', 'Flyer', 'Story Instagram', 'Présentation', 'Reel Instagram', 'Affiche'];
 
   const filteredTemplates = templates.filter(template => {
     if (!searchTerm) return true;
@@ -27,55 +33,108 @@ export default function Templates() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="flex items-center gap-4 mb-8">
-          <Sparkles className="w-8 h-8 text-primary" />
-          <h1 className="text-4xl font-bold text-foreground">Templates de Campagnes</h1>
-        </div>
-        
-        <div className="mb-8">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-            <input
-              type="text"
-              placeholder="Rechercher un template..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 border rounded-lg bg-background text-foreground"
-            />
+    <div className="min-h-screen">
+      <PageContainer className="bg-transparent">
+        <div className="px-6 sm:px-8 lg:px-10 py-8">
+          {/* Barre de recherche et bouton créer */}
+          <div className="mb-6 flex items-center gap-4">
+            <div className="relative flex-1 max-w-xl">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Rechercher partout"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
+              />
+            </div>
+            <button
+              onClick={() => navigate('/template-editor')}
+              className="flex items-center gap-2 px-6 py-2.5 bg-[#841b60] text-white rounded-lg font-medium hover:bg-[#6d1650] transition-colors shadow-sm"
+            >
+              <Plus className="w-5 h-5" />
+              <span className="whitespace-nowrap">Créer un template</span>
+            </button>
           </div>
-        </div>
 
-        {filteredTemplates.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredTemplates.map(template => (
-              <div key={template.id} className="bg-card rounded-xl shadow-sm border p-6 hover:shadow-md transition-shadow cursor-pointer"
-                onClick={() => navigate(`/wizard?templateId=${template.id}`)}>
-                {template.thumbnail_url && (
-                  <img src={template.thumbnail_url} alt={template.name} className="w-full h-48 object-cover rounded-lg mb-4" />
-                )}
-                <h3 className="text-lg font-semibold text-foreground mb-2">{template.name}</h3>
-                {template.description && (
-                  <p className="text-sm text-muted-foreground mb-4">{template.description}</p>
-                )}
-                <div className="flex items-center justify-between">
-                  <span className="text-xs px-2 py-1 bg-accent text-accent-foreground rounded-full">
-                    {template.type}
-                  </span>
-                  {template.is_premium && (
-                    <span className="text-xs px-2 py-1 bg-primary/20 text-primary rounded-full">Premium</span>
-                  )}
-                </div>
+          {/* Filtres */}
+          <div className="mb-6 space-y-4">
+            {/* Format */}
+            <div>
+              <span className="text-sm font-medium text-gray-700 mr-3">Format:</span>
+              <div className="inline-flex gap-2">
+                {formats.map((format) => (
+                  <button
+                    key={format}
+                    onClick={() => setSelectedFormat(format)}
+                    className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                      selectedFormat === format
+                        ? 'bg-[#841b60] text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    {format}
+                  </button>
+                ))}
               </div>
-            ))}
+            </div>
+
+            {/* Catégories */}
+            <div>
+              <div className="flex flex-wrap gap-2">
+                {categories.map((category) => (
+                  <button
+                    key={category}
+                    onClick={() => setSelectedCategory(category)}
+                    className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                      selectedCategory === category
+                        ? 'bg-[#841b60] text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    {category}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
-        ) : (
-          <div className="text-center py-12">
-            <p className="text-muted-foreground">Aucun template trouvé</p>
-          </div>
-        )}
-      </div>
+
+          {/* Grille de templates */}
+          {filteredTemplates.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {filteredTemplates.map(template => (
+                <div 
+                  key={template.id} 
+                  className="group bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition-all cursor-pointer border border-gray-200"
+                  onClick={() => navigate(`/wizard?templateId=${template.id}`)}
+                >
+                  {template.thumbnail_url ? (
+                    <img 
+                      src={template.thumbnail_url} 
+                      alt={template.name} 
+                      className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-300" 
+                    />
+                  ) : (
+                    <div className="w-full h-64 bg-gradient-to-br from-purple-100 to-blue-100 flex items-center justify-center">
+                      <span className="text-gray-400 text-sm">Aperçu bientôt disponible</span>
+                    </div>
+                  )}
+                  <div className="p-3">
+                    <h3 className="text-sm font-medium text-gray-900 truncate">{template.name}</h3>
+                    {template.is_premium && (
+                      <span className="inline-block mt-1 text-xs px-2 py-0.5 bg-[#841b60]/10 text-[#841b60] rounded-full">Premium</span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-16">
+              <p className="text-gray-500">Aucun template trouvé</p>
+            </div>
+          )}
+        </div>
+      </PageContainer>
     </div>
   );
 }

@@ -4,7 +4,8 @@ import RecentCampaigns from '../components/Dashboard/RecentCampaigns';
 import UserManagement from '../components/Dashboard/UserManagement';
 import PageContainer from '../components/Layout/PageContainer';
 import { useProfile } from '../hooks/useProfile';
-import { BarChart3, Users } from 'lucide-react';
+import { BarChart3, Users, FolderOpen, Layers } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const Dashboard: React.FC = () => {
   const { profile } = useProfile();
@@ -27,12 +28,12 @@ const Dashboard: React.FC = () => {
         {/* Onglets de navigation */}
         <div className="px-6 sm:px-8 lg:px-10 pt-6">
           <div className="border-b border-gray-200">
-            <nav className="-mb-px flex space-x-8">
+            <nav className="-mb-px flex items-center flex-wrap gap-x-5 md:gap-x-8 gap-y-2">
               {tabs.map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id as any)}
-                  className={`py-2 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 ${
+                  className={`py-2 px-2 border-b-2 font-medium text-sm flex items-center space-x-2 ${
                     activeTab === tab.id
                       ? 'border-[#841b60] text-[#841b60]'
                       : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -42,6 +43,22 @@ const Dashboard: React.FC = () => {
                   <span>{tab.label}</span>
                 </button>
               ))}
+
+              {/* Liens en style onglet: Mes campagnes + Modèles */}
+              <Link
+                to="/campaigns"
+                className="py-2 px-2 border-b-2 font-medium text-sm flex items-center space-x-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+              >
+                <FolderOpen className="w-4 h-4" />
+                <span>Mes campagnes</span>
+              </Link>
+              <Link
+                to="/modeles"
+                className="py-2 px-2 border-b-2 font-medium text-sm flex items-center space-x-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+              >
+                <Layers className="w-4 h-4" />
+                <span>Modèles</span>
+              </Link>
             </nav>
           </div>
         </div>

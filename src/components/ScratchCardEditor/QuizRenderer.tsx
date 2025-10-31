@@ -154,13 +154,21 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
 
       return (
         <div 
-          key={m.id} 
+          key={m.id}
+          data-module-id={m.id}
           style={{ 
             ...commonStyle, 
             paddingTop: (textModule as any).spacingTop ?? 0, 
             paddingBottom: (textModule as any).spacingBottom ?? 0 
           }}
-          onClick={() => !previewMode && onModuleClick?.(m.id)}
+          onClick={(e) => {
+            console.log('🖱️ [QuizRenderer] BlocTexte clicked!', { id: m.id, previewMode });
+            // NE PAS stopPropagation pour permettre au ModularCanvas de gérer la sélection
+            if (!previewMode) {
+              console.log('✅ Calling onModuleClick for', m.id);
+              onModuleClick?.(m.id);
+            }
+          }}
         >
           <div style={{ display: 'flex', justifyContent, width: '100%' }}>
             <div style={{ width: '100%', maxWidth: maxTextWidth }}>
@@ -266,9 +274,13 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
 
       return (
         <div 
-          key={m.id} 
+          key={m.id}
+          data-module-id={m.id}
           style={{ ...commonStyle }}
-          onClick={() => !previewMode && onModuleClick?.(m.id)}
+          onClick={(e) => {
+            // NE PAS stopPropagation pour permettre au ModularCanvas de gérer la sélection
+            if (!previewMode) onModuleClick?.(m.id);
+          }}
         >
           <div style={{ display: 'flex', justifyContent, width: '100%' }}>
             <div
@@ -311,9 +323,13 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
 
       return (
         <div 
-          key={m.id} 
+          key={m.id}
+          data-module-id={m.id}
           style={{ ...commonStyle }}
-          onClick={() => !previewMode && onModuleClick?.(m.id)}
+          onClick={(e) => {
+            // NE PAS stopPropagation pour permettre au ModularCanvas de gérer la sélection
+            if (!previewMode) onModuleClick?.(m.id);
+          }}
         >
           <div style={{ display: 'flex', justifyContent, width: '100%' }}>
             <div
@@ -353,9 +369,13 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
       
       return (
         <div 
-          key={m.id} 
+          key={m.id}
+          data-module-id={m.id}
           style={{ ...commonStyle, textAlign: 'center' }}
-          onClick={() => !previewMode && onModuleClick?.(m.id)}
+          onClick={(e) => {
+            // NE PAS stopPropagation pour permettre au ModularCanvas de gérer la sélection
+            if (!previewMode) onModuleClick?.(m.id);
+          }}
         >
           <a
             href={buttonModule.href || '#'}
@@ -405,13 +425,17 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
 
       return (
         <div 
-          key={m.id} 
+          key={m.id}
+          data-module-id={m.id}
           style={{ 
             ...commonStyle,
             paddingTop: (carteModule as any).spacingTop ?? 0,
             paddingBottom: (carteModule as any).spacingBottom ?? 0
           }}
-          onClick={() => !previewMode && onModuleClick?.(m.id)}
+          onClick={(e) => {
+            // NE PAS stopPropagation pour permettre au ModularCanvas de gérer la sélection
+            if (!previewMode) onModuleClick?.(m.id);
+          }}
         >
           <div style={{ display: 'flex', justifyContent, width: '100%' }}>
             <div className="quiz-card" style={{
@@ -512,7 +536,8 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
 
       return (
         <div 
-          key={m.id} 
+          key={m.id}
+          data-module-id={m.id}
           style={{ 
             backgroundColor: bandColor,
             height: bandHeight,
@@ -525,7 +550,10 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
             paddingBottom: (logoModule as any).spacingBottom ?? 0,
             position: 'relative'
           }}
-          onClick={() => !previewMode && onModuleClick?.(m.id)}
+          onClick={(e) => {
+            // NE PAS stopPropagation pour permettre au ModularCanvas de gérer la sélection
+            if (!previewMode) onModuleClick?.(m.id);
+          }}
         >
           {logoModule.logoUrl ? (
             <img
@@ -588,7 +616,8 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
 
       return (
         <div 
-          key={m.id} 
+          key={m.id}
+          data-module-id={m.id}
           style={{ 
             backgroundColor: bandColor,
             height: hasContent ? 'auto' : bandHeight,
@@ -606,6 +635,7 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
             cursor: previewMode ? 'default' : 'pointer'
           }}
           onClick={(e) => {
+            // NE PAS stopPropagation pour permettre au ModularCanvas de gérer la sélection
             if (!previewMode) {
               onModuleClick?.(m.id);
             }
