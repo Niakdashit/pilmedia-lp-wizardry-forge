@@ -9,10 +9,11 @@ import { useEditorStore } from '../../stores/editorStore';
 import type { DeviceType } from '../../utils/deviceDimensions';
 import { getCanvasViewport } from './core/Transform';
 import { createPreciseDrag } from './core/Drag';
-import { useSmartSnapping } from '../ModernEditor/hooks/useSmartSnapping';
 import { usePinchResize } from './hooks/usePinchResize';
 import { usePrizeLogic } from '../../hooks/usePrizeLogic';
 import type { CampaignConfig } from '../../types/PrizeSystem';
+
+type CanvasScreenId = 'screen1' | 'screen2' | 'screen3' | 'all';
 
 // Professional drag & drop implementation - Excalidraw/Canva precision
 
@@ -43,16 +44,8 @@ export interface CanvasElementProps {
     startDragging: () => void;
     stopDragging: () => void;
   };
-  // Optional map of custom renderers keyed by element.type
-  customRenderers?: Record<string, (args: {
-    element: any;
-    selectedDevice: DeviceType;
-    readOnly: boolean;
-    elementStyle: React.CSSProperties;
-    deviceProps: any;
-  }) => React.ReactNode>;
-  // Open wheel temporary settings panel (Option A)
-  onOpenWheelPanel?: () => void;
+  screenId?: CanvasScreenId;
+  onTap?: (element: any) => void;
 }
 
 const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
@@ -73,8 +66,8 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
   campaign,
   extractedColors,
   alignmentSystem,
-  customRenderers = {},
-  onOpenWheelPanel
+  screenId,
+  onTap
 }) => {
   const { getPropertiesForDevice } = useUniversalResponsive('desktop');
   
@@ -84,15 +77,6 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
     setCampaign: () => {} // Read-only
   });
   
-  console.log('🎨 CanvasElement: Campaign segments for wheel', {
-    elementType: element.type,
-    campaignId: campaign?.id,
-    campaignSegments,
-    segmentCount: campaignSegments.length,
-    campaignWheelConfig: (campaign as any)?.wheelConfig?.segments,
-    lastUpdate: (campaign as any)?._lastUpdate,
-    extractedColors: extractedColors
-  });
   
   // 📱 Hook d'optimisation tactile pour mobile/tablette
   const touchOptimization = useTouchOptimization({
@@ -119,11 +103,9 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
     },
     onResizeStart: () => {
       setIsResizing(true);
-      console.log('🤏 Pinch resize started for element:', element.id);
     },
     onResizeEnd: () => {
       setIsResizing(false);
-      console.log('🤏 Pinch resize ended for element:', element.id);
     },
     minScale: 0.5,
     maxScale: 3,
@@ -135,11 +117,6 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
     () => getPropertiesForDevice(element, selectedDevice),
     [element, selectedDevice, getPropertiesForDevice]
   );
-
-  const isLaunchButton = useMemo(() => {
-    const role = (element as any)?.role;
-    return typeof role === 'string' && role.toLowerCase() === 'button';
-  }, [element]);
 
   // Report current bounds (canvas-space) to parent for accurate group/marquee calculations
   const reportBounds = useCallback((override?: { x?: number; y?: number; width?: number; height?: number }) => {
@@ -220,24 +197,56 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
       }
     };
     document.addEventListener('uiAdjustingSelection', onAdjust as EventListener);
+    // Inline formatting event listener
+    const onInlineFormat = (e: Event) => {
+      if (!isSelected) return;
+      const detail = (e as CustomEvent<{ action: 'bold'|'italic'|'underline' }>).detail;
+      if (!detail) return;
+      const action = detail.action;
+      const container = textRef.current as HTMLElement | null;
+      if (!container) return;
+      const sel = window.getSelection();
+      if (!sel || sel.rangeCount === 0) return;
+      const range = sel.getRangeAt(0);
+      // Ensure selection is within this text element
+      const within = container.contains(range.commonAncestorContainer as Node);
+      if (!within) return;
+      // Build wrapper element
+      let wrapper: HTMLElement;
+      if (action === 'bold') wrapper = document.createElement('strong');
+      else if (action === 'italic') wrapper = document.createElement('em');
+      else { wrapper = document.createElement('span'); wrapper.style.textDecoration = 'underline'; }
+      try {
+        // Prefer surroundContents when valid
+        range.surroundContents(wrapper);
+      } catch {
+        const frag = range.cloneContents();
+        wrapper.appendChild(frag);
+        range.deleteContents();
+        range.insertNode(wrapper);
+      }
+      // Normalize selection and persist richHtml
+      sel.removeAllRanges();
+      const newRange = document.createRange();
+      newRange.selectNodeContents(wrapper);
+      sel.addRange(newRange);
+      const html = container.innerHTML;
+      onUpdate(element.id, { richHtml: html, content: container.textContent ?? element.content });
+      try { (window as any).__lastInlineHandled__ = true; } catch {}
+    };
+    window.addEventListener('applyInlineFormat', onInlineFormat as EventListener);
     return () => {
       document.removeEventListener('uiAdjustingSelection', onAdjust as EventListener);
+      window.removeEventListener('applyInlineFormat', onInlineFormat as EventListener);
       // Ensure controls are restored on unmount
       setTempHideControls(false);
     };
-  }, []);
+  }, [isSelected, onUpdate, element.id]);
 
   // Normalize angle to [-180, 180] inclusive (keep -180 and 180 as is)
   const normalize180 = useCallback((deg: number) => {
     return ((deg + 180) % 360 + 360) % 360 - 180;
   }, []);
-
-  // Smart snapping integration for alignment guides and snapping during drag
-  const { applySnapping } = useSmartSnapping({
-    containerRef: containerRef as React.RefObject<HTMLDivElement>,
-    gridSize: 20,
-    snapTolerance: 3
-  });
 
   // Global clipboard from store
   const clipboard = useEditorStore(state => state.clipboard);
@@ -260,11 +269,6 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
     if (activeGroupId && (element as any)?.parentGroupId === activeGroupId) {
       e.preventDefault();
       e.stopPropagation();
-      return;
-    }
-    if (isLaunchButton) {
-      e.stopPropagation();
-      e.preventDefault();
       return;
     }
     const isMultiSelect = e.ctrlKey || e.metaKey;
@@ -407,31 +411,38 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
 
     // Démarrer le drag professionnel
     enhancedOnPointerDown(e.nativeEvent, el);
-  }, [element.id, onSelect, containerRef, onUpdate, deviceProps, isDragging, readOnly, applySnapping, activeGroupId, element, schedulePostCommitMeasure]);
+  }, [element.id, onSelect, containerRef, onUpdate, deviceProps, isDragging, readOnly, activeGroupId, element, schedulePostCommitMeasure]);
 
   // Optimized text editing handlers with useCallback - MOVED BEFORE renderElement
   const handleDoubleClick = useCallback(() => {
-    if (readOnly || isLaunchButton) return; // Disable entering edit mode for fixed button
+    if (readOnly) return; // Disable entering edit mode in read-only
     if (element.type === 'text' || element.type === 'shape') {
       setIsEditing(true);
     }
-  }, [element.type, readOnly, isLaunchButton]);
+  }, [element.type, readOnly]);
 
 
-  // Commit edits on blur/Enter without re-rendering per keystroke
+  // Commit edits on blur/Enter; persist rich HTML when present and plain text for search/index
   const commitEditingContent = useCallback(() => {
-    const newText = (editingTextRef.current ?? '').replace(/\n/g, '');
-    const current = element.content ?? '';
-    if (newText !== current) {
-      onUpdate(element.id, { content: newText });
+    const el = textRef.current;
+    const html = el ? el.innerHTML : undefined;
+    const newText = (el?.textContent ?? editingTextRef.current ?? '').replace(/\n/g, '');
+    const payload: any = { content: newText };
+    if (html && html.trim() !== '') {
+      payload.richHtml = html;
     }
-  }, [element.content, element.id, onUpdate]);
+    onUpdate(element.id, payload);
+  }, [element.id, onUpdate]);
 
   const handleTextKeyDown = useCallback((e: React.KeyboardEvent) => {
     const isMac = navigator.platform.toUpperCase().includes('MAC');
     const isMod = isMac ? (e.metaKey as boolean) : (e.ctrlKey as boolean);
 
     if (isMod) {
+      // When editing a text contentEditable, let the browser handle inline formatting (Cmd/Ctrl+B/I/U)
+      if (isEditing && element.type === 'text') {
+        return;
+      }
       const key = e.key.toLowerCase();
 
       if (key === 'b') {
@@ -508,22 +519,29 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
     setIsEditing(false);
   }, [commitEditingContent]);
 
-  // ContentEditable input handler to persist content changes
+  // ContentEditable input handler: track plain text and persist rich HTML live for toolbar inline actions
   const handleContentEditableInput = useCallback((e: React.FormEvent<HTMLDivElement>) => {
-    const newText = (e.currentTarget.textContent ?? '').replace(/\n/g, '');
+    const target = e.currentTarget as HTMLDivElement;
+    const newText = (target.textContent ?? '').replace(/\n/g, '');
     editingTextRef.current = newText;
-  }, []);
+    // Persist rich HTML so inline bold/italic/underline is not lost
+    const html = target.innerHTML;
+    onUpdate(element.id, { richHtml: html });
+  }, [element.id, onUpdate]);
 
   // Autofocus editable div and place caret at end on entering edit mode
   React.useEffect(() => {
     if (isEditing && !readOnly) {
       const el = textRef.current;
       if (el) {
-        // Initialize editing buffer with current content (no placeholder during edit)
-        const initial = (element.content ?? '');
-        editingTextRef.current = initial;
-        if (el.textContent !== initial) {
-          el.textContent = initial;
+        // Initialize editing DOM with richHtml when available, else plain content
+        const initialHtml = (element as any).richHtml as string | undefined;
+        const initialText = (element.content ?? '');
+        editingTextRef.current = initialText;
+        if (initialHtml && initialHtml.trim() !== '') {
+          if (el.innerHTML !== initialHtml) el.innerHTML = initialHtml;
+        } else if (el.textContent !== initialText) {
+          el.textContent = initialText;
         }
         el.focus();
         try {
@@ -536,7 +554,7 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
         } catch {}
       }
     }
-  }, [isEditing, readOnly, element.content]);
+  }, [isEditing, readOnly, element.content, (element as any).richHtml]);
 
   const handleAlign = useCallback((alignment: string) => {
     if (!containerRef?.current) return;
@@ -557,7 +575,6 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
     }
     
     onUpdate(element.id, { x: newX });
-    console.log('Element aligned:', alignment, newX);
   }, [element, deviceProps, containerRef, onUpdate]);
 
   // Optimized resize handler with useCallback - Enhanced for mobile/tablet
@@ -995,27 +1012,23 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
   const minZ = React.useMemo(() => (allEls.length ? Math.min(...allEls.map(getZ)) : getZ(element)), [allEls, element]);
 
   const bringToFront = useCallback(() => {
-    console.log('🔝 bringToFront called for element:', element.id, 'current zIndex:', element.zIndex, 'maxZ:', maxZ);
     onUpdate(element.id, { zIndex: (maxZ || 1) + 1 });
   }, [onUpdate, element.id, maxZ]);
 
   const bringForward = useCallback(() => {
     const current = getZ(element);
-    console.log('⬆️ bringForward called for element:', element.id, 'current zIndex:', current, 'new zIndex:', current + 1);
     onUpdate(element.id, { zIndex: current + 1 });
   }, [onUpdate, element]);
 
   const sendBackward = useCallback(() => {
     const current = getZ(element);
     const newZ = Math.max(1, current - 1);
-    console.log('⬇️ sendBackward called for element:', element.id, 'current zIndex:', current, 'new zIndex:', newZ);
     onUpdate(element.id, { zIndex: newZ });
   }, [onUpdate, element]);
 
   const sendToBack = useCallback(() => {
     const target = (minZ || 1) - 1;
     const newZ = Math.max(0, target);
-    console.log('🔻 sendToBack called for element:', element.id, 'current zIndex:', element.zIndex, 'minZ:', minZ, 'new zIndex:', newZ);
     onUpdate(element.id, { zIndex: newZ });
   }, [onUpdate, element.id, minZ]);
 
@@ -1102,11 +1115,9 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
       minHeight: element.type === 'image' ? `${element.height || 100}px` : 'auto'
     } : {};
 
-    const defaultRender: React.ReactNode = (() => {
-      switch (element.type) {
+    switch (element.type) {
       case 'text': {
         const getTextStyle = (): React.CSSProperties => {
-          const customCSS = (element as any)?.customCSS || {};
           const parsePx = (v: any, fallback: number = 0) => {
             if (v == null) return fallback;
             if (typeof v === 'number') return v;
@@ -1158,10 +1169,61 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
             baseStyle.textShadow = `${parsePx(ts.offsetX, 0)}px ${parsePx(ts.offsetY, 0)}px ${parsePx(ts.blur, 0)}px ${ts.color}`;
           }
 
-          // Add custom CSS from effects
-          if (customCSS) {
-            // Allow gradient backgrounds and flex alignment from customCSS
-            Object.assign(baseStyle, customCSS);
+          // Add custom CSS from effects (do this last to ensure it has priority)
+          if (element.customCSS) {
+            // Force application of important CSS properties
+            Object.assign(baseStyle, element.customCSS);
+            
+            // Ensure critical properties are applied with !important if needed
+            if (element.customCSS.backgroundColor) {
+              baseStyle.backgroundColor = element.customCSS.backgroundColor;
+            }
+            if (element.customCSS.color) {
+              baseStyle.color = element.customCSS.color;
+            }
+            if (element.customCSS.textShadow) {
+              baseStyle.textShadow = element.customCSS.textShadow;
+            }
+            if (element.customCSS.padding) {
+              baseStyle.padding = element.customCSS.padding;
+            }
+            if (element.customCSS.borderRadius) {
+              baseStyle.borderRadius = element.customCSS.borderRadius;
+            }
+            if (element.customCSS.display) {
+              baseStyle.display = element.customCSS.display;
+            }
+            if (element.customCSS.boxSizing) {
+              baseStyle.boxSizing = element.customCSS.boxSizing;
+            }
+          }
+
+          // Also check for advancedStyle CSS
+          if (element.advancedStyle?.css) {
+            Object.assign(baseStyle, element.advancedStyle.css);
+            
+            // Force application of important CSS properties from advancedStyle
+            if (element.advancedStyle.css.backgroundColor) {
+              baseStyle.backgroundColor = element.advancedStyle.css.backgroundColor;
+            }
+            if (element.advancedStyle.css.color) {
+              baseStyle.color = element.advancedStyle.css.color;
+            }
+            if (element.advancedStyle.css.textShadow) {
+              baseStyle.textShadow = element.advancedStyle.css.textShadow;
+            }
+            if (element.advancedStyle.css.padding) {
+              baseStyle.padding = element.advancedStyle.css.padding;
+            }
+            if (element.advancedStyle.css.borderRadius) {
+              baseStyle.borderRadius = element.advancedStyle.css.borderRadius;
+            }
+            if (element.advancedStyle.css.display) {
+              baseStyle.display = element.advancedStyle.css.display;
+            }
+            if (element.advancedStyle.css.boxSizing) {
+              baseStyle.boxSizing = element.advancedStyle.css.boxSizing;
+            }
           }
 
           return baseStyle;
@@ -1201,7 +1263,12 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
             draggable={false}
             data-element-type="text"
           >
-            {element.content || 'Texte'}
+            {(element as any).richHtml ? (
+              // Keep initial children empty; actual HTML is injected in effect to preserve cursor
+              null
+            ) : (
+              element.content || 'Texte'
+            )}
           </div>
         ) : (
           <div
@@ -1210,8 +1277,9 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
             }
             style={getTextStyle()}
             data-element-type="text"
+            {...(((element as any).richHtml && (element as any).richHtml.trim() !== '') ? { dangerouslySetInnerHTML: { __html: (element as any).richHtml } } : {})}
           >
-            {element.content || 'Texte'}
+            {(!(element as any).richHtml || (element as any).richHtml.trim() === '') ? (element.content || 'Texte') : null}
           </div>
         );
       }
@@ -1232,12 +1300,10 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
             className={`${readOnly ? '' : 'cursor-move'}`}
             style={{ 
               ...elementStyle,
-              position: 'relative',
-              pointerEvents: 'auto'
+              pointerEvents: 'none' // Empêche l'interaction directe avec la roue
             }}
           >
-            <div style={{ pointerEvents: 'none' }}>
-              <SmartWheel
+            <SmartWheel
               key={(() => {
                 try {
                   // Use campaign segments instead of element segments
@@ -1261,32 +1327,7 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
                 secondary: extractedColors?.[1] || (campaign as any)?.design?.customColors?.secondary || '#ffffff',
                 accent: extractedColors?.[2] || (campaign as any)?.design?.customColors?.accent || '#4ecdc4'
               }}
-              />
-            </div>
-            {/* Clickable overlay to open the wheel panel (keeps SmartWheel non-interactive) */}
-            {!readOnly && (
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  try { onOpenWheelPanel?.(); } catch {}
-                  try { window.dispatchEvent(new CustomEvent('openWheelPanel')); } catch {}
-                }}
-                onPointerDown={(e) => { e.stopPropagation(); }}
-                aria-label="Open wheel settings"
-                data-wheel-overlay="1"
-                style={{ position: 'absolute', inset: 0, pointerEvents: 'auto', background: 'transparent', zIndex: 50 }}
-              />
-            )}
-          </div>
-        );
-      case 'quiz-template':
-        return (
-          <div className={`${readOnly ? '' : 'cursor-move'}`} style={elementStyle} data-element-type="quiz-template">
-            {/* Quiz supprimé - élément vide */}
-            <div className="w-full h-full bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center text-gray-500">
-              Quiz supprimé
-            </div>
+            />
           </div>
         );
       case 'shape':
@@ -1321,45 +1362,29 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
         );
       default:
         return <div className={`w-20 h-20 bg-gray-300 ${readOnly ? '' : 'cursor-move'}`} style={elementStyle} />;
-      }
-    })();
-
-    if (customRenderers && typeof customRenderers[element.type] === 'function') {
-      try {
-        return customRenderers[element.type]({
-          element,
-          selectedDevice,
-          readOnly: Boolean(readOnly),
-          elementStyle,
-          deviceProps
-        });
-      } catch (error) {
-        console.warn('Custom renderer threw an error for element', element.id, error);
-      }
     }
-
-    return defaultRender;
-  }, [element, deviceProps, isEditing, handleContentEditableInput, handleTextKeyDown, handleTextBlur, readOnly, customRenderers, selectedDevice]);
+  }, [element, deviceProps, isEditing, handleContentEditableInput, handleTextKeyDown, handleTextBlur, readOnly]);
 
   return (
     <div
       ref={elementRef}
       className={`absolute ${
-        isSelected && !readOnly && !isLaunchButton
+        isSelected && !readOnly
           ? (hideControls
               ? ''
               : 'ring-2 ring-[hsl(var(--primary))]')
           : ''
       }`}
       data-element-id={element.id}
+      data-screen-id={screenId ?? undefined}
       style={{
         transform: `translate(${Number(deviceProps.x) || 0}px, ${Number(deviceProps.y) || 0}px) rotate(${typeof element.rotation === 'number' ? element.rotation : 0}deg)`,
         transformOrigin: 'center center',
         opacity: isDragging ? 0.8 : 1,
         zIndex: element.zIndex || 1,
-        transition: 'none',
+        transition: (isDragging || isRotating || isResizing) ? 'none' : 'transform 0.1s linear',
         touchAction: 'none',
-        cursor: readOnly ? 'default' : (isLaunchButton ? 'default' : (isEditing ? 'text' : (isDragging ? 'grabbing' : 'grab'))),
+        cursor: readOnly ? 'default' : (isEditing ? 'text' : (isDragging ? 'grabbing' : 'grab')),
         pointerEvents: readOnly ? 'none' : 'auto',
       }}
       onPointerDown={readOnly ? undefined : handlePointerDown}
@@ -1367,13 +1392,12 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
       onContextMenu={(e) => {
         e.preventDefault();
         e.stopPropagation();
-        console.log('🖱️ Canvas element right-click detected:', element.id);
       }}
     >
       {renderElement}
 
       {/* Selection handles - masqués pendant le drag */}
-      {isSelected && !isDragging && !isResizing && !readOnly && !hideControls && !isEditing && !isLaunchButton && (
+      {isSelected && !isDragging && !isResizing && !readOnly && !hideControls && !isEditing && (
         <div style={{ position: 'absolute', inset: 0, zIndex: 1000 }}>
           {/* Corner handles - for proportional scaling */}
           <div 

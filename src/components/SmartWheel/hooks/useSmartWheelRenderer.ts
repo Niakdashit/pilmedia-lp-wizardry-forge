@@ -73,11 +73,12 @@ export const useSmartWheelRenderer = ({
     return ['/assets/wheel/pointer.svg'];
   };
   const getCenterSourcesForStyle = (name: string): string[] => {
-    const base = ['/assets/wheel/center.svg', '/assets/wheel/center.png'];
+    // Prefer PNG first to avoid 404 noise when only PNG is present locally
+    const base = ['/assets/wheel/center.png', '/assets/wheel/center.svg'];
     if (isSilverStyle(name)) {
       return [
-        '/assets/wheel/center-silver.svg',
         '/assets/wheel/center-silver.png',
+        '/assets/wheel/center-silver.svg',
         ...base
       ];
     }

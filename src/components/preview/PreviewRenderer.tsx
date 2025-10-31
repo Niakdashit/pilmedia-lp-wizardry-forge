@@ -76,6 +76,86 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
   // Hook de synchronisation pour obtenir les données canoniques
   const { getCanonicalPreviewData } = useEditorPreviewSync();
 
+  // Mark body as being in preview to hide any editor-only overlays/controls (zoom slider, screen selector)
+  useEffect(() => {
+    try {
+      document.body.setAttribute('data-in-preview', '1');
+    } catch {}
+    // Aggressively hide any zoom slider/screen selector coming from editor UI
+    const hideEditorControls = () => {
+      try {
+        const sliderCandidates = Array.from(document.querySelectorAll(
+          'input[type="range"], [role="slider"], .rc-slider, .MuiSlider-root, [data-radix-slider-root]'
+        ));
+        sliderCandidates.forEach((el) => {
+          const container = (el as HTMLElement).closest('div,section,aside,nav,footer,header,main');
+          if (container) (container as HTMLElement).style.display = 'none';
+          const next = (el as HTMLElement).nextElementSibling as HTMLElement | null;
+          if (next && (next.tagName === 'SELECT' || next.getAttribute('role') === 'combobox')) {
+            next.style.display = 'none';
+          }
+          // Also hide any sibling selects within same container
+          if (container) {
+            container.querySelectorAll('select,[role="combobox"]').forEach((s) => {
+              (s as HTMLElement).style.display = 'none';
+            });
+          }
+        });
+
+        // Hide French screen selector like "Écran 1/2/3" or "Ecran 1/2/3"
+        const selects = Array.from(document.querySelectorAll('select')) as HTMLSelectElement[];
+        selects.forEach((sel) => {
+          const text = Array.from(sel.options).map(o => (o.text || '').toLowerCase()).join(' | ');
+          if (/écran|ecran/.test(text)) {
+            const container = sel.closest('div,section,aside,nav,footer,header,main');
+            if (container) (container as HTMLElement).style.display = 'none';
+          }
+        });
+
+        // Last resort A: hide any small fixed group bottom-left (common placement for zoom/screen controls)
+        const fixedCandidates = Array.from(document.querySelectorAll('*')) as HTMLElement[];
+        fixedCandidates.forEach((el) => {
+          const cs = window.getComputedStyle(el);
+          if (cs.position === 'fixed') {
+            const rect = el.getBoundingClientRect();
+            if (rect.left <= 40 && rect.bottom >= (window.innerHeight - 120) && rect.width <= 320 && rect.height <= 120) {
+              el.style.display = 'none';
+            }
+          }
+        });
+
+        // Last resort B: sample elements at bottom-left screen area and hide their containers
+        const samplePoints = [
+          { x: 20, y: window.innerHeight - 20 },
+          { x: 60, y: window.innerHeight - 40 },
+          { x: 120, y: window.innerHeight - 60 }
+        ];
+        samplePoints.forEach(({ x, y }) => {
+          const els = (document as any).elementsFromPoint ? (document as any).elementsFromPoint(x, y) : [];
+          (els as HTMLElement[]).forEach((el) => {
+            const txt = (el.innerText || el.textContent || '').toLowerCase();
+            if (/écran|ecran|screen|zoom/.test(txt)) {
+              const container = el.closest('div,section,aside,nav,footer,header,main');
+              if (container) (container as HTMLElement).style.display = 'none';
+            }
+          });
+        });
+      } catch {}
+    };
+
+    hideEditorControls();
+    const mo = new MutationObserver(() => hideEditorControls());
+    try {
+      mo.observe(document.body, { childList: true, subtree: true });
+    } catch {}
+    return () => {
+      try {
+        document.body.removeAttribute('data-in-preview');
+      } catch {}
+      try { mo.disconnect(); } catch {}
+    };
+  }, []);
+
   // Écouter les mises à jour depuis l'éditeur
   useEffect(() => {
     const handleUpdate = (e?: Event) => {
@@ -225,13 +305,17 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
     // Priorité 2: Backgrounds par écran depuis canvasConfig (si non disponible en localStorage)
     const screenBackgrounds = campaign?.canvasConfig?.screenBackgrounds || campaign?.design?.screenBackgrounds;
     if (screenBackgrounds && screenBackgrounds[currentScreen]) {
-      const screenBg = screenBackgrounds[currentScreen];
-      console.log(`✅ [PreviewRenderer] Using screen-specific background for ${currentScreen} (campaign):`, screenBg);
-      if (screenBg.type === 'image' && screenBg.value) {
-        return { background: `url(${screenBg.value}) center/cover no-repeat` };
+      const screenBg: any = screenBackgrounds[currentScreen];
+      const deviceKey = previewMode === 'mobile' ? 'mobile' : (previewMode === 'tablet' ? 'tablet' : 'desktop');
+      // Prefer device-specific override when available
+      const deviceBg = screenBg?.devices?.[deviceKey];
+      const chosenBg = deviceBg && deviceBg.value ? deviceBg : screenBg;
+      console.log(`✅ [PreviewRenderer] Using screen-specific background for ${currentScreen} (${deviceKey}):`, chosenBg);
+      if (chosenBg?.type === 'image' && chosenBg.value) {
+        return { background: `url(${chosenBg.value}) center/cover no-repeat` };
       }
       // If color but empty, use white as default
-      return { background: screenBg.value || '#ffffff' };
+      return { background: chosenBg?.value || '#ffffff' };
     }
 
     // Priorité 3: campaign.canvasConfig.background (preview-only, le plus à jour)
@@ -405,6 +489,33 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
             opacity: 1;
           }
         }
+        /* Hide common editor-only controls in preview */
+        body[data-in-preview="1"] .canvas-zoom,
+        body[data-in-preview="1"] .zoom-control,
+        body[data-in-preview="1"] [data-zoom-control],
+        body[data-in-preview="1"] [aria-label="zoom"],
+        body[data-in-preview="1"] input[type="range"][name*="zoom"],
+        body[data-in-preview="1"] .screen-selector,
+        body[data-in-preview="1"] [data-screen-selector],
+        body[data-in-preview="1"] [data-canvas-controls],
+        body[data-in-preview="1"] .editor-controls,
+        body[data-in-preview="1"] .canvas-toolbar,
+        /* Radix/MUI/rc-slider and generic ARIA slider */
+        body[data-in-preview="1"] [role="slider"],
+        body[data-in-preview="1"] [data-radix-slider-root],
+        body[data-in-preview="1"] .radix-slider-root,
+        body[data-in-preview="1"] .MuiSlider-root,
+        body[data-in-preview="1"] .rc-slider,
+        /* Common container patterns that wrap a slider and a select (screen chooser) */
+        body[data-in-preview="1"] .slider-container,
+        body[data-in-preview="1"] .zoom-slider,
+        body[data-in-preview="1"] .preview-zoom,
+        body[data-in-preview="1"] .preview-controls,
+        body[data-in-preview="1"] .bottom-controls,
+        /* If a select is immediately following a slider (screen selector), hide it */
+        body[data-in-preview="1"] [role="slider"] ~ select {
+          display: none !important;
+        }
       `}</style>
       <div className={constrainedHeight ? "w-full h-full" : "w-full h-[100dvh] min-h-[100dvh]"}>
         <div className="relative w-full h-full">
@@ -421,7 +532,7 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
                 <div className="w-full">
                   <ModuleRenderer
                     modules={logoModules1 as any}
-                    previewMode={!onModuleClick}
+                    previewMode
                     device={previewMode}
                     onModuleClick={onModuleClick}
                   />
@@ -499,7 +610,7 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
                   >
                     <ModuleRenderer
                       modules={modules1 as any}
-                      previewMode={!onModuleClick}
+                      previewMode
                       device={previewMode}
                       onButtonClick={handleParticipate}
                       onModuleClick={onModuleClick}
@@ -526,7 +637,7 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
                 <div className="w-full">
                   <ModuleRenderer
                     modules={footerModules1 as any}
-                    previewMode={!onModuleClick}
+                    previewMode
                     device={previewMode}
                     onModuleClick={onModuleClick}
                   />

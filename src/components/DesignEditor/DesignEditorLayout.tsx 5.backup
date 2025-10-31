@@ -1,0 +1,523 @@
+import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
+import HybridSidebar from './HybridSidebar';
+import DesignCanvas from './DesignCanvas';
+import DesignToolbar from './DesignToolbar';
+import FunnelUnlockedGame from '../funnels/FunnelUnlockedGame';
+import { useAutoResponsive } from '../../hooks/useAutoResponsive';
+import AutoResponsiveIndicator from './components/AutoResponsiveIndicator';
+import ZoomSlider from './components/ZoomSlider';
+import { useEditorStore } from '../../stores/editorStore';
+import { useEnhancedKeyboardShortcuts } from './hooks/useEnhancedKeyboardShortcuts';
+import { useUndoRedo, useUndoRedoShortcuts } from '../../hooks/useUndoRedo';
+import { useWheelConfigSync } from '../../hooks/useWheelConfigSync';
+import PerformanceMonitor from '../ModernEditor/components/PerformanceMonitor';
+import KeyboardShortcutsHelp from '../shared/KeyboardShortcutsHelp';
+import MobileStableEditor from './components/MobileStableEditor';
+import { useDebouncedCallback } from 'use-debounce';
+
+const DesignEditorLayout: React.FC = () => {
+  // Détection automatique de l'appareil
+  const detectDevice = (): 'desktop' | 'tablet' | 'mobile' => {
+    const width = window.innerWidth;
+    if (width >= 1024) return 'desktop';
+    if (width >= 768) return 'tablet';
+    return 'mobile';
+  };
+
+  // Zoom par défaut selon l'appareil
+  const getDefaultZoom = (device: 'desktop' | 'tablet' | 'mobile'): number => {
+    switch (device) {
+      case 'desktop':
+        return 0.7; // 70%
+      case 'tablet':
+        return 0.65; // 65%
+      case 'mobile':
+        return 0.95; // 95%
+      default:
+        return 0.7;
+    }
+  };
+
+  // Store centralisé pour l'optimisation
+  const { 
+    setCampaign,
+    setPreviewDevice,
+    setIsLoading,
+    setIsModified
+  } = useEditorStore();
+
+  // État local pour la compatibilité existante
+  const [selectedDevice, setSelectedDevice] = useState<'desktop' | 'tablet' | 'mobile'>(detectDevice());
+
+  // Gestionnaire de changement d'appareil avec ajustement automatique du zoom
+  const handleDeviceChange = (device: 'desktop' | 'tablet' | 'mobile') => {
+    setSelectedDevice(device);
+    setCanvasZoom(getDefaultZoom(device));
+  };
+
+  // États principaux
+  const [canvasElements, setCanvasElements] = useState<any[]>([]);
+  const [canvasBackground, setCanvasBackground] = useState<{ type: 'color' | 'image'; value: string }>({
+    type: 'color',
+    value: 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)'
+  });
+  const [canvasZoom, setCanvasZoom] = useState(getDefaultZoom(selectedDevice));
+  
+  // Références pour le canvas et le conteneur principal
+  const canvasRef = useRef<HTMLDivElement>(null);
+  const mainContainerRef = useRef<HTMLDivElement>(null);
+  
+  // État pour gérer l'affichage des panneaux dans la sidebar
+  const [showEffectsInSidebar, setShowEffectsInSidebar] = useState(false);
+  const [showAnimationsInSidebar, setShowAnimationsInSidebar] = useState(false);
+  const [showPositionInSidebar, setShowPositionInSidebar] = useState(false);
+  const [campaignConfig, setCampaignConfig] = useState<any>({
+    design: {
+      wheelConfig: {
+        scale: 2
+      }
+    }
+  });
+
+  // État pour l'élément sélectionné
+  const [selectedElement, setSelectedElement] = useState<any>(null);
+  const [extractedColors, setExtractedColors] = useState<string[]>([]);
+  const [showFunnel, setShowFunnel] = useState(false);
+
+  // Fonction pour mettre à jour un élément sélectionné
+  const handleElementUpdate = (updates: any) => {
+    if (selectedElement) {
+      const updatedElement = { ...selectedElement, ...updates };
+      setCanvasElements(prev => 
+        prev.map(el => el.id === selectedElement.id ? updatedElement : el)
+      );
+      setSelectedElement(updatedElement);
+    }
+  };
+  // Utilisation du hook de synchronisation unifié
+  const { wheelModalConfig } = useWheelConfigSync({
+    campaign: campaignConfig,
+    extractedColors,
+    onCampaignChange: setCampaignConfig
+  });
+
+  // Système d'historique pour undo/redo avec le nouveau hook
+  const {
+    addToHistory,
+    undo,
+    redo,
+    canUndo,
+    canRedo,
+    historySize,
+    lastAction
+  } = useUndoRedo({
+    maxHistorySize: 50,
+    onUndo: (restoredCampaign) => {
+      console.log('🔄 Undo: Restauration de la campagne', restoredCampaign);
+      setCampaignConfig(restoredCampaign);
+      setSelectedElement(null);
+    },
+    onRedo: (restoredCampaign) => {
+      console.log('🔄 Redo: Restauration de la campagne', restoredCampaign);
+      setCampaignConfig(restoredCampaign);
+      setSelectedElement(null);
+    },
+    onStateChange: (state, action) => {
+      console.log(`📝 Changement d'état: ${action}`, state);
+      setIsModified(true);
+    }
+  });
+
+  // Raccourcis clavier pour undo/redo
+  useUndoRedoShortcuts(undo, redo, {
+    enabled: true,
+    preventDefault: true
+  });
+    setPreviewDevice(selectedDevice);
+  }, [selectedDevice, setPreviewDevice]);
+
+
+  // Configuration de campagne dynamique optimisée
+  const campaignData = useMemo(() => {
+    // Extraire les éléments du canvas selon leur type et rôle
+    const titleElement = canvasElements.find(el => el.type === 'text' && el.role === 'title');
+    const descriptionElement = canvasElements.find(el => el.type === 'text' && el.role === 'description');
+    const buttonElement = canvasElements.find(el => el.type === 'text' && el.role === 'button');
+    
+    // Séparer les textes et images personnalisés des éléments UI
+    const customTexts = canvasElements.filter(el => 
+      el.type === 'text' && !['title', 'description', 'button'].includes(el.role)
+    );
+    const customImages = canvasElements.filter(el => el.type === 'image');
+
+    return {
+      id: 'wheel-design-preview',
+      type: 'wheel',
+      design: {
+        background: canvasBackground,
+        customTexts: customTexts,
+        customImages: customImages,
+        extractedColors: extractedColors,
+        customColors: {
+          primary: extractedColors[0] || campaignConfig.buttonColor || '#841b60',
+          secondary: extractedColors[1] || '#4ecdc4',
+          accent: extractedColors[2] || '#45b7d1'
+        },
+        wheelConfig: {
+          borderStyle: wheelModalConfig?.wheelBorderStyle || campaignConfig.wheelConfig?.borderStyle || 'classic',
+          borderColor: wheelModalConfig?.wheelBorderColor || campaignConfig.wheelConfig?.borderColor || '#841b60',
+          scale: wheelModalConfig?.wheelScale || campaignConfig.wheelConfig?.scale || 1
+        },
+        wheelBorderStyle: wheelModalConfig?.wheelBorderStyle || campaignConfig.wheelConfig?.borderStyle || 'classic'
+      },
+      gameConfig: {
+        wheel: {
+          segments: [
+            { id: '1', label: 'Prix 1', color: extractedColors[0] || '#841b60', probability: 0.25, isWinning: true },
+            { id: '2', label: 'Prix 2', color: extractedColors[1] || '#4ecdc4', probability: 0.25, isWinning: true },
+            { id: '3', label: 'Prix 3', color: extractedColors[0] || '#841b60', probability: 0.25, isWinning: true },
+            { id: '4', label: 'Dommage', color: extractedColors[1] || '#4ecdc4', probability: 0.25, isWinning: false }
+          ],
+          winProbability: 0.75,
+          maxWinners: 100,
+          buttonLabel: buttonElement?.content || 'Faire tourner'
+        }
+      },
+      buttonConfig: {
+        text: buttonElement?.content || 'Faire tourner',
+        color: extractedColors[0] || campaignConfig.buttonColor || '#841b60',
+        textColor: buttonElement?.style?.color || '#ffffff',
+        borderRadius: campaignConfig.borderRadius || '8px'
+      },
+      screens: [
+        {
+          title: titleElement?.content || 'Tentez votre chance !',
+          description: descriptionElement?.content || 'Tournez la roue et gagnez des prix incroyables',
+          buttonText: buttonElement?.content || 'Jouer'
+        }
+      ],
+      formFields: [
+        { id: 'prenom', label: 'Prénom', type: 'text', required: true },
+        { id: 'nom', label: 'Nom', type: 'text', required: true },
+        { id: 'email', label: 'Email', type: 'email', required: true }
+      ],
+      // Garder la configuration canvas pour compatibilité
+      canvasConfig: {
+        elements: canvasElements,
+        background: canvasBackground,
+        device: selectedDevice
+      }
+    };
+  }, [canvasElements, canvasBackground, campaignConfig, extractedColors, selectedDevice, wheelModalConfig]);
+
+  // Debounced history update pour éviter trop d'entrées
+  const debouncedAddToHistory = useDebouncedCallback((data: any) => {
+    addToHistory(data, 'canvas_update');
+  }, 300);
+
+  // Synchronisation avec le store et historique
+  useEffect(() => {
+    setCampaign(campaignData);
+    debouncedAddToHistory(campaignData);
+  }, [campaignData, setCampaign, debouncedAddToHistory]);
+
+  // Actions optimisées
+  const handleSave = async () => {
+    setIsLoading(true);
+    try {
+      // Simulation de sauvegarde
+      await new Promise(resolve => setTimeout(resolve, 500));
+      setIsModified(false);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handlePreview = () => {
+    setShowFunnel(!showFunnel);
+  };
+
+  // Fonction pour appliquer les couleurs extraites à la roue
+  const handleExtractedColorsChange = (colors: string[]) => {
+    setExtractedColors(colors);
+    
+    // Appliquer automatiquement la couleur extraite (dominante) et le blanc comme seconde couleur
+    if (colors.length >= 1) {
+      setCampaignConfig((prev: any) => {
+        const currentWheelConfig = prev?.design?.wheelConfig;
+        const isClassicBorder = (currentWheelConfig?.borderStyle || 'classic') === 'classic';
+        
+        // Ne mettre à jour la couleur de bordure que si :
+        // 1. Le style est "classic" ET
+        // 2. L'utilisateur n'a pas déjà configuré manuellement une couleur personnalisée différente de la couleur par défaut
+        const shouldUpdateBorderColor = isClassicBorder && 
+          (!currentWheelConfig?.borderColor || currentWheelConfig.borderColor === '#841b60');
+        
+        return {
+          ...prev,
+          design: {
+            ...prev?.design,
+            wheelConfig: {
+              ...currentWheelConfig,
+              ...(shouldUpdateBorderColor && {
+                borderColor: colors[0] || '#841b60'
+              })
+            },
+            brandColors: {
+              primary: colors[0] || '#841b60',
+              secondary: '#ffffff', // Blanc par défaut pour la seconde couleur
+              accent: colors[0] || '#45b7d1'
+            }
+          }
+        };
+      });
+    }
+  };
+
+  // Fonction pour ajouter du texte (inspirée du code HTML)
+  const handleAddText = useCallback((position?: { x: number; y: number }) => {
+    const newTextId = `text-${Date.now()}`;
+    const defaultPosition = position || { x: 200, y: 100 };
+    
+    const newTextElement = {
+      id: newTextId,
+      type: 'text',
+      content: 'Votre texte ici',
+      desktop: {
+        x: defaultPosition.x,
+        y: defaultPosition.y,
+        fontSize: 24,
+        fontFamily: 'Arial',
+        color: '#000000',
+        fontWeight: 'normal',
+        fontStyle: 'normal',
+        textDecoration: 'none',
+        textAlign: 'left'
+      },
+      mobile: {
+        x: defaultPosition.x * 0.8,
+        y: defaultPosition.y * 0.8,
+        fontSize: 20
+      },
+      tablet: {
+        x: defaultPosition.x * 0.9,
+        y: defaultPosition.y * 0.9,
+        fontSize: 22
+      }
+    };
+
+    // Ajouter l'élément aux éléments du canvas
+    setCanvasElements(prev => [...prev, newTextElement]);
+    
+    // Sélectionner automatiquement le nouvel élément
+    setSelectedElement(newTextElement);
+    
+    console.log('🎹 Text element added:', newTextElement);
+  }, [setCanvasElements, setSelectedElement]);
+
+  // Raccourcis clavier améliorés avec techniques du code HTML
+  const { shortcuts } = useEnhancedKeyboardShortcuts({
+    canvasRef,
+    onAddText: handleAddText,
+    onSave: () => {
+      console.log('💾 Save triggered via keyboard shortcut');
+    },
+    onPreview: () => {
+      console.log('👁️ Preview triggered via keyboard shortcut');
+      handlePreview();
+    },
+    onUndo: () => {
+      console.log('↶ Undo triggered via keyboard shortcut');
+      undo();
+    },
+    onRedo: () => {
+      console.log('↷ Redo triggered via keyboard shortcut');
+      redo();
+    },
+    onDuplicate: () => {
+      console.log('📋 Duplicate triggered via keyboard shortcut');
+      if (selectedElement) {
+        const duplicatedElement = {
+          ...selectedElement,
+          id: `${selectedElement.type}-${Date.now()}`,
+          desktop: {
+            ...selectedElement.desktop,
+            x: (selectedElement.desktop?.x || 0) + 20,
+            y: (selectedElement.desktop?.y || 0) + 20
+          }
+        };
+        setCanvasElements(prev => [...prev, duplicatedElement]);
+        setSelectedElement(duplicatedElement);
+      }
+    },
+    onZoomIn: () => {
+      console.log('🔍+ Zoom In triggered via keyboard shortcut');
+      setCanvasZoom(prev => Math.min(prev + 0.1, 3));
+    },
+    onZoomOut: () => {
+      console.log('🔍- Zoom Out triggered via keyboard shortcut');
+      setCanvasZoom(prev => Math.max(prev - 0.1, 0.1));
+    },
+    onZoomReset: () => {
+      console.log('🔍= Zoom Reset triggered via keyboard shortcut');
+      setCanvasZoom(1);
+    },
+    onZoomFit: () => {
+      console.log('🔍📐 Zoom Fit triggered via keyboard shortcut');
+      setCanvasZoom(1);
+    },
+    onToggleFullscreen: () => {
+      console.log('⛶ Fullscreen toggle triggered via keyboard shortcut');
+      // TODO: Implement fullscreen toggle
+    }
+  });
+
+  // Le focus est maintenant géré automatiquement par useEnhancedKeyboardShortcuts
+  // Plus besoin de gestion manuelle du focus
+
+  // Auto-responsive logic
+  const { getAdaptationSuggestions } = useAutoResponsive('desktop');
+  
+  const adaptationSuggestions = useMemo(() => {
+    return getAdaptationSuggestions(canvasElements);
+  }, [canvasElements, getAdaptationSuggestions]);
+
+
+  return (
+    <div 
+      ref={mainContainerRef}
+      className="h-screen bg-gray-50 flex flex-col"
+      tabIndex={0}
+      style={{ outline: 'none' }}
+      onFocus={() => console.log('🎹 DesignEditor focused - shortcuts should work')}
+      onBlur={() => console.log('🎹 DesignEditor lost focus')}
+      onClick={() => {
+        if (mainContainerRef.current) {
+          mainContainerRef.current.focus();
+          console.log('🎹 Container focused on click');
+        }
+      }}
+    >
+      <MobileStableEditor className="h-full flex flex-col">
+      {/* Top Toolbar - Hidden in preview mode */}
+      {!showFunnel && (
+        <>
+          <DesignToolbar 
+            selectedDevice={selectedDevice}
+            onDeviceChange={handleDeviceChange}
+            onPreviewToggle={handlePreview}
+            isPreviewMode={showFunnel}
+          />
+          
+          {/* Bouton d'aide des raccourcis clavier */}
+          <div className="absolute top-4 right-4 z-10">
+            <KeyboardShortcutsHelp shortcuts={shortcuts} />
+          </div>
+        </>
+      )}
+      
+      {/* Main Content */}
+      <div className="flex-1 flex overflow-hidden relative">
+        {showFunnel ? (
+          /* Funnel Preview Mode */
+          <div className={`flex-1 flex items-center justify-center bg-gray-100 group ${
+            selectedDevice === 'tablet' ? 'fixed inset-0 z-40' : ''
+          }`}>
+            {/* Floating Edit Mode Button */}
+            <button
+              onClick={() => setShowFunnel(false)}
+              className="absolute top-4 right-4 z-50 px-4 py-2 bg-gradient-to-br from-[#841b60] to-[#b41b60] text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-[#6b1549]"
+            >
+              Mode édition
+            </button>
+            <FunnelUnlockedGame
+              campaign={campaignData}
+              previewMode={selectedDevice}
+            />
+          </div>
+        ) : (
+          /* Design Editor Mode */
+          <>
+            {/* Hybrid Sidebar - Design & Technical */}
+            <HybridSidebar 
+              onAddElement={(element) => setCanvasElements(prev => [...prev, element])}
+              onBackgroundChange={setCanvasBackground}
+              onExtractedColorsChange={handleExtractedColorsChange}
+              campaignConfig={campaignConfig}
+              onCampaignConfigChange={setCampaignConfig}
+              elements={canvasElements}
+              onElementsChange={setCanvasElements}
+              selectedElement={selectedElement}
+              onElementUpdate={handleElementUpdate}
+              showEffectsPanel={showEffectsInSidebar}
+              onEffectsPanelChange={setShowEffectsInSidebar}
+              showAnimationsPanel={showAnimationsInSidebar}
+              onAnimationsPanelChange={setShowAnimationsInSidebar}
+              showPositionPanel={showPositionInSidebar}
+              onPositionPanelChange={setShowPositionInSidebar}
+              onForceElementsTab={() => {
+                // Cette prop permet d'exposer la fonction globalement
+                return true;
+              }}
+              canvasRef={canvasRef}
+            />
+            
+            {/* Main Canvas Area */}
+            <DesignCanvas 
+              ref={canvasRef}
+              selectedDevice={selectedDevice}
+              elements={canvasElements}
+              onElementsChange={setCanvasElements}
+              background={canvasBackground}
+              campaign={campaignConfig}
+              onCampaignChange={setCampaignConfig}
+              zoom={canvasZoom}
+              selectedElement={selectedElement}
+              onSelectedElementChange={setSelectedElement}
+              onElementUpdate={handleElementUpdate}
+              onShowEffectsPanel={() => {
+                setShowEffectsInSidebar(true);
+                setShowAnimationsInSidebar(false);
+                setShowPositionInSidebar(false);
+              }}
+              onShowAnimationsPanel={() => {
+                setShowAnimationsInSidebar(true);
+                setShowEffectsInSidebar(false);
+                setShowPositionInSidebar(false);
+              }}
+              onShowPositionPanel={() => {
+                setShowPositionInSidebar(true);
+                setShowEffectsInSidebar(false);
+                setShowAnimationsInSidebar(false);
+              }}
+              onOpenElementsTab={() => {
+                // Appeler la fonction globale pour ouvrir l'onglet Elements
+                if ((window as any).forceElementsTab) {
+                  (window as any).forceElementsTab();
+                }
+              }}
+            />
+            
+            {/* Auto-Responsive Indicator - Always visible in bottom right */}
+            <AutoResponsiveIndicator adaptationSuggestions={adaptationSuggestions} />
+            
+            {/* Zoom Slider - Always visible in bottom center */}
+            <ZoomSlider 
+              zoom={canvasZoom}
+              onZoomChange={setCanvasZoom}
+              minZoom={0.25}
+              maxZoom={3}
+              step={0.05}
+            />
+          </>
+        )}
+      </div>
+      
+      {/* Performance Monitor */}
+      <PerformanceMonitor />
+      </MobileStableEditor>
+    </div>
+  );
+};
+
+export default DesignEditorLayout;
