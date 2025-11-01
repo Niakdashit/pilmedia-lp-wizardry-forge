@@ -668,12 +668,6 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
                     data-screen="screen1"
                     style={{ padding: safeZonePadding, boxSizing: 'border-box' }}
                   >
-                    {console.log('📦 [PreviewRenderer] Rendering ModuleRenderer for screen1:', {
-                      modulesCount: modules1.length,
-                      hasOnButtonClick: !!handleParticipate,
-                      isDesignModular,
-                      ModuleRendererType: isDesignModular ? 'DesignModuleRenderer' : 'QuizModuleRenderer'
-                    })}
                     <ModuleRenderer
                       modules={modules1 as any}
                       previewMode={true}

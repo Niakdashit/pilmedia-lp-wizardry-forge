@@ -2151,7 +2151,6 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                           } as any);
                           onShowDesignPanel?.();
                         }}
-                        selectedModuleId={selectedModuleId ?? undefined}
                       />
                       {footerModules.length > 0 && (
                         <div style={{ height: footerVisualHeight }} />

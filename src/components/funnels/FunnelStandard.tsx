@@ -124,9 +124,20 @@ const FunnelStandard: React.FC<GameFunnelProps> = ({ campaign }) => {
   const getGameComponent = () => {
     switch (campaign.type) {
       case 'quiz':
+        // Récupérer les questions depuis plusieurs sources possibles
+        const quizConfig = campaign.gameConfig?.quiz || campaign.quizConfig || {};
+        const questions = quizConfig.questions || campaign.questions || [];
+        
+        console.log('🎯 [FunnelStandard] Quiz config:', {
+          hasGameConfig: !!campaign.gameConfig,
+          hasQuizConfig: !!campaign.quizConfig,
+          questionsCount: questions.length,
+          config: quizConfig
+        });
+        
         return (
           <QuizGame
-            config={campaign.gameConfig?.quiz || {}}
+            config={{ ...quizConfig, questions }}
             design={campaign.design}
           />
         );

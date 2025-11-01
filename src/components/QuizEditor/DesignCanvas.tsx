@@ -14,7 +14,7 @@ import { useSmartSnapping } from '../ModernEditor/hooks/useSmartSnapping';
 import { useAlignmentSystem } from '../DesignEditor/hooks/useAlignmentSystem';
 import { useAdvancedCache } from '../ModernEditor/hooks/useAdvancedCache';
 import { useAdaptiveAutoSave } from '../ModernEditor/hooks/useAdaptiveAutoSave';
-import { useUltraFluidDragDrop } from '../ModernEditor/hooks/useUltraFluidDragDrop';
+// import { useUltraFluidDragDrop } from '../ModernEditor/hooks/useUltraFluidDragDrop';
 import { useVirtualizedCanvas } from '../ModernEditor/hooks/useVirtualizedCanvas';
 import { useEditorStore } from '../../stores/editorStore';
 import CanvasContextMenu from '../DesignEditor/components/CanvasContextMenu';
@@ -3111,7 +3111,6 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                     stopDragging
                   }}
                   customRenderers={customElementRenderers}
-                  safeZonePadding={safeZonePadding}
                 />
               );
             })}

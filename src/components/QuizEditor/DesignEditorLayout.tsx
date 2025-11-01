@@ -1834,7 +1834,7 @@ const handleSaveCampaignName = useCallback(async () => {
     }
   }, [canvasElements]);
   
-  const isArticlePreview = editorMode === 'article' && showFunnel;
+  // const isArticlePreview = editorMode === 'article' && showFunnel;
   const [previewButtonSide, setPreviewButtonSide] = useState<'left' | 'right'>(() =>
     (typeof window !== 'undefined' && localStorage.getItem('previewButtonSide') === 'left') ? 'left' : 'right'
   );
@@ -3665,7 +3665,6 @@ const handleSaveCampaignName = useCallback(async () => {
                       campaign={campaignData}
                       previewMode="mobile"
                       wheelModalConfig={wheelModalConfig}
-                      gameModalConfig={quizModalConfig}
                       constrainedHeight={true}
                     />
                   )}
@@ -3695,7 +3694,6 @@ const handleSaveCampaignName = useCallback(async () => {
                   campaign={campaignData}
                   previewMode={actualDevice === 'desktop' && selectedDevice === 'desktop' ? 'desktop' : selectedDevice}
                   wheelModalConfig={wheelModalConfig}
-                  gameModalConfig={quizModalConfig}
                 />
               )
             )}
