@@ -3111,7 +3111,6 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                     stopDragging
                   }}
                   customRenderers={customElementRenderers}
-                  safeZonePadding={safeZonePadding}
                 />
               );
             })}

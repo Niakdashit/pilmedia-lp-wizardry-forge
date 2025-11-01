@@ -1,5 +1,5 @@
 import React, { useRef, useState, useCallback } from 'react';
-import type { DesignModule, DesignBlocTexte, DesignBlocImage, DesignBlocVideo, DesignBlocBouton, DesignBlocCarte, DesignBlocLogo, DesignBlocPiedDePage } from '@/types/designEditorModular';
+import type { DesignModule, DesignBlocTexte, DesignBlocImage, DesignBlocVideo, DesignBlocBouton, DesignBlocCarte, DesignBlocLogo, DesignBlocPiedDePage, DesignBlocHtml } from '@/types/designEditorModular';
 import type { DeviceType } from '@/utils/deviceDimensions';
 import { getDeviceScale } from '@/utils/deviceDimensions';
 
