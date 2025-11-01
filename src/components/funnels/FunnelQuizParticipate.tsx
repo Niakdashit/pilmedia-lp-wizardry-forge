@@ -175,8 +175,8 @@ const FunnelQuizParticipate: React.FC<FunnelQuizParticipateProps> = ({ campaign,
     // ✅ CRITICAL: Récupérer screenBackgrounds comme dans l'éditeur
     const screenBackgrounds = (campaign as any)?.config?.canvasConfig?.screenBackgrounds 
       || (campaign as any)?.canvasConfig?.screenBackgrounds
-      || storeCampaign?.config?.canvasConfig?.screenBackgrounds
-      || storeCampaign?.canvasConfig?.screenBackgrounds;
+      || (storeCampaign as any)?.config?.canvasConfig?.screenBackgrounds
+      || (storeCampaign as any)?.canvasConfig?.screenBackgrounds;
     
     const screen1Background = screenBackgrounds?.screen1;
     
@@ -235,7 +235,7 @@ const FunnelQuizParticipate: React.FC<FunnelQuizParticipateProps> = ({ campaign,
     const fallbackBg = canvasBackground?.value || design?.background?.value || '#ffffff';
     console.log('⚠️ [FunnelQuizParticipate] Using fallback background:', fallbackBg);
     return { background: fallbackBg };
-  }, [campaign?.design, (campaign as any)?.canvasConfig?.background, (campaign as any)?.config?.canvasConfig?.screenBackgrounds, storeCampaign?.config?.canvasConfig?.screenBackgrounds, previewMode, forceUpdate]);
+  }, [campaign?.design, (campaign as any)?.canvasConfig?.background, (campaign as any)?.config?.canvasConfig?.screenBackgrounds, (storeCampaign as any)?.config?.canvasConfig?.screenBackgrounds, previewMode, forceUpdate]);
 
   // Récupérer directement modularPage pour un rendu unifié
   const campaignAny = campaign as any;

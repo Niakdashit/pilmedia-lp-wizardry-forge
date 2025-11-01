@@ -832,8 +832,8 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
           const pad = Math.max(0, Number(safeZonePadding) || 0);
           const minX = pad;
           const minY = pad;
-          const maxW = Math.max(20, canvasW - pad - minX);
-          const maxH = Math.max(20, canvasH - pad - minY);
+          // const maxW = Math.max(20, canvasW - pad - minX);
+          // const maxH = Math.max(20, canvasH - pad - minY);
           // Clamp X/Y first
           newX = Math.max(minX, newX);
           newY = Math.max(minY, newY);

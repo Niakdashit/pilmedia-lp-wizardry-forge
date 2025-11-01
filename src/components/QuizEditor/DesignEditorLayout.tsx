@@ -1802,7 +1802,7 @@ const handleSaveCampaignName = useCallback(async () => {
     }
   }, [canvasElements]);
   const [showFunnel, setShowFunnel] = useState(false);
-  const isArticlePreview = editorMode === 'article' && showFunnel;
+  // const isArticlePreview = editorMode === 'article' && showFunnel;
   const [currentStep, setCurrentStep] = useState<'article' | 'form' | 'game' | 'result'>('article');
   const [previewButtonSide, setPreviewButtonSide] = useState<'left' | 'right'>(() =>
     (typeof window !== 'undefined' && localStorage.getItem('previewButtonSide') === 'left') ? 'left' : 'right'
