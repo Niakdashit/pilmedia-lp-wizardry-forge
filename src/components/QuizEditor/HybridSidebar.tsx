@@ -665,6 +665,46 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
             buttonTextColor={(campaign?.design?.quizConfig as any)?.style?.buttonTextColor ?? '#000000'}
             buttonHoverBackgroundColor={(campaign?.design?.quizConfig as any)?.style?.buttonHoverBackgroundColor ?? '#9fa4a4'}
             buttonActiveBackgroundColor={(campaign?.design?.quizConfig as any)?.style?.buttonActiveBackgroundColor ?? '#a7acb5'}
+            onBackgroundOpacityChange={(opacity: number) => {
+              setCampaign((prev: any) => {
+                if (!prev) return null;
+                return {
+                  ...prev,
+                  name: prev.name || 'Campaign',
+                  design: {
+                    ...prev.design,
+                    quizConfig: {
+                      ...prev.design?.quizConfig,
+                      style: {
+                        ...prev.design?.quizConfig?.style,
+                        backgroundOpacity: opacity,
+                        // Ensure a background color exists so opacity has a visible effect
+                        backgroundColor: (prev.design?.quizConfig as any)?.style?.backgroundColor || '#ffffff'
+                      }
+                    }
+                  }
+                };
+              });
+            }}
+            onBackgroundColorChange={(color: string) => {
+              setCampaign((prev: any) => {
+                if (!prev) return null;
+                return {
+                  ...prev,
+                  name: prev.name || 'Campaign',
+                  design: {
+                    ...prev.design,
+                    quizConfig: {
+                      ...prev.design?.quizConfig,
+                      style: {
+                        ...prev.design?.quizConfig?.style,
+                        backgroundColor: color
+                      }
+                    }
+                  }
+                };
+              });
+            }}
             onQuizWidthChange={(width: string) => {
               setCampaign((prev: any) => {
                 if (!prev) return null;

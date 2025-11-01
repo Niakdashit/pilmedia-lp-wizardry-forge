@@ -54,12 +54,36 @@ export const useCampaignStateSync = () => {
         
         // Synchroniser la structure modulaire
         ...(editorStates.modularPage !== undefined && {
-          modularPage: editorStates.modularPage
+          modularPage: editorStates.modularPage,
+          // ✅ CRITICAL: Synchroniser aussi dans design.quizModules pour le preview
+          design: {
+            ...(prev.design || {}),
+            quizModules: editorStates.modularPage,
+            designModules: editorStates.modularPage
+          },
+          // ✅ Synchroniser aussi dans config.modularPage pour compatibilité
+          config: {
+            ...(prev.config || {}),
+            modularPage: editorStates.modularPage
+          }
         }),
         
         // Synchroniser les backgrounds par écran
         ...(editorStates.screenBackgrounds !== undefined && {
-          screenBackgrounds: editorStates.screenBackgrounds
+          screenBackgrounds: editorStates.screenBackgrounds,
+          // ✅ CRITICAL: Synchroniser aussi dans config.canvasConfig pour le preview
+          config: {
+            ...(prev.config || {}),
+            canvasConfig: {
+              ...(prev.config?.canvasConfig || {}),
+              screenBackgrounds: editorStates.screenBackgrounds
+            }
+          },
+          // ✅ Synchroniser aussi dans canvasConfig top-level pour compatibilité
+          canvasConfig: {
+            ...(prev.canvasConfig || {}),
+            screenBackgrounds: editorStates.screenBackgrounds
+          }
         }),
         
         // Synchroniser les couleurs extraites

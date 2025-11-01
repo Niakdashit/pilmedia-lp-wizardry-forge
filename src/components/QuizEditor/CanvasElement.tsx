@@ -46,6 +46,8 @@ export interface CanvasElementProps {
   };
   screenId?: CanvasScreenId;
   onTap?: (element: any) => void;
+  // Safe zone padding in canvas units
+  safeZonePadding?: number;
 }
 
 const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
@@ -67,7 +69,8 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
   extractedColors,
   alignmentSystem,
   screenId,
-  onTap
+  onTap,
+  safeZonePadding = 0
 }) => {
   const { getPropertiesForDevice } = useUniversalResponsive('desktop');
   
@@ -332,10 +335,24 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
           sx = snapResult.x;
           sy = snapResult.y;
         }
-
-        // Autoriser le dépassement hors canevas: pas de clamp
-        const cx = sx;
-        const cy = sy;
+        // Appliquer le clamp à la zone de sûreté
+        let cx = sx;
+        let cy = sy;
+        const canvasElNow = containerRef?.current as HTMLElement | null;
+        if (canvasElNow) {
+          const vp = getCanvasViewport(canvasElNow);
+          const zNow = vp.zoom || 1;
+          const rectNow = canvasElNow.getBoundingClientRect();
+          const canvasW = rectNow.width / zNow;
+          const canvasH = rectNow.height / zNow;
+          const pad = Math.max(0, Number(safeZonePadding) || 0);
+          const minX = pad;
+          const minY = pad;
+          const maxX = Math.max(minX, canvasW - pad - elW);
+          const maxY = Math.max(minY, canvasH - pad - elH);
+          cx = Math.min(Math.max(cx, minX), maxX);
+          cy = Math.min(Math.max(cy, minY), maxY);
+        }
 
         // Sauvegarder la position pour la fin du drag
         lastDragPosition = { x: cx, y: cy };
@@ -688,9 +705,11 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
             ? (startRight - Math.max(20, targetW))
             : startPosX;
 
-          // Clamp X to canvas bounds based on target width
-          const maxX = Math.max(0, canvasW - Math.max(20, targetW));
-          adjX = Math.min(Math.max(adjX, 0), maxX);
+          // Clamp X to safe zone bounds based on target width
+          const pad = Math.max(0, Number(safeZonePadding) || 0);
+          const minX = pad;
+          const maxX = Math.max(minX, canvasW - pad - Math.max(20, targetW));
+          adjX = Math.min(Math.max(adjX, minX), maxX);
 
           if (elementRef.current) {
             const angleRaw = typeof element.rotation === 'number' ? element.rotation : 0;
@@ -809,7 +828,18 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
             }
           }
 
-          // Clamp dimensions/position to stay within canvas bounds
+          // Clamp dimensions/position to stay within safe zone bounds
+          const pad = Math.max(0, Number(safeZonePadding) || 0);
+          const minX = pad;
+          const minY = pad;
+          const maxW = Math.max(20, canvasW - pad - minX);
+          const maxH = Math.max(20, canvasH - pad - minY);
+          // Clamp X/Y first
+          newX = Math.max(minX, newX);
+          newY = Math.max(minY, newY);
+          // Then clamp width/height so right/bottom stay inside safe zone
+          newWidth = Math.min(newWidth, canvasW - pad - newX);
+          newHeight = Math.min(newHeight, canvasH - pad - newY);
           if (newX < 0) {
             newWidth = Math.max(20, newWidth + newX);
             newX = 0;

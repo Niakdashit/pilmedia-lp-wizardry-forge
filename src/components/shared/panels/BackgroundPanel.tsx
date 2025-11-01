@@ -499,12 +499,12 @@ const BackgroundPanel: React.FC<BackgroundPanelProps> = ({
     // Sync article mode listeners
     try {
       const evtCurrent = new CustomEvent('applyBackgroundCurrentScreen', {
-        detail: { url: finalUrl, screenId: currentScreen, device: selectedDevice }
+        detail: { url: finalUrl, screenId: currentScreen, device: selectedDevice, applyAll: false, fromQuizEditor: true }
       });
       window.dispatchEvent(evtCurrent);
       if (applyToAllScreens) {
         const evtAll = new CustomEvent('applyBackgroundAllScreens', {
-          detail: { url: finalUrl, device: selectedDevice }
+          detail: { url: finalUrl, device: selectedDevice, applyAll: true, fromQuizEditor: true }
         });
         window.dispatchEvent(evtAll);
       }

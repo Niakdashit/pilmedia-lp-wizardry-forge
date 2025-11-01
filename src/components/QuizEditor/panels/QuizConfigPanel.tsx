@@ -74,6 +74,12 @@ const QuizConfigPanel: React.FC<QuizConfigPanelProps> = ({
   const [isEditingRadius, setIsEditingRadius] = React.useState(false);
   const [isEditingZoom, setIsEditingZoom] = React.useState(false);
 
+  // Local state to keep slider thumb responsive while global store updates
+  const [localOpacity, setLocalOpacity] = React.useState(backgroundOpacity);
+  React.useEffect(() => {
+    setLocalOpacity(backgroundOpacity);
+  }, [backgroundOpacity]);
+
   const activeTemplate = React.useMemo(() => {
     return quizTemplates.find((tpl) => tpl.id === selectedTemplate) || quizTemplates[0];
   }, [selectedTemplate]);
@@ -184,13 +190,19 @@ const QuizConfigPanel: React.FC<QuizConfigPanelProps> = ({
                 min="0"
                 max="100"
                 step="1"
-                value={backgroundOpacity}
+                value={localOpacity}
                 onChange={(e) => {
                   const newOpacity = parseInt(e.target.value);
+                  setLocalOpacity(newOpacity);
                   onBackgroundOpacityChange?.(newOpacity);
                   // Émettre un événement pour synchroniser avec TemplatedQuiz
                   const event = new CustomEvent('quizStyleUpdate', {
-                    detail: { backgroundOpacity: newOpacity }
+                    detail: {
+                      backgroundOpacity: newOpacity,
+                      // Important: fournir une couleur de fond par défaut afin que l'opacité soit visible
+                      // lorsque aucune couleur explicite n'a encore été enregistrée côté campagne.
+                      backgroundColor: backgroundColor || '#ffffff'
+                    }
                   });
                   window.dispatchEvent(event);
                 }}
@@ -199,7 +211,7 @@ const QuizConfigPanel: React.FC<QuizConfigPanelProps> = ({
                 aria-label="Transparence (%)"
                 onDoubleClick={(e) => handleRangeDblClick(e, { kind: 'percent' })}
                 style={{
-                  background: `linear-gradient(to right, #841b60 0%, #841b60 ${backgroundOpacity}%, #e5e7eb ${backgroundOpacity}%, #e5e7eb 100%)`
+                  background: `linear-gradient(to right, #841b60 0%, #841b60 ${localOpacity}%, #e5e7eb ${localOpacity}%, #e5e7eb 100%)`
                 }}
               />
               {isEditingOpacity ? (
@@ -233,7 +245,7 @@ const QuizConfigPanel: React.FC<QuizConfigPanelProps> = ({
                   onDoubleClick={() => setIsEditingOpacity(true)}
                   onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setIsEditingOpacity(true); }}
                 >
-                  {backgroundOpacity}%
+                  {localOpacity}%
                 </div>
               )}
             </div>

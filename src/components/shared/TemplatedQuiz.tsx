@@ -367,17 +367,17 @@ const TemplatedQuiz: React.FC<TemplatedQuizProps> = ({
   const getBackgroundWithOpacity = () => {
     // Ne pas masquer l'image de fond d'écran: par défaut, fond transparent
     // N'appliquer une couleur que si elle est explicitement définie par l'utilisateur ou la campagne
-    const explicitBg = currentStyles.backgroundColor || campaign?.design?.quizConfig?.style?.backgroundColor;
-    if (!explicitBg) {
-      return 'transparent';
-    }
+    const explicitBg = currentStyles.backgroundColor ||
+                       campaign?.design?.quizConfig?.style?.backgroundColor ||
+                       template.style.backgroundColor ||
+                       '#ffffff';
 
     const opacityValue = currentStyles.backgroundOpacity ??
                         campaign?.design?.quizConfig?.style?.backgroundOpacity ??
                         100;
 
-    // Les valeurs 0 et 1 doivent être complètement transparentes
-    const opacity = (opacityValue === 0 || opacityValue === 1) ? 0 : opacityValue / 100;
+    // Utiliser directement le pourcentage 0..100 -> 0..1
+    const opacity = Math.max(0, Math.min(1, Number(opacityValue) / 100));
 
     // Convertir la couleur hex en rgba avec opacité
     if (explicitBg.startsWith('#')) {
@@ -389,6 +389,33 @@ const TemplatedQuiz: React.FC<TemplatedQuizProps> = ({
 
     // Si c'est déjà une couleur rgba ou autre format, l'utiliser tel quel
     return explicitBg;
+  };
+
+  // Helper: apply alpha to a color (supports #RRGGBB and rgba)
+  const applyOpacityToColor = (color?: string, alpha?: number): string | undefined => {
+    if (!color) return color;
+    if (alpha == null) return color;
+    if (color.startsWith('#')) {
+      try {
+        const r = parseInt(color.slice(1, 3), 16);
+        const g = parseInt(color.slice(3, 5), 16);
+        const b = parseInt(color.slice(5, 7), 16);
+        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+      } catch {
+        return color;
+      }
+    }
+    if (color.startsWith('rgba')) {
+      return color.replace(/rgba\(([^)]+)\)/, (_, inner) => {
+        const parts = inner.split(',').map((p: string) => p.trim());
+        const [r, g, b] = parts;
+        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+      });
+    }
+    if (color.startsWith('rgb(')) {
+      return color.replace(/rgb\(([^)]+)\)/, (_, inner) => `rgba(${inner}, ${alpha})`);
+    }
+    return color;
   };
 
   const containerStyle: React.CSSProperties = {
@@ -412,7 +439,8 @@ const TemplatedQuiz: React.FC<TemplatedQuizProps> = ({
       const opacityValue = currentStyles.backgroundOpacity ?? 
                           campaign?.design?.quizConfig?.style?.backgroundOpacity ?? 
                           100;
-      return (opacityValue === 0 || opacityValue === 1) ? 'none' : template.style.boxShadow;
+      const alpha = Math.max(0, Math.min(1, Number(opacityValue) / 100));
+      return alpha === 0 ? 'none' : template.style.boxShadow;
     })(),
     fontFamily: template.style.fontFamily,
     margin: 'auto',
@@ -454,7 +482,13 @@ const TemplatedQuiz: React.FC<TemplatedQuizProps> = ({
     whiteSpace: 'normal',
     width: '100%',
     ...(template.questionStyle.background && { 
-      background: template.questionStyle.background 
+      background: (() => {
+        const qOpacityValue = currentStyles.backgroundOpacity ??
+                               campaign?.design?.quizConfig?.style?.backgroundOpacity ??
+                               100;
+        const qAlpha = Math.max(0, Math.min(1, Number(qOpacityValue) / 100));
+        return applyOpacityToColor(template.questionStyle.background as string, qAlpha) as any;
+      })()
     }),
     ...(template.questionStyle.border && { 
       border: template.questionStyle.border 
@@ -492,10 +526,21 @@ const TemplatedQuiz: React.FC<TemplatedQuizProps> = ({
   // Render grid layout for City of Light template
   const renderGridLayout = () => {
     if (!template.hasGrid) return null;
-    
+    // Compute effective alpha from style or campaign (same rule as container)
+    const panelOpacityValue = currentStyles.backgroundOpacity ??
+                              campaign?.design?.quizConfig?.style?.backgroundOpacity ??
+                              100;
+    const panelAlpha = Math.max(0, Math.min(1, Number(panelOpacityValue) / 100));
+    // Choose a base color priority: explicit bg from styles, then campaign, then template default
+    const basePanelBg = currentStyles.backgroundColor ||
+                        campaign?.design?.quizConfig?.style?.backgroundColor ||
+                        (template.panelStyle?.background as string) ||
+                        '#ffffff';
+    const effectivePanelBg = applyOpacityToColor(basePanelBg, panelAlpha);
+
     return (
       <div style={{
-        background: template.panelStyle?.background || '#ffffff',
+        background: effectivePanelBg,
         border: template.panelStyle?.border || '1.5px solid #8E8E8E',
         borderRadius: unifiedBorderRadius,
         padding: template.panelStyle?.padding || '18px',

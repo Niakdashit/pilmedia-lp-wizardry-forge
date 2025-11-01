@@ -235,6 +235,22 @@ const BackgroundPanel: React.FC<BackgroundPanelProps> = ({
           device: selectedDevice
         }
       );
+
+      // Synchroniser aperçu/canvases
+      try {
+        if (applyToAllScreens) {
+          window.dispatchEvent(new CustomEvent('applyBackgroundAllScreens', {
+            detail: { url: color, device: selectedDevice, applyAll: true, fromEditor: true }
+          }));
+        } else {
+          window.dispatchEvent(new CustomEvent('applyBackgroundCurrentScreen', {
+            detail: { url: color, device: selectedDevice, screenId: currentScreen, applyAll: false, fromEditor: true }
+          }));
+          window.dispatchEvent(new CustomEvent('clearBackgroundOtherScreens', {
+            detail: { device: selectedDevice, keepScreenId: currentScreen }
+          }));
+        }
+      } catch {}
       
       // Émettre un événement pour synchroniser avec TemplatedQuiz et FunnelQuizParticipate
       const event = new CustomEvent('quizStyleUpdate', {
@@ -470,6 +486,22 @@ const BackgroundPanel: React.FC<BackgroundPanelProps> = ({
             device: selectedDevice
           }
         );
+
+        // Sync events for canvases/preview
+        try {
+          if (applyToAllScreens) {
+            window.dispatchEvent(new CustomEvent('applyBackgroundAllScreens', {
+              detail: { url: imageUrl, device: selectedDevice, applyAll: true, fromEditor: true }
+            }));
+          } else {
+            window.dispatchEvent(new CustomEvent('applyBackgroundCurrentScreen', {
+              detail: { url: imageUrl, device: selectedDevice, screenId: currentScreen, applyAll: false, fromEditor: true }
+            }));
+            window.dispatchEvent(new CustomEvent('clearBackgroundOtherScreens', {
+              detail: { device: selectedDevice, keepScreenId: currentScreen }
+            }));
+          }
+        } catch {}
         
         // Extract colors from the uploaded image
         const extractedColors = await extractColorsFromImage(imageUrl);

@@ -78,10 +78,23 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
     document.body.style.height = '100vh';
     document.body.style.margin = '0';
 
+    // Suppress CSS transitions/animations briefly on mount to avoid initial flicker when restoring saved campaigns
+    let styleEl: HTMLStyleElement | null = null;
+    try {
+      styleEl = document.createElement('style');
+      styleEl.setAttribute('data-no-anim', 'true');
+      styleEl.textContent = `* { transition: none !important; animation: none !important; }`;
+      document.head.appendChild(styleEl);
+      setTimeout(() => {
+        try { if (styleEl && styleEl.parentNode) styleEl.parentNode.removeChild(styleEl); } catch {}
+      }, 300);
+    } catch {}
+
     return () => {
       document.body.style.background = previousBackground;
       document.body.style.height = previousHeight;
       document.body.style.margin = previousMargin;
+      try { if (styleEl && styleEl.parentNode) styleEl.parentNode.removeChild(styleEl); } catch {}
     };
   }, []);
   

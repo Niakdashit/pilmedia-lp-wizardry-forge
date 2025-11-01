@@ -274,12 +274,25 @@ export const useCanvasZoom = ({
     canvasRef
   ]);
 
+  // Avoid initial flicker: disable transform transition until after first stable frame
+  const [isTransitionReady, setIsTransitionReady] = useState(false);
+  useEffect(() => {
+    // Two rAFs + small timeout to ensure layout is stabilized
+    let mounted = true;
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        setTimeout(() => { if (mounted) setIsTransitionReady(true); }, 100);
+      });
+    });
+    return () => { mounted = false; };
+  }, []);
+
   // Style CSS pour appliquer la transformation
   const canvasStyle = {
     transform: `scale(${zoomState.scale}) translate(${zoomState.translateX / zoomState.scale}px, ${zoomState.translateY / zoomState.scale}px)`,
     transformOrigin: '0 0',
-    transition: isPanning ? 'none' : 'transform 0.1s ease-out'
-  };
+    transition: (isPanning || !isTransitionReady) ? 'none' : 'transform 0.1s ease-out'
+  } as const;
 
   return {
     zoomState,

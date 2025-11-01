@@ -1220,6 +1220,15 @@ useEffect(() => {
   
   // État pour tracker la position de scroll (quel écran est visible)
   const [currentScreen, setCurrentScreen] = useState<'screen1' | 'screen2'>('screen1');
+
+  // Garder l'overlay aligné avec le background par écran (persistance après aperçu)
+  useEffect(() => {
+    const devBg = (screenBackgrounds as any)?.[currentScreen]?.devices?.[selectedDevice];
+    const cur = devBg || (screenBackgrounds as any)?.[currentScreen];
+    if (cur && typeof cur === 'object' && cur.type && cur.value !== undefined) {
+      setCanvasBackground(cur as any);
+    }
+  }, [currentScreen, selectedDevice, screenBackgrounds]);
   const selectedModule: Module | null = useMemo(() => {
     if (!selectedModuleId) return null;
     const allModules = (Object.values(modularPage.screens) as Module[][]).flat();
@@ -1774,7 +1783,8 @@ useEffect(() => {
         screen1: bg,
         screen2: bg
       });
-      setCanvasBackground(bg); // Fallback global
+      try { if (bg?.type === 'image') window.dispatchEvent(new CustomEvent('applyBackgroundAllScreens', { detail: { url: bg.value, device: options?.device || selectedDevice, applyAll: true, fromEditor: true } })); } catch {}
+      setCanvasBackground(bg); // Fallback global utile en mode édition
     } else if (options?.screenId && options?.device) {
       // 📱 Appliquer uniquement à l'écran ET appareil spécifiés
       console.log(`✅ Applying background to ${options.screenId} on ${options.device} ONLY`);
@@ -1803,6 +1813,14 @@ useEffect(() => {
           [screenKey]: newScreenBg
         };
       });
+      // Émettre les évènements pour mise à jour preview et autres canvases
+      try {
+        if (bg?.type === 'image') {
+          window.dispatchEvent(new CustomEvent('applyBackgroundCurrentScreen', { detail: { url: bg.value, device: options.device, screenId: options.screenId, applyAll: false, fromEditor: true } }));
+          window.dispatchEvent(new CustomEvent('clearBackgroundOtherScreens', { detail: { device: options.device, keepScreenId: options.screenId } }));
+        }
+      } catch {}
+      // Ne PAS toucher à canvasBackground global ici pour éviter héritage
     } else if (options?.screenId) {
       // Appliquer uniquement à l'écran spécifié (tous devices)
       console.log(`✅ Applying background to ${options.screenId} ONLY`);

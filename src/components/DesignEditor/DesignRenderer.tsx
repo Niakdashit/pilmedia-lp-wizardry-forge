@@ -258,6 +258,37 @@ export const DesignModuleRenderer: React.FC<DesignModuleRendererProps & { onModu
       );
     }
 
+    // BlocHtml - render custom HTML (e.g., iframes, embeds) with responsive aspect ratio
+    if (m.type === 'BlocHtml') {
+      const htmlModule = m as DesignBlocHtml;
+      const align = htmlModule.align || 'center';
+      const justifyContent = align === 'left' ? 'flex-start' : align === 'right' ? 'flex-end' : 'center';
+      const minHeight = typeof htmlModule.minHeight === 'number' ? Math.max(40, Math.round(htmlModule.minHeight * deviceScale)) : undefined;
+
+      // Use original HTML directly; scale to container width without forcing height
+      const html = htmlModule.html || '';
+      const containerHeight = minHeight ?? Math.round(300 * deviceScale);
+
+      return (
+        <div
+          key={m.id}
+          style={{
+            ...commonStyle,
+            paddingTop: scaleValue((htmlModule as any).spacingTop, 0),
+            paddingBottom: scaleValue((htmlModule as any).spacingBottom, 0)
+          }}
+          onClick={() => !previewMode && onModuleClick?.(m.id)}
+        >
+          <div style={{ display: 'flex', justifyContent, width: '100%' }}>
+            <div style={{ width: '100%', maxWidth: 960, height: containerHeight }}>
+              <style>{`.html-embed iframe, .html-embed embed, .html-embed object { max-width: 100% !important; width: 100% !important; height: 100% !important; border: 0; display: block; }`}</style>
+              <div className="html-embed" style={{ width: '100%', height: '100%' }} dangerouslySetInnerHTML={{ __html: html }} />
+            </div>
+          </div>
+        </div>
+      );
+    }
+
     // BlocImage
     if (m.type === 'BlocImage') {
       const imageModule = m as DesignBlocImage;

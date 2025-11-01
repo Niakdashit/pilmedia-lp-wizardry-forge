@@ -172,22 +172,47 @@ const FunnelQuizParticipate: React.FC<FunnelQuizParticipateProps> = ({ campaign,
     const design = (campaign.design as any);
     const canvasBackground = (campaign as any)?.canvasConfig?.background || design?.background;
     
+    // ✅ CRITICAL: Récupérer screenBackgrounds comme dans l'éditeur
+    const screenBackgrounds = (campaign as any)?.config?.canvasConfig?.screenBackgrounds 
+      || (campaign as any)?.canvasConfig?.screenBackgrounds
+      || storeCampaign?.config?.canvasConfig?.screenBackgrounds
+      || storeCampaign?.canvasConfig?.screenBackgrounds;
+    
+    const screen1Background = screenBackgrounds?.screen1;
+    
     // Debug: log pour voir ce qu'on reçoit
     console.log('🖼️ [FunnelQuizParticipate] Background debug:', {
       previewMode,
+      screen1Background,
       designBackground: design?.background,
       canvasBackground,
       designBackgroundImage: design?.backgroundImage,
       designMobileBackgroundImage: design?.mobileBackgroundImage
     });
     
-    // PRIORITÉ 1: Vérifier si design.background est un objet image
+    // ✅ PRIORITÉ 1: Utiliser screenBackgrounds.screen1 (comme dans l'éditeur)
+    if (screen1Background) {
+      if (screen1Background.type === 'image' && screen1Background.value) {
+        console.log('✅ [FunnelQuizParticipate] Using screen1Background.value:', screen1Background.value.substring(0, 50) + '...');
+        return { background: `url(${screen1Background.value}) center/cover no-repeat` };
+      }
+      if (screen1Background.type === 'color' && screen1Background.value) {
+        console.log('✅ [FunnelQuizParticipate] Using screen1Background color:', screen1Background.value);
+        return { background: screen1Background.value };
+      }
+      if (screen1Background.type === 'gradient' && screen1Background.value) {
+        console.log('✅ [FunnelQuizParticipate] Using screen1Background gradient:', screen1Background.value);
+        return { background: screen1Background.value };
+      }
+    }
+    
+    // PRIORITÉ 2: Vérifier si design.background est un objet image
     if (design?.background && typeof design.background === 'object' && design.background.type === 'image' && design.background.value) {
       console.log('✅ [FunnelQuizParticipate] Using design.background.value:', design.background.value.substring(0, 50) + '...');
       return { background: `url(${design.background.value}) center/cover no-repeat` };
     }
     
-    // PRIORITÉ 2: Vérifier les propriétés backgroundImage/mobileBackgroundImage
+    // PRIORITÉ 3: Vérifier les propriétés backgroundImage/mobileBackgroundImage
     let backgroundImageUrl: string | undefined;
     if (previewMode === 'mobile') {
       backgroundImageUrl = design?.mobileBackgroundImage || design?.backgroundImage;
@@ -200,7 +225,7 @@ const FunnelQuizParticipate: React.FC<FunnelQuizParticipateProps> = ({ campaign,
       return { background: `url(${backgroundImageUrl}) center/cover no-repeat` };
     }
     
-    // PRIORITÉ 3: Vérifier canvasBackground
+    // PRIORITÉ 4: Vérifier canvasBackground
     if (canvasBackground?.type === 'image' && canvasBackground?.value) {
       console.log('✅ [FunnelQuizParticipate] Using canvasBackground.value:', canvasBackground.value.substring(0, 50) + '...');
       return { background: `url(${canvasBackground.value}) center/cover no-repeat` };
@@ -210,14 +235,26 @@ const FunnelQuizParticipate: React.FC<FunnelQuizParticipateProps> = ({ campaign,
     const fallbackBg = canvasBackground?.value || design?.background?.value || '#ffffff';
     console.log('⚠️ [FunnelQuizParticipate] Using fallback background:', fallbackBg);
     return { background: fallbackBg };
-  }, [campaign?.design, (campaign as any)?.canvasConfig?.background, previewMode, forceUpdate]);
+  }, [campaign?.design, (campaign as any)?.canvasConfig?.background, (campaign as any)?.config?.canvasConfig?.screenBackgrounds, storeCampaign?.config?.canvasConfig?.screenBackgrounds, previewMode, forceUpdate]);
 
   // Récupérer directement modularPage pour un rendu unifié
   const campaignAny = campaign as any;
   const storeCampaignAny = storeCampaign as any;
   
-  // Priorité: utiliser storeCampaign (synchronisé) plutôt que campaign (props)
-  const modularPage = storeCampaignAny?.modularPage || campaignAny?.modularPage || { screens: { screen1: [], screen2: [], screen3: [] }, _updatedAt: Date.now() };
+  // ✅ CRITICAL: Chercher les modules dans TOUS les emplacements possibles
+  // Priorité 1: storeCampaign (synchronisé en temps réel)
+  // Priorité 2: design.quizModules (sauvegarde QuizEditor)
+  // Priorité 3: design.designModules (sauvegarde DesignEditor)
+  // Priorité 4: config.modularPage (ancienne sauvegarde)
+  // Priorité 5: modularPage top-level (fallback)
+  const modularPage = storeCampaignAny?.modularPage 
+    || storeCampaignAny?.design?.quizModules 
+    || storeCampaignAny?.design?.designModules
+    || campaignAny?.design?.quizModules
+    || campaignAny?.design?.designModules
+    || campaignAny?.config?.modularPage
+    || campaignAny?.modularPage 
+    || { screens: { screen1: [], screen2: [], screen3: [] }, _updatedAt: Date.now() };
   const modules = modularPage.screens.screen1 || [];
   const modules2 = modularPage.screens.screen2 || [];
   const modules3 = modularPage.screens.screen3 || [];

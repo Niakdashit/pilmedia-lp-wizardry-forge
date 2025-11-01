@@ -208,15 +208,26 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
   // Choix robuste: pour tout type ≠ 'quiz', privilégier designModules même si modularPage existe
   const isDesignModular = (campaign?.type !== 'quiz' && hasDesignModules) || (!hasQuizModularPage && hasDesignModules);
   
-  // CRITICAL: For temporary campaigns (not yet saved), force empty modules and neutral background
+  // Conserver l'info mais ne pas filtrer sur campagne temporaire
   const isTempCampaign = isTempCampaignId(campaign?.id);
   
-  // Source des modules
-  const modularPage = isTempCampaign 
-    ? { screens: { screen1: [], screen2: [], screen3: [] } }
-    : isDesignModular 
-      ? (campaign?.design?.designModules || canonicalData.modularPage)
-      : ((campaign as any)?.modularPage?.screens ? (campaign as any).modularPage : (campaign?.design?.designModules || canonicalData.modularPage));
+  // Source des modules — alignée avec l'éditeur
+  const modularPage = (
+    // Priorité 1: store/campaign.modularPage
+    (campaign as any)?.modularPage?.screens ? (campaign as any).modularPage : undefined
+  ) || (
+    // Priorité 2: design.quizModules
+    (campaign as any)?.design?.quizModules?.screens ? (campaign as any).design.quizModules : undefined
+  ) || (
+    // Priorité 3: design.designModules (DesignEditor)
+    (campaign as any)?.design?.designModules?.screens ? (campaign as any).design.designModules : undefined
+  ) || (
+    // Priorité 4: config.modularPage
+    (campaign as any)?.config?.modularPage?.screens ? (campaign as any).config.modularPage : undefined
+  ) || (
+    // Priorité 5: données canoniques
+    canonicalData?.modularPage
+  ) || { screens: { screen1: [], screen2: [], screen3: [] } };
   
   console.log('📦 [PreviewRenderer] Loading modules from:', {
     isDesignModular,
@@ -260,6 +271,39 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
   const footerModules3 = allModules3.filter((m: any) => m?.type === 'BlocPiedDePage');
   const modules3 = allModules3.filter((m: any) => m?.type !== 'BlocLogo' && m?.type !== 'BlocPiedDePage');
 
+  // Au montage ou lorsque les données changent, sélectionner automatiquement l'écran qui a du contenu
+  useEffect(() => {
+    try {
+      // Détecter les backgrounds par écran
+      const screenBackgrounds =
+        (campaign as any)?.config?.canvasConfig?.screenBackgrounds
+        || campaign?.canvasConfig?.screenBackgrounds
+        || campaign?.design?.screenBackgrounds
+        || {};
+
+      const hasBg = (s: DesignScreenId) => {
+        const bg: any = screenBackgrounds?.[s];
+        if (!bg) return false;
+        if (bg?.devices && typeof previewMode === 'string') {
+          const dk = previewMode === 'mobile' ? 'mobile' : (previewMode === 'tablet' ? 'tablet' : 'desktop');
+          const db = bg.devices?.[dk];
+          return Boolean(db?.value);
+        }
+        return Boolean(bg?.value);
+      };
+
+      const candidates: Array<{ id: DesignScreenId; score: number }> = [
+        { id: 'screen1', score: (modules1.length ? 2 : 0) + (hasBg('screen1') ? 1 : 0) },
+        { id: 'screen2', score: (modules2.length ? 2 : 0) + (hasBg('screen2') ? 1 : 0) },
+        { id: 'screen3', score: (modules3.length ? 2 : 0) + (hasBg('screen3') ? 1 : 0) }
+      ];
+      const best = candidates.sort((a, b) => b.score - a.score)[0];
+      if (best && best.score > 0 && best.id !== currentScreen) {
+        setCurrentScreen(best.id);
+      }
+    } catch {}
+  }, [modules1.length, modules2.length, modules3.length, campaign?.canvasConfig?.screenBackgrounds, (campaign as any)?.config?.canvasConfig?.screenBackgrounds, campaign?.design?.screenBackgrounds, previewMode]);
+
   // Background style - Privilégier d'abord le localStorage par écran pour robustesse
   const backgroundStyle: React.CSSProperties = useMemo(() => {
     console.log('🎨 [PreviewRenderer] Raw data:', {
@@ -272,11 +316,7 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
       'isTempCampaign': isTempCampaign
     });
     
-    // CRITICAL: For temporary campaigns, force neutral white background
-    if (isTempCampaign) {
-      console.log('🛡️ [PreviewRenderer] Temp campaign detected - forcing blank background');
-      return { background: '#ffffff' };
-    }
+    // Ne pas écraser le fond pour les campagnes temporaires — le preview doit refléter l'éditeur
     
     // Priorité 1: image de fond par écran stockée en session (localStorage) – la plus robuste entre Editor/Preview
     // Using campaign-namespaced keys
@@ -303,7 +343,11 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
     }
 
     // Priorité 2: Backgrounds par écran depuis canvasConfig (si non disponible en localStorage)
-    const screenBackgrounds = campaign?.canvasConfig?.screenBackgrounds || campaign?.design?.screenBackgrounds;
+    const screenBackgrounds =
+      // config.canvasConfig (utilisé par l'éditeur)
+      (campaign as any)?.config?.canvasConfig?.screenBackgrounds
+      || campaign?.canvasConfig?.screenBackgrounds
+      || campaign?.design?.screenBackgrounds;
     if (screenBackgrounds && screenBackgrounds[currentScreen]) {
       const screenBg: any = screenBackgrounds[currentScreen];
       const deviceKey = previewMode === 'mobile' ? 'mobile' : (previewMode === 'tablet' ? 'tablet' : 'desktop');
@@ -314,12 +358,19 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
       if (chosenBg?.type === 'image' && chosenBg.value) {
         return { background: `url(${chosenBg.value}) center/cover no-repeat` };
       }
-      // If color but empty, use white as default
-      return { background: chosenBg?.value || '#ffffff' };
+      // If color and non-empty, apply it; if empty, fall through to global backgrounds
+      if (chosenBg?.type && chosenBg?.value) {
+        return { background: chosenBg.value };
+      }
+      // else: do not return here, continue to global background resolution
     }
 
     // Priorité 3: campaign.canvasConfig.background (preview-only, le plus à jour)
     let bg = campaign?.canvasConfig?.background;
+    // Inclure aussi config.canvasConfig.background
+    if (!bg || (!bg.value && !bg.type)) {
+      bg = (campaign as any)?.config?.canvasConfig?.background || bg;
+    }
     
     // Priorité 4: campaign.design.background (global)
     if (!bg || (!bg.value && !bg.type)) {
@@ -362,8 +413,9 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
     if (bg?.type === 'image' && bg.value) {
       return { background: `url(${bg.value}) center/cover no-repeat` };
     }
-    // Default to white background instead of gradient
-    return { background: bg?.value || '#ffffff' };
+    // Final fallback: appliquer le même dégradé par défaut que l'éditeur Quiz
+    const defaultGradient = 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)';
+    return { background: bg?.value || defaultGradient };
   }, [
     // Dépendre aussi de l'écran courant et du mode pour rafraîchir la lecture localStorage
     currentScreen,
@@ -532,9 +584,10 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
                 <div className="w-full">
                   <ModuleRenderer
                     modules={logoModules1 as any}
-                    previewMode
+                    previewMode={true}
                     device={previewMode}
                     onModuleClick={onModuleClick}
+                    onButtonClick={() => {}}
                   />
                 </div>
               )}
@@ -610,7 +663,7 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
                   >
                     <ModuleRenderer
                       modules={modules1 as any}
-                      previewMode
+                      previewMode={true}
                       device={previewMode}
                       onButtonClick={handleParticipate}
                       onModuleClick={onModuleClick}
@@ -637,9 +690,10 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
                 <div className="w-full">
                   <ModuleRenderer
                     modules={footerModules1 as any}
-                    previewMode
+                    previewMode={true}
                     device={previewMode}
                     onModuleClick={onModuleClick}
+                    onButtonClick={() => {}}
                   />
                 </div>
               )}
@@ -654,7 +708,7 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
                 <div className="w-full">
                   <ModuleRenderer
                     modules={logoModules2 as any}
-                    previewMode={!onModuleClick}
+                    previewMode={true}
                     device={previewMode}
                     onModuleClick={onModuleClick}
                   />
@@ -733,8 +787,9 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
                   >
                     <ModuleRenderer
                       modules={modules2 as any}
-                      previewMode
+                      previewMode={true}
                       device={previewMode}
+                      onButtonClick={() => {}}
                     />
                   </section>
                 )}
@@ -811,7 +866,7 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
                 <div className="w-full">
                   <ModuleRenderer
                     modules={logoModules3 as any}
-                    previewMode
+                    previewMode={true}
                     device={previewMode}
                   />
                 </div>
@@ -957,7 +1012,7 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
                   >
                     <ModuleRenderer
                       modules={modules3 as any}
-                      previewMode
+                      previewMode={true}
                       device={previewMode}
                       onButtonClick={handleReset}
                     />
@@ -970,7 +1025,7 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
                 <div className="w-full">
                   <ModuleRenderer
                     modules={footerModules3 as any}
-                    previewMode
+                    previewMode={true}
                     device={previewMode}
                   />
                 </div>

@@ -137,10 +137,23 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
     document.body.style.height = '100vh';
     document.body.style.margin = '0';
 
+    // Suppress CSS transitions/animations briefly on mount to avoid initial flicker when restoring saved campaigns
+    let styleEl: HTMLStyleElement | null = null;
+    try {
+      styleEl = document.createElement('style');
+      styleEl.setAttribute('data-no-anim', 'true');
+      styleEl.textContent = `* { transition: none !important; animation: none !important; }`;
+      document.head.appendChild(styleEl);
+      setTimeout(() => {
+        try { if (styleEl && styleEl.parentNode) styleEl.parentNode.removeChild(styleEl); } catch {}
+      }, 300);
+    } catch {}
+
     return () => {
       document.body.style.background = previousBackground;
       document.body.style.height = previousHeight;
       document.body.style.margin = previousMargin;
+      try { if (styleEl && styleEl.parentNode) styleEl.parentNode.removeChild(styleEl); } catch {}
     };
   }, []);
   const getTemplateBaseWidths = useCallback((templateId?: string) => {
@@ -341,7 +354,7 @@ useEffect(() => {
           hasDesign: !!data.design,
           hasModules: !!((data.design as any)?.quizModules || (data.config as any)?.modularPage)
         });
-        
+
         // Transform database row to OptimizedCampaign format
         const campaignData: any = {
           ...data,
@@ -372,7 +385,7 @@ useEffect(() => {
 }, [location.search, campaignState, setCampaign, saveToCampaignCache, loadFromCampaignCache]);
   
 // Campaign state synchronization hook
-const { syncAllStates } = useCampaignStateSync();
+const { syncAllStates, syncModularPage } = useCampaignStateSync();
 
   // Nouvelle campagne via header: si aucun id dans l'URL, créer une campagne vierge et activer le flag global
   useEffect(() => {
@@ -870,14 +883,13 @@ useEffect(() => {
   // État pour forcer le re-render du preview quand l'image de fond change
   const [backgroundUpdateTrigger, setBackgroundUpdateTrigger] = useState(0);
 
+  
+
   // Fonction commune pour mettre à jour l'image de fond
   const updateBackgroundImage = useCallback((url: string, targetDevice: string) => {
     console.log('🎨 [QuizEditor] Updating background image:', { url: url.substring(0, 50), targetDevice, selectedDevice });
     
-    // Mettre à jour le background local de l'éditeur seulement si c'est le device actuel
-    if (targetDevice === selectedDevice) {
-      setCanvasBackground({ type: 'image', value: url });
-    }
+    // Ne pas définir canvasBackground global ici: les fonds sont gérés par écran.
     
     // Mettre à jour la campagne globale selon le device ciblé
     try {
@@ -1372,6 +1384,10 @@ const handleSaveCampaignName = useCallback(async () => {
           window.dispatchEvent(new CustomEvent('applyBackgroundAllScreens', { detail: { url: background.value, device: targetDevice } }));
         } else {
           window.dispatchEvent(new CustomEvent('applyBackgroundCurrentScreen', { detail: { url: background.value, device: targetDevice, screenId: targetScreen } }));
+          // Propre: retirer les fonds des autres écrans pour ce device pour éviter toute propagation visuelle
+          try { window.dispatchEvent(new CustomEvent('clearBackgroundOtherScreens', { detail: { device: targetDevice, keepScreenId: targetScreen } })); } catch {}
+          // Important: ne pas laisser un fond global affecter les autres écrans visuellement
+          try { setCanvasBackground({ type: 'color', value: '' }); } catch {}
         }
       } catch {}
     }
@@ -1379,15 +1395,25 @@ const handleSaveCampaignName = useCallback(async () => {
     setCampaign((prev: any) => {
       if (!prev) return prev;
       const design = { ...(prev.design || {}) } as any;
-      if (background.type === 'image') {
-        if (targetDevice === 'mobile') design.mobileBackgroundImage = background.value;
-        else design.backgroundImage = background.value;
+      // IMPORTANT: n'écrire sur design.backgroundImage / mobileBackgroundImage que si on applique à TOUS les écrans.
+      if (applyAll) {
+        if (background.type === 'image') {
+          if (targetDevice === 'mobile') design.mobileBackgroundImage = background.value;
+          else design.backgroundImage = background.value;
+        } else {
+          design.background = background;
+        }
       } else {
-        design.background = background;
+        // Pour un upload écran unique: purger les images globales afin d'éviter toute propagation visuelle
+        if (background.type === 'image') {
+          delete design.backgroundImage;
+          delete design.mobileBackgroundImage;
+        }
       }
       return {
         ...prev,
         design,
+        // Toujours stocker le background par écran dans la config (source de vérité par écran)
         config: { ...(prev.config || {}), canvasConfig: { ...(prev.config?.canvasConfig || {}), screenBackgrounds: nextScreens } }
       };
     });
@@ -1409,8 +1435,12 @@ const handleSaveCampaignName = useCallback(async () => {
       };
       return updated;
     });
+    
+    // ✅ CRITICAL: Synchroniser avec le store Zustand pour que le preview puisse voir les modules
+    syncModularPage(next);
+    
     try { setIsModified(true); } catch {}
-  }, [setIsModified]);
+  }, [setIsModified, syncModularPage]);
 
   const scrollToScreen = useCallback((screen: ScreenId): boolean => {
     const canvasScrollArea = document.querySelector('.canvas-scroll-area') as HTMLElement | null;

@@ -1,6 +1,6 @@
 // @ts-nocheck
 import React, { useRef, useState, useCallback } from 'react';
-import type { Module, BlocTexte, BlocImage, BlocVideo, BlocBouton, BlocCarte, BlocLogo, BlocPiedDePage } from '@/types/modularEditor';
+import type { Module, BlocTexte, BlocImage, BlocVideo, BlocBouton, BlocCarte, BlocLogo, BlocPiedDePage, BlocHtml } from '@/types/modularEditor';
 import type { DeviceType } from '@/utils/deviceDimensions';
 import { STANDARD_DEVICE_DIMENSIONS, getDeviceScale } from '@/utils/deviceDimensions';
 import VideoModule from '@/components/shared/modules/VideoModule';
@@ -346,6 +346,35 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
             onClick={() => !previewMode && onModuleClick?.(m.id)}
             isSelected={selectedModuleId === m.id}
           />
+        </div>
+      );
+    }
+
+    // BlocHtml - render custom HTML (iframes/embeds) inside a fixed-height container
+    if (m.type === 'BlocHtml') {
+      const htmlModule = m as BlocHtml;
+      const align = htmlModule.align || 'center';
+      const justifyContent = align === 'left' ? 'flex-start' : align === 'right' ? 'flex-end' : 'center';
+      const containerHeight = (typeof htmlModule.minHeight === 'number')
+        ? Math.max(40, Math.round(htmlModule.minHeight * deviceScale))
+        : Math.round(300 * deviceScale);
+
+      return (
+        <div
+          key={m.id}
+          style={{
+            ...commonStyle,
+            paddingTop: scaleValue((htmlModule as any).spacingTop, 0),
+            paddingBottom: scaleValue((htmlModule as any).spacingBottom, 0)
+          }}
+          onClick={() => !previewMode && onModuleClick?.(m.id)}
+        >
+          <div style={{ display: 'flex', justifyContent, width: '100%' }}>
+            <div style={{ width: '100%', maxWidth: 960, height: containerHeight }}>
+              <style>{`.html-embed iframe, .html-embed embed, .html-embed object { max-width: 100% !important; width: 100% !important; height: 100% !important; border: 0; display: block; }`}</style>
+              <div className="html-embed" style={{ width: '100%', height: '100%' }} dangerouslySetInnerHTML={{ __html: htmlModule.html || '' }} />
+            </div>
+          </div>
         </div>
       );
     }

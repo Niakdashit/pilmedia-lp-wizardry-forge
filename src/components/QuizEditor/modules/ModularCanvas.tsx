@@ -183,7 +183,7 @@ const renderModule = (m: Module, onUpdate: (patch: Partial<Module>) => void, dev
             previewMode={false}
             device={device}
             onModuleClick={() => {}}
-            onModuleUpdate={(_id, patch) => onUpdate(patch)}
+            onModuleUpdate={(_id, patch) => onUpdate(m.id, patch)}
           />
         </div>
       );
@@ -196,7 +196,7 @@ const renderModule = (m: Module, onUpdate: (patch: Partial<Module>) => void, dev
             previewMode={false}
             device={device}
             onModuleClick={() => {}}
-            onModuleUpdate={(_id, patch) => onUpdate(patch)}
+            onModuleUpdate={(_id, patch) => onUpdate(m.id, patch)}
           />
         </div>
       );
@@ -209,7 +209,7 @@ const renderModule = (m: Module, onUpdate: (patch: Partial<Module>) => void, dev
             previewMode={false}
             device={device}
             onModuleClick={() => {}}
-            onModuleUpdate={(_id, patch) => onUpdate(patch)}
+            onModuleUpdate={(_id, patch) => onUpdate(m.id, patch)}
           />
         </div>
       );

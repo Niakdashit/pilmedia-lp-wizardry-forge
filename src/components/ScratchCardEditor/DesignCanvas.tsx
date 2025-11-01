@@ -522,10 +522,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
           ...prev,
           [targetDevice]: detail.url || null
         }));
-        // Mettre aussi à jour le design global (par device) pour la persistance et le preview
-        try {
-          updateDesign(targetDevice === 'mobile' ? { mobileBackgroundImage: detail.url } : { backgroundImage: detail.url });
-        } catch {}
+        // IMPORTANT: Ne PAS écrire dans le design global ici pour éviter la propagation non désirée
       }
     };
     window.addEventListener('applyBackgroundCurrentScreen', handler as EventListener);
