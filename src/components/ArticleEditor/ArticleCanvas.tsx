@@ -88,6 +88,13 @@ const ArticleCanvas: React.FC<ArticleCanvasProps> = ({
   
   // Rendu du contenu selon l'étape
   const renderStepContent = () => {
+    console.log('🎬 [ArticleCanvas] Rendering step:', {
+      currentStep,
+      campaignType,
+      hasCampaign: !!campaign,
+      campaignId: campaign?.id
+    });
+    
     switch (currentStep) {
       case 'article':
         return (
@@ -203,13 +210,26 @@ const ArticleCanvas: React.FC<ArticleCanvasProps> = ({
                 </div>
               )}
               {campaignType === 'quiz' && campaign && (
-                <ArticleQuiz
-                  campaign={campaign}
-                  onComplete={(result: any) => {
-                    console.log('📝 Quiz completed:', result);
-                    onGameComplete?.();
-                  }}
-                />
+                <>
+                  {console.log('🎮 [ArticleCanvas] Rendering ArticleQuiz', { campaign: campaign?.id })}
+                  <ArticleQuiz
+                    campaign={campaign}
+                    onComplete={(result: any) => {
+                      console.log('📝 Quiz completed:', result);
+                      onGameComplete?.();
+                    }}
+                  />
+                </>
+              )}
+              {campaignType === 'quiz' && !campaign && (
+                <div className="text-center text-red-500 p-8">
+                  ⚠️ Campaign data missing for quiz
+                </div>
+              )}
+              {campaignType !== 'quiz' && campaignType !== 'wheel' && campaignType !== 'jackpot' && campaignType !== 'scratch' && (
+                <div className="text-center text-gray-500 p-8">
+                  ℹ️ Game type: {campaignType}
+                </div>
               )}
             </div>
           </div>

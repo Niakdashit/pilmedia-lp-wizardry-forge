@@ -38,7 +38,7 @@ import { quizTemplates } from '../../types/quizTemplates';
 import { supabase } from '@/integrations/supabase/client';
 // import { CampaignStorage } from '@/utils/campaignStorage';
 import { useAutoSaveToSupabase } from '@/hooks/useAutoSaveToSupabase';
-import { generateTempCampaignId, isTempCampaignId, clearTempCampaignData, replaceTempWithPersistedId } from '@/utils/tempCampaignId';
+import { generateTempCampaignId, isTempCampaignId, isPersistedCampaignId, clearTempCampaignData, replaceTempWithPersistedId } from '@/utils/tempCampaignId';
 
 const KeyboardShortcutsHelp = lazy(() => import('../shared/KeyboardShortcutsHelp'));
 const MobileStableEditor = lazy(() => import('./components/MobileStableEditor'));
@@ -425,58 +425,7 @@ const { syncAllStates, syncModularPage } = useCampaignStateSync();
     }
   }, [location.pathname]);
   
-  // 🧹 CRITICAL: Clean temporary campaigns - keep only Participer and Rejouer buttons
-  useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const id = params.get('campaign');
-    if (!id || !isTempCampaignId(id)) return;
-    
-    console.log('🧹 [QuizEditor] Cleaning temp campaign:', id);
-    
-    // Clear localStorage
-    clearTempCampaignData(id);
-    
-    // Reset background images
-    setCampaign((prev: any) => {
-      if (!prev) return prev;
-      return {
-        ...prev,
-        design: {
-          ...(prev.design || {}),
-          backgroundImage: undefined,
-          mobileBackgroundImage: undefined
-        }
-      };
-    });
-    
-    // Reset backgrounds to color only
-    const defaultBg = { type: 'color' as const, value: '' };
-    setCanvasBackground(defaultBg);
-    setScreenBackgrounds({
-      screen1: defaultBg,
-      screen2: defaultBg,
-      screen3: defaultBg
-    });
-    
-    // Filter modularPage to keep only Participer and Rejouer
-    setModularPage((prev: ModularPage) => {
-      const participerButton = prev.screens.screen1?.find((m: Module) => 
-        m.type === 'BlocBouton' && m.label?.toLowerCase().includes('participer')
-      );
-      const rejouerButton = prev.screens.screen3?.find((m: Module) => 
-        m.type === 'BlocBouton' && m.label?.toLowerCase().includes('rejouer')
-      );
-      
-      return {
-        ...prev,
-        screens: {
-          screen1: participerButton ? [participerButton] : [],
-          screen2: [],
-          screen3: rejouerButton ? [rejouerButton] : []
-        }
-      };
-    });
-  }, [location.search]);
+  
   
   // CRITICAL: Reset all local state when campaign ID changes to ensure complete isolation
   const prevCampaignIdRef = useRef<string | undefined>(undefined);
@@ -1197,6 +1146,89 @@ const handleSaveCampaignName = useCallback(async () => {
   // État pour tracker la position de scroll (quel écran est visible)
   const [currentScreen, setCurrentScreen] = useState<'screen1' | 'screen2' | 'screen3'>('screen1');
   
+  // État pour le funnel article
+  const [currentStep, setCurrentStep] = useState<'article' | 'form' | 'game' | 'result'>('article');
+  const [showFunnel, setShowFunnel] = useState(false);
+
+  // 🧹 CRITICAL: Clean temporary campaigns - keep only Participer and Rejouer buttons
+  // Guard: do NOT run while in Preview (showFunnel), otherwise it wipes screen2 just after we navigate
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const id = params.get('campaign');
+    if (!id || !isTempCampaignId(id)) return;
+    if (showFunnel) return; // skip cleanup during preview to avoid flicker/back-to-screen1
+
+    console.log('🧹 [QuizEditor] Cleaning temp campaign:', id);
+
+    // Clear localStorage
+    clearTempCampaignData(id);
+
+    // Reset background images
+    setCampaign((prev: any) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        design: {
+          ...(prev.design || {}),
+          backgroundImage: undefined,
+          mobileBackgroundImage: undefined
+        }
+      };
+    });
+
+    // Reset backgrounds to color only
+    const defaultBg = { type: 'color' as const, value: '' };
+    setCanvasBackground(defaultBg);
+    setScreenBackgrounds({
+      screen1: defaultBg,
+      screen2: defaultBg,
+      screen3: defaultBg
+    });
+
+    // Filter modularPage to keep only Participer and Rejouer
+    setModularPage((prev: ModularPage) => {
+      const participerButton = prev.screens.screen1?.find((m: Module) =>
+        m.type === 'BlocBouton' && m.label?.toLowerCase().includes('participer')
+      );
+      const rejouerButton = prev.screens.screen3?.find((m: Module) =>
+        m.type === 'BlocBouton' && m.label?.toLowerCase().includes('rejouer')
+      );
+
+      return {
+        ...prev,
+        screens: {
+          screen1: participerButton ? [participerButton] : [],
+          screen2: [],
+          screen3: rejouerButton ? [rejouerButton] : []
+        }
+      };
+    });
+  }, [location.search, showFunnel]);
+
+  // Handlers pour le funnel article
+  const handleCTAClick = useCallback(() => {
+    console.log('🎯 [QuizEditor] CTA clicked, starting quiz (game step)');
+    console.log('🎯 [QuizEditor] Current state before:', { currentStep, showFunnel, editorMode });
+    setCurrentStep('game'); // Quiz IS the game
+    console.log('🎯 [QuizEditor] setCurrentStep called with "game"');
+  }, [currentStep, showFunnel, editorMode]);
+
+  const handleFormSubmit = useCallback((data: Record<string, string>) => {
+    console.log('📝 [QuizEditor] Form submitted:', data);
+    setCurrentStep('result'); // After form, go to result
+  }, []);
+
+  const handleGameComplete = useCallback(() => {
+    console.log('🎮 [QuizEditor] Quiz completed, moving to form');
+    setCurrentStep('form'); // After quiz, show form
+  }, []);
+  
+  // Debug: Logger les changements de currentStep
+  useEffect(() => {
+    console.log('🔄 [QuizEditor] currentStep changed to:', currentStep);
+    console.trace('Stack trace for currentStep change');
+  }, [currentStep]);
+  
   useEffect(() => {
     modularPageRef.current = modularPage;
   }, [modularPage]);
@@ -1801,9 +1833,8 @@ const handleSaveCampaignName = useCallback(async () => {
       console.log('🎯 No selectable elements found on canvas');
     }
   }, [canvasElements]);
-  const [showFunnel, setShowFunnel] = useState(false);
+  
   const isArticlePreview = editorMode === 'article' && showFunnel;
-  const [currentStep, setCurrentStep] = useState<'article' | 'form' | 'game' | 'result'>('article');
   const [previewButtonSide, setPreviewButtonSide] = useState<'left' | 'right'>(() =>
     (typeof window !== 'undefined' && localStorage.getItem('previewButtonSide') === 'left') ? 'left' : 'right'
   );
@@ -1878,6 +1909,20 @@ const handleSaveCampaignName = useCallback(async () => {
     const campaignId = searchParams.get('campaign');
     
     if (campaignId) {
+      // Skip DB loading for temporary campaign IDs to avoid invalid UUID errors
+      if (isTempCampaignId(campaignId)) {
+        console.log('⏭️ [QuizEditor] Skipping DB load for temp campaign id:', campaignId);
+        dataHydratedRef.current = true;
+        setIsLoading(false);
+        return;
+      }
+      // Skip DB loading for non-UUID ids to avoid Postgres 22P02
+      if (!isPersistedCampaignId(campaignId)) {
+        console.log('⏭️ [QuizEditor] Skipping DB load for non-UUID id:', campaignId);
+        dataHydratedRef.current = true;
+        setIsLoading(false);
+        return;
+      }
       console.log('📂 [QuizEditor] Loading existing campaign:', campaignId);
       setIsLoading(true);
       dataHydratedRef.current = false; // Mark that we're starting to load data
@@ -3117,30 +3162,14 @@ const handleSaveCampaignName = useCallback(async () => {
     const nextShowFunnel = !showFunnel;
     setShowFunnel(nextShowFunnel);
 
-    if (editorMode === 'article') {
-      if (!nextShowFunnel) {
-        setCurrentStep('article');
-      }
-    } else if (nextShowFunnel) {
+    if (nextShowFunnel) {
+      // Reset to article step when entering preview
+      setCurrentStep('article');
+    } else if (editorMode === 'article') {
+      setCurrentStep('article');
+    } else {
       setCurrentScreen('screen1');
     }
-  };
-
-  // Funnel progression handlers for Quiz
-  // Quiz flow: Article → Quiz (game) → Form → Result
-  const handleCTAClick = () => {
-    console.log('🎯 [QuizEditor] CTA clicked, starting quiz (game step)');
-    setCurrentStep('game'); // Quiz IS the game
-  };
-
-  const handleFormSubmit = (data: Record<string, string>) => {
-    console.log('📝 [QuizEditor] Form submitted:', data);
-    setCurrentStep('result'); // After form, go to result
-  };
-
-  const handleGameComplete = () => {
-    console.log('🎮 [QuizEditor] Quiz completed, moving to form');
-    setCurrentStep('form'); // After quiz, show form
   };
 
   // Save & Quit with validation modal
@@ -3636,6 +3665,7 @@ const handleSaveCampaignName = useCallback(async () => {
                       campaign={campaignData}
                       previewMode="mobile"
                       wheelModalConfig={wheelModalConfig}
+                      gameModalConfig={quizModalConfig}
                       constrainedHeight={true}
                     />
                   )}
@@ -3665,6 +3695,7 @@ const handleSaveCampaignName = useCallback(async () => {
                   campaign={campaignData}
                   previewMode={actualDevice === 'desktop' && selectedDevice === 'desktop' ? 'desktop' : selectedDevice}
                   wheelModalConfig={wheelModalConfig}
+                  gameModalConfig={quizModalConfig}
                 />
               )
             )}

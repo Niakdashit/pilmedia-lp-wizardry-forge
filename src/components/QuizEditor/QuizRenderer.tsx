@@ -405,9 +405,21 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
     // Important: en mode preview, le CTA principal est géré par FunnelQuizParticipate.
     // On ne rend donc PAS les BlocBouton en preview pour éviter le doublon, SAUF s'il est dans une carte.
     if (m.type === 'BlocBouton') {
-      // Si en preview et qu'il y a un callback, c'est un bouton dans une carte, on le rend
-      if (previewMode && !onButtonClick) return null;
       const buttonModule = m as BlocBouton;
+      
+      console.log('🔘 [QuizRenderer] BlocBouton render check:', {
+        moduleId: m.id,
+        previewMode,
+        hasOnButtonClick: !!onButtonClick,
+        willRender: !(previewMode && !onButtonClick),
+        buttonLabel: buttonModule.label
+      });
+      
+      // Si en preview et qu'il y a un callback, c'est un bouton dans une carte, on le rend
+      if (previewMode && !onButtonClick) {
+        console.log('⚠️ [QuizRenderer] BlocBouton NOT rendered - no onButtonClick in preview mode');
+        return null;
+      }
       
       return (
         <div 
@@ -418,9 +430,17 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
           <a
             href={buttonModule.href || '#'}
             onClick={(e) => {
+              console.log('🎯 [QuizRenderer] BlocBouton clicked!', {
+                previewMode,
+                hasOnButtonClick: !!onButtonClick,
+                buttonLabel: buttonModule.label
+              });
               e.preventDefault();
               if (previewMode && onButtonClick) {
+                console.log('✅ [QuizRenderer] Calling onButtonClick callback');
                 onButtonClick();
+              } else {
+                console.log('⚠️ [QuizRenderer] onButtonClick not called:', { previewMode, hasCallback: !!onButtonClick });
               }
             }}
             className={`inline-flex items-center justify-center px-6 py-3 text-sm transition-transform hover:-translate-y-[1px] ${((buttonModule as any).uppercase) ? 'uppercase' : ''} ${((buttonModule as any).bold) ? 'font-bold' : 'font-semibold'}`}

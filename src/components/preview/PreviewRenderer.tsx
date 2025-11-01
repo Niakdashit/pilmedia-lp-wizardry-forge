@@ -437,13 +437,20 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
     return () => window.removeEventListener('quiz-bg-sync', rerender);
   }, []);
 
+  // Debug: Track currentScreen changes
+  useEffect(() => {
+    console.log('🔄 [PreviewRenderer] currentScreen changed to:', currentScreen);
+  }, [currentScreen]);
+
   // Safe zone padding
   const safeZonePadding = previewMode === 'mobile' ? 28 : previewMode === 'tablet' ? 40 : 56;
 
   // Handlers
   const handleParticipate = () => {
-    console.log('🎮 Participate clicked - Moving to screen2');
+    console.log('🎮 [PreviewRenderer] handleParticipate called!');
+    console.log('🎮 [PreviewRenderer] Current screen before:', currentScreen);
     setCurrentScreen('screen2');
+    console.log('🎮 [PreviewRenderer] setCurrentScreen("screen2") called');
   };
 
   const handleGameFinish = (result: 'win' | 'lose') => {
@@ -661,6 +668,12 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
                     data-screen="screen1"
                     style={{ padding: safeZonePadding, boxSizing: 'border-box' }}
                   >
+                    {console.log('📦 [PreviewRenderer] Rendering ModuleRenderer for screen1:', {
+                      modulesCount: modules1.length,
+                      hasOnButtonClick: !!handleParticipate,
+                      isDesignModular,
+                      ModuleRendererType: isDesignModular ? 'DesignModuleRenderer' : 'QuizModuleRenderer'
+                    })}
                     <ModuleRenderer
                       modules={modules1 as any}
                       previewMode={true}

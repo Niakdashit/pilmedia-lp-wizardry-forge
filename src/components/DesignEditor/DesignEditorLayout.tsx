@@ -1509,35 +1509,19 @@ useEffect(() => {
       nextScreens = { screen1: bg, screen2: bg, screen3: bg } as any;
       setScreenBackgrounds(nextScreens);
       setCanvasBackground(bg); // Fallback global
-    } else if (options?.screenId && options?.device) {
-      // 📱 Appliquer uniquement à l'écran ET appareil spécifiés
-      console.log(`✅ Applying background to ${options.screenId} on ${options.device} ONLY`);
-      const screenKey = options.screenId;
-      const deviceKey = options.device;
-      const currentScreenBg = nextScreens[screenKey];
-      nextScreens = {
-        ...nextScreens,
-        [screenKey]: {
-          ...currentScreenBg,
-          devices: {
-            ...(currentScreenBg?.devices || {}),
-            [deviceKey]: bg,
-          },
-        } as any,
-      };
-      setScreenBackgrounds(nextScreens);
     } else if (options?.screenId) {
-      // Appliquer uniquement à l'écran spécifié (tous devices)
+      // Appliquer uniquement à l'écran spécifié
       console.log(`✅ Applying background to ${options.screenId} ONLY`);
       nextScreens = { ...nextScreens, [options.screenId]: bg } as any;
       setScreenBackgrounds(nextScreens);
       // Ne pas modifier canvasBackground global
     } else {
-      // Pas d'options : comportement par défaut (appliquer globalement)
-      console.log('⚠️ No options provided, applying globally (fallback)');
-      nextScreens = { screen1: bg, screen2: bg, screen3: bg } as any;
+      // Fallback: appliquer à l'écran actuel
+      const currentScreenId = currentScreen || 'screen1';
+      console.log(`✅ No screenId specified, applying to current screen: ${currentScreenId}`);
+      nextScreens = { ...nextScreens, [currentScreenId]: bg } as any;
       setScreenBackgrounds(nextScreens);
-      setCanvasBackground(bg);
+      // Ne pas modifier canvasBackground global
     }
 
     setTimeout(() => {
