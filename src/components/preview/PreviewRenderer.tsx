@@ -2,7 +2,7 @@
 
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import StandardizedWheel from '../shared/StandardizedWheel';
 import TemplatedQuiz from '../shared/TemplatedQuiz';
 import DynamicContactForm, { type FieldConfig } from '../forms/DynamicContactForm';
@@ -49,6 +49,8 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
   const [forceUpdate, setForceUpdate] = useState(0);
   const [showContactForm, setShowContactForm] = useState(false);
   const [hasSubmittedForm, setHasSubmittedForm] = useState(false);
+  // Verrou pour éviter que l'auto-sélection d'écran n'écrase une navigation manuelle (ex: clic Participer)
+  const manualNavRef = useRef(false);
   
   // Lire les messages depuis le store Zustand persistant
   const { messages: storeMessages } = useMessageStore();
@@ -274,6 +276,10 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
   // Au montage ou lorsque les données changent, sélectionner automatiquement l'écran qui a du contenu
   useEffect(() => {
     try {
+      // Si l'utilisateur a navigué manuellement (ex: clic Participer), ne pas écraser son choix
+      if (manualNavRef.current) {
+        return;
+      }
       // Détecter les backgrounds par écran
       const screenBackgrounds =
         (campaign as any)?.config?.canvasConfig?.screenBackgrounds
@@ -449,12 +455,14 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
   const handleParticipate = () => {
     console.log('🎮 [PreviewRenderer] handleParticipate called!');
     console.log('🎮 [PreviewRenderer] Current screen before:', currentScreen);
+    manualNavRef.current = true;
     setCurrentScreen('screen2');
     console.log('🎮 [PreviewRenderer] setCurrentScreen("screen2") called');
   };
 
   const handleGameFinish = (result: 'win' | 'lose') => {
     console.log('🎯 Game finished with result:', result);
+    manualNavRef.current = true;
     setGameResult(result);
     
     // Check if form should be shown before result
@@ -472,6 +480,7 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
 
   const handleReset = () => {
     console.log('🔄 Reset - Back to screen1');
+    manualNavRef.current = false;
     setCurrentScreen('screen1');
     setGameResult(null);
     setHasSubmittedForm(false);
