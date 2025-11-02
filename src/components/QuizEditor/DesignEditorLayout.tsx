@@ -1423,6 +1423,23 @@ const handleSaveCampaignName = useCallback(async () => {
         }
       } catch {}
     }
+    // ✅ Persistance locale et sync pour les COULEURS afin que le Preview reflète immédiatement
+    if (background.type === 'color') {
+      try {
+        const campaignId = (useEditorStore.getState().campaign as any)?.id;
+        if (campaignId) {
+          const deviceKey = targetDevice;
+          const colorKey = `campaign_${campaignId}:bgcolor-${deviceKey}-${targetScreen}`;
+          const imageKey = `campaign_${campaignId}:bg-${deviceKey}-${targetScreen}`;
+          // Sauvegarder la couleur choisie
+          localStorage.setItem(colorKey, background.value || '');
+          // Nettoyer une éventuelle image précédente pour éviter de la réutiliser en preview
+          try { localStorage.removeItem(imageKey); } catch {}
+        }
+      } catch {}
+      // Notifier le preview
+      try { window.dispatchEvent(new CustomEvent('editor-background-sync', { detail: { screenId: targetScreen, device: targetDevice, type: 'color' } })); } catch {}
+    }
 
     setCampaign((prev: any) => {
       if (!prev) return prev;

@@ -1219,6 +1219,7 @@ useEffect(() => {
   const [selectedElements, setSelectedElements] = useState<any[]>([]);
   
   // État pour tracker la position de scroll (quel écran est visible)
+  // Fullscreen mode: supports screen1 (main) and screen2 (exit)
   const [currentScreen, setCurrentScreen] = useState<'screen1' | 'screen2'>('screen1');
 
   // Garder l'overlay aligné avec le background par écran (persistance après aperçu)
@@ -3774,8 +3775,8 @@ useEffect(() => {
               />
             {/* Canvas Scrollable Area */}
             <div
-              className="flex-1 canvas-scroll-area relative z-20 rounded-br-[18px] rounded-bl-none"
-              style={{ borderBottomLeftRadius: '0 !important' }}
+              className="flex-1 canvas-scroll-area relative z-20 rounded-br-[18px] rounded-bl-none bg-white"
+              style={{ borderBottomLeftRadius: '0 !important', backgroundColor: '#ffffff' }}
               onMouseDown={(e) => {
                 // Only left button
                 if (e.button !== 0) return;
@@ -3960,107 +3961,73 @@ useEffect(() => {
                   />
                   )}
                 </div>
-                
-                {/* Deuxième Canvas - Seulement en mode Fullscreen */}
-                {editorMode === 'fullscreen' && (
-                <div className="mt-4 relative" data-screen-anchor="screen2">
-                  {/* Background pour éviter la transparence de la bande magenta */}
-                  <div 
-                    className="absolute inset-0 z-0"
-                    style={{
-                      background: canvasBackground.type === 'image'
-                        ? `url(${canvasBackground.value}) center/cover no-repeat`
-                        : canvasBackground.value || 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)'
-                    }}
-                  />
-                  {/* Background supplémentaire pour l'espace entre les canvas */}
-                  <div 
-                    className="absolute -top-4 left-0 right-0 h-4 z-0"
-                    style={{
-                      background: '#ffffff'
-                    }}
-                  />
-                  <div className="relative z-10">
-                    <DesignCanvas
-                      onElementUpdate={handleElementUpdate}
-                      // Quiz sync props - DISABLED for screen2 (exit message only)
-                      extractedColors={extractedColors}
-                      quizModalConfig={undefined}
-                      hideInlineQuizPreview
-                      containerClassName={mode === 'template' ? 'bg-gray-50' : undefined}
-                      elementFilter={(element: any) => {
-                        // Screen 2 should ONLY show elements explicitly assigned to screen2
-                        // This filters out quiz, form, and other screen1 elements
-                        return element?.screenId === 'screen2';
-                      }}
-                      // Sidebar panel triggers
-                      onShowEffectsPanel={() => {
-                        if (!isWindowMobile) {
-                          setShowEffectsInSidebar(true);
-                          setShowAnimationsInSidebar(false);
-                          setShowPositionInSidebar(false);
-                        }
-                      }}
-                      onShowAnimationsPanel={() => {
-                        if (!isWindowMobile) {
-                          setShowAnimationsInSidebar(true);
-                          setShowEffectsInSidebar(false);
-                          setShowPositionInSidebar(false);
-                        }
-                      }}
-                      onShowDesignPanel={(context?: 'fill' | 'border' | 'text') => {
-                        // Met à jour le contexte immédiatement même si le panneau est déjà ouvert
-                        if (context) {
-                          setDesignColorContext(context);
-                        }
-                        // Toujours ouvrir/forcer l'onglet Design
-                        setShowDesignInSidebar(true);
-                        setShowEffectsInSidebar(false);
-                        setShowAnimationsInSidebar(false);
-                        setShowPositionInSidebar(false);
 
-                        if (sidebarRef.current) {
-                          sidebarRef.current.setActiveTab('background');
-                        }
+                {/* Écran 2 (Sortie) - réintroduit uniquement en mode fullscreen */}
+                {editorMode === 'fullscreen' && (
+                  <div className="mt-4 relative" data-screen-anchor="screen2">
+                    {/* Background pour éviter toute bande visible entre écrans */}
+                    <div
+                      className="absolute inset-0 z-0"
+                      style={{
+                        background:
+                          canvasBackground.type === 'image'
+                            ? `url(${canvasBackground.value}) center/cover no-repeat`
+                            : canvasBackground.value || 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)'
                       }}
-                      onOpenElementsTab={() => {
-                        // Utiliser la même logique que onForceElementsTab
-                        if (sidebarRef.current) {
-                          sidebarRef.current.setActiveTab('elements');
-                        }
-                        // Fermer les autres panneaux
-                        setShowAnimationsInSidebar(false);
-                        setShowPositionInSidebar(false);
-                      }}
-                      // Mobile sidebar integrations
-                      onAddElement={handleAddElement}
-                      onBackgroundChange={handleBackgroundChange}
-                      onExtractedColorsChange={handleExtractedColorsChange}
-                      // Group selection wiring
-                      selectedGroupId={selectedGroupId as any}
-                      onSelectedGroupChange={setSelectedGroupId as any}
-                      onUndo={undo}
-                      onRedo={redo}
-                      canUndo={canUndo}
-                      canRedo={canRedo}
-                      // Quiz panels - DISABLED for screen2
-                      showQuizPanel={false}
-                      onQuizPanelChange={() => {}}
-                      // Modular page (screen2)
-                      modularModules={modularPage.screens.screen2}
-                      onModuleUpdate={handleUpdateModule}
-                      onModuleDelete={handleDeleteModule}
-                      onModuleMove={handleMoveModule}
-                      onModuleDuplicate={handleDuplicateModule}
                     />
+                    {/* Espace blanc masquant la bande entre écrans */}
+                    <div
+                      className="absolute -top-4 left-0 right-0 h-4 z-0 bg-white"
+                      style={{ background: '#ffffff' }}
+                    />
+                    <div className="relative z-10">
+                      <DesignCanvas
+                        editorMode={editorMode}
+                        screenId="screen2"
+                        ref={canvasRef}
+                        selectedDevice={selectedDevice}
+                        elements={canvasElements}
+                        onElementsChange={setCanvasElements}
+                        background={screenBackgrounds.screen2 || canvasBackground}
+                        campaign={memoCampaignData}
+                        onCampaignChange={handleCampaignConfigChange}
+                        zoom={canvasZoom}
+                        enableInternalAutoFit={true}
+                        onZoomChange={setCanvasZoom}
+                        selectedElement={selectedElement}
+                        onSelectedElementChange={debugSetSelectedElement}
+                        selectedElements={selectedElements}
+                        onSelectedElementsChange={setSelectedElements}
+                        onElementUpdate={handleElementUpdate}
+                        extractedColors={extractedColors}
+                        quizModalConfig={undefined}
+                        hideInlineQuizPreview
+                        containerClassName={mode === 'template' ? 'bg-gray-50' : undefined}
+                        elementFilter={(element: any) => element?.screenId === 'screen2'}
+                        onShowEffectsPanel={() => {
+                          if (!isWindowMobile) {
+                            setShowEffectsInSidebar(true);
+                            setShowAnimationsInSidebar(false);
+                            setShowPositionInSidebar(false);
+                          }
+                        }}
+                        modularModules={modularPage.screens.screen2}
+                        onModuleUpdate={handleUpdateModule}
+                        onModuleDelete={handleDeleteModule}
+                        onModuleMove={handleMoveModule}
+                        onModuleDuplicate={handleDuplicateModule}
+                      />
+                    </div>
                   </div>
-                </div>
                 )}
 
-                {/* FormEditor only has 2 screens - screen3 removed */}
+                {/* close min-h-full flex container */}
               </div>
+              {/* close canvas-scroll-area container */}
             </div>
-            {/* Zoom Slider with integrated Screen navigation button */}
+
+              {/* Screen 2 removed in fullscreen mode */}
+                {/* Zoom Slider with integrated Screen navigation button */}
             {!isWindowMobile && (
               <ZoomSlider 
                 zoom={canvasZoom}

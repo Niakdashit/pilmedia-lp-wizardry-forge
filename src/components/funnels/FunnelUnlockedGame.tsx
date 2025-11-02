@@ -168,6 +168,37 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
   const { getPropertiesForDevice } = universalResponsive;
   const safeZonePadding = SAFE_ZONE_PADDING[previewMode] ?? SAFE_ZONE_PADDING.desktop;
   const safeZoneRadius = SAFE_ZONE_RADIUS[previewMode] ?? SAFE_ZONE_RADIUS.desktop;
+
+  // Safe-zone visibility: hidden by default in preview unless explicitly enabled
+  const showSafeZone: boolean = React.useMemo(() => {
+    try {
+      if (typeof window === 'undefined') return false;
+      const sp = new URLSearchParams(window.location.search);
+      if ((window as any).__SHOW_SAFE_ZONE__ === true) return true;
+      return sp.has('guides') || sp.get('safezone') === '1';
+    } catch {
+      return false;
+    }
+  }, []);
+
+  const renderSafeZone = () => {
+    if (!showSafeZone) return null;
+    return (
+      <div
+        className="pointer-events-none absolute inset-0 z-[6]"
+        aria-hidden="true"
+      >
+        <div
+          className="absolute border border-dashed border-white/60"
+          style={{
+            inset: `${safeZonePadding}px`,
+            borderRadius: `${safeZoneRadius}px`,
+            boxShadow: '0 0 0 1px rgba(12, 18, 31, 0.08) inset'
+          }}
+        />
+      </div>
+    );
+  };
   
   // Hook de synchronisation pour obtenir les données canoniques
   const { getCanonicalPreviewData } = useEditorPreviewSync();
@@ -282,17 +313,55 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
   };
 
   // Background style avec synchronisation en temps réel et override par écran (DesignCanvas)
-  // Utilise les données canoniques du hook de synchronisation
+  // Étend les priorités pour inclure couleurs locales et background global miroir
   const backgroundStyle: React.CSSProperties = useMemo(() => {
-    // Priorité 1: Backgrounds par écran depuis campaign
+    // Priorité 0.9: Couleur unie locale (localStorage) pour l'écran courant uniquement
+    try {
+      const campaignId = campaign?.id;
+      if (campaignId && typeof window !== 'undefined') {
+        const deviceKey = previewMode;
+        const curKey = `campaign_${campaignId}:bgcolor-${deviceKey}-${currentScreen}`;
+        const legacyCur = `bgcolor-${deviceKey}-${currentScreen}`;
+        const quizLegacyCur = `quiz-bgcolor-${campaignId}-${deviceKey}-${currentScreen}`;
+        const storedCur = localStorage.getItem(curKey) || localStorage.getItem(legacyCur) || localStorage.getItem(quizLegacyCur);
+        if (storedCur && storedCur.trim().length > 0) {
+          console.log('🎯 [FunnelUnlockedGame] Using stored solid color for CURRENT screen:', { value: storedCur });
+          return { background: storedCur };
+        }
+      }
+    } catch {}
+
+    // Priorité 1: Background global le plus récent depuis campaign.canvasConfig/config.canvasConfig
+    // Seulement si aucun per-screen n'existe
+    try {
+      const sbAny = campaign?.canvasConfig?.screenBackgrounds || campaign?.design?.screenBackgrounds || (campaign as any)?.config?.canvasConfig?.screenBackgrounds;
+      const dk = previewMode;
+      const hasAnyPerScreen = !!sbAny && ['screen1','screen2','screen3'].some((s) => {
+        const bgS: any = (sbAny as any)[s];
+        if (!bgS) return false;
+        const db = bgS?.devices?.[dk];
+        const chosen = db && db.value ? db : bgS;
+        return !!chosen?.value;
+      });
+      const bg = !hasAnyPerScreen ? (campaign?.canvasConfig?.background || (campaign as any)?.config?.canvasConfig?.background) : undefined;
+      if (bg && typeof bg === 'object' && bg.value) {
+        if (bg.type === 'image') return { background: `url(${bg.value}) center/cover no-repeat` };
+        return { background: bg.value };
+      }
+    } catch {}
+
+    // Priorité 1.5: Backgrounds par écran depuis campaign (avec override par device)
     const screenBackgrounds = campaign?.canvasConfig?.screenBackgrounds || campaign?.design?.screenBackgrounds;
     if (screenBackgrounds && screenBackgrounds[currentScreen]) {
-      const screenBg = screenBackgrounds[currentScreen];
-      console.log(`✅ [FunnelUnlockedGame] Using screen-specific background for ${currentScreen}:`, screenBg);
-      if (screenBg.type === 'image' && screenBg.value) {
-        return { background: `url(${screenBg.value}) center/cover no-repeat` };
+      const screenBg: any = screenBackgrounds[currentScreen];
+      const deviceKey = previewMode; // 'desktop' | 'tablet' | 'mobile'
+      const deviceBg = screenBg?.devices?.[deviceKey];
+      const chosen = deviceBg && deviceBg.value ? deviceBg : screenBg;
+      console.log(`✅ [FunnelUnlockedGame] Using screen-specific background for ${currentScreen} (${deviceKey}):`, chosen);
+      if (chosen?.type === 'image' && chosen?.value) {
+        return { background: `url(${chosen.value}) center/cover no-repeat` };
       }
-      return { background: screenBg.value || 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)' };
+      if (chosen?.value) return { background: chosen.value };
     }
     
     // Priorité 2: Per-screen localStorage
@@ -318,7 +387,7 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
       return { background: `url(${canonicalBg.value}) center/cover no-repeat` };
     }
     
-    return { background: canonicalBg.value };
+    return { background: canonicalBg.value || 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)' };
   }, [campaign, currentScreen, previewMode, getCanonicalPreviewData, forceUpdate]);
 
   // Récupérer directement modularPage depuis les données canoniques
@@ -470,8 +539,8 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
     }
     console.log('📦 [FunnelUnlockedGame] Setting gameResult to:', result);
     setGameResult(result);
-    // Afficher l'écran de résultat immédiatement après avoir défini gameResult
-    console.log('✅ [FunnelUnlockedGame] Now showing result screen');
+    // Afficher immédiatement l'écran de résultat (pendant la fenêtre de 4s précédente)
+    console.log('✅ [FunnelUnlockedGame] Showing result screen immediately');
     setShowResultScreen(true);
   };
 
@@ -498,20 +567,7 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
         <div className="relative w-full h-full">
           {/* Background avec TOUT le contenu à l'intérieur - EXACTEMENT comme DesignCanvas */}
           <div className="absolute inset-0" style={backgroundStyle}>
-            {/* Safe zone overlay */}
-            <div
-              className="pointer-events-none absolute inset-0 z-[6]"
-              aria-hidden="true"
-            >
-              <div
-                className="absolute border border-dashed border-white/60"
-                style={{
-                  inset: `${safeZonePadding}px`,
-                  borderRadius: `${safeZoneRadius}px`,
-                  boxShadow: '0 0 0 1px rgba(12, 18, 31, 0.08) inset'
-                }}
-              />
-            </div>
+            {renderSafeZone()}
             
             {/* Content À L'INTÉRIEUR du background */}
             <div 
@@ -561,21 +617,8 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
         <div className="relative w-full h-full">
           {/* Background avec TOUT le contenu à l'intérieur - EXACTEMENT comme DesignCanvas */}
           <div className="absolute inset-0" style={backgroundStyle}>
-            {/* Safe zone overlay */}
-            <div
-              className="pointer-events-none absolute inset-0 z-[6]"
-              aria-hidden="true"
-            >
-              <div
-                className="absolute border border-dashed border-white/60"
-                style={{
-                  inset: `${safeZonePadding}px`,
-                  borderRadius: `${safeZoneRadius}px`,
-                  boxShadow: '0 0 0 1px rgba(12, 18, 31, 0.08) inset'
-                }}
-              />
-            </div>
-            
+            {renderSafeZone()}
+
             {/* Content À L'INTÉRIEUR du background */}
             <div 
               className="relative h-full w-full overflow-y-auto"
@@ -588,47 +631,47 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
               }}
             >
               <div className="flex flex-col h-full">
-              {/* Modules Logo (collés en haut sans padding) */}
-              {logoModules1.length > 0 && (
-                <div className="w-full">
-                  <DesignModuleRenderer
-                    modules={logoModules1 as any}
-                    previewMode
-                    device={previewMode}
-                  />
-                </div>
-              )}
-              
-              {/* Contenu principal - flex-1 pour pousser le footer en bas */}
-              {/* IMPORTANT: Pas de padding ici pour éviter le doublon avec les espacements des modules */}
-              <div className="flex-1 relative">
-                {regularModules1.length > 0 && (
-                  <DesignModuleRenderer
-                    modules={regularModules1 as any}
-                    previewMode
-                    device={previewMode}
-                    onButtonClick={handleGameButtonClick}
-                  />
+                {/* Modules Logo (collés en haut sans padding) */}
+                {logoModules1.length > 0 && (
+                  <div className="w-full">
+                    <DesignModuleRenderer
+                      modules={logoModules1 as any}
+                      previewMode
+                      device={previewMode}
+                    />
+                  </div>
                 )}
-              </div>
-              
-              {/* Modules Footer (collés en bas sans padding) */}
-              {footerModules1.length > 0 && (
-                <div className="w-full">
-                  <DesignModuleRenderer
-                    modules={footerModules1 as any}
-                    previewMode
-                    device={previewMode}
-                  />
+
+                {/* Contenu principal - flex-1 pour pousser le footer en bas */}
+                {/* IMPORTANT: Pas de padding ici pour éviter le doublon avec les espacements des modules */}
+                <div className="flex-1 relative">
+                  {regularModules1.length > 0 && (
+                    <DesignModuleRenderer
+                      modules={regularModules1 as any}
+                      previewMode
+                      device={previewMode}
+                      onButtonClick={handleGameButtonClick}
+                    />
+                  )}
                 </div>
-              )}
+                
+                {/* Modules Footer (collés en bas sans padding) */}
+                {footerModules1.length > 0 && (
+                  <div className="w-full">
+                    <DesignModuleRenderer
+                      modules={footerModules1 as any}
+                      previewMode
+                      device={previewMode}
+                    />
+                  </div>
+                )}
               </div>
             </div>
           </div>
         </div>
       </div>
-    );
-  }
+  );
+}
 
   if (liveCampaign.type === 'scratch') {
     return (
@@ -636,20 +679,7 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
         <div className="relative w-full h-full">
           {/* Background avec TOUT le contenu à l'intérieur - EXACTEMENT comme DesignCanvas */}
           <div className="absolute inset-0" style={backgroundStyle}>
-            {/* Safe zone overlay */}
-            <div
-              className="pointer-events-none absolute inset-0 z-[6]"
-              aria-hidden="true"
-            >
-              <div
-                className="absolute border border-dashed border-white/60"
-                style={{
-                  inset: `${safeZonePadding}px`,
-                  borderRadius: `${safeZoneRadius}px`,
-                  boxShadow: '0 0 0 1px rgba(12, 18, 31, 0.08) inset'
-                }}
-              />
-            </div>
+            {renderSafeZone()}
 
             {/* Content À L'INTÉRIEUR du background */}
             <div 
@@ -703,7 +733,7 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
             )}
 
             {/* ÉCRAN 2 : Cartes visibles (bloquées si formulaire non validé) */}
-            {currentScreen === 'screen2' && gameResult === null && (
+            {currentScreen === 'screen2' && !showResultScreen && (
               <div className="flex flex-col h-full">
               {/* Modules Logo (collés en haut sans padding) */}
               {logoModules2.length > 0 && (
@@ -778,13 +808,12 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
                         </div>
                       )}
                       
-                      {/* Overlay invisible pour intercepter les clics si formulaire non validé */}
+                      {/* Overlay transparent: ouvre le formulaire au clic sans masque visuel */}
                       {!formValidated && (
                         <div 
-                          className="absolute inset-0 cursor-pointer" 
-                          style={{ zIndex: 150, backgroundColor: 'rgba(255,0,0,0.1)' }}
+                          className="absolute inset-0 cursor-pointer"
+                          style={{ zIndex: 150, backgroundColor: 'transparent' }}
                           onClick={(e) => {
-                            console.log('🚫 Overlay clicked - opening form modal');
                             e.preventDefault();
                             e.stopPropagation();
                             handleCardClick();
@@ -819,7 +848,7 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
             )}
 
             {/* ÉCRAN 3 : Après le jeu (gameResult='win' ou 'lose') - Layout identique à l'éditeur */}
-            {gameResult !== null && (
+            {gameResult !== null && showResultScreen && (
               <div className="flex flex-col h-full">
                 {/* Modules Logo (collés en haut sans padding) */}
                 {logoModules3.length > 0 && (

@@ -96,6 +96,47 @@ const ResultScreen: React.FC<ResultScreenProps> = ({
         className="text-center space-y-4 w-full max-w-lg rounded-[2px] border border-black/5"
       >
         <div className="space-y-3">
+          {/* Optional prize image for winners */}
+          {gameResult === 'win' && currentConfig.showPrizeImage && (
+            <div className="w-full flex items-center justify-center pb-2">
+              {(
+                (currentConfig as any).prizeImageUrl ||
+                campaign?.prizeImage?.value ||
+                campaign?.images?.prize
+              ) ? (
+                <img
+                  src={(currentConfig as any).prizeImageUrl || campaign?.prizeImage?.value || campaign?.images?.prize}
+                  alt="Prix gagné"
+                  style={{
+                    maxWidth: '220px',
+                    maxHeight: '160px',
+                    width: '100%',
+                    height: 'auto',
+                    objectFit: 'contain',
+                    borderRadius: 8,
+                    boxShadow: '0 6px 20px rgba(0,0,0,0.12)'
+                  }}
+                />
+              ) : (
+                <div
+                  style={{
+                    width: 96,
+                    height: 96,
+                    borderRadius: 16,
+                    background: 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#7a4b00',
+                    fontSize: 48,
+                    boxShadow: '0 10px 24px rgba(0,0,0,0.15)'
+                  }}
+                >
+                  🏆
+                </div>
+              )}
+            </div>
+          )}
           <h2 className="text-2xl font-bold text-gray-900">
             {currentConfig.title}
           </h2>

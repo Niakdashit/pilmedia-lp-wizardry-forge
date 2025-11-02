@@ -171,6 +171,9 @@ const ArticleCanvas: React.FC<ArticleCanvasProps> = ({
                   onComplete={(prize: string) => {
                     console.log('🎡 Wheel completed with prize:', prize);
                     onGameComplete?.();
+                    if (onStepChange) {
+                      setTimeout(() => onStepChange('result'), 4000);
+                    }
                   }}
                 />
               )}
@@ -180,10 +183,16 @@ const ArticleCanvas: React.FC<ArticleCanvasProps> = ({
                   onWin={(results: string[]) => {
                     console.log('🎰 Jackpot won:', results);
                     onGameComplete?.();
+                    if (onStepChange) {
+                      setTimeout(() => onStepChange('result'), 4000);
+                    }
                   }}
                   onLose={() => {
                     console.log('🎰 Jackpot lost');
                     onGameComplete?.();
+                    if (onStepChange) {
+                      setTimeout(() => onStepChange('result'), 4000);
+                    }
                   }}
                 />
               )}

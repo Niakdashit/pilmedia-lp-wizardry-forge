@@ -986,8 +986,8 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
       case 'messages':
         return (
           <MessagesPanel 
-            campaignConfig={campaignConfig}
-            onCampaignConfigChange={onCampaignConfigChange}
+            campaign={campaign}
+            setCampaign={setCampaign}
           />
         );
       default:

@@ -1641,6 +1641,67 @@ useEffect(() => {
       });
       setCanvasBackground(bg);
     }
+    // 🪞 Miroir immédiat dans la campagne pour que le Preview le voie sans attendre l'autosave
+    // Uniquement si application globale (tous les écrans) ou sans options; pas lors d'une application ciblée écran/appareil
+    try {
+      const shouldMirrorGlobal = Boolean(options?.applyToAllScreens || !options?.screenId);
+      if (shouldMirrorGlobal) {
+        setCampaign((prev: any) => {
+          if (!prev) return prev;
+          const nextCfg = {
+            ...(prev.canvasConfig || {}),
+            background: bg
+          } as any;
+          const next = {
+            ...prev,
+            canvasConfig: nextCfg,
+            config: {
+              ...(prev.config || {}),
+              canvasConfig: {
+                ...((prev.config as any)?.canvasConfig || {}),
+                background: bg
+              }
+            }
+          };
+          return next;
+        });
+        // Notifier le Preview
+        try { window.dispatchEvent(new CustomEvent('editor-background-sync', { detail: { type: bg?.type || 'color' } })); } catch {}
+      } else {
+        // Application ciblée: notifier uniquement pour re-render, sans écraser le global
+        try { window.dispatchEvent(new CustomEvent('editor-background-sync', { detail: { type: bg?.type || 'color', targeted: true } })); } catch {}
+      }
+    } catch {}
+    // ✅ Si couleur unie: persister + forcer un fallback global cohérent pour le Preview
+    try {
+      if (bg?.type === 'color') {
+        const campaignId = (useEditorStore.getState().campaign as any)?.id as string | undefined;
+        const deviceKey = (options?.device || selectedDevice) as 'desktop' | 'tablet' | 'mobile';
+        const screensToWrite: Array<'screen1'|'screen2'|'screen3'> = options?.applyToAllScreens
+          ? ['screen1','screen2','screen3']
+          : (options?.screenId ? [options.screenId] : ['screen1','screen2','screen3']);
+        if (campaignId) {
+          for (const s of screensToWrite) {
+            const colorKey = `campaign_${campaignId}:bgcolor-${deviceKey}-${s}`;
+            const imageKey = `campaign_${campaignId}:bg-${deviceKey}-${s}`;
+            try { localStorage.setItem(colorKey, bg.value || ''); } catch {}
+            try { localStorage.removeItem(imageKey); } catch {}
+          }
+        }
+        // Mettre à jour un fallback global pour que Preview rende la même couleur même si l'écran auto-sélectionné diffère
+        setCampaign((prev: any) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            design: {
+              ...(prev.design || {}),
+              background: { type: 'color', value: bg.value || '' }
+            }
+          };
+        });
+        try { window.dispatchEvent(new CustomEvent('editor-background-sync', { detail: { screenId: targetScreen, device: deviceKey, type: 'color' } })); } catch {}
+      }
+    } catch {}
     
     setTimeout(() => {
       addToHistory({
@@ -2735,7 +2796,8 @@ useEffect(() => {
 
   const handleGameComplete = () => {
     console.log('🎮 [JackpotEditor] Game completed');
-    setCurrentStep('result');
+    // Delay 4s before showing result to keep the game visible
+    setTimeout(() => setCurrentStep('result'), 4000);
   };
 
   // Save & Quit with validation modal

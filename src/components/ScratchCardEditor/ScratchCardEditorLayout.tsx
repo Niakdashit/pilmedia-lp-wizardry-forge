@@ -1730,7 +1730,55 @@ const handleSaveCampaignName = useCallback(async () => {
       });
       setCanvasBackground(bg);
     }
-    
+
+    // 🪞 Miroir global uniquement si application globale (tous les écrans) ou sans options
+    try {
+      const shouldMirrorGlobal = Boolean(options?.applyToAllScreens || !options?.screenId);
+      if (shouldMirrorGlobal) {
+        setCampaign((prev: any) => {
+          if (!prev) return prev;
+          const nextCfg = {
+            ...(prev.canvasConfig || {}),
+            background: bg
+          } as any;
+          return {
+            ...prev,
+            canvasConfig: nextCfg,
+            config: {
+              ...(prev.config || {}),
+              canvasConfig: {
+                ...((prev.config as any)?.canvasConfig || {}),
+                background: bg
+              }
+            }
+          };
+        });
+      }
+      try { window.dispatchEvent(new CustomEvent('editor-background-sync', { detail: { type: bg?.type || 'color' } })); } catch {}
+    } catch {}
+
+    // ✅ Persistance locale par écran/appareil pour PreviewRenderer/Funnel
+    try {
+      const campaignId = (useEditorStore.getState().campaign as any)?.id as string | undefined;
+      const deviceKey = (options?.device || selectedDevice) as 'desktop' | 'tablet' | 'mobile';
+      const screensToWrite: Array<'screen1'|'screen2'|'screen3'> = options?.applyToAllScreens
+        ? ['screen1','screen2','screen3']
+        : (options?.screenId ? [options.screenId] : ['screen1','screen2','screen3']);
+      if (campaignId) {
+        for (const s of screensToWrite) {
+          const colorKey = `campaign_${campaignId}:bgcolor-${deviceKey}-${s}`;
+          const imageKey = `campaign_${campaignId}:bg-${deviceKey}-${s}`;
+          if (bg?.type === 'color') {
+            try { localStorage.setItem(colorKey, bg.value || ''); } catch {}
+            try { localStorage.removeItem(imageKey); } catch {}
+          } else if (bg?.type === 'image') {
+            try { localStorage.setItem(imageKey, bg.value || ''); } catch {}
+            try { localStorage.removeItem(colorKey); } catch {}
+          }
+        }
+      }
+    } catch {}
+
     setTimeout(() => {
       addToHistory({
         campaignConfig: { ...campaignConfig },

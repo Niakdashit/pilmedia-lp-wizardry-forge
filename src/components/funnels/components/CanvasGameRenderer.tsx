@@ -1,5 +1,5 @@
 // @ts-nocheck
-import React, { useMemo, createPortal } from 'react';
+import React, { useMemo } from 'react';
 import ContrastBackground from '../../common/ContrastBackground';
 import ValidationMessage from '../../common/ValidationMessage';
 import WheelPreview from '../../GameTypes/WheelPreview';
@@ -15,8 +15,9 @@ import { useEditorStore } from '../../../stores/editorStore';
 import FormPreview from '../../GameTypes/FormPreview';
 import CustomElementsRenderer from '../../ModernEditor/components/CustomElementsRenderer';
 
-// Charger SlotJackpot UNE SEULE FOIS en dehors du composant
-const SlotJackpot = React.lazy(() => import('../../SlotJackpot'));
+// Import statique pour éviter les remounts et Suspense en plein spin
+import SlotJackpot from '../../SlotJackpot';
+import FullscreenJackpotPortal from '../../SlotJackpot/FullscreenJackpotPortal';
 
 interface CanvasGameRendererProps {
   campaign: any;
@@ -43,6 +44,7 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
   onGameButtonClick,
   fullScreen = true
 }) => {
+  // Plus de logique portail locale: on utilise un composant singleton dédié pour le fullscreen
   // Configuration du canvas depuis la campagne - essayer plusieurs sources
   const canvasConfig = campaign.canvasConfig || {};
   const canvasElements = canvasConfig.elements || campaign.elements || [];
@@ -327,19 +329,29 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
         effectiveTemplate
       });
       
-      // SlotJackpot est maintenant chargé en haut du fichier pour éviter les re-chargements
+      // En fullscreen, utiliser le portail singleton pour éviter tout unmount
+      if (fullScreen) {
+        return (
+          <FullscreenJackpotPortal
+            templateOverride={effectiveTemplate}
+            symbols={effectiveSymbols}
+            onWin={handleWin}
+            onLose={handleLose}
+          />
+        );
+      }
+
+      // Mode non-fullscreen: rendu direct
       return (
         <div className="absolute inset-0" style={{ zIndex: 10 }}>
-          <React.Suspense fallback={<div>Loading...</div>}>
-            <SlotJackpot
-              key="slotjackpot-stable"
-              templateOverride={effectiveTemplate}
-              symbols={effectiveSymbols}
-              onWin={handleWin}
-              onLose={handleLose}
-              disabled={!formValidated}
-            />
-          </React.Suspense>
+          <SlotJackpot
+            key="slotjackpot-stable"
+            templateOverride={effectiveTemplate}
+            symbols={effectiveSymbols}
+            onWin={handleWin}
+            onLose={handleLose}
+            disabled={!formValidated}
+          />
         </div>
       );
     }
@@ -445,8 +457,9 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
           {renderGameComponent()}
         </div>
 
-        {/* Overlay pour déclencher le formulaire si pas validé */}
-        {!formValidated && displayMode !== 'embedded' && ['wheel', 'scratch', 'jackpot'].includes(campaign.type) && (
+        {/* Overlay pour déclencher le formulaire si pas validé
+           - En fullscreen pour le jackpot, on saute l'overlay pour que le premier clic lance directement le jeu */}
+        {!formValidated && displayMode !== 'embedded' && ['wheel', 'scratch', 'jackpot'].includes(campaign.type) && !(fullScreen && campaign.type === 'jackpot') && (
           <div 
             onClick={() => {
               console.log('Canvas overlay clicked - triggering form');

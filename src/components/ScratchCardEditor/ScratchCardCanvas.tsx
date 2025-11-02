@@ -283,29 +283,7 @@ const ScratchCardCanvas: React.FC<ScratchCardCanvasProps> = ({
         padding: 0
       }}
     >
-      {/* Reset button (visible only in edit mode) */}
-      {!previewMode && (
-        <button
-          onClick={handleResetAllCards}
-          className="sc-reset-button"
-          style={{
-            position: 'absolute',
-            top: containerDimensions.isMobile ? -5 : -10,
-            right: containerDimensions.isMobile ? -5 : -10,
-            zIndex: 20,
-            padding: containerDimensions.isMobile ? '6px 8px' : '8px 12px',
-            background: '#ff6b6b',
-            color: 'white',
-            border: 'none',
-            borderRadius: '6px',
-            fontSize: containerDimensions.isMobile ? '11px' : '12px',
-            cursor: 'pointer',
-            boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-          }}
-        >
-          Reset
-        </button>
-      )}
+      {/* Reset button removed per request */}
 
       {/* Scratch cards grid */}
       <div

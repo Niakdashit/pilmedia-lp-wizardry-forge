@@ -241,12 +241,6 @@ const BackgroundPanel: React.FC<BackgroundPanelProps> = ({
           device: selectedDevice
         }
       );
-      
-      // Émettre un événement pour synchroniser avec TemplatedQuiz et FunnelQuizParticipate
-      const event = new CustomEvent('quizStyleUpdate', {
-        detail: { backgroundColor: color }
-      });
-      window.dispatchEvent(event);
     }
   };
 

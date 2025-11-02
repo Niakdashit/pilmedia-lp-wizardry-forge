@@ -2304,7 +2304,8 @@ useEffect(() => {
 
   const handleGameComplete = () => {
     console.log('🎮 [DesignEditor] Game completed');
-    setCurrentStep('result');
+    // Delay 4s before showing result to keep the game visible
+    setTimeout(() => setCurrentStep('result'), 4000);
   };
 
   // Save and quit: validate, persist then return to dashboard
