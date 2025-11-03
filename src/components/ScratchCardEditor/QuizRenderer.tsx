@@ -669,7 +669,8 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
             paddingLeft: '64px',
             paddingRight: '64px',
             gap: '16px',
-            cursor: previewMode ? 'default' : 'pointer'
+            cursor: previewMode ? 'default' : 'pointer',
+            borderRadius: 0
           }}
           onClick={(e) => {
             // NE PAS stopPropagation pour permettre au ModularCanvas de gérer la sélection

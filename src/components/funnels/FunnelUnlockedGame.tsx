@@ -565,10 +565,17 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
         : campaign.design?.background?.value || '#ffffff'
     };
     return (
-      <div className="w-full h-[100dvh] min-h-[100dvh]">
-        <div className="relative w-full h-full">
+      <div className="w-full h-[100dvh] min-h-[100dvh]" style={{ borderRadius: 0 }}>
+        <div className="relative w-full h-full" style={{ borderRadius: 0, overflow: 'visible' }}>
           {/* Background avec TOUT le contenu à l'intérieur - EXACTEMENT comme DesignCanvas */}
-          <div className="absolute inset-0" style={backgroundStyle}>
+          <div
+            className="absolute inset-0"
+            style={{
+              ...backgroundStyle,
+              borderRadius: 0,
+              overflow: 'visible'
+            }}
+          >
             {renderSafeZone()}
             
             {/* Content À L'INTÉRIEUR du background */}
@@ -615,10 +622,10 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
       }
     }
     return (
-      <div className="w-full h-[100dvh] min-h-[100dvh]">
-        <div className="relative w-full h-full">
+      <div className="w-full h-[100dvh] min-h-[100dvh]" style={{ borderRadius: 0 }}>
+        <div className="relative w-full h-full" style={{ borderRadius: 0, overflow: 'visible' }}>
           {/* Background avec TOUT le contenu à l'intérieur - EXACTEMENT comme DesignCanvas */}
-          <div className="absolute inset-0" style={backgroundStyle}>
+          <div className="absolute inset-0" style={{ ...backgroundStyle, borderRadius: 0, overflow: 'visible' }}>
             {renderSafeZone()}
 
             {/* Content À L'INTÉRIEUR du background */}
@@ -628,14 +635,25 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
                 paddingLeft: `${safeZonePadding}px`,
                 paddingRight: `${safeZonePadding}px`,
                 paddingTop: `${safeZonePadding}px`,
-                paddingBottom: `${safeZonePadding}px`,
-                boxSizing: 'border-box'
+                // Important: no bottom padding so the footer band can stick to the bottom edge
+                paddingBottom: 0,
+                boxSizing: 'border-box',
+                borderRadius: 0
               }}
             >
               <div className="flex flex-col h-full">
                 {/* Modules Logo (collés en haut sans padding) */}
                 {logoModules1.length > 0 && (
-                  <div className="w-full">
+                  <div
+                    className="w-full"
+                    style={{
+                      marginTop: `-${safeZonePadding}px`,
+                      marginLeft: `-${safeZonePadding}px`,
+                      marginRight: `-${safeZonePadding}px`,
+                      width: `calc(100% + ${safeZonePadding * 2}px)`,
+                      marginBottom: `${safeZonePadding}px`
+                    }}
+                  >
                     <DesignModuleRenderer
                       modules={logoModules1 as any}
                       previewMode
@@ -659,7 +677,16 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
                 
                 {/* Modules Footer (collés en bas sans padding) */}
                 {footerModules1.length > 0 && (
-                  <div className="w-full">
+                  <div
+                    className="mt-auto w-full"
+                    style={{
+                      paddingBottom: 0,
+                      marginLeft: `-${safeZonePadding}px`,
+                      marginRight: `-${safeZonePadding}px`,
+                      width: `calc(100% + ${safeZonePadding * 2}px)`,
+                      borderRadius: 0
+                    }}
+                  >
                     <DesignModuleRenderer
                       modules={footerModules1 as any}
                       previewMode
@@ -677,10 +704,10 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
 
   if (liveCampaign.type === 'scratch') {
     return (
-      <div className="w-full h-[100dvh] min-h-[100dvh]">
-        <div className="relative w-full h-full">
+      <div className="w-full h-[100dvh] min-h-[100dvh]" style={{ borderRadius: 0 }}>
+        <div className="relative w-full h-full" style={{ borderRadius: 0, overflow: 'visible' }}>
           {/* Background avec TOUT le contenu à l'intérieur - EXACTEMENT comme DesignCanvas */}
-          <div className="absolute inset-0" style={backgroundStyle}>
+          <div className="absolute inset-0" style={{ ...backgroundStyle, borderRadius: 0, overflow: 'visible' }}>
             {renderSafeZone()}
 
             {/* Content À L'INTÉRIEUR du background */}
@@ -690,7 +717,8 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
                 paddingLeft: `${safeZonePadding}px`,
                 paddingRight: `${safeZonePadding}px`,
                 paddingTop: `${safeZonePadding}px`,
-                paddingBottom: `${safeZonePadding}px`,
+                // Important: remove bottom padding to stick footer to bottom edge
+                paddingBottom: 0,
                 boxSizing: 'border-box'
               }}
             >
@@ -699,7 +727,16 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
               <div className="flex flex-col h-full">
                 {/* Modules Logo (collés en haut sans padding) */}
                 {logoModules1.length > 0 && (
-                  <div className="w-full">
+                  <div
+                    className="w-full"
+                    style={{
+                      marginTop: `-${safeZonePadding}px`,
+                      marginLeft: `-${safeZonePadding}px`,
+                      marginRight: `-${safeZonePadding}px`,
+                      width: `calc(100% + ${safeZonePadding * 2}px)`,
+                      marginBottom: `${safeZonePadding}px`
+                    }}
+                  >
                     <QuizModuleRenderer 
                       modules={logoModules1}
                       previewMode={true}
@@ -723,7 +760,17 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
                 
                 {/* Modules Footer (collés en bas sans padding) */}
                 {footerModules1.length > 0 && (
-                  <div className="w-full">
+                  <div
+                    className="mt-auto w-full"
+                    style={{
+                      paddingBottom: 0,
+                      // Full-bleed horizontally: cancel container safe-zone padding
+                      marginLeft: `-${safeZonePadding}px`,
+                      marginRight: `-${safeZonePadding}px`,
+                      width: `calc(100% + ${safeZonePadding * 2}px)`,
+                      borderRadius: 0
+                    }}
+                  >
                     <QuizModuleRenderer 
                       modules={footerModules1}
                       previewMode={true}
@@ -739,7 +786,17 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
               <div className="flex flex-col h-full">
               {/* Modules Logo (collés en haut sans padding) */}
               {logoModules2.length > 0 && (
-                <div className="w-full" style={{ pointerEvents: 'auto' }}>
+                <div
+                  className="w-full"
+                  style={{
+                    pointerEvents: 'auto',
+                    marginTop: `-${safeZonePadding}px`,
+                    marginLeft: `-${safeZonePadding}px`,
+                    marginRight: `-${safeZonePadding}px`,
+                    width: `calc(100% + ${safeZonePadding * 2}px)`,
+                    marginBottom: `${safeZonePadding}px`
+                  }}
+                >
                   <QuizModuleRenderer 
                     modules={logoModules2}
                     previewMode={true}
@@ -838,7 +895,16 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
                 
                 {/* Modules Footer (collés en bas sans padding) */}
                 {footerModules2.length > 0 && (
-                  <div className="w-full">
+                  <div
+                    className="mt-auto w-full"
+                    style={{
+                      paddingBottom: 0,
+                      marginLeft: `-${safeZonePadding}px`,
+                      marginRight: `-${safeZonePadding}px`,
+                      width: `calc(100% + ${safeZonePadding * 2}px)`,
+                      borderRadius: 0
+                    }}
+                  >
                     <QuizModuleRenderer 
                       modules={footerModules2}
                       previewMode={true}
@@ -854,7 +920,16 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
               <div className="flex flex-col h-full">
                 {/* Modules Logo (collés en haut sans padding) */}
                 {logoModules3.length > 0 && (
-                  <div className="w-full">
+                  <div
+                    className="w-full"
+                    style={{
+                      marginTop: `-${safeZonePadding}px`,
+                      marginLeft: `-${safeZonePadding}px`,
+                      marginRight: `-${safeZonePadding}px`,
+                      width: `calc(100% + ${safeZonePadding * 2}px)`,
+                      marginBottom: `${safeZonePadding}px`
+                    }}
+                  >
                     <QuizModuleRenderer 
                       modules={logoModules3}
                       previewMode={true}
@@ -878,7 +953,16 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
                 
                 {/* Modules Footer (collés en bas sans padding) */}
                 {footerModules3.length > 0 && (
-                  <div className="w-full">
+                  <div
+                    className="mt-auto w-full"
+                    style={{
+                      paddingBottom: 0,
+                      marginLeft: `-${safeZonePadding}px`,
+                      marginRight: `-${safeZonePadding}px`,
+                      width: `calc(100% + ${safeZonePadding * 2}px)`,
+                      borderRadius: 0
+                    }}
+                  >
                     <QuizModuleRenderer 
                       modules={footerModules3}
                       previewMode={true}
