@@ -3710,6 +3710,7 @@ const handleSaveCampaignName = useCallback(async () => {
                 <PreviewRenderer
                   campaign={campaignData}
                   previewMode={actualDevice === 'desktop' && selectedDevice === 'desktop' ? 'desktop' : selectedDevice}
+                  constrainedHeight={selectedDevice === 'mobile'}
                   wheelModalConfig={wheelModalConfig}
                 />
               )

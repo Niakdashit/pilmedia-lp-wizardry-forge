@@ -12,14 +12,16 @@ const MessagesPanel: React.FC<MessagesPanelProps> = ({
   onCampaignConfigChange 
 }) => {
   const [activeSection, setActiveSection] = useState<'winner' | 'loser'>('loser');
+  const isNeutralConfirmation = (campaignConfig?.type === 'form') || (campaignConfig?.resultMode === 'confirmation');
   
-  // Émettre un événement quand l'onglet change pour mettre à jour l'aperçu
+  // Émettre un événement pour mettre à jour l'aperçu (ignorer le toggle en mode neutre)
   useEffect(() => {
+    if (isNeutralConfirmation) return;
     const event = new CustomEvent('resultMessageTabChange', { 
       detail: { activeTab: activeSection } 
     });
     window.dispatchEvent(event);
-  }, [activeSection]);
+  }, [activeSection, isNeutralConfirmation]);
   
   // Utiliser le store Zustand persistant
   const { messages, setWinnerMessage, setLoserMessage } = useMessageStore();
@@ -27,10 +29,10 @@ const MessagesPanel: React.FC<MessagesPanelProps> = ({
   const winnerMessages = messages.winner;
   const loserMessages = messages.loser;
 
-  // Synchroniser le store avec campaignConfig au montage
+  // Synchroniser le store avec campaignConfig au montage (hors mode neutre)
   useEffect(() => {
+    if (isNeutralConfirmation) return;
     if (campaignConfig?.resultMessages) {
-      // Si campaignConfig a des messages, les charger dans le store
       if (campaignConfig.resultMessages.winner) {
         setWinnerMessage(campaignConfig.resultMessages.winner);
       }
@@ -38,17 +40,18 @@ const MessagesPanel: React.FC<MessagesPanelProps> = ({
         setLoserMessage(campaignConfig.resultMessages.loser);
       }
     }
-  }, []);
+  }, [isNeutralConfirmation]);
 
-  // Synchroniser le store vers campaignConfig à chaque modification
+  // Synchroniser le store vers campaignConfig à chaque modification (hors mode neutre)
   useEffect(() => {
+    if (isNeutralConfirmation) return;
     if (onCampaignConfigChange) {
       onCampaignConfigChange({
         ...campaignConfig,
         resultMessages: messages
       });
     }
-  }, [messages]);
+  }, [messages, isNeutralConfirmation]);
 
   const updateWinnerMessage = (updates: any) => {
     setWinnerMessage(updates);
@@ -58,16 +61,138 @@ const MessagesPanel: React.FC<MessagesPanelProps> = ({
     setLoserMessage(updates);
   };
 
+  // Gestion de la configuration de confirmation (mode neutre)
+  const confirmation = campaignConfig?.resultMessages?.confirmation || {
+    title: 'Merci !',
+    message: 'Votre participation a été enregistrée.',
+    subMessage: 'Vous recevrez une confirmation par email.',
+    buttonText: 'Fermer',
+    buttonAction: 'close',
+    redirectUrl: ''
+  };
+
+  const updateConfirmation = (updates: any) => {
+    if (!onCampaignConfigChange) return;
+    const next = {
+      ...(campaignConfig || {}),
+      resultMessages: {
+        ...(campaignConfig?.resultMessages || {}),
+        confirmation: { ...confirmation, ...updates }
+      },
+      // Verrouiller le mode confirmation si on édite ici
+      resultMode: 'confirmation'
+    };
+    onCampaignConfigChange(next);
+  };
+
   return (
     <div className="h-full flex flex-col bg-white">
       {/* Header */}
       <div className="p-4 border-b">
         <h2 className="text-lg font-semibold">Messages de sortie</h2>
         <p className="text-sm text-gray-500 mt-1">
-          Personnalisez les messages selon le résultat
+          {isNeutralConfirmation ? 'Message de confirmation d\'inscription' : 'Personnalisez les messages selon le résultat'}
         </p>
       </div>
 
+      {/* Mode neutre: éditeur simple */}
+      {isNeutralConfirmation ? (
+        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          {/* Titre principal */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Titre principal
+            </label>
+            <input
+              type="text"
+              value={confirmation.title}
+              onChange={(e) => updateConfirmation({ title: e.target.value })}
+              placeholder="Merci !"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            />
+          </div>
+
+          {/* Message principal */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Message principal
+            </label>
+            <textarea
+              value={confirmation.message}
+              onChange={(e) => updateConfirmation({ message: e.target.value })}
+              placeholder="Votre participation a été enregistrée."
+              rows={3}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
+            />
+          </div>
+
+          {/* Sous-message */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Sous-message (optionnel)
+            </label>
+            <input
+              type="text"
+              value={confirmation.subMessage || ''}
+              onChange={(e) => updateConfirmation({ subMessage: e.target.value })}
+              placeholder="Vous recevrez une confirmation par email"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            />
+          </div>
+
+          {/* Bouton d'action */}
+          <div className="pt-4 border-t">
+            <h3 className="text-sm font-semibold mb-3">Bouton d'action</h3>
+            <div className="space-y-3">
+              {/* Texte du bouton */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Texte du bouton
+                </label>
+                <input
+                  type="text"
+                  value={confirmation.buttonText}
+                  onChange={(e) => updateConfirmation({ buttonText: e.target.value })}
+                  placeholder="Fermer"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                />
+              </div>
+
+              {/* Action du bouton */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Action du bouton
+                </label>
+                <select
+                  value={confirmation.buttonAction}
+                  onChange={(e) => updateConfirmation({ buttonAction: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                >
+                  <option value="close">Fermer la fenêtre</option>
+                  <option value="redirect">Rediriger vers une URL</option>
+                </select>
+              </div>
+
+              {/* URL de redirection */}
+              {confirmation.buttonAction === 'redirect' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    URL de redirection
+                  </label>
+                  <input
+                    type="url"
+                    value={confirmation.redirectUrl || ''}
+                    onChange={(e) => updateConfirmation({ redirectUrl: e.target.value })}
+                    placeholder="https://exemple.com"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      ) : (
+      <>
       {/* Toggle Gagnant / Perdant */}
       <div className="grid grid-cols-2 gap-2 px-4 pt-4 pb-2">
         <button
@@ -306,6 +431,8 @@ const MessagesPanel: React.FC<MessagesPanelProps> = ({
           </div>
         )}
       </div>
+      </>
+      )}
     </div>
   );
 };

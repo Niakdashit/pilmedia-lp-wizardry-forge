@@ -230,15 +230,17 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
           ...(campaign.design || {}),
           ...(storeCampaign.design || {}),
           background:
-            normalizedBackground ??
-            storeCampaign.design?.background ??
+            normalizedBackground ||
+            storeCampaign.design?.background ||
             campaign.design?.background
         },
         // ✅ IMPORTANT: Synchroniser les formFields depuis le store
         formFields: storeCampaign.formFields || campaign.formFields,
         _lastUpdate: storeCampaign._lastUpdate || Date.now(),
-        // Préserver les messages personnalisés
-        scratchResultMessages: storeCampaign.scratchResultMessages || campaign.scratchResultMessages
+        // Préserver les messages personnalisés (compat)
+        scratchResultMessages: storeCampaign.scratchResultMessages || campaign.scratchResultMessages,
+        // ✅ Nouveau: synchroniser aussi les messages de sortie unifiés
+        resultMessages: (storeCampaign as any).resultMessages || (campaign as any).resultMessages
       });
     } else {
       setLiveCampaign(campaign);

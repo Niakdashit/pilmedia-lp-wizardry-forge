@@ -288,16 +288,14 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
 
   // Forcer un format mobile selon les dimensions de l'iPhone 14 Pro Max
   const effectiveCanvasSize = useMemo(() => {
-    const mobileFallback = { width: 430, height: 932 };
+    // Aligner l'échelle mobile sur /designEditor (ratio 9:16)
+    const mobileFallback = { width: 360, height: 640 };
     const defaultFallback = { width: 810, height: 1440 };
     if (selectedDevice === 'mobile') {
       return mobileFallback;
     }
     // Sécuriser quand canvasSize est indéfini
-    if (!canvasSize || typeof canvasSize.width !== 'number' || typeof canvasSize.height !== 'number') {
-      return defaultFallback;
-    }
-    return canvasSize;
+    return canvasSize || defaultFallback;
   }, [selectedDevice, canvasSize]);
 
   const safeZonePadding = useMemo(() => SAFE_ZONE_PADDING[selectedDevice] ?? SAFE_ZONE_PADDING.desktop, [selectedDevice]);
@@ -1125,7 +1123,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
 
   // Calculer le zoom par défaut selon l'appareil (pour le bouton reset)
   const deviceDefaultZoom = useMemo(() => {
-    return selectedDevice === 'mobile' ? 0.85 :
+    return selectedDevice === 'mobile' ? 0.60 :
            selectedDevice === 'tablet' ? 0.6 : 0.7;
   }, [selectedDevice]);
 
@@ -1179,6 +1177,8 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     updateAutoFit();
     autoFitEnabledRef.current = false;
   }, [selectedDevice, enableInternalAutoFit, updateAutoFit]);
+
+  // Supprimer les forçages de zoom mobile pour correspondre exactement au comportement du DesignEditor
 
   // Do not auto-fit on resizes anymore; keep user's zoom unchanged
   useEffect(() => {
@@ -2638,7 +2638,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                           const formConfig = campaignToUse?.design?.formConfig || {
                             title: 'Vos informations',
                             description: 'Remplissez le formulaire pour participer',
-                            submitLabel: 'SPIN',
+                            submitLabel: 'Participer',
                             panelBg: '#ffffff',
                             borderColor: '#e5e7eb',
                             textColor: '#000000',
@@ -2647,7 +2647,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                             fontFamily: 'inherit',
                             displayMode: 'overlay',
                             position: 'right',
-                            borderRadius: 12,
+                            borderRadius: 5,
                             fieldBorderRadius: 2,
                             width: 500,
                             height: 500
@@ -2786,7 +2786,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                                 
                                 <DynamicContactForm
                                   fields={campaignToUse?.formFields || DEFAULT_FIELDS}
-                                  submitLabel={formConfig.submitLabel}
+                                  submitLabel="Envoyer"
                                   onSubmit={() => {}}
                                   inputBorderColor={formConfig.borderColor}
                                   inputBorderRadius={`${formConfig.fieldBorderRadius}px`}
@@ -2801,7 +2801,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                                     button: {
                                       backgroundColor: formConfig.buttonColor,
                                       color: formConfig.buttonTextColor,
-                                      borderRadius: `${formConfig.borderRadius}px`,
+                                      borderRadius: typeof formConfig.borderRadius === 'number' ? `${formConfig.borderRadius}px` : (formConfig.borderRadius || '12px'),
                                       fontFamily: formConfig.fontFamily
                                     }
                                   }}
@@ -2820,7 +2820,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                                     backgroundColor: formConfig.buttonColor || '#841b60',
                                     color: formConfig.buttonTextColor || '#ffffff',
                                     padding: '16px 32px',
-                                    borderRadius: '50px',
+                                    borderRadius: typeof formConfig.borderRadius === 'number' ? `${formConfig.borderRadius}px` : (formConfig.borderRadius || '9999px'),
                                     border: 'none',
                                     fontSize: '16px',
                                     fontWeight: '600',
@@ -2838,7 +2838,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                                     e.currentTarget.style.transform = 'translateX(-50%) scale(1)';
                                   }}
                                 >
-                                  📝 Remplir le formulaire
+                                  {formConfig.submitLabel || 'Participer'}
                                 </button>
                               )}
                             </>

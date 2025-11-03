@@ -10,7 +10,7 @@ const FormConfigPanel: React.FC<FormConfigPanelProps> = ({ campaign, onCampaignC
   const formConfig = campaign?.design?.formConfig || {
     title: 'Vos informations',
     description: 'Remplissez le formulaire pour participer',
-    submitLabel: 'SPIN',
+    submitLabel: 'Participer',
     panelBg: '#ffffff',
     borderColor: '#e5e7eb',
     textColor: '#000000',
@@ -19,7 +19,7 @@ const FormConfigPanel: React.FC<FormConfigPanelProps> = ({ campaign, onCampaignC
     fontFamily: 'inherit',
     displayMode: 'overlay',
     position: 'right',
-    borderRadius: 12,
+    borderRadius: 5,
     fieldBorderRadius: 2,
     width: 500,
     height: 500

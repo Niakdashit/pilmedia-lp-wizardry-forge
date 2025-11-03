@@ -83,11 +83,18 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
     try {
       styleEl = document.createElement('style');
       styleEl.setAttribute('data-no-anim', 'true');
-      styleEl.textContent = `* { transition: none !important; animation: none !important; }`;
+      // Target the editor containers more explicitly to prevent module jitter at first paint
+      styleEl.textContent = `
+        .design-canvas-container, .design-canvas-container *,
+        [data-editor-root], [data-editor-root] * {
+          transition: none !important;
+          animation: none !important;
+        }
+      `;
       document.head.appendChild(styleEl);
       setTimeout(() => {
         try { if (styleEl && styleEl.parentNode) styleEl.parentNode.removeChild(styleEl); } catch {}
-      }, 300);
+      }, 1000);
     } catch {}
 
     return () => {
@@ -2707,31 +2714,26 @@ useEffect(() => {
         <div className="flex-1 flex overflow-hidden relative">
         {showFunnel ? (
           /* Funnel Preview Mode */
-          <div 
-            className="group fixed inset-0 z-40 w-full h-[100dvh] min-h-[100dvh] overflow-hidden flex items-center justify-center"
-            style={{
-              backgroundColor: (editorMode === 'article' && selectedDevice === 'mobile' && actualDevice !== 'mobile') ? '#2c2c35' : 'transparent'
-            }}
-          >
+          <div className="group fixed inset-0 z-40 w-full h-[100dvh] min-h-[100dvh] overflow-hidden bg-[#2c2c35] flex items-center justify-center">
             {/* Floating Edit Mode Button */}
             <button
               onClick={() => setShowFunnel(false)}
-              className={`absolute top-4 ${previewButtonSide === 'left' ? 'left-4' : 'right-4'} z-50 px-4 py-2 bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] shadow-none focus:shadow-none ring-0 focus:ring-0 drop-shadow-none filter-none backdrop-blur-0`}
+              className={`absolute top-4 ${previewButtonSide === 'left' ? 'left-4' : 'right-4'} z-[9999] px-4 py-2 bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] shadow-none focus:shadow-none ring-0 focus:ring-0 drop-shadow-none filter-none backdrop-blur-0 pointer-events-auto`}
             >
               Mode édition
             </button>
-            {editorMode === 'article' ? (
-              (selectedDevice === 'mobile' && actualDevice !== 'mobile') ? (
-                /* Mobile Article Preview on desktop */
-                <div className="flex items-center justify-center w-full h-full">
-                  <div 
-                    className="relative overflow-hidden rounded-[32px] shadow-2xl"
-                    style={{
-                      width: '430px',
-                      height: '932px',
-                      maxHeight: '90vh'
-                    }}
-                  >
+            {(selectedDevice === 'mobile' && actualDevice !== 'mobile') ? (
+              /* Mobile Preview sur Desktop: Canvas centré avec cadre */
+              <div className="flex items-center justify-center w-full h-full">
+                <div 
+                  className="relative overflow-hidden rounded-[32px] shadow-2xl"
+                  style={{
+                    width: '430px',
+                    height: '932px',
+                    maxHeight: '90vh'
+                  }}
+                >
+                  {editorMode === 'article' ? (
                     <ArticleFunnelView
                       articleConfig={(campaignState as any)?.articleConfig || {}}
                       campaignType={(campaignState as any)?.type || 'wheel'}
@@ -2748,58 +2750,95 @@ useEffect(() => {
                       containerClassName="p-0"
                       containerStyle={{ backgroundColor: 'transparent' }}
                     />
-                  </div>
+                  ) : (
+                    <PreviewRenderer
+                      campaign={campaignData}
+                      previewMode="mobile"
+                      constrainedHeight={true}
+                      wheelModalConfig={wheelModalConfig}
+                      onModuleClick={(moduleId) => {
+                        console.log('🖱️ [DesignEditorLayout] Module clicked in preview:', moduleId);
+                        const allModules = (Object.values(modularPage.screens) as Module[][]).flat();
+                        const module = allModules.find(m => m.id === moduleId);
+                        if (module) {
+                          const moduleTypeToRole: Record<string, string> = {
+                            'BlocTexte': 'module-text',
+                            'BlocBouton': 'module-button',
+                            'BlocImage': 'module-image',
+                            'BlocVideo': 'module-video',
+                            'BlocSocial': 'module-social',
+                            'BlocHTML': 'module-html',
+                            'BlocCarte': 'module-carte',
+                            'BlocLogo': 'module-logo',
+                            'BlocPiedDePage': 'module-footer'
+                          };
+                          setSelectedElement({
+                            id: `module-proxy-${moduleId}`,
+                            type: 'module-proxy',
+                            moduleId: moduleId,
+                            role: moduleTypeToRole[module.type] || 'module-text'
+                          });
+                          setShowFunnel(false);
+                        }
+                      }}
+                    />
+                  )}
+                </div>
+              </div>
+            ) : (
+              /* Desktop/Tablet Preview OU Mobile physique: Fullscreen */
+              editorMode === 'article' ? (
+                <div className="w-full h-full flex items-start justify-center overflow-y-auto py-8" style={{ backgroundColor: '#2c2c35' }}>
+                  <ArticleFunnelView
+                    articleConfig={(campaignState as any)?.articleConfig || {}}
+                    campaignType={(campaignState as any)?.type || 'wheel'}
+                    campaign={campaignData}
+                    wheelModalConfig={wheelModalConfig}
+                    gameModalConfig={wheelModalConfig}
+                    currentStep={currentStep}
+                    editable={false}
+                    formFields={(campaignState as any)?.formFields}
+                    onCTAClick={handleCTAClick}
+                    onFormSubmit={handleFormSubmit}
+                    onGameComplete={handleGameComplete}
+                    onStepChange={setCurrentStep}
+                    containerClassName="py-8"
+                    containerStyle={{ backgroundColor: '#2c2c35' }}
+                  />
                 </div>
               ) : (
-                <ArticleFunnelView
-                  articleConfig={(campaignState as any)?.articleConfig || {}}
-                  campaignType={(campaignState as any)?.type || 'wheel'}
+                <PreviewRenderer
                   campaign={campaignData}
+                  previewMode={actualDevice === 'desktop' && selectedDevice === 'desktop' ? 'desktop' : selectedDevice}
+                  constrainedHeight={selectedDevice === 'mobile'}
                   wheelModalConfig={wheelModalConfig}
-                  gameModalConfig={wheelModalConfig}
-                  currentStep={currentStep}
-                  editable={false}
-                  formFields={(campaignState as any)?.formFields}
-                  onCTAClick={handleCTAClick}
-                  onFormSubmit={handleFormSubmit}
-                  onGameComplete={handleGameComplete}
-                  onStepChange={setCurrentStep}
-                  containerClassName="py-8"
-                  containerStyle={{ backgroundColor: '#2c2c35' }}
+                  onModuleClick={(moduleId) => {
+                    console.log('🖱️ [DesignEditorLayout] Module clicked in preview:', moduleId);
+                    const allModules = (Object.values(modularPage.screens) as Module[][]).flat();
+                    const module = allModules.find(m => m.id === moduleId);
+                    if (module) {
+                      const moduleTypeToRole: Record<string, string> = {
+                        'BlocTexte': 'module-text',
+                        'BlocBouton': 'module-button',
+                        'BlocImage': 'module-image',
+                        'BlocVideo': 'module-video',
+                        'BlocSocial': 'module-social',
+                        'BlocHTML': 'module-html',
+                        'BlocCarte': 'module-carte',
+                        'BlocLogo': 'module-logo',
+                        'BlocPiedDePage': 'module-footer'
+                      };
+                      setSelectedElement({
+                        id: `module-proxy-${moduleId}`,
+                        type: 'module-proxy',
+                        moduleId: moduleId,
+                        role: moduleTypeToRole[module.type] || 'module-text'
+                      });
+                      setShowFunnel(false);
+                    }
+                  }}
                 />
               )
-            ) : (
-              <PreviewRenderer
-                campaign={campaignData}
-                previewMode={actualDevice === 'desktop' && selectedDevice === 'desktop' ? 'desktop' : selectedDevice}
-                wheelModalConfig={wheelModalConfig}
-                onModuleClick={(moduleId) => {
-                  console.log('🖱️ [DesignEditorLayout] Module clicked in preview:', moduleId);
-                  // Trouver le module dans modularPage
-                  const allModules = (Object.values(modularPage.screens) as Module[][]).flat();
-                  const module = allModules.find(m => m.id === moduleId);
-                  if (module) {
-                    const moduleTypeToRole: Record<string, string> = {
-                      'BlocTexte': 'module-text',
-                      'BlocBouton': 'module-button',
-                      'BlocImage': 'module-image',
-                      'BlocVideo': 'module-video',
-                      'BlocSocial': 'module-social',
-                      'BlocHTML': 'module-html',
-                      'BlocCarte': 'module-carte',
-                      'BlocLogo': 'module-logo',
-                      'BlocPiedDePage': 'module-footer'
-                    };
-                    setSelectedElement({
-                      id: `module-proxy-${moduleId}`,
-                      type: 'module-proxy',
-                      moduleId: moduleId,
-                      role: moduleTypeToRole[module.type] || 'module-text'
-                    });
-                    setShowFunnel(false);
-                  }
-                }}
-              />
             )}
           </div>
         ) : (

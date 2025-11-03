@@ -18,12 +18,18 @@ const ResultScreenPreview: React.FC<ResultScreenPreviewProps> = ({
 }) => {
   // État pour suivre l'onglet actif (winner ou loser)
   const [activeTab, setActiveTab] = useState<'winner' | 'loser'>('loser');
+  const isNeutralConfirmation = Boolean(
+    (campaign?.resultMessages && (campaign.resultMessages as any).confirmation)
+    || (campaign?.type === 'form')
+    || (campaign?.resultMode === 'confirmation')
+  );
   
   // État pour forcer le re-render quand les modules changent
   const [, setForceUpdate] = useState(0);
   
-  // Écouter les changements d'onglet depuis MessagesPanel
+  // Écouter les changements d'onglet depuis MessagesPanel (sauf en mode neutre)
   useEffect(() => {
+    if (isNeutralConfirmation) return;
     const handleTabChange = (e: Event) => {
       const customEvent = e as CustomEvent;
       if (customEvent.detail?.activeTab) {
@@ -45,17 +51,25 @@ const ResultScreenPreview: React.FC<ResultScreenPreviewProps> = ({
       window.removeEventListener('editor-modules-sync', handleModuleUpdate);
       window.removeEventListener('editor-module-sync', handleModuleUpdate);
     };
-  }, []);
+  }, [isNeutralConfirmation]);
   
   // Récupérer les messages depuis le store Zustand ou depuis campaign.scratchResultMessages
   const { messages } = useMessageStore();
   
-  // Fallback sur campaign.scratchResultMessages pour compatibilité ScratchCardEditor
+  // Fallbacks historiques + confirmation neutre
   const winnerConfig = campaign?.scratchResultMessages?.winner || messages.winner;
   const loserConfig = campaign?.scratchResultMessages?.loser || messages.loser;
+  const neutralConfig = (campaign?.resultMessages as any)?.confirmation || {
+    title: 'Merci !',
+    message: 'Votre participation a été enregistrée.',
+    subMessage: 'Vous recevrez une confirmation par email.',
+    buttonText: 'Fermer'
+  };
   
-  // Sélectionner la configuration selon l'onglet actif
-  const currentConfig = activeTab === 'winner' ? winnerConfig : loserConfig;
+  // Sélectionner la configuration
+  const currentConfig = isNeutralConfirmation
+    ? neutralConfig
+    : (activeTab === 'winner' ? winnerConfig : loserConfig);
 
   const frameConfig = {
     color: 'rgba(255,255,255,0.9)',

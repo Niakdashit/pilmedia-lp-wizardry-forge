@@ -922,7 +922,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
           <div className="space-y-6">
             <FormConfigPanel
               campaign={campaign}
-              setCampaign={setCampaign}
+              onCampaignChange={(next) => setCampaign(next)}
             />
           </div>
         );
@@ -938,8 +938,8 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
       case 'messages':
         return (
           <MessagesPanel 
-            campaign={campaign}
-            setCampaign={setCampaign}
+            campaignConfig={campaign}
+            onCampaignConfigChange={(cfg) => setCampaign((prev: any) => ({ ...(prev || {}), ...(cfg || {}) }))}
           />
         );
       default:

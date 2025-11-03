@@ -617,9 +617,17 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
     if (m.type === 'BlocPiedDePage') {
       const footerModule = m as BlocPiedDePage;
       const baseBandHeight = footerModule.bandHeight ?? 60;
-      const bandHeight = isMobileDevice ? baseBandHeight * 0.9 : baseBandHeight;
+      const hasLinks = (footerModule.footerLinks ?? []).length > 0;
+      const hasSocials = (footerModule.socialLinks ?? []).length > 0;
+      const minAutoBand = 100; // px, this renderer is not scaled via scaleValue
+      const bandHeight = (hasLinks && hasSocials)
+        ? Math.max(isMobileDevice ? baseBandHeight * 0.9 : baseBandHeight, minAutoBand)
+        : (isMobileDevice ? baseBandHeight * 0.9 : baseBandHeight);
       const bandColor = footerModule.bandColor ?? '#ffffff';
       const bandPadding = footerModule.bandPadding ?? 24;
+      const effectiveBandPadding = (hasLinks && hasSocials)
+        ? Math.max(bandPadding, 20)
+        : bandPadding;
       const logoWidth = footerModule.logoWidth ?? 120;
       const logoHeight = footerModule.logoHeight ?? 120;
       const align = footerModule.align || 'center';
@@ -656,8 +664,8 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
             flexDirection: 'column',
             alignItems: align === 'left' ? 'flex-start' : align === 'right' ? 'flex-end' : 'center',
             justifyContent: 'center',
-            paddingTop: (footerModule as any).spacingTop ?? bandPadding,
-            paddingBottom: (footerModule as any).spacingBottom ?? bandPadding,
+            paddingTop: (footerModule as any).spacingTop ?? effectiveBandPadding,
+            paddingBottom: (footerModule as any).spacingBottom ?? effectiveBandPadding,
             paddingLeft: '64px',
             paddingRight: '64px',
             gap: '16px',
@@ -717,7 +725,7 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
                     rel={link.openInNewTab ? 'noopener noreferrer' : undefined}
                     style={{
                       color: linkColor,
-                      textDecoration: 'underline',
+                      textDecoration: 'none',
                       cursor: 'pointer'
                     }}
                     onClick={(e) => {

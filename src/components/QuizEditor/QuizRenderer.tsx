@@ -645,9 +645,18 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
     if (m.type === 'BlocPiedDePage') {
       const footerModule = m as BlocPiedDePage;
       const baseBandHeight = scaleValue(footerModule.bandHeight, 60);
-      const bandHeight = baseBandHeight;
+      // Auto-min height when two rows (links + socials)
+      const hasLinks = (footerModule.footerLinks ?? []).length > 0;
+      const hasSocials = (footerModule.socialLinks ?? []).length > 0;
+      const minAutoBand = scaleValue(100, 100);
+      const bandHeight = (hasLinks && hasSocials)
+        ? Math.max(baseBandHeight, minAutoBand)
+        : baseBandHeight;
       const bandColor = footerModule.bandColor ?? '#ffffff';
       const bandPadding = scaleValue(footerModule.bandPadding, 24);
+      const effectiveBandPadding = (hasLinks && hasSocials)
+        ? Math.max(bandPadding, scaleValue(20, 20))
+        : bandPadding;
       const logoWidth = scaleValue(footerModule.logoWidth, 120);
       const logoHeight = scaleValue(footerModule.logoHeight, 120);
       const align = footerModule.align || 'center';
@@ -665,12 +674,6 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
       const socialIconColor = footerModule.socialIconColor ?? '#000000';
 
       const hasContent = footerModule.logoUrl || footerText || footerLinks.length > 0 || socialLinks.length > 0;
-
-      // Ne pas afficher le footer vide en mode preview
-      if (previewMode && !hasContent) {
-        return null;
-      }
-
       return (
         <div 
           key={m.id} 
@@ -683,11 +686,19 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
             flexDirection: 'column',
             alignItems: align === 'left' ? 'flex-start' : align === 'right' ? 'flex-end' : 'center',
             justifyContent: 'center',
-            paddingTop: scaleValue((footerModule as any).spacingTop, bandPadding),
-            paddingBottom: scaleValue((footerModule as any).spacingBottom, bandPadding),
+            paddingTop: scaleValue((footerModule as any).spacingTop, effectiveBandPadding),
+            paddingBottom: scaleValue((footerModule as any).spacingBottom, effectiveBandPadding),
             paddingLeft: scaleValue(64, 64),
             paddingRight: scaleValue(64, 64),
             gap: scaleValue(16, 16),
+            borderTopLeftRadius: `${scaleValue(12, 12)}px`,
+            borderTopRightRadius: `${scaleValue(12, 12)}px`,
+            borderBottomLeftRadius: 0,
+            borderBottomRightRadius: 0,
+            marginLeft: 0,
+            marginRight: 0,
+            marginBottom: 0,
+            boxShadow: 'none',
             cursor: previewMode ? 'default' : 'pointer'
           }}
           onClick={(e) => {
@@ -696,7 +707,7 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
             }
           }}
         >
-          {/* Logo */}
+
           {footerModule.logoUrl && (
             <img
               src={footerModule.logoUrl}
@@ -743,7 +754,7 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
                     rel={link.openInNewTab ? 'noopener noreferrer' : undefined}
                     style={{
                       color: linkColor,
-                      textDecoration: 'underline',
+                      textDecoration: 'none',
                       cursor: 'pointer'
                     }}
                     onClick={(e) => {

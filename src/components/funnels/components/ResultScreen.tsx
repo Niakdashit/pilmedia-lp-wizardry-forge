@@ -25,6 +25,21 @@ const ResultScreen: React.FC<ResultScreenProps> = ({
   // Utiliser les messages personnalisés depuis scratchResultMessages
   const customMessages = campaign.scratchResultMessages;
   
+  // Mode neutre pour les campagnes formulaire: message de confirmation sans notion de gain/perte
+  const isNeutralConfirmation = Boolean(
+    (campaign?.resultMessages && (campaign.resultMessages as any).confirmation)
+    || (campaign?.type === 'form')
+    || (campaign?.resultMode === 'confirmation')
+  );
+  const neutralConfig = {
+    title: 'Merci !',
+    message: 'Votre participation a été enregistrée.',
+    subMessage: 'Vous recevrez une confirmation par email.',
+    buttonText: 'Fermer',
+    buttonAction: 'close' as const,
+    showPrizeImage: false
+  };
+
   const winnerConfig = customMessages?.winner || {
     title: '🎉 Félicitations !',
     message: 'Vous avez gagné !',
@@ -41,7 +56,9 @@ const ResultScreen: React.FC<ResultScreenProps> = ({
     buttonAction: 'replay'
   };
 
-  const currentConfig = gameResult === 'win' ? winnerConfig : loserConfig;
+  const currentConfig = isNeutralConfirmation
+    ? (campaign?.resultMessages?.confirmation || neutralConfig)
+    : (gameResult === 'win' ? winnerConfig : loserConfig);
 
   
 
@@ -84,18 +101,28 @@ const ResultScreen: React.FC<ResultScreenProps> = ({
           }
         }
       `}</style>
-      <div 
+      <div
         className="w-full h-full flex items-center justify-center p-4"
         style={{
           animation: 'slideUpFromBottom 0.5s ease-out forwards'
         }}
       >
         <ContrastBackground
-        enabled={true}
-        config={frameConfig}
-        className="text-center space-y-4 w-full max-w-lg rounded-[2px] border border-black/5"
-      >
-        <div className="space-y-3">
+          enabled={true}
+          config={frameConfig}
+          className="text-center space-y-4 w-full max-w-lg"
+        >
+        <div
+          className="space-y-3 rounded"
+          style={{
+            backgroundColor: campaign?.design?.formConfig?.panelBg || '#ffffff',
+            borderRadius: typeof campaign?.design?.formConfig?.borderRadius === 'number'
+              ? `${campaign?.design?.formConfig?.borderRadius}px`
+              : '12px',
+            border: `1px solid ${campaign?.design?.formConfig?.borderColor || 'rgba(0,0,0,0.05)'}`,
+            padding: 24
+          }}
+        >
           {/* Optional prize image for winners */}
           {gameResult === 'win' && currentConfig.showPrizeImage && (
             <div className="w-full flex items-center justify-center pb-2">
@@ -137,14 +164,23 @@ const ResultScreen: React.FC<ResultScreenProps> = ({
               )}
             </div>
           )}
-          <h2 className="text-2xl font-bold text-gray-900">
+          <h2
+            className="text-2xl font-bold"
+            style={{ color: campaign?.design?.formConfig?.textColor || '#111827' }}
+          >
             {currentConfig.title}
           </h2>
-          <p className="text-lg text-gray-600">
+          <p
+            className="text-lg"
+            style={{ color: campaign?.design?.formConfig?.textColor || '#374151' }}
+          >
             {currentConfig.message}
           </p>
           {currentConfig.subMessage && (
-            <p className="text-sm text-gray-500">
+            <p
+              className="text-sm"
+              style={{ color: campaign?.design?.formConfig?.textColor || '#6B7280' }}
+            >
               {currentConfig.subMessage}
             </p>
           )}
@@ -156,11 +192,11 @@ const ResultScreen: React.FC<ResultScreenProps> = ({
             className="inline-flex items-center justify-center px-6 py-2 font-medium transition-colors"
             style={{
               ...launchButtonStyles,
-              ...(launchButtonStyles ? {} : {
-                backgroundColor: primaryColor || campaign.design?.primaryColor || '#841b60',
-                color: accentColor || campaign.design?.accentColor || '#ffffff',
-                borderRadius: '2px'
-              })
+              backgroundColor: campaign?.design?.formConfig?.buttonColor || launchButtonStyles?.backgroundColor || primaryColor || campaign?.design?.primaryColor || '#841b60',
+              color: campaign?.design?.formConfig?.buttonTextColor || launchButtonStyles?.color || accentColor || campaign?.design?.accentColor || '#ffffff',
+              borderRadius: typeof campaign?.design?.formConfig?.borderRadius === 'number'
+                ? `${campaign?.design?.formConfig?.borderRadius}px`
+                : (launchButtonStyles?.borderRadius as string) || '12px'
             }}
           >
             {currentConfig.buttonText}

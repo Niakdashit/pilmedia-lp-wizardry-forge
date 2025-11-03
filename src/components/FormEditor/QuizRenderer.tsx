@@ -633,7 +633,13 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
     if (m.type === 'BlocPiedDePage') {
       const footerModule = m as BlocPiedDePage;
       const baseBandHeight = scaleValue(footerModule.bandHeight, 60);
-      const bandHeight = baseBandHeight;
+      // Auto-min height when two rows (links + socials)
+      const hasLinks = (footerModule.footerLinks ?? []).length > 0;
+      const hasSocials = (footerModule.socialLinks ?? []).length > 0;
+      const minAutoBand = scaleValue(80, 80);
+      const bandHeight = (hasLinks && hasSocials)
+        ? Math.max(baseBandHeight, minAutoBand)
+        : baseBandHeight;
       const bandColor = footerModule.bandColor ?? '#ffffff';
       const bandPadding = scaleValue(footerModule.bandPadding, 24);
       const logoWidth = scaleValue(footerModule.logoWidth, 120);
@@ -731,7 +737,7 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
                     rel={link.openInNewTab ? 'noopener noreferrer' : undefined}
                     style={{
                       color: linkColor,
-                      textDecoration: 'underline',
+                      textDecoration: 'none',
                       cursor: 'pointer'
                     }}
                     onClick={(e) => {

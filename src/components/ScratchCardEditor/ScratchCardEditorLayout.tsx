@@ -3416,7 +3416,7 @@ const handleSaveCampaignName = useCallback(async () => {
               /* Mobile Preview sur Desktop: Canvas centré avec cadre */
               <div className="flex items-center justify-center w-full h-full">
                 <div 
-                  className="relative overflow-y-auto rounded-[32px] shadow-2xl"
+                  className="relative overflow-hidden rounded-[32px] shadow-2xl"
                   style={{
                     width: '430px',
                     height: '932px',

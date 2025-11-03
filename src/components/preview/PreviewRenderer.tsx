@@ -83,7 +83,11 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
     try {
       document.body.setAttribute('data-in-preview', '1');
     } catch {}
-    // Aggressively hide any zoom slider/screen selector coming from editor UI
+    // Allow natural scrolling for content overflow, but hide editor controls
+    try {
+      // Just mark as preview mode, don't block scrolling
+      document.body.setAttribute('data-in-preview', '1');
+    } catch {}
     const hideEditorControls = () => {
       try {
         const sliderCandidates = Array.from(document.querySelectorAll(
@@ -191,6 +195,31 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
 
   // Obtenir les données canoniques
   const canonicalData = getCanonicalPreviewData();
+
+  // Bindings to FormEditor "Jeu" tab: derive quiz config from multiple sources
+  const derivedQuizConfig = React.useMemo(() => {
+    const fromDesign = (campaign as any)?.design?.quizConfig || {};
+    const fromRoot = (campaign as any)?.quizConfig || {};
+    const fromGame = (campaign as any)?.gameConfig?.quiz || {};
+    const templateId = fromDesign.templateId || fromRoot.templateId || fromGame.templateId;
+    const questions = fromDesign.questions || fromRoot.questions || fromGame.questions || [];
+    const style = fromDesign.style || fromRoot.style || {};
+    return { templateId, questions, style } as any;
+  }, [campaign]);
+
+  const previewQuizCampaign = React.useMemo(() => {
+    const design = { ...(campaign as any)?.design } || {};
+    return {
+      ...(campaign as any),
+      design: {
+        ...design,
+        quizConfig: {
+          ...(design as any)?.quizConfig,
+          ...derivedQuizConfig
+        }
+      }
+    } as any;
+  }, [campaign, derivedQuizConfig]);
   
   // Déterminer quel renderer utiliser selon le type de campagne
   // Priorité 1: Si la campagne n'est pas un quiz et que des designModules existent → utiliser DesignModuleRenderer
@@ -544,7 +573,54 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
 
   const ModuleRenderer = isDesignModular ? DesignModuleRenderer : QuizModuleRenderer;
 
-  return (
+  // Read form config to mirror editor exactly
+  const formConfig = (campaign as any)?.design?.formConfig || {
+    title: 'Vos informations',
+    description: 'Remplissez le formulaire pour participer',
+    submitLabel: 'Envoyer',
+    panelBg: '#ffffff',
+    borderColor: '#e5e7eb',
+    textColor: '#000000',
+    buttonColor: '#841b60',
+    buttonTextColor: '#ffffff',
+    borderRadius: 12,
+    fieldBorderRadius: 2,
+  };
+
+  // Helper: normalize borderRadius to valid CSS (add px when numeric or numeric-string)
+  const toRadius = (v: any): string | undefined => {
+    if (v === undefined || v === null) return undefined;
+    if (typeof v === 'number') return `${v}px`;
+    if (typeof v === 'string') {
+      const t = v.trim();
+      return /^\d+$/.test(t) ? `${t}px` : t; // add px if pure number string
+    }
+    return undefined;
+  };
+
+  // Derive form submit button styles/label from formConfig first, then overrides
+  const quizStyleOverrides = (campaign as any)?.design?.quizConfig?.style || {};
+  const buttonModule1 = (modules1 || []).find((m: any) => m?.type === 'BlocBouton');
+  const submitButtonLabel = (formConfig?.submitLabel as string)
+    || (buttonModule1?.label as string)
+    || (quizStyleOverrides.buttonLabel as string)
+    || 'Envoyer';
+  const submitLaunchButtonStyles: React.CSSProperties = {
+    background: formConfig?.buttonColor || quizStyleOverrides.buttonBackgroundColor,
+    backgroundColor: formConfig?.buttonColor || quizStyleOverrides.buttonBackgroundColor,
+    color: formConfig?.buttonTextColor || quizStyleOverrides.buttonTextColor,
+    padding: quizStyleOverrides.buttonPadding || '14px 20px',
+    borderRadius: toRadius(formConfig?.borderRadius)
+      || toRadius(quizStyleOverrides.borderRadius)
+      || '12px',
+    boxShadow: quizStyleOverrides.buttonBoxShadow || '0 6px 16px rgba(0,0,0,0.15)',
+    width: '100%',
+    fontWeight: 600,
+  };
+
+  const isPhoneFrame = constrainedHeight && previewMode === 'mobile';
+
+  const InnerContent = (
     <>
       <style>{`
         @keyframes slideUpFromBottom {
@@ -554,6 +630,14 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
           }
           to {
             transform: translateY(0);
+            opacity: 1;
+          }
+        }
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+          }
+          to {
             opacity: 1;
           }
         }
@@ -585,16 +669,15 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
           display: none !important;
         }
       `}</style>
-      <div className={constrainedHeight ? "w-full h-full" : "w-full h-[100dvh] min-h-[100dvh]"}>
-        <div className="relative w-full h-full">
+      <div className="relative w-full h-full">
         {/* Background */}
         <div className="absolute inset-0 z-0" style={backgroundStyle} />
 
         {/* Content avec safe zone */}
-        <div className="relative z-30 h-full w-full overflow-y-auto">
+        <div className={`relative z-30 h-full w-full ${currentScreen === 'screen2' ? 'overflow-hidden' : 'overflow-y-auto'} overflow-x-hidden`}>
           {/* SCREEN 1: Page d'accueil */}
           {currentScreen === 'screen1' && (
-            <div className="flex flex-col min-h-full">
+            <div className={`flex flex-col ${isPhoneFrame ? 'min-h-full' : 'min-h-screen min-h-[100svh] min-h-[100dvh]'} relative`}>
               {/* Modules Logo (collés en haut sans padding) */}
               {logoModules1.length > 0 && (
                 <div className="w-full">
@@ -640,6 +723,8 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
                     ))}
                   </div>
                 )}
+
+                {/* Form card is rendered in the fallback branch below for form campaigns (to avoid duplicates) */}
                 
                 {campaign?.design?.customTexts && campaign.design.customTexts.length > 0 && (
                   <div className="absolute inset-0 pointer-events-none" style={{ padding: safeZonePadding }}>
@@ -671,7 +756,7 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
                   </div>
                 )}
 
-                {modules1.length > 0 ? (
+                {modules1.length > 0 && campaign?.type !== 'form' ? (
                   <section 
                     className="space-y-6" 
                     data-screen="screen1"
@@ -686,39 +771,191 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
                     />
                   </section>
                 ) : (
-                  /* Si pas de modules sur screen1, afficher un bouton "Participer" par défaut */
-                  <div 
-                    className="flex items-center justify-center h-full"
-                    style={{ padding: safeZonePadding, boxSizing: 'border-box' }}
-                  >
-                    <button
-                      onClick={handleParticipate}
-                      className="inline-flex items-center px-8 py-4 text-lg rounded-xl bg-gradient-to-br from-[#841b60] to-[#b41b60] backdrop-blur-sm text-white font-semibold border border-white/20 shadow-lg shadow-[#841b60]/20 hover:from-[#841b60] hover:to-[#6d164f] hover:shadow-xl hover:shadow-[#841b60]/30 transition-all duration-300 transform hover:-translate-y-0.5"
-                    >
-                      Participer
-                    </button>
-                  </div>
+                  /* Pas de modules sur screen1 */
+                  (
+                    campaign?.type === 'form' ? (
+                      // Mobile: bouton en bas + formulaire slide-up
+                      // Desktop: formulaire inline aligné à droite
+                      previewMode === 'mobile' ? (
+                        <>
+                          {/* Bouton fixé en bas */}
+                          <div 
+                            className="absolute bottom-0 left-0 right-0 flex items-center justify-center"
+                            style={{ 
+                              padding: `${safeZonePadding}px`,
+                              paddingBottom: `${safeZonePadding + 20}px`
+                            }}
+                          >
+                            <button
+                              onClick={() => setShowContactForm(true)}
+                              className="inline-flex items-center px-8 py-4 text-lg backdrop-blur-sm text-white font-semibold border border-white/20 shadow-lg transition-all duration-300 transform hover:-translate-y-0.5"
+                              style={{
+                                background: formConfig?.buttonColor || '#841b60',
+                                borderRadius: (typeof formConfig?.borderRadius === 'number' ? `${formConfig.borderRadius}px` : formConfig?.borderRadius) || '9999px',
+                                color: formConfig?.buttonTextColor || '#ffffff'
+                              }}
+                            >
+                              {formConfig?.submitLabel || 'Participer'}
+                            </button>
+                          </div>
+                          
+                          {/* Formulaire slide-up depuis le bas avec backdrop */}
+                          {showContactForm && (
+                            <>
+                              {/* Backdrop noir semi-transparent */}
+                              <div
+                                className="absolute inset-0"
+                                style={{
+                                  backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                                  zIndex: 49,
+                                  animation: 'fadeIn 0.3s ease-out'
+                                }}
+                                onClick={() => setShowContactForm(false)}
+                              />
+                              
+                              {/* Formulaire */}
+                              <div
+                                className="absolute inset-0 flex items-end"
+                                style={{
+                                  animation: 'slideUpFromBottom 0.4s ease-out',
+                                  zIndex: 50,
+                                  pointerEvents: 'none'
+                                }}
+                              >
+                                <div
+                                  className="w-full shadow-xl p-6"
+                                  style={{
+                                    background: formConfig?.panelBg || '#ffffff',
+                                    borderTopLeftRadius: (typeof formConfig?.borderRadius === 'number' ? `${formConfig.borderRadius}px` : formConfig?.borderRadius) || '12px',
+                                    borderTopRightRadius: (typeof formConfig?.borderRadius === 'number' ? `${formConfig.borderRadius}px` : formConfig?.borderRadius) || '12px',
+                                    border: `1px solid ${formConfig?.borderColor || '#e5e7eb'}`,
+                                    color: formConfig?.textColor || '#111827',
+                                    maxHeight: '80%',
+                                    overflowY: 'auto',
+                                    pointerEvents: 'auto'
+                                  }}
+                                >
+                                <div className="flex items-center justify-between mb-4">
+                                  <h3 className="font-semibold text-lg" style={{ color: formConfig?.textColor || '#111827' }}>
+                                    {formConfig?.title || 'Vos informations'}
+                                  </h3>
+                                  <button
+                                    onClick={() => setShowContactForm(false)}
+                                    className="text-gray-400 hover:text-gray-600 text-2xl leading-none"
+                                  >
+                                    ×
+                                  </button>
+                                </div>
+                                {formConfig?.description && (
+                                  <p className="text-sm mb-4" style={{ color: '#6b7280' }}>
+                                    {formConfig.description}
+                                  </p>
+                                )}
+                                <DynamicContactForm
+                                  fields={contactFields}
+                                  onSubmit={async (data) => {
+                                    await handleFormSubmit(data);
+                                    setShowContactForm(false);
+                                    setCurrentScreen('screen3');
+                                  }}
+                                  submitLabel="Envoyer"
+                                  launchButtonStyles={submitLaunchButtonStyles}
+                                />
+                              </div>
+                            </div>
+                          </>
+                          )}
+                        </>
+                      ) : (
+                        // Desktop: formulaire inline aligné à droite
+                        <div
+                          className="absolute"
+                          style={{
+                            right: `${safeZonePadding}px`,
+                            top: '50%',
+                            transform: 'translateY(-50%)'
+                          }}
+                        >
+                          <div
+                            className="shadow-xl p-6"
+                            style={{
+                              width: (typeof formConfig?.width === 'number' && formConfig.width > 0) ? `${formConfig.width}px` : '420px',
+                              background: formConfig?.panelBg || '#ffffff',
+                              borderRadius: (typeof formConfig?.borderRadius === 'number' ? `${formConfig.borderRadius}px` : formConfig?.borderRadius) || '12px',
+                              border: `1px solid ${formConfig?.borderColor || '#e5e7eb'}`,
+                              color: formConfig?.textColor || '#111827'
+                            }}
+                          >
+                            <h3 className="font-semibold text-lg mb-2" style={{ color: formConfig?.textColor || '#111827' }}>
+                              {formConfig?.title || 'Vos informations'}
+                            </h3>
+                            {formConfig?.description && (
+                              <p className="text-sm mb-4" style={{ color: '#6b7280' }}>
+                                {formConfig.description}
+                              </p>
+                            )}
+                            <DynamicContactForm
+                              fields={contactFields}
+                              onSubmit={async (data) => {
+                                await handleFormSubmit(data);
+                                // Pour les campagnes formulaire uniquement, aller au résultat
+                                setCurrentScreen('screen3');
+                              }}
+                              submitLabel={submitButtonLabel}
+                              launchButtonStyles={submitLaunchButtonStyles}
+                            />
+                          </div>
+                        </div>
+                      )
+                    ) : (
+                      // Autres types: bouton Participer par défaut
+                      <div 
+                        className="flex items-center justify-center"
+                        style={{ padding: safeZonePadding, boxSizing: 'border-box', minHeight: 280 }}
+                      >
+                        <button
+                          onClick={handleParticipate}
+                          className="inline-flex items-center px-8 py-4 text-lg rounded-xl bg-gradient-to-br from-[#841b60] to-[#b41b60] backdrop-blur-sm text-white font-semibold border border-white/20 shadow-lg shadow-[#841b60]/20 hover:from-[#841b60] hover:to-[#6d164f] hover:shadow-xl hover:shadow-[#841b60]/30 transition-all duration-300 transform hover:-translate-y-0.5"
+                        >
+                          Participer
+                        </button>
+                      </div>
+                    )
+                  )
                 )}
               </div>
               
               {/* Modules Footer (collés en bas sans padding) */}
               {footerModules1.length > 0 && (
-                <div className="w-full">
-                  <ModuleRenderer
-                    modules={footerModules1 as any}
-                    previewMode={true}
-                    device={previewMode}
-                    onModuleClick={onModuleClick}
-                    onButtonClick={() => {}}
-                  />
-                </div>
+                isPhoneFrame ? (
+                  <div className="mt-auto w-full z-[9999]" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
+                    <ModuleRenderer
+                      modules={footerModules1 as any}
+                      previewMode
+                      device={previewMode}
+                      onModuleClick={onModuleClick}
+                    />
+                  </div>
+                ) : (
+                  <div
+                    className="absolute inset-x-0 bottom-0 z-[9999]"
+                    style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+                  >
+                    <ModuleRenderer
+                      modules={footerModules1 as any}
+                      previewMode
+                      device={previewMode}
+                      onModuleClick={onModuleClick}
+                    />
+                  </div>
+                )
               )}
             </div>
           )}
 
           {/* SCREEN 2: Jeu */}
           {currentScreen === 'screen2' && (
-            <div className="flex flex-col min-h-full">
+            <div className={`flex flex-col ${isPhoneFrame ? 'min-h-full' : 'min-h-screen min-h-[100svh] min-h-[100dvh]'} relative`}>
               {/* Modules Logo (collés en haut sans padding) */}
               {logoModules2.length > 0 && (
                 <div className="w-full">
@@ -839,12 +1076,12 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
                   )}
 
                   {/* Quiz */}
-                  {campaign.type === 'quiz' && (
+                  {(campaign.type === 'quiz' || (campaign.type === 'form' && derivedQuizConfig?.templateId)) && (
                     <TemplatedQuiz
-                      campaign={campaign}
+                      campaign={previewQuizCampaign}
                       device={previewMode}
                       disabled={false}
-                      templateId={campaign?.design?.quizConfig?.templateId || 'image-quiz'}
+                      templateId={derivedQuizConfig?.templateId || 'image-quiz'}
                       onAnswerSelected={(isCorrect) => {
                         console.log('🎯 Quiz answer selected:', isCorrect ? 'correct' : 'incorrect');
                         setTimeout(() => {
@@ -858,13 +1095,26 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
               
               {/* Modules Footer (collés en bas sans padding) */}
               {footerModules2.length > 0 && (
-                <div className="w-full">
-                  <ModuleRenderer
-                    modules={footerModules2 as any}
-                    previewMode
-                    device={previewMode}
-                  />
-                </div>
+                isPhoneFrame ? (
+                  <div className="mt-auto w-full z-[9999]" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
+                    <ModuleRenderer
+                      modules={footerModules2 as any}
+                      previewMode
+                      device={previewMode}
+                    />
+                  </div>
+                ) : (
+                  <div
+                    className="absolute inset-x-0 bottom-0 z-[9999]"
+                    style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+                  >
+                    <ModuleRenderer
+                      modules={footerModules2 as any}
+                      previewMode
+                      device={previewMode}
+                    />
+                  </div>
+                )
               )}
             </div>
           )}
@@ -957,24 +1207,35 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
                   style={{ padding: safeZonePadding, boxSizing: 'border-box' }}
                 >
                   {(() => {
-                    // Utiliser les messages du store en priorité, sinon fallback sur campaign
-                    const resultMessages = storeMessages || campaign?.resultMessages || {};
-                    const messages = gameResult === 'win' 
-                      ? (resultMessages.winner || {
-                          title: '🎉 Félicitations !',
-                          message: 'Vous avez gagné !',
-                          subMessage: 'Un email de confirmation vous a été envoyé',
-                          buttonText: 'Fermer',
-                          buttonAction: 'close',
-                          showPrizeImage: true
-                        })
-                      : (resultMessages.loser || {
-                          title: '😞 Dommage !',
-                          message: 'Merci pour votre participation !',
-                          subMessage: 'Tentez votre chance une prochaine fois',
-                          buttonText: 'Rejouer',
-                          buttonAction: 'replay'
-                        });
+                    // Sélection des messages avec priorité au mode confirmation neutre
+                    const resultMessagesAll = (campaign?.resultMessages) || (storeMessages as any) || {};
+                    const hasConfirmation = Boolean((resultMessagesAll as any)?.confirmation);
+                    const neutralMode = hasConfirmation || campaign?.type === 'form' || campaign?.resultMode === 'confirmation';
+                    const confirmationDefaults = {
+                      title: 'Merci !',
+                      message: 'Votre participation a été enregistrée.',
+                      subMessage: 'Vous recevrez une confirmation par email.',
+                      buttonText: 'Fermer',
+                      buttonAction: 'close' as const
+                    };
+                    const messages = neutralMode
+                      ? ((resultMessagesAll as any).confirmation || confirmationDefaults)
+                      : (gameResult === 'win'
+                          ? ((resultMessagesAll as any).winner || {
+                              title: '🎉 Félicitations !',
+                              message: 'Vous avez gagné !',
+                              subMessage: 'Un email de confirmation vous a été envoyé',
+                              buttonText: 'Fermer',
+                              buttonAction: 'close',
+                              showPrizeImage: true
+                            })
+                          : ((resultMessagesAll as any).loser || {
+                              title: '😞 Dommage !',
+                              message: 'Merci pour votre participation !',
+                              subMessage: 'Tentez votre chance une prochaine fois',
+                              buttonText: 'Rejouer',
+                              buttonAction: 'replay'
+                            }));
 
                     const handleButtonClick = () => {
                       if (messages.buttonAction === 'replay') {
@@ -982,26 +1243,42 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
                       } else if (messages.buttonAction === 'redirect' && messages.redirectUrl) {
                         window.location.href = messages.redirectUrl;
                       } else {
-                        // close action - could close modal or navigate away
+                        // action close par défaut
                         console.log('Close action');
                       }
                     };
 
                     return (
-                      <div className="bg-white rounded-2xl shadow-lg p-8 text-center max-w-md w-full mx-auto">
+                      <div
+                        className="shadow-lg p-8 text-center max-w-md w-full mx-auto"
+                        style={{
+                          backgroundColor: (formConfig as any)?.panelBg || '#ffffff',
+                          borderRadius: typeof (formConfig as any)?.borderRadius === 'number' ? `${(formConfig as any).borderRadius}px` : '12px',
+                          border: `1px solid ${((formConfig as any)?.borderColor || 'rgba(0,0,0,0.05)')}`
+                        }}
+                      >
                         {/* Titre principal */}
-                        <h2 className="text-2xl font-semibold text-gray-900 mb-3 text-center">
+                        <h2
+                          className="text-2xl font-semibold mb-3 text-center"
+                          style={{ color: (formConfig as any)?.textColor || '#111827' }}
+                        >
                           {messages.title}
                         </h2>
 
                         {/* Message principal */}
-                        <p className="text-base text-gray-700 mb-2">
+                        <p
+                          className="text-base mb-2"
+                          style={{ color: (formConfig as any)?.textColor || '#374151' }}
+                        >
                           {messages.message}
                         </p>
 
                         {/* Sous-message */}
                         {messages.subMessage && (
-                          <p className="text-sm text-gray-600 mb-6">
+                          <p
+                            className="text-sm mb-6"
+                            style={{ color: (formConfig as any)?.textColor || '#6B7280' }}
+                          >
                             {messages.subMessage}
                           </p>
                         )}
@@ -1010,7 +1287,14 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
                         <button
                           onClick={handleButtonClick}
                           className="w-full font-medium text-base hover:opacity-90 transition-all duration-200"
-                          style={globalButtonStyle}
+                          style={{
+                            ...globalButtonStyle,
+                            backgroundColor: (formConfig as any)?.buttonColor || (globalButtonStyle as any)?.backgroundColor || '#841b60',
+                            color: (formConfig as any)?.buttonTextColor || (globalButtonStyle as any)?.color || '#ffffff',
+                            borderRadius: (typeof (formConfig as any)?.borderRadius === 'number'
+                              ? `${(formConfig as any).borderRadius}px`
+                              : ((globalButtonStyle as any)?.borderRadius || '12px'))
+                          }}
                         >
                           {messages.buttonText}
                         </button>
@@ -1050,13 +1334,37 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
           )}
         </div>
       </div>
-      </div>
+    </>
+  );
 
-      {/* Modal de formulaire de contact */}
-      {showContactForm && (() => {
-        // Calculer la hauteur dynamique en fonction du nombre de champs
-        const baseHeight = 200;
-        const fieldHeight = 100;
+  return (
+    <>
+      {isPhoneFrame ? (
+        <div className="w-full h-full min-h-full flex items-center justify-center" style={{ backgroundColor: '#2c2c35' }}>
+          <div
+            className="relative"
+            style={{
+              width: 360,
+              height: 640,
+              borderRadius: 24,
+              overflow: 'hidden',
+              boxShadow: '0 14px 40px rgba(0,0,0,0.35)',
+              backgroundColor: '#000'
+            }}
+          >
+            {InnerContent}
+          </div>
+        </div>
+      ) : (
+        <div className={constrainedHeight ? "w-full h-full" : "w-full h-[100dvh] min-h-[100dvh]"}>
+          {InnerContent}
+        </div>
+      )}
+      
+      {/* Contact Form Modal - Skip for form campaigns in mobile (they use inline slide-up) */}
+      {showContactForm && !(campaign?.type === 'form' && previewMode === 'mobile') && (() => {
+        const baseHeight = 400;
+        const fieldHeight = 80;
         const calculatedHeight = baseHeight + (contactFields.length * fieldHeight);
         const maxScreenHeight = window.innerHeight * 0.85;
         const maxHeight = `${Math.min(calculatedHeight, maxScreenHeight)}px`;

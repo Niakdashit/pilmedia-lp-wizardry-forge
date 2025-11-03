@@ -2641,7 +2641,7 @@ useEffect(() => {
         formConfig: campaignConfig?.design?.formConfig || campaignState?.design?.formConfig || {
           title: 'Vos informations',
           description: 'Remplissez le formulaire pour participer',
-          submitLabel: 'SPIN',
+          submitLabel: 'Participer',
           panelBg: '#ffffff',
           borderColor: '#e5e7eb',
           textColor: '#000000',
@@ -2650,7 +2650,7 @@ useEffect(() => {
           fontFamily: 'inherit',
           displayMode: 'overlay',
           position: 'right',
-          borderRadius: 12,
+          borderRadius: 5,
           fieldBorderRadius: 2,
           width: 500,
           height: 500
@@ -3405,57 +3405,67 @@ useEffect(() => {
               Mode édition
             </button>
             {editorMode === 'article' ? (
-              selectedDevice === 'mobile' ? (
-                <div className="flex items-center justify-center w-full h-full">
-                  <div 
-                    className="relative overflow-hidden rounded-[32px] shadow-2xl"
-                    style={{
-                      width: '430px',
-                      height: '932px',
-                      maxHeight: '90vh'
-                    }}
-                  >
-                    <ArticleFunnelView
-                      articleConfig={(campaignState as any)?.articleConfig || {}}
-                      campaignType={(campaignState as any)?.type || 'form'}
-                      campaign={campaignData}
-                      wheelModalConfig={wheelModalConfig}
-                      gameModalConfig={wheelModalConfig}
-                      currentStep={currentStep}
-                      editable={false}
-                      formFields={(campaignState as any)?.formFields}
-                      onCTAClick={handleCTAClick}
-                      onFormSubmit={handleFormSubmit}
-                      onGameComplete={handleGameComplete}
-                      onStepChange={setCurrentStep}
-                      containerClassName="p-0"
-                      containerStyle={{ backgroundColor: 'transparent' }}
-                    />
+              currentStep === 'article' ? (
+                selectedDevice === 'mobile' ? (
+                  <div className="flex items-center justify-center w-full h-full">
+                    <div 
+                      className="relative overflow-hidden rounded-[32px] shadow-2xl"
+                      style={{
+                        width: '430px',
+                        height: '932px',
+                        maxHeight: '90vh'
+                      }}
+                    >
+                      <ArticleFunnelView
+                        articleConfig={(campaignState as any)?.articleConfig || {}}
+                        campaignType={(campaignState as any)?.type || 'form'}
+                        campaign={campaignData}
+                        wheelModalConfig={wheelModalConfig}
+                        gameModalConfig={wheelModalConfig}
+                        currentStep={currentStep}
+                        editable={false}
+                        formFields={(campaignState as any)?.formFields}
+                        onCTAClick={handleCTAClick}
+                        onFormSubmit={handleFormSubmit}
+                        onGameComplete={handleGameComplete}
+                        onStepChange={setCurrentStep}
+                        containerClassName="p-0"
+                        containerStyle={{ backgroundColor: 'transparent' }}
+                      />
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  <ArticleFunnelView
+                    articleConfig={(campaignState as any)?.articleConfig || {}}
+                    campaignType={(campaignState as any)?.type || 'form'}
+                    campaign={campaignData}
+                    wheelModalConfig={wheelModalConfig}
+                    gameModalConfig={wheelModalConfig}
+                    currentStep={currentStep}
+                    editable={false}
+                    formFields={(campaignState as any)?.formFields}
+                    onCTAClick={handleCTAClick}
+                    onFormSubmit={handleFormSubmit}
+                    onGameComplete={handleGameComplete}
+                    onStepChange={setCurrentStep}
+                    containerClassName="py-8"
+                    containerStyle={{ backgroundColor: '#2c2c35' }}
+                  />
+                )
               ) : (
-                <ArticleFunnelView
-                  articleConfig={(campaignState as any)?.articleConfig || {}}
-                  campaignType={(campaignState as any)?.type || 'form'}
+                <PreviewRenderer
                   campaign={campaignData}
+                  previewMode={actualDevice === 'desktop' && selectedDevice === 'mobile' ? 'mobile' : selectedDevice}
                   wheelModalConfig={wheelModalConfig}
-                  gameModalConfig={wheelModalConfig}
-                  currentStep={currentStep}
-                  editable={false}
-                  formFields={(campaignState as any)?.formFields}
-                  onCTAClick={handleCTAClick}
-                  onFormSubmit={handleFormSubmit}
-                  onGameComplete={handleGameComplete}
-                  onStepChange={setCurrentStep}
-                  containerClassName="py-8"
-                  containerStyle={{ backgroundColor: '#2c2c35' }}
+                  constrainedHeight={true}
                 />
               )
             ) : (
               <PreviewRenderer
                 campaign={campaignData}
-                previewMode={selectedDevice}
+                previewMode={actualDevice === 'desktop' && selectedDevice === 'mobile' ? 'mobile' : selectedDevice}
                 wheelModalConfig={wheelModalConfig}
+                constrainedHeight={true}
               />
             )}
           </div>
@@ -3796,81 +3806,6 @@ useEffect(() => {
               <div className="min-h-full flex flex-col">
                 {/* Premier Canvas */}
                 <div data-screen-anchor="screen1" className="relative">
-                  {editorMode === 'article' ? (
-                    /* Article Mode: Show ArticleCanvas with funnel */
-                    <div className="w-full flex items-start justify-center bg-gray-100 overflow-y-auto p-8">
-                      <ArticleFunnelView
-                        articleConfig={(campaignState as any)?.articleConfig || {}}
-                        campaignType={(campaignState as any)?.type || 'form'}
-                        campaign={campaignData}
-                        wheelModalConfig={wheelModalConfig}
-                        gameModalConfig={wheelModalConfig}
-                        currentStep={currentStep}
-                        editable={true}
-                        formFields={(campaignState as any)?.formFields}
-                        onBannerChange={(imageUrl) => {
-                          if (campaignState) {
-                            setCampaign({
-                              ...campaignState,
-                              articleConfig: {
-                                ...(campaignState as any).articleConfig,
-                                banner: {
-                                  ...(campaignState as any).articleConfig?.banner,
-                                  imageUrl,
-                                },
-                              },
-                            });
-                          }
-                        }}
-                        onBannerRemove={() => {
-                          if (campaignState) {
-                            setCampaign({
-                              ...campaignState,
-                              articleConfig: {
-                                ...(campaignState as any).articleConfig,
-                                banner: {
-                                  ...(campaignState as any).articleConfig?.banner,
-                                  imageUrl: undefined,
-                                },
-                              },
-                            });
-                          }
-                        }}
-                        onTitleChange={(title) => {
-                          if (campaignState) {
-                            setCampaign({
-                              ...campaignState,
-                              articleConfig: {
-                                ...(campaignState as any).articleConfig,
-                                content: {
-                                  ...(campaignState as any).articleConfig?.content,
-                                  title,
-                                },
-                              },
-                            });
-                          }
-                        }}
-                        onDescriptionChange={(description) => {
-                          if (campaignState) {
-                            setCampaign({
-                              ...campaignState,
-                              articleConfig: {
-                                ...(campaignState as any).articleConfig,
-                                content: {
-                                  ...(campaignState as any).articleConfig?.content,
-                                  description,
-                                },
-                              },
-                            });
-                          }
-                        }}
-                        onCTAClick={handleCTAClick}
-                        onFormSubmit={handleFormSubmit}
-                        onGameComplete={handleGameComplete}
-                        onStepChange={setCurrentStep}
-                      />
-                    </div>
-                  ) : (
                   <DesignCanvas
                     editorMode={editorMode}
                     screenId="screen1"
@@ -3959,7 +3894,6 @@ useEffect(() => {
                     onModuleMove={handleMoveModule}
                     onModuleDuplicate={handleDuplicateModule}
                   />
-                  )}
                 </div>
 
                 {/* Écran 2 (Sortie) - réintroduit uniquement en mode fullscreen */}
