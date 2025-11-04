@@ -612,8 +612,10 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
 
         const maxX = Math.max(0, (effectiveCanvasSize.width || 0) - widthForClamp);
         const maxY = Math.max(0, (effectiveCanvasSize.height || 0) - heightForClamp);
-        const clampedAbsX = Math.min(Math.max(absX, 0), maxX);
-        const clampedAbsY = Math.min(Math.max(absY, 0), maxY);
+        // Allow disabling clamping globally for full free-move
+        const disableClamp = (typeof window !== 'undefined') && (window as any).__DISABLE_CANVAS_CLAMP__ === true;
+        const clampedAbsX = disableClamp ? absX : Math.min(Math.max(absX, 0), maxX);
+        const clampedAbsY = disableClamp ? absY : Math.min(Math.max(absY, 0), maxY);
 
         // Convertir en relatif si nécessaire après clamping
         if (parentId) {

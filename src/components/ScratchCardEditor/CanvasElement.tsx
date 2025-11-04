@@ -295,6 +295,8 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
     
     // Variable pour tracker la dernière position pendant le drag
     let lastDragPosition = { x: currentCanvasX, y: currentCanvasY };
+    // Verrouillage vertical pour les éléments texte
+    const lockVerticalOnly = element.type === 'text';
     
     // Cache metrics at drag start to avoid repeated layout reads
     // Plus de clamp aux bords, on ne calcule plus les bornes du canevas
@@ -333,14 +335,19 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
           sy = snapResult.y;
         }
 
+        // Verrouillage vertical: conserver X d'origine pour les textes
+        if (lockVerticalOnly) {
+          sx = currentCanvasX;
+        }
+
         // Autoriser le dépassement hors canevas: pas de clamp
         const cx = sx;
         const cy = sy;
 
         // Sauvegarder la position pour la fin du drag
-        lastDragPosition = { x: cx, y: cy };
+        lastDragPosition = { x: lockVerticalOnly ? currentCanvasX : cx, y: cy };
 
-        // Mise à jour immédiate du transform avec la position clampée
+        // Mise à jour immédiate du transform avec la position (x possiblement verrouillé)
         if (elementRef.current) {
           const angleRaw = typeof element.rotation === 'number' ? element.rotation : 0;
           const angle = normalize180(angleRaw);
@@ -385,11 +392,12 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
         if (dragSystemRef.current?.isActive()) {
           const finalState = dragSystemRef.current.getState();
           if (finalState.started) {
-            // SOLUTION MOBILE: Utiliser directement la dernière position trackée
-            // au lieu de recalculer avec viewport (qui peut être incorrect sur mobile)
-            onUpdate(element.id, { 
-              x: Math.round(lastDragPosition.x * 100) / 100,
-              y: Math.round(lastDragPosition.y * 100) / 100
+            // Utiliser la dernière position, en conservant X initial pour les textes si verrouillage actif
+            const commitX = lockVerticalOnly ? currentCanvasX : lastDragPosition.x;
+            const commitY = lastDragPosition.y;
+            onUpdate(element.id, {
+              x: Math.round(commitX * 100) / 100,
+              y: Math.round(commitY * 100) / 100
             });
           }
         }

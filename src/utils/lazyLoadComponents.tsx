@@ -6,3 +6,4 @@ export const LazyStandardizedWheel = lazy(() => import('@/components/shared/Stan
 export const LazyArticleCanvas = lazy(() => import('@/components/ArticleEditor/ArticleCanvas'));
 export const LazyModularCanvas = lazy(() => import('@/components/QuizEditor/modules/ModularCanvas'));
 export const LazyPerformanceMonitor = lazy(() => import('@/components/ModernEditor/components/PerformanceMonitor'));
+export const LazyProEditorLayout = lazy(() => import('@/components/ProEditor/ProEditorLayout'));

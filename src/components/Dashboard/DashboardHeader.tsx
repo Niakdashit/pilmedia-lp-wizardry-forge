@@ -19,6 +19,9 @@ const DashboardHeader: React.FC = () => {
     type: 'jackpot',
     label: 'Jackpot'
   }, {
+    type: 'pro',
+    label: 'Pro'
+  }, {
     type: 'form',
     label: 'Formulaire'
   }];
@@ -49,6 +52,7 @@ const DashboardHeader: React.FC = () => {
                   quiz: '/gamification/shortcuts/quiz.svg',
                   scratch: '/gamification/shortcuts/scratch.svg',
                   jackpot: '/gamification/shortcuts/jackpot.svg',
+                  pro: '/gamification/shortcuts/jackpot.svg',
                   form: '/gamification/shortcuts/form.svg'
                 };
                 return <button 
@@ -88,6 +92,7 @@ const DashboardHeader: React.FC = () => {
                     quiz: '/gamification/shortcuts/quiz.svg',
                     scratch: '/gamification/shortcuts/scratch.svg',
                     jackpot: '/gamification/shortcuts/jackpot.svg',
+                    pro: '/gamification/shortcuts/jackpot.svg',
                     form: '/gamification/shortcuts/form.svg'
                   };
                   

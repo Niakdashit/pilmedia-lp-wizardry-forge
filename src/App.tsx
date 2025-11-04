@@ -17,6 +17,7 @@ const DesignEditor = lazy(() => import('./pages/DesignEditor'));
 const QuizEditor = lazy(() => import('./pages/QuizEditor'));
 const ModelEditor = lazy(() => import('./pages/ModelEditor'));
 const JackpotEditor = lazy(() => import('./pages/JackpotEditor'));
+const ProEditor = lazy(() => import('./pages/ProEditor'));
 const FormEditor = lazy(() => import('./pages/FormEditor'));
 const ScratchCardEditor = lazy(() => import('./pages/ScratchCardEditor'));
 const ScratchCard2 = lazy(() => import('./pages/ScratchCard2'));
@@ -111,6 +112,11 @@ function App() {
               <Route path="/jackpot-editor" element={
                 <LoadingBoundary fallback={<EditorLoader />}>
                   <JackpotEditor />
+                </LoadingBoundary>
+              } />
+              <Route path="/pro-editor" element={
+                <LoadingBoundary fallback={<EditorLoader />}>
+                  <ProEditor />
                 </LoadingBoundary>
               } />
               <Route path="/form-editor" element={

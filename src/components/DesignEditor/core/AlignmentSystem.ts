@@ -46,15 +46,19 @@ export class AlignmentSystem {
   private gridSize: number = 20;
   private showGrid: boolean = false;
   private lastSnapState: { [elementId: string]: { x?: number; y?: number } } = {};
+  // Global enable/disable switch. By default we disable snapping to allow free move.
+  private enabled: boolean = false;
 
   constructor(options?: {
     snapTolerance?: number;
     gridSize?: number;
     showGrid?: boolean;
+    enabled?: boolean;
   }) {
     if (options?.snapTolerance) this.snapTolerance = options.snapTolerance;
     if (options?.gridSize) this.gridSize = options.gridSize;
     if (options?.showGrid !== undefined) this.showGrid = options.showGrid;
+    if (options?.enabled !== undefined) this.enabled = options.enabled;
   }
 
   /**
@@ -133,6 +137,16 @@ export class AlignmentSystem {
     canvas: CanvasInfo,
     zoom: number = 1
   ): SnapResult {
+    // Hard disable path: if globally or locally disabled, bypass snapping entirely
+    const globalDisabled = (typeof window !== 'undefined') && (window as any).__DISABLE_ALIGNMENT_SNAP__ === true;
+    if (!this.enabled || globalDisabled) {
+      return {
+        x: element.x,
+        y: element.y,
+        snapped: false,
+        guides: []
+      };
+    }
     // Tolérance adaptative: min 3px, max 12px
     const baseTolerance = Math.max(3, Math.min(12, this.snapTolerance / zoom));
     
@@ -520,6 +534,11 @@ export class AlignmentSystem {
 
   setShowGrid(show: boolean): void {
     this.showGrid = show;
+  }
+
+  /** Enable or disable snapping at runtime */
+  setEnabled(on: boolean): void {
+    this.enabled = on;
   }
 }
 

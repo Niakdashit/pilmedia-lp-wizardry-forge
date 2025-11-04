@@ -39,7 +39,9 @@ const Toolbar: React.FC<{
   onAlignChange?: (v: 'left' | 'center' | 'right') => void;
   isMobile?: boolean;
   onDuplicate?: () => void;
-}> = ({ onDelete, visible, layoutWidth, onWidthChange, expanded, onToggle, align = 'left', onAlignChange, isMobile = false, onDuplicate }) => {
+  isAbsolute?: boolean;
+  onToggleAbsolute?: () => void;
+}> = ({ onDelete, visible, layoutWidth, onWidthChange, expanded, onToggle, align = 'left', onAlignChange, isMobile = false, onDuplicate, isAbsolute = false, onToggleAbsolute }) => {
   const containerRef = React.useRef<HTMLDivElement | null>(null);
   const [placement, setPlacement] = React.useState<'above' | 'inline'>('above');
 
@@ -67,80 +69,91 @@ const Toolbar: React.FC<{
   }, [recomputePlacement]);
 
   return (
-  <div
-    ref={containerRef}
-    className={`absolute ${isMobile ? 'right-0 top-0' : 'right-2.5 top-2.5'} flex items-center ${isMobile ? 'gap-0.5' : 'gap-1'} rounded-lg border border-white/40 bg-white/70 shadow-lg shadow-black/10 backdrop-blur-sm transition-all duration-150
-      ${visible ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 -translate-y-1 pointer-events-none'} ${isMobile ? '' : 'md:right-3 md:top-3 md:gap-1.5 md:rounded-xl'}`}
-    style={{ padding: expanded ? (isMobile ? '2px 6px' : '2px 8px') : 0, zIndex: 1003, ...(placement === 'above' ? { transform: 'translateY(-100%)' } : {}), ...(isMobile ? { maxWidth: '100%', overflowX: 'auto' } : {}) }}
-    data-module-no-drag="true"
-  >
-    {!expanded && (
-      <button
-        type="button"
-        onClick={onToggle}
-        onMouseDown={(e) => { e.stopPropagation(); }}
-        onPointerDown={(e) => { e.stopPropagation(); }}
-        className={`inline-flex ${isMobile ? 'h-6 w-6' : 'h-7 w-7'} items-center justify-center rounded-md bg-white/80 text-gray-700 hover:bg-white`}
-        aria-label="Ouvrir les options"
-      >
-        <ChevronDown className={`${isMobile ? 'h-3.5 w-3.5' : 'h-4 w-4'}`} />
-      </button>
-    )}
-    {expanded && (
-      <>
-        <div className={`flex items-center gap-0.5 ${isMobile ? 'pr-1' : 'pr-1.5'} border-r border-white/40`}>
-          {layoutOptions.map((option) => {
-            const isActive = layoutWidth === option.id;
-            return (
-              <button
-                key={option.id}
-                type="button"
-                onClick={() => onWidthChange(option.id)}
-                className={`${isMobile ? 'px-1.5 py-0.5 text-[10px]' : 'px-2 py-1 text-[11px]'} font-semibold uppercase tracking-wide rounded-md transition-colors
-                  ${isActive ? 'bg-[#841b60] text-white shadow-sm shadow-[#841b60]/40' : 'bg-white/70 text-gray-600 hover:bg-white/90 hover:text-gray-900'}`}
-                aria-label={`Largeur ${option.label}`}
-              >
-                {option.label}
-              </button>
-            );
-          })}
-        </div>
-        {/* Align controls removed as requested */}
-        {onDuplicate && (
-          <div className={`flex items-center gap-0.5 ${isMobile ? 'pr-1' : 'pr-1.5'} border-r border-white/40`}>
-            <button
-              type="button"
-              onClick={onDuplicate}
-              className={`inline-flex ${isMobile ? 'h-6 w-6' : 'h-7 w-7'} items-center justify-center rounded-md text-gray-600 hover:bg-white/90 transition-colors ${isMobile ? '' : 'md:h-8 md:w-8'}`}
-              aria-label="Dupliquer"
-              title="Dupliquer"
-            >
-              <Copy className={`${isMobile ? 'h-3.5 w-3.5' : 'h-3.5 w-3.5 md:h-4 md:w-4'}`} />
-            </button>
-          </div>
-        )}
-        <div className={`flex items-center gap-0.5 ${isMobile ? 'pr-1' : 'pr-1.5'} border-r border-white/40`}>
-          <button
-            onClick={onDelete}
-            className={`inline-flex ${isMobile ? 'h-6 w-6' : 'h-7 w-7'} items-center justify-center rounded-md text-red-600 hover:bg-red-50/90 transition-colors ${isMobile ? '' : 'md:h-8 md:w-8'}`}
-            aria-label="Supprimer"
-          >
-            <Trash2 className={`${isMobile ? 'h-3.5 w-3.5' : 'h-3.5 w-3.5 md:h-4 md:w-4'}`} />
-          </button>
-        </div>
+    <div
+      ref={containerRef}
+      className={`absolute ${isMobile ? 'right-0 top-0' : 'right-2.5 top-2.5'} flex items-center ${isMobile ? 'gap-0.5' : 'gap-1'} rounded-lg border border-white/40 bg-white/70 shadow-lg shadow-black/10 backdrop-blur-sm transition-all duration-150
+        ${visible ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 -translate-y-1 pointer-events-none'} ${isMobile ? '' : 'md:right-3 md:top-3 md:gap-1.5 md:rounded-xl'}`}
+      style={{ padding: expanded ? (isMobile ? '2px 6px' : '2px 8px') : 0, zIndex: 1003, ...(placement === 'above' ? { transform: 'translateY(-100%)' } : {}), ...(isMobile ? { maxWidth: '100%', overflowX: 'auto' } : {}) }}
+      data-module-no-drag="true"
+    >
+      {!expanded && (
         <button
           type="button"
           onClick={onToggle}
           onMouseDown={(e) => { e.stopPropagation(); }}
           onPointerDown={(e) => { e.stopPropagation(); }}
-          className={`ml-1 inline-flex ${isMobile ? 'h-6 w-6' : 'h-7 w-7'} items-center justify-center rounded-md bg-white/60 text-gray-600 hover:bg-white/80`}
-          aria-label="Replier"
+          className={`inline-flex ${isMobile ? 'h-6 w-6' : 'h-7 w-7'} items-center justify-center rounded-md bg-white/80 text-gray-700 hover:bg-white`}
+          aria-label="Ouvrir les options"
         >
-          <ChevronDown className={`${isMobile ? 'h-3.5 w-3.5' : 'h-4 w-4'} rotate-180`} />
+          <ChevronDown className={`${isMobile ? 'h-3.5 w-3.5' : 'h-4 w-4'}`} />
         </button>
-      </>
-    )}
-  </div>
+      )}
+      {expanded && (
+        <>
+          <div className={`flex items-center gap-0.5 ${isMobile ? 'pr-1' : 'pr-1.5'} border-r border-white/40`}>
+            {layoutOptions.map((option) => {
+              const isActive = layoutWidth === option.id;
+              return (
+                <button
+                  key={option.id}
+                  type="button"
+                  onClick={() => onWidthChange(option.id)}
+                  className={`${isMobile ? 'px-1.5 py-0.5 text-[10px]' : 'px-2 py-1 text-[11px]'} font-semibold uppercase tracking-wide rounded-md transition-colors
+                    ${isActive ? 'bg-[#841b60] text-white shadow-sm shadow-[#841b60]/40' : 'bg-white/70 text-gray-600 hover:bg-white/90 hover:text-gray-900'}`}
+                  aria-label={`Largeur ${option.label}`}
+                >
+                  {option.label}
+                </button>
+              );
+            })}
+          </div>
+          {/* Mode Libre (position absolue) */}
+          <div className={`flex items-center gap-0.5 ${isMobile ? 'pr-1' : 'pr-1.5'} border-r border-white/40`}>
+            <button
+              type="button"
+              onClick={onToggleAbsolute}
+              className={`${isMobile ? 'px-2 py-0.5 text-[10px]' : 'px-2 py-1 text-[11px]'} font-semibold uppercase tracking-wide rounded-md transition-colors ${isAbsolute ? 'bg-[#841b60] text-white shadow-sm shadow-[#841b60]/40' : 'bg-white/70 text-gray-600 hover:bg-white/90 hover:text-gray-900'}`}
+              aria-label="Basculer position libre"
+            >
+              Libre
+            </button>
+          </div>
+          {/* Align controls removed as requested */}
+          {onDuplicate && (
+            <div className={`flex items-center gap-0.5 ${isMobile ? 'pr-1' : 'pr-1.5'} border-r border-white/40`}>
+              <button
+                type="button"
+                onClick={onDuplicate}
+                className={`inline-flex ${isMobile ? 'h-6 w-6' : 'h-7 w-7'} items-center justify-center rounded-md text-gray-600 hover:bg-white/90 transition-colors ${isMobile ? '' : 'md:h-8 md:w-8'}`}
+                aria-label="Dupliquer"
+                title="Dupliquer"
+              >
+                <Copy className={`${isMobile ? 'h-3.5 w-3.5' : 'h-3.5 w-3.5 md:h-4 md:w-4'}`} />
+              </button>
+            </div>
+          )}
+          <div className={`flex items-center gap-0.5 ${isMobile ? 'pr-1' : 'pr-1.5'} border-r border-white/40`}>
+            <button
+              onClick={onDelete}
+              className={`inline-flex ${isMobile ? 'h-6 w-6' : 'h-7 w-7'} items-center justify-center rounded-md text-red-600 hover:bg-red-50/90 transition-colors ${isMobile ? '' : 'md:h-8 md:w-8'}`}
+              aria-label="Supprimer"
+            >
+              <Trash2 className={`${isMobile ? 'h-3.5 w-3.5' : 'h-3.5 w-3.5 md:h-4 md:w-4'}`} />
+            </button>
+          </div>
+          <button
+            type="button"
+            onClick={onToggle}
+            onMouseDown={(e) => { e.stopPropagation(); }}
+            onPointerDown={(e) => { e.stopPropagation(); }}
+            className={`ml-1 inline-flex ${isMobile ? 'h-6 w-6' : 'h-7 w-7'} items-center justify-center rounded-md bg-white/60 text-gray-600 hover:bg-white/80`}
+            aria-label="Replier"
+          >
+            <ChevronDown className={`${isMobile ? 'h-3.5 w-3.5' : 'h-4 w-4'} rotate-180`} />
+          </button>
+        </>
+      )}
+    </div>
   );
 }
 
@@ -549,6 +562,25 @@ const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate
     if (event.button !== 0 && event.pointerType !== 'touch' && event.pointerType !== 'pen') {
       return;
     }
+    if (event.detail > 1) {
+      return;
+    }
+
+    const target = event.target as HTMLElement | null;
+    if (!target) return;
+
+    const interactiveAncestor = target.closest('[data-module-no-drag="true"], input, textarea, select') as HTMLElement | null;
+    if (interactiveAncestor && interactiveAncestor !== event.currentTarget) {
+      return;
+    }
+    const contentEditableAncestor = target.closest('[contenteditable="true"]') as HTMLElement | null;
+    if (contentEditableAncestor) {
+      return;
+    }
+
+    if (module.type === 'BlocHtml') {
+      return;
+    }
 
     if (dragStateRef.current) {
       stopModuleDrag();
@@ -648,7 +680,8 @@ const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate
   // Séparer les modules Logo des autres modules
   const logoModules = React.useMemo(() => modules.filter(m => m.type === 'BlocLogo'), [modules]);
   const footerModules = React.useMemo(() => modules.filter(m => m.type === 'BlocPiedDePage'), [modules]);
-  const regularModules = React.useMemo(() => modules.filter(m => m.type !== 'BlocLogo' && m.type !== 'BlocPiedDePage'), [modules]);
+  const absoluteModules = React.useMemo(() => modules.filter((m: any) => (m as any).absolute === true), [modules]);
+  const regularModules = React.useMemo(() => modules.filter((m: any) => m.type !== 'BlocLogo' && m.type !== 'BlocPiedDePage' && !(m as any).absolute), [modules]);
   
   const modulePaddingClass = device === 'mobile' ? 'p-0' : 'p-4';
   const single = regularModules.length === 1;
@@ -683,6 +716,27 @@ const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate
     if (current.length > 0) grouped.push(current);
     return grouped;
   }, [regularModules]);
+
+  // One-time migration to absolute free-move: convert non-absolute modules to absolute with spaced Y
+  const migratedRef = React.useRef(false);
+  React.useEffect(() => {
+    if (migratedRef.current) return;
+    // If user wants simple vertical blocks and none is absolute yet, convert
+    const hasAbsolute = absoluteModules.length > 0;
+    const hasRegular = regularModules.length > 0;
+    if (!hasAbsolute && hasRegular) {
+      let y = 20;
+      const step = 140; // default vertical spacing
+      modules.forEach((m) => {
+        const anyM: any = m as any;
+        if (!anyM.absolute) {
+          onUpdate(m.id, { absolute: true, x: 0, y } as any);
+          y += step;
+        }
+      });
+      migratedRef.current = true;
+    }
+  }, [modules, absoluteModules.length, regularModules.length, onUpdate]);
 
   return (
     <div className="w-full" data-modular-zone="1">
@@ -730,7 +784,7 @@ const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate
       ))}
       
       {/* Modules réguliers - dans le conteneur centré avec max-width */}
-      <div className="w-full max-w-[1500px] mx-auto">
+      <div className="w-full max-w-[1500px] mx-auto relative">
         <div
           className="flex flex-col gap-0"
           style={{
@@ -755,7 +809,6 @@ const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate
                   : modulePaddingClass;
 
                 const handleModulePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
-                  console.log('⚡ [ModularCanvas] handleModulePointerDown called!', { id: m.id, type: m.type });
                   if (event.button !== 0 && event.pointerType !== 'touch' && event.pointerType !== 'pen') {
                     return;
                   }
@@ -778,9 +831,8 @@ const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate
                   if (m.type === 'BlocHtml') {
                     return;
                   }
-                  // TEMPORAIREMENT COMMENTÉ POUR TESTER
-                  console.log('🚫 [ModularCanvas] startModuleDrag DISABLED for testing');
-                  // startModuleDrag(event as unknown as React.PointerEvent<HTMLElement>, m, originalIndex);
+                  // Enable drag-reorder by clicking the module area
+                  startModuleDrag(event as unknown as React.PointerEvent<HTMLElement>, m, originalIndex);
                 };
 
                 const handleDragHandlePointerDown = (event: React.PointerEvent<HTMLElement>) => {
@@ -961,6 +1013,8 @@ const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate
                         onToggle={() => setOpenToolbarFor((prev) => (prev === m.id ? null : m.id))}
                         isMobile={device === 'mobile'}
                         onDuplicate={onDuplicate ? () => onDuplicate(m.id) : undefined}
+                        isAbsolute={(m as any).absolute === true}
+                        onToggleAbsolute={() => onUpdate(m.id, { absolute: !(m as any).absolute } as any)}
                       />
                     )}
                     <button
@@ -995,6 +1049,65 @@ const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate
             </div>
           );
         })}
+        {/* Overlay absolu: modules en position libre (vertical only) */}
+        {absoluteModules.length > 0 && (
+          <div className="absolute inset-0" style={{ pointerEvents: 'none' }}>
+            {absoluteModules.map((m) => {
+              const y = ((m as any).y ?? 0) as number;
+              const onPointerDown: React.PointerEventHandler<HTMLDivElement> = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const el = e.currentTarget;
+                try { el.setPointerCapture(e.pointerId); } catch {}
+                (el as any).__start__ = { y, py: e.clientY };
+                const move = (ev: PointerEvent) => {
+                  const s = (el as any).__start__ as { y: number; py: number } | undefined;
+                  if (!s) return;
+                  const ny = s.y + (ev.clientY - s.py);
+                  el.style.transform = `translate(-50%, ${ny}px)`;
+                };
+                const up = (ev: PointerEvent) => {
+                  document.removeEventListener('pointermove', move);
+                  document.removeEventListener('pointerup', up);
+                  try { el.releasePointerCapture(e.pointerId); } catch {}
+                  const s = (el as any).__start__ as { y: number; py: number } | undefined;
+                  if (!s) return;
+                  const ny = Math.round(s.y + (ev.clientY - s.py));
+                  onUpdate(m.id, { absolute: true, x: 0, y: ny } as any);
+                };
+                document.addEventListener('pointermove', move);
+                document.addEventListener('pointerup', up, { once: true });
+              };
+              return (
+                <div
+                  key={m.id}
+                  className="absolute cursor-ns-resize"
+                  style={{ left: '50%', top: 0, transform: `translate(-50%, ${y}px)`, pointerEvents: 'auto' }}
+                  onPointerDown={onPointerDown}
+                >
+                  {/* Toolbar flottante: bascule Libre (retour grille) + supprimer */}
+                  <div className="absolute -top-9 right-0 z-[1004]">
+                    <Toolbar
+                      visible={selectedModuleId === m.id}
+                      layoutWidth={(m.layoutWidth ?? 'full') as LayoutWidth}
+                      onWidthChange={() => {}}
+                      onDelete={() => onDelete(m.id)}
+                      expanded={openToolbarFor === m.id}
+                      onToggle={() => setOpenToolbarFor((prev) => (prev === m.id ? null : m.id))}
+                      isMobile={device === 'mobile'}
+                      isAbsolute={true}
+                      onToggleAbsolute={() => onUpdate(m.id, { absolute: false } as any)}
+                      onDuplicate={onDuplicate ? () => onDuplicate(m.id) : undefined}
+                    />
+                  </div>
+                  <div className={modulePaddingClass}>
+                    {renderModule(m, (patch) => onUpdate(m.id, patch), device)}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
         </div>
         {regularModules.length === 0 && logoModules.length === 0 && footerModules.length === 0 && (
           <div className="text-xs text-gray-500 text-center py-8">Aucun module. Utilisez l'onglet Éléments pour en ajouter.</div>
