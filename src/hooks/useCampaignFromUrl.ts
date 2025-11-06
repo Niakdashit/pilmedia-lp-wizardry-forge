@@ -47,6 +47,12 @@ export const useCampaignFromUrl = () => {
 
         const loadedCampaign = await getCampaign(campaignId);
         if (loadedCampaign) {
+          // ✅ CRITICAL: Préserver le mode Article lors du chargement
+          console.log('🔍 [useCampaignFromUrl] Loaded campaign editor mode:', {
+            editor_mode: (loadedCampaign as any)?.editor_mode,
+            editorMode: (loadedCampaign as any)?.editorMode
+          });
+          
           setCampaign(loadedCampaign);
 
           // Instrumentation about modularPage

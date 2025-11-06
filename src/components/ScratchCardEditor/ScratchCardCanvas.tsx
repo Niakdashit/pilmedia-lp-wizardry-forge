@@ -201,12 +201,6 @@ const ScratchCardCanvas: React.FC<ScratchCardCanvasProps> = ({
     }
   }, [selectedCardId, previewMode]);
 
-  // Reset selected card when resetting all cards
-  const handleResetAllCards = useCallback(() => {
-    setSelectedCardId(null);
-    resetAllCards();
-  }, [resetAllCards]);
-
   // Render individual scratch card
   const renderScratchCard = useCallback((card: ScratchCard, index: number) => {
     // ⚠️ Utiliser les colonnes/espaces recalculés (localGrid + gridGap)

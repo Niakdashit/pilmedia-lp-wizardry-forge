@@ -50,7 +50,8 @@ const ArticleEditorLayout: React.FC<ArticleEditorLayoutProps> = ({
         name: 'Article - ' + campaignType.charAt(0).toUpperCase() + campaignType.slice(1),
         description: 'Campagne en mode Article',
         type: campaignType,
-        editorMode: 'article',
+        editorMode: 'article', // ✅ CRITICAL: Mode Article
+        editor_mode: 'article', // ✅ CRITICAL: Mode Article (DB field)
         articleConfig: DEFAULT_ARTICLE_CONFIG,
         articleLayout: DEFAULT_ARTICLE_LAYOUT,
         design: {
@@ -65,6 +66,11 @@ const ArticleEditorLayout: React.FC<ArticleEditorLayoutProps> = ({
           { id: 'email', type: 'email', label: 'Email', required: true },
         ],
       };
+      
+      console.log('🎨 [ArticleEditorLayout] Initializing Article campaign:', {
+        editorMode: initialCampaign.editorMode,
+        editor_mode: initialCampaign.editor_mode
+      });
       
       setCampaign(initialCampaign);
       setIsLoading(false);
@@ -237,9 +243,24 @@ const ArticleEditorLayout: React.FC<ArticleEditorLayoutProps> = ({
     
     setIsSaving(true);
     try {
-      await saveCampaign(campaign as any);
+      // ✅ CRITICAL: S'assurer que editorMode et editor_mode sont bien définis
+      const campaignToSave = {
+        ...campaign,
+        editorMode: 'article',
+        editor_mode: 'article', // ✅ DB field
+        articleConfig: articleConfig, // ✅ S'assurer que articleConfig est à jour
+      };
+      
+      console.log('💾 [ArticleEditorLayout] Saving Article campaign:', {
+        id: campaignToSave.id,
+        editorMode: campaignToSave.editorMode,
+        editor_mode: campaignToSave.editor_mode,
+        hasArticleConfig: !!campaignToSave.articleConfig
+      });
+      
+      await saveCampaign(campaignToSave as any);
       setIsModified(false);
-      console.log('✅ Campagne Article sauvegardée');
+      console.log('✅ Campagne Article sauvegardée avec succès');
     } catch (error) {
       console.error('❌ Erreur lors de la sauvegarde:', error);
       alert('Erreur lors de la sauvegarde de la campagne');

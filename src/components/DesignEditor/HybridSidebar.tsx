@@ -957,10 +957,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
         );
       case 'messages':
         return (
-          <MessagesPanel 
-            campaign={campaign}
-            setCampaign={setCampaign}
-          />
+              <MessagesPanel />
         );
       case 'code':
         return (

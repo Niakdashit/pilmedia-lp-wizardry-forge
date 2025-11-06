@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { QrCode, Download, Copy, Check, Palette, RefreshCw } from 'lucide-react';
+import { QrCode, Download, Copy, Check, Palette } from 'lucide-react';
 import { 
-  generateQRCodeUrl, 
   generateBrandedQRCode,
-  downloadQRCode,
-  type QRCodeOptions 
+  downloadQRCode
 } from '@/utils/qrCode';
 
 interface QRCodeGeneratorProps {

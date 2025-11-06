@@ -111,7 +111,6 @@ const SlotMachine: React.FC<SlotMachineProps> = ({ onWin, onLose, onOpenConfig, 
   
   // Récupérer les symboles depuis le store
   const campaign = useEditorStore?.((s: any) => s.campaign);
-  const campaignId = campaign?.id || 'global';
   const jackpotConfig = (campaign?.gameConfig?.jackpot as any) || {};
   const campaignSymbols = jackpotConfig.symbols as string[] | undefined;
   const jackpotStyle = (jackpotConfig.style as any) || {};
@@ -143,7 +142,6 @@ const SlotMachine: React.FC<SlotMachineProps> = ({ onWin, onLose, onOpenConfig, 
     return { reels0, offsets0 };
   }, [symbols, templateOverride]);
   const [reels, setReels] = useState<string[]>(() => [initialSetup.reels0[0], initialSetup.reels0[1], initialSetup.reels0[2]]);
-  const [isStable, setIsStable] = useState(true); // Toujours jouable immédiatement
   const [hasPlayed, setHasPlayed] = useState(false); // Non utilisé pour bloquer désormais
   // Utiliser useRef pour completedReels car setState ne fonctionne pas bien dans requestAnimationFrame
   const completedReelsRef = useRef<boolean[]>([true, true, true]);
@@ -344,7 +342,7 @@ const SlotMachine: React.FC<SlotMachineProps> = ({ onWin, onLose, onOpenConfig, 
       
       animReqs.current[reelIndex] = requestAnimationFrame(animate);
     });
-  }, [isSpinning, disabled, isStable, hasPlayed, symbols, currentTemplate, finalizeSpin, clearFinishTimers]);
+  }, [isSpinning, disabled, hasPlayed, symbols, currentTemplate, finalizeSpin, clearFinishTimers]);
 
   const isCustomTemplate = currentTemplate === 'custom-frame';
   const isUserTemplate = currentTemplate === 'user-template' && !!customTemplateUrl;

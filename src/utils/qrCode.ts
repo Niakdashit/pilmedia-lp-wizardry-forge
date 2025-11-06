@@ -41,11 +41,10 @@ export function generateQRCodeWithLogo(data: string, logoUrl: string, options: Q
     errorCorrection = 'H', // High correction nécessaire pour les logos
   } = options;
 
-  const encodedData = encodeURIComponent(data);
-  const encodedLogo = encodeURIComponent(logoUrl);
+  const _encodedData = encodeURIComponent(data);
   
   // API alternative avec support logo
-  return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodedData}&ecc=${errorCorrection}&qzone=2`;
+  return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${_encodedData}&ecc=${errorCorrection}&qzone=2`;
 }
 
 /**

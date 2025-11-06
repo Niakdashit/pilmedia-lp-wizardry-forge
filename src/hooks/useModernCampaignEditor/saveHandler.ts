@@ -239,11 +239,14 @@ export const saveCampaignToDB = async (
   };
 
   // Detect editor mode (article vs fullscreen)
-  const editorMode = campaign?.editorMode || 'fullscreen';
+  // ✅ CRITICAL: Check both editorMode and editor_mode fields
+  const editorMode = campaign?.editorMode || campaign?.editor_mode || 'fullscreen';
   const isArticleMode = editorMode === 'article';
   
   console.log('📝 [saveCampaignToDB] Editor mode detected:', {
     editorMode,
+    campaignEditorMode: campaign?.editorMode,
+    campaignEditor_mode: campaign?.editor_mode,
     isArticleMode,
     hasArticleConfig: !!campaign?.articleConfig
   });

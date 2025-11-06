@@ -208,6 +208,7 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
   }, [campaign]);
 
   const previewQuizCampaign = React.useMemo(() => {
+    if (!campaign) return null;
     const design = { ...(campaign as any)?.design } || {};
     return {
       ...(campaign as any),
@@ -604,11 +605,11 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
   // Derive form submit button styles/label from formConfig first, then overrides
   const quizStyleOverrides = (campaign as any)?.design?.quizConfig?.style || {};
   const buttonModule1 = (modules1 || []).find((m: any) => m?.type === 'BlocBouton');
-  const submitButtonLabel = (formConfig?.submitLabel as string)
+  const _submitButtonLabel = (formConfig?.submitLabel as string)
     || (buttonModule1?.label as string)
     || (quizStyleOverrides.buttonLabel as string)
     || 'Envoyer';
-  const submitLaunchButtonStyles: React.CSSProperties = {
+  const _submitLaunchButtonStyles: React.CSSProperties = {
     background: formConfig?.buttonColor || quizStyleOverrides.buttonBackgroundColor,
     backgroundColor: formConfig?.buttonColor || quizStyleOverrides.buttonBackgroundColor,
     color: formConfig?.buttonTextColor || quizStyleOverrides.buttonTextColor,

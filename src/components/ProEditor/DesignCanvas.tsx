@@ -804,12 +804,6 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
         }
 
         // 🚧 Clamp aux limites du canvas (en coordonnées absolues)
-        // NB: Pour les enfants de groupe, workingUpdates.x/y sont devenus relatifs après soustraction ci-dessus.
-        // On doit donc clore en ABSOLU avant soustraction. Recalculons l'absolu pour clamping fiable.
-        const elDeviceProps = getPropertiesForDevice(element, selectedDevice);
-        const widthForClamp = Number(elDeviceProps.width ?? element.width ?? 100) || 100;
-        const heightForClamp = Number(elDeviceProps.height ?? element.height ?? 100) || 100;
-
         // Reconstituer position ABSOLUE proposée
         const parentId = (element as any).parentGroupId;
         let absX = Number(workingUpdates.x) || 0;
