@@ -17,10 +17,13 @@ const DesignEditor = lazy(() => import('./pages/DesignEditor'));
 const QuizEditor = lazy(() => import('./pages/QuizEditor'));
 const ModelEditor = lazy(() => import('./pages/ModelEditor'));
 const JackpotEditor = lazy(() => import('./pages/JackpotEditor'));
-const ProEditor = lazy(() => import('./pages/ProEditor'));
 const FormEditor = lazy(() => import('./pages/FormEditor'));
 const ScratchCardEditor = lazy(() => import('./pages/ScratchCardEditor'));
 const ScratchCard2 = lazy(() => import('./pages/ScratchCard2'));
+const DesignEditorPlus = lazy(() => import('./pages/DesignEditorPlus'));
+const QuizEditorPlus = lazy(() => import('./pages/QuizEditorPlus'));
+const ScratchEditorPlus = lazy(() => import('./pages/ScratchEditorPlus'));
+const JackpotEditorPlus = lazy(() => import('./pages/JackpotEditorPlus'));
 const TemplateEditor = lazy(() => import('./pages/TemplateEditor'));
 const TemplatesEditor = lazy(() => import('./pages/TemplatesEditor'));
 const MobileTestPage = lazy(() => import('./pages/MobileTestPage'));
@@ -114,11 +117,6 @@ function App() {
                   <JackpotEditor />
                 </LoadingBoundary>
               } />
-              <Route path="/pro-editor" element={
-                <LoadingBoundary fallback={<EditorLoader />}>
-                  <ProEditor />
-                </LoadingBoundary>
-              } />
               <Route path="/form-editor" element={
                 <LoadingBoundary fallback={<EditorLoader />}>
                   <FormEditor />
@@ -141,6 +139,28 @@ function App() {
               } />
               <Route path="/mobile-test" element={<MobileTestPage />} />
               <Route path="/mobile-complete-test" element={<MobileCompleteTestPage />} />
+
+              {/* Advanced Editors - Accessible via "Mécaniques avancées" modal */}
+              <Route path="/advanced-wheel" element={
+                <LoadingBoundary fallback={<EditorLoader />}>
+                  <DesignEditorPlus />
+                </LoadingBoundary>
+              } />
+              <Route path="/advanced-quiz" element={
+                <LoadingBoundary fallback={<EditorLoader />}>
+                  <QuizEditorPlus />
+                </LoadingBoundary>
+              } />
+              <Route path="/advanced-scratch" element={
+                <LoadingBoundary fallback={<EditorLoader />}>
+                  <ScratchEditorPlus />
+                </LoadingBoundary>
+              } />
+              <Route path="/advanced-jackpot" element={
+                <LoadingBoundary fallback={<EditorLoader />}>
+                  <JackpotEditorPlus />
+                </LoadingBoundary>
+              } />
 
               {/* Campaign Settings - Standalone page */}
               <Route path="/campaign/:id/settings" element={

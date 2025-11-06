@@ -11,10 +11,13 @@ const shortcutIconMap: Record<string, string> = {
   memory: '/gamification/shortcuts/memory.svg',
   puzzle: '/gamification/shortcuts/puzzle.svg',
   form: '/gamification/shortcuts/form.svg',
+  // alias for the new Advanced entry
+  advanced: '/gamification/shortcuts/puzzle.svg',
 };
 
 const getShortcutIcon = (type: string) => shortcutIconMap[type] ?? shortcutIconMap.wheel;
 const QuickCreationSection: React.FC = () => {
+  const [showAdvanced, setShowAdvanced] = React.useState(false);
   const gameTypes: GameType[] = [{
     type: 'wheel',
     label: 'Roue de la fortune'
@@ -39,6 +42,9 @@ const QuickCreationSection: React.FC = () => {
   }, {
     type: 'form',
     label: 'Formulaire'
+  }, {
+    type: 'advanced',
+    label: 'Avancé'
   }];
   return <div className="w-full mt-8 py-0">
       <div className="relative overflow-hidden rounded-3xl p-8 bg-gradient-to-br from-white/50 via-white/40 to-white/30 backdrop-blur-xl border border-white/40 shadow-1xl shadow-purple-500/10 bg-[#428cec]/25 my-0">
@@ -55,32 +61,67 @@ const QuickCreationSection: React.FC = () => {
             <h2 className="text-2xl font-bold mb-2 text-[#841b60] drop-shadow-sm">Qu'allez-vous créer aujourd'hui ?</h2>
           </div>
 
+        {showAdvanced && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center">
+            <div className="absolute inset-0 bg-black/40" onClick={() => setShowAdvanced(false)} />
+            <div className="relative z-10 w-full max-w-lg rounded-2xl bg-white shadow-2xl border border-gray-200 p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-800">Mécaniques avancées</h3>
+                <button type="button" onClick={() => setShowAdvanced(false)} className="px-2 py-1 text-gray-500 hover:text-gray-700">✕</button>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                {[
+                  { type: 'wheel', label: 'Roue de la fortune', route: '/advanced-wheel' },
+                  { type: 'quiz', label: 'Quiz', route: '/advanced-quiz' },
+                  { type: 'scratch', label: 'Carte à gratter', route: '/advanced-scratch' },
+                  { type: 'jackpot', label: 'Jackpot', route: '/advanced-jackpot' },
+                ].map((m) => (
+                  <Link
+                    key={m.type}
+                    to={m.route}
+                    className="flex items-center gap-3 p-3 rounded-xl border border-gray-200 hover:border-[#841b60]/40 hover:bg-[#841b60]/5 transition"
+                    onClick={() => setShowAdvanced(false)}
+                  >
+                    <img src={getShortcutIcon(m.type)} alt={m.label} className="w-8 h-8" />
+                    <span className="text-sm font-medium text-gray-800">{m.label}</span>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
           <div className="flex justify-center mb-8">
             {/* Container pour desktop avec flex center */}
             <div className="hidden md:flex items-center justify-center space-x-8 max-w-5xl">
               {gameTypes.map((game, index) => {
                 const iconSrc = getShortcutIcon(game.type);
-                return (
+                const commonInner = (
+                  <>
+                    <div className="w-16 h-16 bg-white/80 backdrop-blur-sm rounded-full shadow-xl shadow-purple-500/15 flex items-center justify-center group-hover:shadow-2xl group-hover:shadow-purple-500/25 transform group-hover:scale-110 transition-all duration-300 border border-white/50 group-hover:bg-white/90">
+                      <img src={iconSrc} alt={game.label} className="w-10 h-10 object-contain drop-shadow-sm" loading="lazy" />
+                    </div>
+                    <span className="mt-2 text-sm font-medium text-gray-700 group-hover:text-[#841b60] transition-colors text-center drop-shadow-sm">{game.label}</span>
+                  </>
+                );
+                return game.type === 'advanced' ? (
+                  <button
+                    key={game.type}
+                    type="button"
+                    onClick={() => setShowAdvanced(true)}
+                    className="flex flex-col items-center group cursor-pointer opacity-0 animate-fade-in"
+                    style={{ animationDelay: `${index * 0.1}s`, animationFillMode: 'forwards' }}
+                  >
+                    {commonInner}
+                  </button>
+                ) : (
                   <Link
                     key={game.type}
                     to={`/quick-campaign?type=${game.type}`}
                     className="flex flex-col items-center group cursor-pointer opacity-0 animate-fade-in"
-                    style={{
-                      animationDelay: `${index * 0.1}s`,
-                      animationFillMode: 'forwards',
-                    }}
+                    style={{ animationDelay: `${index * 0.1}s`, animationFillMode: 'forwards' }}
                   >
-                    <div className="w-16 h-16 bg-white/80 backdrop-blur-sm rounded-full shadow-xl shadow-purple-500/15 flex items-center justify-center group-hover:shadow-2xl group-hover:shadow-purple-500/25 transform group-hover:scale-110 transition-all duration-300 border border-white/50 group-hover:bg-white/90">
-                      <img
-                        src={iconSrc}
-                        alt={game.label}
-                        className="w-10 h-10 object-contain drop-shadow-sm"
-                        loading="lazy"
-                      />
-                    </div>
-                    <span className="mt-2 text-sm font-medium text-gray-700 group-hover:text-[#841b60] transition-colors text-center drop-shadow-sm">
-                      {game.label}
-                    </span>
+                    {commonInner}
                   </Link>
                 );
               })}
@@ -95,27 +136,32 @@ const QuickCreationSection: React.FC = () => {
             }}>
                 {gameTypes.map((game, index) => {
                   const iconSrc = getShortcutIcon(game.type);
-                  return (
+                  const commonInner = (
+                    <>
+                      <div className="w-16 h-16 bg-white/80 backdrop-blur-sm rounded-full shadow-xl shadow-purple-500/15 flex items-center justify-center group-hover:shadow-2xl group-hover:shadow-purple-500/25 transform group-hover:scale-110 transition-all duration-300 border border-white/50 group-hover:bg-white/90">
+                        <img src={iconSrc} alt={game.label} className="w-10 h-10 object-contain drop-shadow-sm" loading="lazy" />
+                      </div>
+                      <span className="mt-2 text-sm font-medium text-gray-700 group-hover:text-[#841b60] transition-colors text-center drop-shadow-sm">{game.label}</span>
+                    </>
+                  );
+                  return game.type === 'advanced' ? (
+                    <button
+                      key={game.type}
+                      type="button"
+                      onClick={() => setShowAdvanced(true)}
+                      className="flex flex-col items-center group cursor-pointer opacity-0 animate-fade-in flex-shrink-0"
+                      style={{ animationDelay: `${index * 0.1}s`, animationFillMode: 'forwards' }}
+                    >
+                      {commonInner}
+                    </button>
+                  ) : (
                     <Link
                       key={game.type}
                       to={`/quick-campaign?type=${game.type}`}
                       className="flex flex-col items-center group cursor-pointer opacity-0 animate-fade-in flex-shrink-0"
-                      style={{
-                        animationDelay: `${index * 0.1}s`,
-                        animationFillMode: 'forwards',
-                      }}
+                      style={{ animationDelay: `${index * 0.1}s`, animationFillMode: 'forwards' }}
                     >
-                      <div className="w-16 h-16 bg-white/80 backdrop-blur-sm rounded-full shadow-xl shadow-purple-500/15 flex items-center justify-center group-hover:shadow-2xl group-hover:shadow-purple-500/25 transform group-hover:scale-110 transition-all duration-300 border border-white/50 group-hover:bg-white/90">
-                        <img
-                          src={iconSrc}
-                          alt={game.label}
-                          className="w-10 h-10 object-contain drop-shadow-sm"
-                          loading="lazy"
-                        />
-                      </div>
-                      <span className="mt-2 text-sm font-medium text-gray-700 group-hover:text-[#841b60] transition-colors text-center drop-shadow-sm">
-                        {game.label}
-                      </span>
+                      {commonInner}
                     </Link>
                   );
                 })}

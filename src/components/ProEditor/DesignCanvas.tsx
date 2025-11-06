@@ -18,7 +18,7 @@ import CanvasContextMenu from './components/CanvasContextMenu';
 
 import AnimationSettingsPopup from './panels/AnimationSettingsPopup';
 import ResultScreenPreview from '../DesignEditor/ResultScreenPreview';
-// SlotMachine removed for ProEditor
+import SlotMachine from '../SlotJackpot/SlotMachine';
 
 import MobileResponsiveLayout from './components/MobileResponsiveLayout';
 import type { DeviceType } from '../../utils/deviceDimensions';
@@ -306,25 +306,18 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   // Intégration du système auto-responsive (doit être défini avant effectiveCanvasSize)
   const { applyAutoResponsive, getPropertiesForDevice, DEVICE_DIMENSIONS } = useAutoResponsive();
 
-  // Taille du canvas mémoïsée avec fallback sécurisé
-  const fallbackSize = { width: 360, height: 640 } as const;
+  // Taille du canvas memoized
   const canvasSize = useMemo(() => {
-    try {
-      const dims = DEVICE_DIMENSIONS && selectedDevice ? (DEVICE_DIMENSIONS as any)[selectedDevice] : undefined;
-      if (!dims || !Number(dims.width) || !Number(dims.height)) return fallbackSize;
-      return dims;
-    } catch {
-      return fallbackSize;
-    }
+    return DEVICE_DIMENSIONS[selectedDevice];
   }, [selectedDevice, DEVICE_DIMENSIONS]);
 
-  // Forcer un format mobile 9:16 sans bordures ni encoches (et fallback si indéterminé)
+  // Forcer un format mobile 9:16 sans bordures ni encoches
   const effectiveCanvasSize = useMemo(() => {
     if (selectedDevice === 'mobile') {
       // 9:16 exact ratio
-      return fallbackSize;
+      return { width: 360, height: 640 };
     }
-    return canvasSize || fallbackSize;
+    return canvasSize;
   }, [selectedDevice, canvasSize]);
 
   const safeZonePadding = useMemo(() => SAFE_ZONE_PADDING[selectedDevice] ?? SAFE_ZONE_PADDING.desktop, [selectedDevice]);
@@ -344,11 +337,10 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
 
   useEffect(() => {
     if (!onElementsChange) return;
-    const src = Array.isArray(elements) ? elements : [];
-    if (src.length === 0) return;
+    if (!elements || elements.length === 0) return;
 
     let changed = false;
-    const updated = src.map((el: any) => {
+    const updated = elements.map((el: any) => {
       if (el?.type === 'text' && el.autoCenter && measuredBounds[el.id]) {
         const bounds = measuredBounds[el.id];
         const autoCenter = el.autoCenter;
@@ -387,8 +379,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
 
   // Derive simplified alignment bounds preferring measured layout when available
   const alignmentElements = useMemo(() => {
-    const list = Array.isArray(elements) ? elements : [];
-    const visibleElements = list.filter((el: any) => {
+    const visibleElements = elements.filter((el: any) => {
       const targetScreen = (el?.screenId ?? 'screen1') as CanvasScreenId;
       const screenMatches = screenId === 'all' || targetScreen === 'all' || targetScreen === screenId;
       if (!screenMatches) return false;
@@ -627,15 +618,13 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   // Memoized maps for fast lookups during interactions
   const elementById = useMemo(() => {
     const m = new Map<string, any>();
-    const list = Array.isArray(elements) ? elements : [];
-    for (const el of list) m.set(el.id, el);
+    for (const el of elements) m.set(el.id, el);
     return m;
   }, [elements]);
 
   const devicePropsById = useMemo(() => {
     const m = new Map<string, any>();
-    const list = Array.isArray(elements) ? elements : [];
-    for (const el of list) m.set(el.id, getPropertiesForDevice(el, selectedDevice));
+    for (const el of elements) m.set(el.id, getPropertiesForDevice(el, selectedDevice));
     return m;
   }, [elements, selectedDevice, getPropertiesForDevice]);
 
@@ -874,8 +863,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
       return;
     }
 
-    const src = Array.isArray(elements) ? elements : [];
-    const updatedElements = src.map(el => {
+    const updatedElements = elements.map(el => {
       if (el.id !== id) return el;
 
       const base = { ...el, ...workingUpdates };
@@ -1216,9 +1204,8 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   // Move multiple selected elements by delta (canvas-space)
   const moveSelectedElements = useCallback((deltaX: number, deltaY: number) => {
     if (!selectedElements || selectedElements.length < 1) return;
-    const selectedIdSet = new Set((selectedElements || []).map((e: any) => e.id));
-    const src = Array.isArray(elements) ? elements : [];
-    const updated = src.map(el => {
+    const selectedIdSet = new Set(selectedElements.map((e: any) => e.id));
+    const updated = elements.map(el => {
       if (!selectedIdSet.has(el.id)) return el;
       if (selectedDevice !== 'desktop') {
         const currentDeviceData = (el as any)[selectedDevice] || {};
@@ -1672,8 +1659,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   // Recenter existing quiz-template once per device to fix legacy top-centered items
   const hasAutoCenteredRef = useRef<string | null>(null);
   useEffect(() => {
-    const list = Array.isArray(elements) ? elements : [];
-    const hasQuiz = list.some(el => el.id === 'quiz-template');
+    const hasQuiz = elements.some(el => el.id === 'quiz-template');
     if (!hasQuiz) return;
     const key = `${selectedDevice}`;
     if (hasAutoCenteredRef.current === key) return;
@@ -1877,8 +1863,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
 
   // Convertir les éléments en format compatible avec useAutoResponsive
   const responsiveElements = useMemo(() => {
-    const list = Array.isArray(elements) ? elements : [];
-    return list.map(element => ({
+    return elements.map(element => ({
       id: element.id,
       x: element.x || 0,
       y: element.y || 0,
@@ -1892,21 +1877,14 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     }));
   }, [elements]);
 
-  // Appliquer les calculs responsives (toujours renvoyer un tableau)
+  // Appliquer les calculs responsives
   const elementsWithResponsive = useMemo(() => {
-    try {
-      const base = Array.isArray(responsiveElements) ? responsiveElements : [];
-      const out = applyAutoResponsive(base);
-      return Array.isArray(out) ? out : [];
-    } catch {
-      return [];
-    }
+    return applyAutoResponsive(responsiveElements);
   }, [responsiveElements, applyAutoResponsive]);
 
   // Note: elementsWithAbsolute computed but not used in render to prevent unused warning  
   React.useMemo(() => {
-    const list = Array.isArray(elementsWithResponsive) ? elementsWithResponsive : [];
-    const result = list.map((el: any) => {
+    const result = elementsWithResponsive.map((el: any) => {
       const parentId = (el as any).parentGroupId;
       if (!parentId) return el;
       const parentProps = devicePropsById.get(parentId);
@@ -1924,8 +1902,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
 
   // Tri mémoïsé par zIndex pour le rendu du canvas
   const elementsSortedByZIndex = useMemo(() => {
-    const src = Array.isArray(elementsWithResponsive) ? elementsWithResponsive : [];
-    return src.slice().sort((a: any, b: any) => {
+    return elementsWithResponsive.slice().sort((a: any, b: any) => {
       const za = typeof a.zIndex === 'number' ? a.zIndex : 0;
       const zb = typeof b.zIndex === 'number' ? b.zIndex : 0;
       if (za !== zb) {
@@ -1938,10 +1915,9 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   }, [elementsWithResponsive]);
 
   const renderableElements = useMemo(() => {
-    const base = Array.isArray(elementsSortedByZIndex) ? elementsSortedByZIndex : [];
     const screenedElements = typeof elementFilter === 'function'
-      ? base.filter(elementFilter)
-      : base;
+      ? elementsSortedByZIndex.filter(elementFilter)
+      : elementsSortedByZIndex;
 
     if (screenId === 'all') {
       return screenedElements;
@@ -2403,33 +2379,22 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                 );
               })()}
 
-              {/* ProEditor: render iframe overlay on screen 2 (winner/loser) */}
-              {screenId === 'screen2' && (() => {
-                const proCfg: any = (campaign as any)?.proConfig || {};
-                const view: 'winner' | 'loser' = proCfg.activeGameView === 'loser' ? 'loser' : 'winner';
-                const rawUrl: string = view === 'winner' ? proCfg.winnerUrl : proCfg.loserUrl;
-                const url = (typeof rawUrl === 'string' && rawUrl.length > 0)
-                  ? (/^https?:\/\//i.test(rawUrl) ? rawUrl : `https://${rawUrl}`)
-                  : '';
-                if (!url) return null;
-                return (
-                  <div
-                    className="absolute inset-0 flex items-center justify-center pointer-events-none"
-                    style={{ zIndex: 10000 }}
-                  >
-                    <div className="pointer-events-auto w-[84%] h-[72%] max-w-[860px] max-h-[640px] overflow-hidden">
-                      <iframe
-                        title={view === 'winner' ? 'Iframe Gagnant' : 'Iframe Perdant'}
-                        src={url}
-                        className="w-full h-full"
-                        loading="lazy"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
-                        sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox"
-                      />
-                    </div>
+              {/* Jackpot Game Canvas - Seulement sur l'écran de jeu (screen2) */}
+              {screenId === 'screen2' && (
+                <div 
+                  className="absolute inset-0 flex items-center justify-center pointer-events-none"
+                  style={{ zIndex: 10000 }}
+                >
+                  <div className="pointer-events-auto">
+                    <SlotMachine 
+                      disabled={readOnly}
+                      onOpenConfig={onOpenElementsTab}
+                      symbols={(campaign as any)?.proConfig?.symbols}
+                      templateOverride={(campaign as any)?.proConfig?.template || (campaign as any)?.gameConfig?.pro?.template}
+                    />
                   </div>
-                );
-              })()}
+                </div>
+              )}
             </div>
 
             {/* Aperçu de la carte de résultat pour l'écran 3 */}

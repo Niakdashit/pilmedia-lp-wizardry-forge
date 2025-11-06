@@ -119,6 +119,8 @@ export interface DesignCanvasProps {
   onModuleDelete?: (id: string) => void;
   onModuleMove?: (id: string, dir: 'up' | 'down') => void;
   onModuleDuplicate?: (id: string) => void;
+  modularReadOnly?: boolean;
+  onButtonClick?: () => void;
   // Preview mode flag to disable rounded corners
   isPreviewMode?: boolean;
 }
@@ -176,8 +178,12 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   onModuleUpdate,
   onModuleDelete,
   onModuleMove,
-  onModuleDuplicate
+  onModuleDuplicate,
+  modularReadOnly = false,
+  onButtonClick
 }, ref) => {
+  
+  console.log('🎯 [DesignCanvas] Props received:', { modularReadOnly, hasOnButtonClick: !!onButtonClick, hasModularModules: !!modularModules, modulesCount: modularModules?.length || 0 });
 
   // MODE ARTICLE
   if (editorMode === 'article') {
@@ -2028,7 +2034,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
         canvasRef={activeCanvasRef as React.RefObject<HTMLDivElement>}
         zoom={localZoom}
         forceDeviceType={selectedDevice}
-        className={`design-canvas-container flex-1 h-full flex flex-col items-center ${isWindowMobile ? 'justify-start pt-0' : 'justify-center pt-40'} pb-4 px-4 ${containerClassName ? containerClassName : 'bg-gray-100'} relative`}
+        className={`design-canvas-container flex-1 h-full flex flex-col items-center ${readOnly ? 'justify-start' : (isWindowMobile ? 'justify-start pt-0' : 'justify-center pt-40')} ${readOnly ? '' : 'pb-4 px-4'} ${containerClassName ? containerClassName : 'bg-gray-100'} relative`}
         onAddElement={onAddElement}
         onBackgroundChange={onBackgroundChange}
         onExtractedColorsChange={onExtractedColorsChange}
@@ -2248,19 +2254,21 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                 />
               )}
               {/* Safe zone overlay to keep modules away from hard edges */}
-              <div
-                className="pointer-events-none absolute inset-0 z-[6]"
-                aria-hidden="true"
-              >
+              {!readOnly && (
                 <div
-                  className="absolute border border-dashed border-white/60"
-                  style={{
-                    inset: `${safeZonePadding}px`,
-                    borderRadius: `${safeZoneRadius}px`,
-                    boxShadow: '0 0 0 1px rgba(12, 18, 31, 0.08) inset'
-                  }}
-                />
-              </div>
+                  className="absolute inset-0 pointer-events-none"
+                  aria-hidden="true"
+                >
+                  <div
+                    className="absolute border border-dashed border-white/60"
+                    style={{
+                      inset: `${safeZonePadding}px`,
+                      borderRadius: `${safeZoneRadius}px`,
+                      boxShadow: '0 0 0 1px rgba(12, 18, 31, 0.08) inset'
+                    }}
+                  />
+                </div>
+              )}
 
               <GridOverlay 
                 canvasSize={effectiveCanvasSize}
@@ -2368,8 +2376,10 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                           bandPadding: 0,
                           spacingTop: 0
                         }))}
-                        previewMode={false}
+                        previewMode={modularReadOnly}
                         device={selectedDevice}
+                        readOnly={modularReadOnly}
+                        onButtonClick={onButtonClick}
                         onModuleUpdate={(_id, patch) => onModuleUpdate?.(_id, patch)}
                         onModuleClick={(moduleId) => {
                           try {
@@ -2463,6 +2473,8 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                         onDelete={(id) => onModuleDelete?.(id)}
                         onMove={(id, dir) => onModuleMove?.(id, dir)}
                         onDuplicate={(id) => onModuleDuplicate?.(id)}
+                        readOnly={modularReadOnly}
+                        onButtonClick={onButtonClick}
                         onSelect={(m) => {
                           try {
                             const evt = new CustomEvent('modularModuleSelected', { detail: { module: m } });
@@ -2565,8 +2577,10 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                       <div className="w-full" style={{ pointerEvents: 'auto' }}>
                         <QuizModuleRenderer
                           modules={footerModules}
-                          previewMode={false}
+                          previewMode={modularReadOnly}
                           device={selectedDevice}
+                          readOnly={modularReadOnly}
+                          onButtonClick={onButtonClick}
                           onModuleUpdate={(_id, patch) => onModuleUpdate?.(_id, patch)}
                           onModuleClick={(moduleId) => {
                             try {
@@ -2733,7 +2747,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
             )}
 
             {/* Grid and Guides Toggle - desktop only */}
-            {selectedDevice === 'desktop' && (
+            {selectedDevice === 'desktop' && !readOnly && (
               <div className="absolute top-2 right-2 flex gap-2">
                 <button
                   onClick={() => setShowGridLines(!showGridLines)}

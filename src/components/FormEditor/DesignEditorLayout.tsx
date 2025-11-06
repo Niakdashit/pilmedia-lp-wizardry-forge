@@ -9,6 +9,8 @@ import { Save, X } from 'lucide-react';
 
 const HybridSidebar = lazy(() => import('./HybridSidebar'));
 const DesignToolbar = lazy(() => import('./DesignToolbar'));
+const FullScreenPreviewModal = lazy(() => import('@/components/shared/modals/FullScreenPreviewModal'));
+const FunnelUnlockedGame = lazy(() => import('@/components/funnels/FunnelUnlockedGame'));
 import PreviewRenderer from '@/components/preview/PreviewRenderer';
 import ArticleFunnelView from '@/components/ArticleEditor/ArticleFunnelView';
 import type { ModularPage, ScreenId, BlocBouton, Module } from '@/types/modularEditor';
@@ -747,7 +749,8 @@ useEffect(() => {
   });
 
   const id = (campaignState as any)?.id as string | undefined;
-  if (!id) {
+  const isUuid = (v?: string) => !!v && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v);
+  if (!id || !isUuid(id)) {
     console.log('🧩 [FormEditor] No campaign ID, skipping autosave');
     return;
   }
@@ -1644,6 +1647,8 @@ useEffect(() => {
   const [previewButtonSide, setPreviewButtonSide] = useState<'left' | 'right'>(() =>
     (typeof window !== 'undefined' && localStorage.getItem('previewButtonSide') === 'left') ? 'left' : 'right'
   );
+  const [showFullScreenPreview, setShowFullScreenPreview] = useState(false);
+  const [fullScreenPreviewDevice, setFullScreenPreviewDevice] = useState<'desktop' | 'mobile'>('desktop');
   // Calcul des onglets à masquer selon le mode
   const effectiveHiddenTabs = useMemo(
     () => {
@@ -3380,6 +3385,10 @@ useEffect(() => {
             onSave={handleSaveAndQuit}
             showSaveCloseButtons={false}
             campaignId={(campaignState as any)?.id || new URLSearchParams(location.search).get('campaign') || undefined}
+            onFullScreenPreview={() => {
+              setFullScreenPreviewDevice(selectedDevice === 'mobile' ? 'mobile' : 'desktop');
+              setShowFullScreenPreview(true);
+            }}
           />
 
           {/* Bouton d'aide des raccourcis clavier */}
@@ -4050,6 +4059,23 @@ useEffect(() => {
           </div>
         </div>
       )}
+
+      {/* Full Screen Preview Modal */}
+      <FullScreenPreviewModal
+        isOpen={showFullScreenPreview}
+        onClose={() => setShowFullScreenPreview(false)}
+        device={fullScreenPreviewDevice}
+        onDeviceChange={setFullScreenPreviewDevice}
+      >
+        <div className="w-full h-full overflow-hidden bg-white">
+          <FunnelUnlockedGame
+            campaign={campaignData}
+            previewMode={fullScreenPreviewDevice}
+            wheelModalConfig={wheelModalConfig}
+            launchButtonStyles={{}}
+          />
+        </div>
+      </FullScreenPreviewModal>
     </MobileStableEditor>
   </div>
 );

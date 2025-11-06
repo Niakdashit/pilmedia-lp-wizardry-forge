@@ -17,6 +17,7 @@ export interface ModularCanvasProps {
   onSelect?: (module: Module) => void;
   selectedModuleId?: string;
   device?: DeviceType;
+  readOnly?: boolean;
 }
 
 type LayoutWidth = NonNullable<Module['layoutWidth']>;
@@ -39,7 +40,9 @@ const Toolbar: React.FC<{
   onAlignChange?: (v: 'left' | 'center' | 'right') => void;
   isMobile?: boolean;
   onDuplicate?: () => void;
-}> = ({ onDelete, visible, layoutWidth, onWidthChange, expanded, onToggle, align = 'left', onAlignChange, isMobile = false, onDuplicate }) => {
+  isAbsolute?: boolean;
+  onToggleAbsolute?: () => void;
+}> = ({ onDelete, visible, layoutWidth, onWidthChange, expanded, onToggle, align = 'left', onAlignChange, isMobile = false, onDuplicate, isAbsolute = false, onToggleAbsolute }) => {
   const containerRef = React.useRef<HTMLDivElement | null>(null);
   const [placement, setPlacement] = React.useState<'above' | 'inline'>('above');
 
@@ -96,6 +99,8 @@ const Toolbar: React.FC<{
                 key={option.id}
                 type="button"
                 onClick={() => onWidthChange(option.id)}
+                onMouseDown={(e) => { e.stopPropagation(); }}
+                onPointerDown={(e) => { e.stopPropagation(); }}
                 className={`${isMobile ? 'px-1.5 py-0.5 text-[10px]' : 'px-2 py-1 text-[11px]'} font-semibold uppercase tracking-wide rounded-md transition-colors
                   ${isActive ? 'bg-[#841b60] text-white shadow-sm shadow-[#841b60]/40' : 'bg-white/70 text-gray-600 hover:bg-white/90 hover:text-gray-900'}`}
                 aria-label={`Largeur ${option.label}`}
@@ -105,12 +110,27 @@ const Toolbar: React.FC<{
             );
           })}
         </div>
+        {/* Mode Libre (position absolue) */}
+        <div className={`flex items-center gap-0.5 ${isMobile ? 'pr-1' : 'pr-1.5'} border-r border-white/40`}>
+          <button
+            type="button"
+            onClick={onToggleAbsolute}
+            onMouseDown={(e) => { e.stopPropagation(); }}
+            onPointerDown={(e) => { e.stopPropagation(); }}
+            className={`${isMobile ? 'px-2 py-0.5 text-[10px]' : 'px-2 py-1 text-[11px]'} font-semibold uppercase tracking-wide rounded-md transition-colors ${isAbsolute ? 'bg-[#841b60] text-white shadow-sm shadow-[#841b60]/40' : 'bg-white/70 text-gray-600 hover:bg-white/90 hover:text-gray-900'}`}
+            aria-label="Basculer position libre"
+          >
+            Libre
+          </button>
+        </div>
         {/* Align controls removed as requested */}
         {onDuplicate && (
           <div className={`flex items-center gap-0.5 ${isMobile ? 'pr-1' : 'pr-1.5'} border-r border-white/40`}>
             <button
               type="button"
               onClick={onDuplicate}
+              onMouseDown={(e) => { e.stopPropagation(); }}
+              onPointerDown={(e) => { e.stopPropagation(); }}
               className={`inline-flex ${isMobile ? 'h-6 w-6' : 'h-7 w-7'} items-center justify-center rounded-md text-gray-600 hover:bg-white/90 transition-colors ${isMobile ? '' : 'md:h-8 md:w-8'}`}
               aria-label="Dupliquer"
               title="Dupliquer"
@@ -121,7 +141,10 @@ const Toolbar: React.FC<{
         )}
         <div className={`flex items-center gap-0.5 ${isMobile ? 'pr-1' : 'pr-1.5'} border-r border-white/40`}>
           <button
+            type="button"
             onClick={onDelete}
+            onMouseDown={(e) => { e.stopPropagation(); }}
+            onPointerDown={(e) => { e.stopPropagation(); }}
             className={`inline-flex ${isMobile ? 'h-6 w-6' : 'h-7 w-7'} items-center justify-center rounded-md text-red-600 hover:bg-red-50/90 transition-colors ${isMobile ? '' : 'md:h-8 md:w-8'}`}
             aria-label="Supprimer"
           >
@@ -455,7 +478,7 @@ const renderModule = (m: Module, onUpdate: (patch: Partial<Module>) => void, dev
   }
 };
 
-const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate, onDelete, onMove, onDuplicate, onSelect, selectedModuleId, device = 'desktop' }) => {
+const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate, onDelete, onMove, onDuplicate, onSelect, selectedModuleId, device = 'desktop', readOnly = false }) => {
   const moduleRefs = React.useRef<Record<string, HTMLDivElement | null>>({});
   const modulesRef = React.useRef(modules);
   const onMoveRef = React.useRef(onMove);
@@ -465,6 +488,7 @@ const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate
   const [dragOffset, setDragOffset] = React.useState(0);
   const lastReorderYRef = React.useRef<number | null>(null);
   const [openToolbarFor, setOpenToolbarFor] = React.useState<string | null>(null);
+  const autoLaunchButtonRef = React.useRef<Set<string>>(new Set());
 
   React.useEffect(() => {
     modulesRef.current = modules;
@@ -520,6 +544,48 @@ const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate
       }
     }
   }, []);
+
+  React.useEffect(() => {
+    if (readOnly || screen !== 'screen1') return;
+
+    modules.forEach((module) => {
+      if (!module || module.type !== 'BlocBouton') return;
+
+      const moduleAny = module as any;
+      const label = typeof moduleAny.label === 'string' ? moduleAny.label.trim().toLowerCase() : '';
+      const meta = moduleAny.meta || {};
+      const roleCandidates = [
+        typeof moduleAny.role === 'string' ? moduleAny.role.toLowerCase() : '',
+        typeof meta.role === 'string' ? meta.role.toLowerCase() : '',
+        typeof meta.type === 'string' ? meta.type.toLowerCase() : ''
+      ];
+      const isLaunchButton =
+        label === 'participer' ||
+        moduleAny.isLaunchButton === true ||
+        moduleAny.launchButton === true ||
+        moduleAny.isPrimaryCTA === true ||
+        meta.isLaunchButton === true ||
+        roleCandidates.some((candidate) =>
+          candidate.includes('particip') || candidate.includes('launch') || candidate.includes('cta')
+        );
+
+      if (!isLaunchButton) return;
+
+      if (moduleAny.absolute === true) {
+        autoLaunchButtonRef.current.add(module.id);
+        return;
+      }
+
+      if (autoLaunchButtonRef.current.has(module.id)) return;
+      autoLaunchButtonRef.current.add(module.id);
+
+      onUpdate(module.id, {
+        absolute: true,
+        x: typeof moduleAny.x === 'number' ? moduleAny.x : 0,
+        y: typeof moduleAny.y === 'number' ? moduleAny.y : 0
+      } as any);
+    });
+  }, [modules, onUpdate, readOnly, screen]);
 
   const stopModuleDrag = React.useCallback(() => {
     const dragState = dragStateRef.current;
@@ -645,10 +711,11 @@ const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate
     return () => window.cancelAnimationFrame(id);
   }, [modules, onUpdate, device]);
 
-  // Séparer les modules Logo des autres modules
+  // Séparer les modules Logo, Footer, Absolus et Réguliers
   const logoModules = React.useMemo(() => modules.filter(m => m.type === 'BlocLogo'), [modules]);
   const footerModules = React.useMemo(() => modules.filter(m => m.type === 'BlocPiedDePage'), [modules]);
-  const regularModules = React.useMemo(() => modules.filter(m => m.type !== 'BlocLogo' && m.type !== 'BlocPiedDePage'), [modules]);
+  const absoluteModules = React.useMemo(() => modules.filter(m => (m as any).absolute === true && m.type !== 'BlocLogo' && m.type !== 'BlocPiedDePage'), [modules]);
+  const regularModules = React.useMemo(() => modules.filter(m => !(m as any).absolute && m.type !== 'BlocLogo' && m.type !== 'BlocPiedDePage'), [modules]);
   
   const modulePaddingClass = device === 'mobile' ? 'p-0' : 'p-4';
   const single = regularModules.length === 1;
@@ -777,6 +844,10 @@ const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate
                   if (m.type === 'BlocHtml') {
                     return;
                   }
+                  
+                  // Sélectionner le module avant de commencer le drag
+                  onSelect?.(m);
+                  
                   startModuleDrag(event as unknown as React.PointerEvent<HTMLElement>, m, originalIndex);
                 };
 
@@ -957,6 +1028,8 @@ const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate
                         onToggle={() => setOpenToolbarFor((prev) => (prev === m.id ? null : m.id))}
                         isMobile={device === 'mobile'}
                         onDuplicate={onDuplicate ? () => onDuplicate(m.id) : undefined}
+                        isAbsolute={false}
+                        onToggleAbsolute={() => onUpdate(m.id, { absolute: true, x: 0, y: 0 } as any)}
                       />
                     )}
                     <button
@@ -1039,6 +1112,75 @@ const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate
           {renderModule(m, (patch) => onUpdate(m.id, patch), device)}
         </div>
       ))}
+
+      {/* Overlay absolu: modules en position libre (vertical only) */}
+      {absoluteModules.length > 0 && (
+        <div className="absolute inset-0" style={{ pointerEvents: 'none' }}>
+          {absoluteModules.map((m) => {
+            const y = ((m as any).y ?? 0) as number;
+            const onPointerDown: React.PointerEventHandler<HTMLDivElement> = (e) => {
+              if (readOnly) return;
+              e.preventDefault();
+              e.stopPropagation();
+              const el = e.currentTarget;
+              try { el.setPointerCapture(e.pointerId); } catch {}
+              (el as any).__start__ = { y, py: e.clientY };
+              const move = (ev: PointerEvent) => {
+                const s = (el as any).__start__ as { y: number; py: number } | undefined;
+                if (!s) return;
+                const ny = s.y + (ev.clientY - s.py);
+                el.style.transform = `translate(-50%, ${ny}px)`;
+              };
+              const up = (ev: PointerEvent) => {
+                document.removeEventListener('pointermove', move);
+                document.removeEventListener('pointerup', up);
+                try { el.releasePointerCapture(e.pointerId); } catch {}
+                const s = (el as any).__start__ as { y: number; py: number } | undefined;
+                if (!s) return;
+                const ny = Math.round(s.y + (ev.clientY - s.py));
+                onUpdate(m.id, { absolute: true, x: 0, y: ny } as any);
+              };
+              document.addEventListener('pointermove', move);
+              document.addEventListener('pointerup', up, { once: true });
+            };
+            const isSelected = m.id === selectedModuleId;
+            return (
+              <div
+                key={m.id}
+                className={`absolute ${readOnly ? 'cursor-default' : 'cursor-ns-resize'} ${!readOnly && isSelected ? 'border border-[#0ea5b7] ring-2 ring-[#0ea5b7]/30' : 'border-0'} ${!readOnly ? 'hover:outline hover:outline-1 hover:outline-gray-400' : ''} rounded-md transition-colors`}
+                style={{ left: '50%', top: 0, transform: `translate(-50%, ${y}px)`, pointerEvents: 'auto' }}
+                onPointerDown={onPointerDown}
+                onClick={(e) => {
+                  if (readOnly) return;
+                  e.stopPropagation();
+                  onSelect?.(m);
+                }}
+              >
+                {/* Toolbar flottante: bascule Libre (retour grille) + supprimer */}
+                {!readOnly && (
+                  <div className="absolute -top-9 right-0 z-[1004]">
+                    <Toolbar
+                      visible={selectedModuleId === m.id}
+                      layoutWidth={(m.layoutWidth ?? 'full') as LayoutWidth}
+                      onWidthChange={() => {}}
+                      onDelete={() => onDelete(m.id)}
+                      expanded={openToolbarFor === m.id}
+                      onToggle={() => setOpenToolbarFor((prev) => (prev === m.id ? null : m.id))}
+                      isMobile={device === 'mobile'}
+                      isAbsolute={true}
+                      onToggleAbsolute={() => onUpdate(m.id, { absolute: false } as any)}
+                      onDuplicate={onDuplicate ? () => onDuplicate(m.id) : undefined}
+                    />
+                  </div>
+                )}
+                <div className={modulePaddingClass}>
+                  {renderModule(m, (patch) => onUpdate(m.id, patch), device)}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 };

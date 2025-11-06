@@ -238,6 +238,7 @@ const FunnelQuizParticipate: React.FC<FunnelQuizParticipateProps> = ({ campaign,
   // Récupérer directement modularPage pour un rendu unifié
   const campaignAny = campaign as any;
   const storeCampaignAny = storeCampaign as any;
+  const canvasElementsAny = storeCampaignAny?.canvasElements || campaignAny?.canvasElements;
   
   // ✅ CRITICAL: Chercher les modules dans TOUS les emplacements possibles
   // Priorité 1: storeCampaign (synchronisé en temps réel)
@@ -314,7 +315,8 @@ const FunnelQuizParticipate: React.FC<FunnelQuizParticipateProps> = ({ campaign,
 
     const device = options?.device || previewMode;
     const isMobile = device === 'mobile';
-    const modulePaddingClass = isMobile ? 'p-0' : 'p-4';
+    // Align preview with editor: no extra padding around modules
+    const modulePaddingClass = 'p-0';
     const rows = buildRows(mods);
 
     return (
@@ -368,16 +370,53 @@ const FunnelQuizParticipate: React.FC<FunnelQuizParticipateProps> = ({ campaign,
     campaignModularPage: campaignAny?.modularPage
   });
 
-  // Vérifier si une carte contient un bouton sur écran 1
-  const carteWithButton = Array.isArray(modules)
-    ? (modules as any[]).find((m) => 
-        m?.type === 'BlocCarte' && 
-        Array.isArray(m.children) && 
-        m.children.some((child: any) => child?.type === 'BlocBouton')
-      )
-    : undefined;
+  // Helper: trouver récursivement le premier BlocBouton dans une liste de modules
+  const findFirstCTA = (mods: any[] | undefined): any | undefined => {
+    if (!Array.isArray(mods)) return undefined;
+    for (const m of mods) {
+      if (m?.type === 'BlocBouton') return m;
+      // Explore known children property
+      if (Array.isArray(m?.children)) {
+        const nested = findFirstCTA(m.children);
+        if (nested) return nested;
+      }
+      // Generic deep search: traverse any array-valued fields containing module-like items
+      for (const key of Object.keys(m || {})) {
+        const val = (m as any)[key];
+        if (Array.isArray(val) && val.length && typeof val[0] === 'object') {
+          const nested2 = findFirstCTA(val);
+          if (nested2) return nested2;
+        }
+      }
+    }
+    return undefined;
+  };
 
-  // Vérifier si une carte contient un bouton sur écran 3
+  // Generic deep scan over arbitrary nested arrays/objects to locate a BlocBouton (for canvasElements or unknown shapes)
+  const deepScanForCTA = (node: any): any | undefined => {
+    if (!node) return undefined;
+    if (Array.isArray(node)) {
+      for (const item of node) {
+        const found = deepScanForCTA(item);
+        if (found) return found;
+      }
+      return undefined;
+    }
+    if (typeof node === 'object') {
+      if (node.type === 'BlocBouton') return node;
+      for (const key of Object.keys(node)) {
+        const val = (node as any)[key];
+        const found = deepScanForCTA(val);
+        if (found) return found;
+      }
+    }
+    return undefined;
+  };
+
+  // Présence d'un CTA sur l'écran 1 (sert uniquement à masquer le bouton par défaut pour éviter les doublons)
+  const firstCtaOnScreen1 = findFirstCTA(modules as any[]);
+
+  // Vérifier si une carte contient un bouton sur écran 3 (inchangé, pour masquer l'overlay bas si déjà géré par une carte)
   const carteWithButtonScreen3 = Array.isArray(modules3)
     ? (modules3 as any[]).find((m) => 
         m?.type === 'BlocCarte' && 
@@ -386,14 +425,17 @@ const FunnelQuizParticipate: React.FC<FunnelQuizParticipateProps> = ({ campaign,
       )
     : undefined;
 
-  // Si un module BlocBouton est défini (ou dans une carte), on l'utilise comme source de vérité pour le style du CTA preview
-  const ctaModule: any | undefined = carteWithButton
-    ? carteWithButton.children.find((c: any) => c?.type === 'BlocBouton')
-    : Array.isArray(modules)
-    ? (modules as any[]).find((m) => m?.type === 'BlocBouton')
-    : undefined;
+  // Source de vérité des styles: premier CTA trouvé parmi écran1, puis écran2, puis écran3 (recherche récursive)
+  const ctaModule: any | undefined = firstCtaOnScreen1
+    || findFirstCTA(modules2 as any[])
+    || findFirstCTA(modules3 as any[])
+    || deepScanForCTA(canvasElementsAny);
 
-  const hasPrimaryCTA = Boolean(ctaModule);
+  const hasPrimaryCTA = Boolean(firstCtaOnScreen1);
+  const hasAnyCTA = Boolean(ctaModule);
+  const canvasCount = Array.isArray(canvasElementsAny) ? canvasElementsAny.length : 0;
+  const hasAnyModules = (modules.length + modules2.length + modules3.length + canvasCount) > 0;
+  const showFallbackCTA = false; // disable default black button entirely to prevent duplicates
 
   // Styles par défaut (hérités de gameConfig/buttonConfig) si aucun BlocBouton n'est présent
   const defaultParticipateStyles = useMemo(() => {
@@ -525,8 +567,8 @@ const FunnelQuizParticipate: React.FC<FunnelQuizParticipateProps> = ({ campaign,
                 );
               })()}
               
-              {/* Bouton Participer - affiché uniquement si aucun CTA modulaire n'est présent */}
-              {!hasPrimaryCTA && (
+              {/* Bouton Participer - fallback DISABLED to avoid duplicates */}
+              {showFallbackCTA && !hasAnyCTA && !hasAnyModules && (
                 <button
                   onClick={handleParticipate}
                   className={ctaClassName}

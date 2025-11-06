@@ -166,6 +166,24 @@ export const useCampaigns = () => {
         result = data;
       } else {
         // Create new campaign (require or default type)
+        // HARD GUARD: never insert a brand-new, unnamed, empty campaign
+        const rawName = (campaign.name ?? '').toString().trim();
+        const isUnnamed = !rawName || /^nouvelle campagne/i.test(rawName);
+        const cfg: any = campaign.config || {};
+        const canvasCfg: any = cfg.canvasConfig || {};
+        const elementsLen = Array.isArray(canvasCfg.elements) ? canvasCfg.elements.length : (Array.isArray(cfg.elements) ? cfg.elements.length : 0);
+        const modular = cfg.modularPage || (campaign.design as any)?.modularPage || (campaign.design as any)?.quizModules;
+        const screens = (modular && modular.screens) || {};
+        const countModules = (arr: any) => (Array.isArray(arr) ? arr.length : 0);
+        const modulesLen = countModules(screens.screen1) + countModules(screens.screen2) + countModules(screens.screen3);
+        const hasBackgroundImg = !!((campaign.design as any)?.backgroundImage || (campaign.design as any)?.mobileBackgroundImage);
+        const isEmpty = elementsLen === 0 && modulesLen === 0 && !hasBackgroundImg;
+
+        if (isUnnamed && isEmpty) {
+          console.warn('⛔ [useCampaigns.saveCampaign] Skipping INSERT for untouched, unnamed empty campaign');
+          return null;
+        }
+
         const insertData = {
           ...baseData,
           type: campaign.type ?? 'wheel',

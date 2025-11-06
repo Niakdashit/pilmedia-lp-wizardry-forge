@@ -10,6 +10,7 @@ const HybridSidebar = lazy(() => import('./HybridSidebar'));
 const DesignToolbar = lazy(() => import('./DesignToolbar'));
 const FunnelUnlockedGame = lazy(() => import('@/components/funnels/FunnelUnlockedGame'));
 const FunnelQuizParticipate = lazy(() => import('../funnels/FunnelQuizParticipate'));
+const FullScreenPreviewModal = lazy(() => import('@/components/shared/modals/FullScreenPreviewModal'));
 // Scratch editor uses FunnelUnlockedGame for preview
 import type { ModularPage, ScreenId, BlocBouton, Module } from '@/types/modularEditor';
 import { createEmptyModularPage } from '@/types/modularEditor';
@@ -19,6 +20,7 @@ import ArticleCanvas from '@/components/ArticleEditor/ArticleCanvas';
 import ZoomSlider from './components/ZoomSlider';
 import EditorHeader from '@/components/shared/EditorHeader';
 const DesignCanvas = lazy(() => import('./DesignCanvas'));
+import ModularCanvas from './modules/ModularCanvas';
 import { useEditorStore } from '../../stores/editorStore';
 import { useKeyboardShortcuts } from '../ModernEditor/hooks/useKeyboardShortcuts';
 import { useUndoRedo, useUndoRedoShortcuts } from '../../hooks/useUndoRedo';
@@ -1528,6 +1530,8 @@ const handleSaveCampaignName = useCallback(async () => {
   const [previewButtonSide, setPreviewButtonSide] = useState<'left' | 'right'>(() =>
     (typeof window !== 'undefined' && localStorage.getItem('previewButtonSide') === 'left') ? 'left' : 'right'
   );
+  const [showFullScreenPreview, setShowFullScreenPreview] = useState(false);
+  const [fullScreenPreviewDevice, setFullScreenPreviewDevice] = useState<'desktop' | 'mobile'>('desktop');
   // Calcul des onglets à masquer selon le mode
   const effectiveHiddenTabs = useMemo(
     () => {
@@ -3391,6 +3395,10 @@ const handleSaveCampaignName = useCallback(async () => {
             showSaveCloseButtons={false}
             onBeforeOpenSettings={handleBeforeOpenSettings}
             campaignId={(campaignState as any)?.id || new URLSearchParams(location.search).get('campaign') || undefined}
+            onFullScreenPreview={() => {
+              setFullScreenPreviewDevice(selectedDevice === 'mobile' ? 'mobile' : 'desktop');
+              setShowFullScreenPreview(true);
+            }}
           />
 
           {/* Bouton d'aide des raccourcis clavier */}
@@ -3469,23 +3477,20 @@ const handleSaveCampaignName = useCallback(async () => {
                       gameModalConfig={wheelModalConfig}
                       onStepChange={setCurrentStep}
                     />
-                  ) : campaignData?.type === 'quiz' ? (
-                    <FunnelQuizParticipate
-                      campaign={campaignData as any}
-                      previewMode="mobile"
-                    />
                   ) : (
-                    <FunnelUnlockedGame
-                      campaign={campaignData}
-                      previewMode="mobile"
-                      wheelModalConfig={wheelModalConfig}
-                      launchButtonStyles={launchButtonStyles}
-                    />
+                    <div className="absolute inset-0 bg-white overflow-hidden">
+                      <FunnelUnlockedGame
+                        campaign={campaignData}
+                        previewMode="mobile"
+                        wheelModalConfig={wheelModalConfig}
+                        launchButtonStyles={{}}
+                      />
+                    </div>
                   )}
                 </div>
               </div>
             ) : (
-              /* Desktop/Tablet Preview OU Mobile physique: Fullscreen */
+              /* Desktop/Tablet Preview OU Mobile physique */
               editorMode === 'article' ? (
                 <div className="w-full h-full flex items-start justify-center overflow-y-auto py-8" style={{ backgroundColor: '#2c2c35' }}>
                   <ArticleCanvas
@@ -3535,20 +3540,13 @@ const handleSaveCampaignName = useCallback(async () => {
                   />
                 </div>
               ) : (
-                <div className="w-full h-full pointer-events-auto flex items-center justify-center">
-                  {campaignData?.type === 'quiz' ? (
-                    <FunnelQuizParticipate
-                      campaign={campaignData as any}
-                      previewMode={selectedDevice}
-                    />
-                  ) : (
-                    <FunnelUnlockedGame
-                      campaign={campaignData}
-                      previewMode={actualDevice === 'desktop' && selectedDevice === 'desktop' ? 'desktop' : selectedDevice}
-                      wheelModalConfig={wheelModalConfig}
-                      launchButtonStyles={launchButtonStyles}
-                    />
-                  )}
+                <div className="absolute inset-0 bg-white overflow-hidden">
+                  <FunnelUnlockedGame
+                    campaign={campaignData}
+                    previewMode={actualDevice === 'desktop' && selectedDevice === 'desktop' ? 'desktop' : selectedDevice}
+                    wheelModalConfig={wheelModalConfig}
+                    launchButtonStyles={{}}
+                  />
                 </div>
               )
             )}
@@ -4383,6 +4381,23 @@ const handleSaveCampaignName = useCallback(async () => {
           </div>
         </div>
       )}
+
+      {/* Full Screen Preview Modal */}
+      <FullScreenPreviewModal
+        isOpen={showFullScreenPreview}
+        onClose={() => setShowFullScreenPreview(false)}
+        device={fullScreenPreviewDevice}
+        onDeviceChange={setFullScreenPreviewDevice}
+      >
+        <div className="w-full h-full overflow-hidden bg-white">
+          <FunnelUnlockedGame
+            campaign={campaignData}
+            previewMode={fullScreenPreviewDevice}
+            wheelModalConfig={wheelModalConfig}
+            launchButtonStyles={{}}
+          />
+        </div>
+      </FullScreenPreviewModal>
     </MobileStableEditor>
     </div>
   );

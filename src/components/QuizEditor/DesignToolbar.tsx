@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Monitor, Smartphone, Save, Eye, X, Undo, Redo, Layers, Settings } from 'lucide-react';
+import { Monitor, Smartphone, Save, Eye, X, Undo, Redo, Layers, Settings, Maximize2 } from 'lucide-react';
 import CampaignSettingsModal from '@/components/DesignEditor/modals/CampaignSettingsModal';
 import CampaignValidationModal from '@/components/shared/CampaignValidationModal';
 import { useCampaignValidation } from '@/hooks/useCampaignValidation';
@@ -31,6 +31,8 @@ interface QuizToolbarProps {
   showSaveCloseButtons?: boolean;
   // Campaign ID for settings modal
   campaignId?: string;
+  // Full screen preview
+  onFullScreenPreview?: () => void;
 }
 
 const QuizToolbar: React.FC<QuizToolbarProps> = React.memo(({
@@ -47,7 +49,8 @@ const QuizToolbar: React.FC<QuizToolbarProps> = React.memo(({
   mode = 'campaign',
   onSave,
   showSaveCloseButtons = true,
-  campaignId
+  campaignId,
+  onFullScreenPreview
 }) => {
   const navigate = useNavigate();
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
@@ -241,6 +244,16 @@ const QuizToolbar: React.FC<QuizToolbarProps> = React.memo(({
           <Eye className="w-4 h-4 mr-1" />
           {isPreviewMode ? 'Mode Édition' : 'Aperçu'}
         </button>
+        {onFullScreenPreview && (
+          <button
+            onClick={onFullScreenPreview}
+            className="flex items-center px-2.5 py-1.5 text-xs sm:text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            title="Prévisualisation en grand écran"
+          >
+            <Maximize2 className="w-4 h-4 mr-1" />
+            <span className="hidden sm:inline">Grand écran</span>
+          </button>
+        )}
         <button
           onClick={handleOpenSettings}
           className={`flex items-center px-2.5 py-1.5 text-xs sm:text-sm border rounded-lg transition-colors border-gray-300 hover:bg-gray-50`}

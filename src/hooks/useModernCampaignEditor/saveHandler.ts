@@ -72,6 +72,44 @@ export const saveCampaignToDB = async (
   }
   
   try {
+    // Skip saving for brand-new unnamed campaigns unless explicitly allowed later
+    const idStr: string | undefined = campaign?.id;
+    const isTempId = typeof idStr === 'string' && idStr.startsWith('temp-');
+    const rawName = (campaign?.name ?? '').toString().trim();
+    const isUnnamed = !rawName || /^(nouvelle campagne|ma campagne|new campaign|untitled)/i.test(rawName);
+    const modularScreens = (campaign?.modularPage?.screens) || {};
+    const hasModules = ['screen1','screen2','screen3'].some((s) => Array.isArray(modularScreens?.[s]) && modularScreens[s].length > 0);
+    const hasElements = Array.isArray(campaign?.canvasElements) && campaign.canvasElements.length > 0;
+    const bg = (campaign as any)?.canvasConfig?.background;
+    const hasBg = !!(((bg && bg.type === 'image' && bg.value) ? bg.value : undefined)
+      || (campaign as any)?.design?.backgroundImage
+      || (campaign as any)?.design?.mobileBackgroundImage);
+    const hasAnyContent = hasModules || hasElements || hasBg;
+
+    // HARD GUARD A: never insert a new campaign when it's a fresh, unnamed draft with no content
+    // Remove dependency on isNewCampaignGlobal because it may be cleared before unmount
+    if (!isUuid(idStr) && (isTempId || !idStr) && isUnnamed && !hasAnyContent) {
+      console.warn('⛔ [saveCampaignToDB] Skipping save for untouched, unnamed new campaign (no modules/elements/background)');
+      return { ...campaign };
+    }
+
+    // HARD GUARD B: require a non-default name for any first insert
+    // If the campaign is not yet persisted (no UUID), do not INSERT when the name is empty/default
+    if (!isUuid(idStr) && (isTempId || !idStr) && isUnnamed) {
+      console.warn('⛔ [saveCampaignToDB] Skipping INSERT for unnamed campaign (name is empty or default)');
+      return { ...campaign };
+    }
+
+    // HARD GUARD C: explicit opt-in for first INSERTs to prevent any auto-insert
+    // Only allow INSERT when an explicit user action sets _allowFirstInsert = true
+    if (!isUuid(idStr) && (isTempId || !idStr)) {
+      const allow = (campaign as any)?._allowFirstInsert === true;
+      if (!allow) {
+        console.warn('⛔ [saveCampaignToDB] Skipping first INSERT (explicit opt-in missing: _allowFirstInsert=true)');
+        return { ...campaign };
+      }
+    }
+
     // Hard guard: never persist preview-only campaign objects
     if (typeof campaign?.id === 'string' && !isUuid(campaign.id)) {
       if (campaign.id.includes('preview')) {

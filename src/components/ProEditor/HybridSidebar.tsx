@@ -24,7 +24,8 @@ import HtmlModulePanel from '../QuizEditor/modules/HtmlModulePanel';
 import CartePanel from '../QuizEditor/panels/CartePanel';
 import QuizConfigPanel from '../QuizEditor/panels/QuizConfigPanel';
 import ModernFormTab from '../ModernEditor/ModernFormTab';
-// Jackpot panels removed for ProEditor
+import JackpotFullPanel from './panels/JackpotFullPanel';
+import JackpotConfigPanel from '../SlotJackpot/panels/JackpotConfigPanel';
 import WheelConfigPanel from './panels/WheelConfigPanel';
 import MessagesPanel from './panels/MessagesPanel';
 import ArticleModePanel from '../DesignEditor/panels/ArticleModePanel';
@@ -68,7 +69,9 @@ interface HybridSidebarProps extends React.HTMLAttributes<HTMLDivElement> {
   // Inline quiz panel controls
   showQuizPanel?: boolean;
   onQuizPanelChange?: (show: boolean) => void;
-  // Inline pro panel controls removed in ProEditor
+  // Inline pro panel controls
+  showJackpotPanel?: boolean;
+  onJackpotPanelChange?: (show: boolean) => void;
   // Inline wheel panel controls
   showWheelPanel?: boolean;
   onWheelPanelChange?: (show: boolean) => void;
@@ -175,7 +178,8 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
   onQuizBorderRadiusChange,
   showQuizPanel = false,
   onQuizPanelChange,
-  // Jackpot panel controls removed
+  showJackpotPanel = false,
+  onJackpotPanelChange,
   showWheelPanel = false,
   onWheelPanelChange,
   showDesignPanel = false,
@@ -366,6 +370,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
     showPositionPanel,
     showQuizPanel,
     showWheelPanel,
+    showJackpotPanel,
     showDesignPanel,
     activeTab: internalActiveTab
   });
@@ -383,6 +388,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
       { key: 'position', active: showPositionPanel, prevActive: prev.showPositionPanel },
       { key: 'quiz', active: showQuizPanel, prevActive: prev.showQuizPanel },
       { key: 'wheel', active: showWheelPanel, prevActive: prev.showWheelPanel },
+      { key: 'pro', active: showJackpotPanel, prevActive: prev.showJackpotPanel },
       { key: 'background', active: showDesignPanel, prevActive: prev.showDesignPanel }
     ];
 
@@ -397,7 +403,10 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
       shouldUpdate = true;
     }
     // Si le panneau Jackpot est activé, forcer l'onglet pro
-    // Jackpot tab removed
+    else if (showJackpotPanel && !prev.showJackpotPanel) {
+      newActiveTab = 'pro';
+      shouldUpdate = true;
+    }
     // Si le panneau Design est activé, forcer l'onglet background (sauf si déjà sur background)
     else if (showDesignPanel && !prev.showDesignPanel && internalActiveTab !== 'background') {
       newActiveTab = 'background';
@@ -429,6 +438,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
       showPositionPanel,
       showQuizPanel,
       showWheelPanel,
+      showJackpotPanel,
       showDesignPanel,
       activeTab: newActiveTab
     };
@@ -446,6 +456,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
     showPositionPanel, 
     showQuizPanel,
     showWheelPanel,
+    showJackpotPanel,
     showDesignPanel,
     activeTab,
     onDesignPanelChange
@@ -528,11 +539,12 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
     const activeIsVisible = internalActiveTab ? tabs.some(t => t.id === internalActiveTab) : false;
     const isTransientQuiz = internalActiveTab === 'quiz' && showQuizPanel;
     const isTransientWheel = internalActiveTab === 'wheel' && showWheelPanel;
+    const isTransientJackpot = internalActiveTab === 'pro' && showJackpotPanel;
 
-    if (!activeIsVisible && !isTransientQuiz && !isTransientWheel) {
+    if (!activeIsVisible && !isTransientQuiz && !isTransientWheel && !isTransientJackpot) {
       setInternalActiveTab(backgroundVisible ? 'background' : (tabs[0]?.id ?? null));
     }
-  }, [tabs, internalActiveTab, showQuizPanel, showWheelPanel]);
+  }, [tabs, internalActiveTab, showQuizPanel, showWheelPanel, showJackpotPanel]);
 
   // Prefetch on hover/touch to smooth first paint
   const prefetchTab = (tabId: string) => {
@@ -916,6 +928,52 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
             onModuleDelete={onModuleDelete}
           />
         );
+      case 'pro':
+        const proConfig = (campaign as any)?.proConfig || {};
+        return (
+          <JackpotConfigPanel
+            onBack={() => {
+              onJackpotPanelChange?.(false);
+              setActiveTab(null);
+            }}
+            selectedTemplate={proConfig.template || 'pro-11'}
+            borderColor={proConfig.borderColor || '#ffd700'}
+            backgroundColor={proConfig.backgroundColor || '#ffffff'}
+            textColor={proConfig.textColor || '#333333'}
+            reelSymbols={proConfig.symbols}
+            onTemplateChange={(templateId) => {
+              setCampaign?.((prev: any) => ({
+                ...prev,
+                proConfig: { ...proConfig, template: templateId }
+              }));
+            }}
+            onBorderColorChange={(color) => {
+              setCampaign?.((prev: any) => ({
+                ...prev,
+                proConfig: { ...proConfig, borderColor: color }
+              }));
+            }}
+            onBackgroundColorChange={(color) => {
+              setCampaign?.((prev: any) => ({
+                ...prev,
+                proConfig: { ...proConfig, backgroundColor: color }
+              }));
+            }}
+            onTextColorChange={(color) => {
+              setCampaign?.((prev: any) => ({
+                ...prev,
+                proConfig: { ...proConfig, textColor: color }
+              }));
+            }}
+          />
+        );
+      case 'game':
+        return (
+          <JackpotFullPanel
+            campaign={campaign}
+            setCampaign={setCampaign}
+          />
+        );
       case 'form':
         return (
           <div className="p-4">
@@ -923,70 +981,6 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
               campaign={campaign}
               setCampaign={setCampaign as any}
             />
-          </div>
-        );
-      case 'game':
-        // Simple configuration for two iframes (winner/loser)
-        const proCfg = (campaignConfig as any)?.proConfig || {};
-        const activeView: 'winner' | 'loser' = (proCfg.activeGameView === 'loser') ? 'loser' : 'winner';
-        return (
-          <div className="p-4 space-y-4">
-            <div className="flex gap-2">
-              <button
-                className={`px-3 py-1 rounded ${activeView === 'winner' ? 'bg-[#0ea5b7] text-white' : 'bg-gray-200'}`}
-                onClick={() => onCampaignConfigChange?.((prev: any) => ({
-                  ...(prev || {}),
-                  proConfig: { ...(prev?.proConfig || {}), activeGameView: 'winner' }
-                }))}
-              >Gagnant</button>
-              <button
-                className={`px-3 py-1 rounded ${activeView === 'loser' ? 'bg-[#0ea5b7] text-white' : 'bg-gray-200'}`}
-                onClick={() => onCampaignConfigChange?.((prev: any) => ({
-                  ...(prev || {}),
-                  proConfig: { ...(prev?.proConfig || {}), activeGameView: 'loser' }
-                }))}
-              >Perdant</button>
-            </div>
-
-            <div className="space-y-3">
-              <label className="block text-sm font-medium text-gray-200">URL iframe Gagnant</label>
-              <input
-                type="text"
-                className="w-full px-3 py-2 rounded bg-gray-800 text-gray-100 border border-gray-700"
-                placeholder="https://..."
-                value={proCfg.winnerUrl || ''}
-                onChange={(e) => {
-                  const raw = e.target.value || '';
-                  const match = raw.includes('<iframe') ? /src\s*=\s*"([^"]+)"/i.exec(raw) : null;
-                  const url = match?.[1] || raw.trim();
-                  onCampaignConfigChange?.((prev: any) => ({
-                    ...(prev || {}),
-                    proConfig: { ...(prev?.proConfig || {}), winnerUrl: url }
-                  }));
-                }}
-              />
-            </div>
-
-            <div className="space-y-3">
-              <label className="block text-sm font-medium text-gray-200">URL iframe Perdant</label>
-              <input
-                type="text"
-                className="w-full px-3 py-2 rounded bg-gray-800 text-gray-100 border border-gray-700"
-                placeholder="https://..."
-                value={proCfg.loserUrl || ''}
-                onChange={(e) => {
-                  const raw = e.target.value || '';
-                  const match = raw.includes('<iframe') ? /src\s*=\s*"([^"]+)"/i.exec(raw) : null;
-                  const url = match?.[1] || raw.trim();
-                  onCampaignConfigChange?.((prev: any) => ({
-                    ...(prev || {}),
-                    proConfig: { ...(prev?.proConfig || {}), loserUrl: url }
-                  }));
-                }}
-              />
-            </div>
-
-            <p className="text-xs text-gray-400">L’iframe active s’affiche sur l’écran 2 du canvas.</p>
           </div>
         );
       case 'messages':

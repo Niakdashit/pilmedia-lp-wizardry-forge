@@ -11,7 +11,8 @@ import {
   Image,
   Type,
   MousePointer,
-  List
+  List,
+  Code2
 } from 'lucide-react';
 import { BackgroundPanel, CompositeElementsPanel, TextEffectsPanel } from '@/components/shared';
 import ImageModulePanel from '../QuizEditor/modules/ImageModulePanel';
@@ -29,6 +30,7 @@ import QuizManagementPanel from './panels/QuizManagementPanel';
 import WheelConfigPanel from './panels/WheelConfigPanel';
 import MessagesPanel from './panels/MessagesPanel';
 import ArticleModePanel from '../DesignEditor/panels/ArticleModePanel';
+import CodePanel from '../DesignEditor/panels/CodePanel';
 import { useEditorStore } from '../../stores/editorStore';
 import { useArticleBannerSync } from '@/hooks/useArticleBannerSync';
 import { getEditorDeviceOverride } from '@/utils/deviceOverrides';
@@ -486,7 +488,8 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
         { id: 'design', label: 'Design', icon: Palette },
         { id: 'form', label: 'Formulaire', icon: FormInput },
         { id: 'game', label: 'Jeu', icon: Gamepad2 },
-        { id: 'messages', label: 'Sortie', icon: MessageSquare }
+        { id: 'messages', label: 'Sortie', icon: MessageSquare },
+        { id: 'code', label: 'Code', icon: Code2 }
       ]
     : [
         { 
@@ -514,6 +517,11 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
           id: 'messages', 
           label: 'Sortie', 
           icon: MessageSquare
+        },
+        { 
+          id: 'code', 
+          label: 'Code', 
+          icon: Code2
         }
       ];
   
@@ -965,6 +973,14 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
             campaign={campaign}
             setCampaign={setCampaign}
             onCampaignConfigChange={onCampaignConfigChange}
+          />
+        );
+      case 'code':
+        return (
+          <CodePanel 
+            campaign={campaign}
+            currentScreen={currentScreen}
+            onCampaignChange={setCampaign}
           />
         );
       default:

@@ -16,6 +16,7 @@ interface QuizModuleRendererProps {
   inheritedTextColor?: string;
   // Callback pour mettre à jour un module (utilisé en mode édition)
   onModuleUpdate?: (moduleId: string, patch: Partial<Module>) => void;
+  readOnly?: boolean;
 }
 
 /**
@@ -34,7 +35,8 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
   className = '',
   onButtonClick,
   inheritedTextColor,
-  onModuleUpdate
+  onModuleUpdate,
+  readOnly = false
 }) => {
   const isMobileDevice = device === 'mobile';
   
@@ -44,12 +46,13 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
   
   console.log(`📱 [ScratchCardRenderer] Device: ${device}, Scale: ${deviceScale.toFixed(3)} (${device === 'mobile' ? '51.8% desktop' : '100%'})`);
   console.log(`📌 [ScratchCardRenderer] Modules seront ${device === 'mobile' ? '51.8%' : '100%'} de la taille desktop`);
+  console.log(`🎮 [QuizModuleRenderer] Props received:`, { previewMode, readOnly, hasOnButtonClick: !!onButtonClick, modulesCount: modules.length });
   const [editingModuleId, setEditingModuleId] = useState<string | null>(null);
   const textRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   // Fonctions de gestion de l'édition de texte
   const handleTextClick = useCallback((moduleId: string) => {
-    if (previewMode) return;
+    if (previewMode || readOnly) return;
     setEditingModuleId(moduleId);
     setTimeout(() => {
       const ref = textRefs.current[moduleId];
@@ -64,7 +67,7 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
         }
       }
     }, 0);
-  }, [previewMode]);
+  }, [previewMode, readOnly]);
 
   const handleTextBlur = useCallback((moduleId: string) => {
     setEditingModuleId(null);
@@ -174,7 +177,7 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
             <div style={{ width: '100%', maxWidth: maxTextWidth }}>
               {hasContainerStyles ? (
                 <div style={{ display: 'inline-block', ...containerStyles, ...rotationStyle }}>
-                  {isEditing ? (
+                  {isEditing && !readOnly ? (
                     <div
                       ref={(el) => { textRefs.current[m.id] = el; }}
                       contentEditable
@@ -212,7 +215,7 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
                   )}
                 </div>
               ) : (
-                isEditing ? (
+                isEditing && !readOnly ? (
                   <div
                     ref={(el) => { textRefs.current[m.id] = el; }}
                     contentEditable
@@ -410,11 +413,15 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
             href={buttonModule.href || '#'}
             onClick={(e) => {
               e.preventDefault();
+              console.log('🔘 Button clicked!', { previewMode, hasCallback: !!onButtonClick });
               if (previewMode && onButtonClick) {
+                console.log('✅ Calling onButtonClick');
                 onButtonClick();
+              } else {
+                console.log('❌ Not calling onButtonClick', { previewMode, onButtonClick });
               }
             }}
-            className={`inline-flex items-center justify-center px-6 py-3 text-sm transition-transform hover:-translate-y-[1px] ${((buttonModule as any).uppercase) ? 'uppercase' : ''} ${((buttonModule as any).bold) ? 'font-bold' : 'font-semibold'}`}
+            className={`inline-flex items-center justify-center px-6 py-3 text-sm transition-transform hover:-translate-y-[1px] ${previewMode ? 'cursor-pointer' : ''} ${((buttonModule as any).uppercase) ? 'uppercase' : ''} ${((buttonModule as any).bold) ? 'font-bold' : 'font-semibold'}`}
             style={{
               background: buttonModule.background || '#000000',
               color: buttonModule.textColor || '#ffffff',

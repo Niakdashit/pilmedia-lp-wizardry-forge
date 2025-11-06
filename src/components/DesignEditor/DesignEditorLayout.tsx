@@ -9,6 +9,8 @@ import { useLocation, useNavigate } from '@/lib/router-adapter';
 import { Save, X } from 'lucide-react';
 const HybridSidebar = lazy(() => import('./HybridSidebar'));
 const DesignToolbar = lazy(() => import('./DesignToolbar'));
+const FullScreenPreviewModal = lazy(() => import('@/components/shared/modals/FullScreenPreviewModal'));
+const FunnelUnlockedGame = lazy(() => import('@/components/funnels/FunnelUnlockedGame'));
 import PreviewRenderer from '@/components/preview/PreviewRenderer';
 import ArticleFunnelView from '@/components/ArticleEditor/ArticleFunnelView';
 // import GradientBand from '../shared/GradientBand';
@@ -104,7 +106,7 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
       try { if (styleEl && styleEl.parentNode) styleEl.parentNode.removeChild(styleEl); } catch {}
     };
   }, []);
-  
+
   // Détection automatique de l'appareil basée sur l'user-agent pour éviter le basculement lors du redimensionnement de fenêtre
   const detectDevice = (): 'desktop' | 'tablet' | 'mobile' => {
     const override = getEditorDeviceOverride();
@@ -190,6 +192,43 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
   const isRestoringRef = useRef(false);
   const didRestoreDeviceRef = useRef(false);
   const didHydrateModularRef = useRef(false);
+
+  // Listen for explicit save requests from panels (e.g., CodePanel Apply)
+  useEffect(() => {
+    const handler = async () => {
+      try {
+        const currentCampaign = useEditorStore.getState().campaign as any;
+        if (!currentCampaign?.id) return;
+        const payload: any = {
+          ...(currentCampaign || {}),
+          // Mirror local modular state if available
+          modularPage,
+          canvasElements,
+          screenBackgrounds,
+          selectedDevice,
+          canvasConfig: {
+            ...(currentCampaign as any)?.canvasConfig,
+            elements: canvasElements,
+            screenBackgrounds,
+            device: selectedDevice,
+            zoom: canvasZoom,
+            background: canvasBackground
+          }
+        };
+        console.log('💾 [DesignEditor] Manual save from event → DB');
+        await saveCampaignToDB(payload, saveCampaign);
+        setIsModified(false);
+        // Nudge previews to re-read
+        try {
+          window.dispatchEvent(new CustomEvent('editor-force-sync'));
+        } catch {}
+      } catch (e) {
+        console.error('❌ [DesignEditor] Manual save failed:', e);
+      }
+    };
+    window.addEventListener('editor-request-save', handler as any);
+    return () => window.removeEventListener('editor-request-save', handler as any);
+  }, [canvasElements, screenBackgrounds, selectedDevice, canvasZoom, canvasBackground, modularPage, saveCampaign, setIsModified]);
 
   // 🧹 CRITICAL: Save complete state before unmount to prevent data loss
   useEditorUnmountSave('wheel', {
@@ -476,7 +515,9 @@ useEffect(() => {
   const saveBgTimeoutRef = useRef<number | null>(null);
   const persistBackground = useCallback((bg: { type: 'color' | 'image'; value: string }, nextScreens?: Record<'screen1' | 'screen2' | 'screen3', BackgroundValue>) => {
     if (isRestoringRef.current) return;
-    if (!campaignState?.id) return;
+    const id = (campaignState as any)?.id as string | undefined;
+    const isUuid = (v?: string) => !!v && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v);
+    if (!id || !isUuid(id)) return;
     if (saveBgTimeoutRef.current) {
       clearTimeout(saveBgTimeoutRef.current);
     }
@@ -532,7 +573,8 @@ useEffect(() => {
 // 💾 Autosave léger et non intrusif des éléments du canvas
 useEffect(() => {
   const id = (campaignState as any)?.id as string | undefined;
-  if (!id || isRestoringRef.current) return;
+  const isUuid = (v?: string) => !!v && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v);
+  if (!id || !isUuid(id) || isRestoringRef.current) return;
   const t = window.setTimeout(async () => {
     try {
       const payload: any = {
@@ -1332,6 +1374,8 @@ useEffect(() => {
   const [previewButtonSide, setPreviewButtonSide] = useState<'left' | 'right'>(() =>
     (typeof window !== 'undefined' && localStorage.getItem('previewButtonSide') === 'left') ? 'left' : 'right'
   );
+  const [showFullScreenPreview, setShowFullScreenPreview] = useState(false);
+  const [fullScreenPreviewDevice, setFullScreenPreviewDevice] = useState<'desktop' | 'mobile'>('desktop');
   // Calcul des onglets à masquer selon le mode
   const effectiveHiddenTabs = useMemo(
     () => {
@@ -2701,6 +2745,10 @@ useEffect(() => {
               onSave={handleSaveAndQuit}
               showSaveCloseButtons={false}
               campaignId={(campaignState as any)?.id || new URLSearchParams(location.search).get('campaign') || undefined}
+              onFullScreenPreview={() => {
+                setFullScreenPreviewDevice(selectedDevice === 'mobile' ? 'mobile' : 'desktop');
+                setShowFullScreenPreview(true);
+              }}
             />
 
             {/* Bouton d'aide des raccourcis clavier */}
@@ -3467,6 +3515,23 @@ useEffect(() => {
           </div>
         </div>
       )}
+
+      {/* Full Screen Preview Modal */}
+      <FullScreenPreviewModal
+        isOpen={showFullScreenPreview}
+        onClose={() => setShowFullScreenPreview(false)}
+        device={fullScreenPreviewDevice}
+        onDeviceChange={setFullScreenPreviewDevice}
+      >
+        <div className="w-full h-full overflow-hidden bg-white">
+          <FunnelUnlockedGame
+            campaign={campaignData}
+            previewMode={fullScreenPreviewDevice}
+            wheelModalConfig={wheelModalConfig}
+            launchButtonStyles={{}}
+          />
+        </div>
+      </FullScreenPreviewModal>
     </MobileStableEditor>
     </div>
   );

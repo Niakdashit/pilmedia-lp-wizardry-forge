@@ -6,7 +6,7 @@ import { useEditorStore } from '@/stores/editorStore';
 interface EditorModeModalProps {
   isOpen: boolean;
   onClose: () => void;
-  editorType: 'wheel' | 'quiz' | 'scratch' | 'jackpot' | 'pro' | 'form' | 'dice' | 'memory' | 'puzzle';
+  editorType: 'wheel' | 'quiz' | 'scratch' | 'jackpot' | 'form' | 'dice' | 'memory' | 'puzzle';
 }
 
 /**
@@ -34,7 +34,6 @@ const EditorModeModal: React.FC<EditorModeModalProps> = ({
       quiz: '/quiz-editor',
       scratch: '/scratch-editor',
       jackpot: '/jackpot-editor',
-      pro: '/pro-editor',
       form: '/form-editor',
       dice: '/dice-editor',
       memory: '/memory-editor',
@@ -52,7 +51,6 @@ const EditorModeModal: React.FC<EditorModeModalProps> = ({
       quiz: 'Quiz',
       scratch: 'Carte à Gratter',
       jackpot: 'Jackpot',
-      pro: 'Pro',
       form: 'Formulaire',
       dice: 'Dés',
       memory: 'Memory',

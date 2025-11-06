@@ -9,6 +9,8 @@ import { Save, X } from 'lucide-react';
 
 const HybridSidebar = lazy(() => import('./HybridSidebar'));
 const DesignToolbar = lazy(() => import('./DesignToolbar'));
+const FullScreenPreviewModal = lazy(() => import('@/components/shared/modals/FullScreenPreviewModal'));
+const FunnelUnlockedGame = lazy(() => import('@/components/funnels/FunnelUnlockedGame'));
 import PreviewRenderer from '@/components/preview/PreviewRenderer';
 import ArticleFunnelView from '@/components/ArticleEditor/ArticleFunnelView';
 import type { ModularPage, ScreenId, BlocBouton, Module } from '@/types/modularEditor';
@@ -1149,6 +1151,8 @@ const handleSaveCampaignName = useCallback(async () => {
   // État pour le funnel article
   const [currentStep, setCurrentStep] = useState<'article' | 'form' | 'game' | 'result'>('article');
   const [showFunnel, setShowFunnel] = useState(false);
+  const [showFullScreenPreview, setShowFullScreenPreview] = useState(false);
+  const [fullScreenPreviewDevice, setFullScreenPreviewDevice] = useState<'desktop' | 'mobile'>('desktop');
 
   // 🧹 CRITICAL: Clean temporary campaigns - keep only Participer and Rejouer buttons
   // Guard: do NOT run while in Preview (showFunnel), otherwise it wipes screen2 just after we navigate
@@ -3628,6 +3632,10 @@ const handleSaveCampaignName = useCallback(async () => {
             onSave={handleSaveAndQuit}
             showSaveCloseButtons={false}
             campaignId={(campaignState as any)?.id || new URLSearchParams(location.search).get('campaign') || undefined}
+            onFullScreenPreview={() => {
+              setFullScreenPreviewDevice(selectedDevice === 'mobile' ? 'mobile' : 'desktop');
+              setShowFullScreenPreview(true);
+            }}
           />
 
           {/* Bouton d'aide des raccourcis clavier */}
@@ -4463,6 +4471,23 @@ const handleSaveCampaignName = useCallback(async () => {
           </div>
         </div>
       )}
+
+      {/* Full Screen Preview Modal */}
+      <FullScreenPreviewModal
+        isOpen={showFullScreenPreview}
+        onClose={() => setShowFullScreenPreview(false)}
+        device={fullScreenPreviewDevice}
+        onDeviceChange={setFullScreenPreviewDevice}
+      >
+        <div className="w-full h-full overflow-hidden bg-white">
+          <FunnelUnlockedGame
+            campaign={campaignData}
+            previewMode={fullScreenPreviewDevice}
+            wheelModalConfig={quizModalConfig}
+            launchButtonStyles={{}}
+          />
+        </div>
+      </FullScreenPreviewModal>
     </MobileStableEditor>
   </div>
 );

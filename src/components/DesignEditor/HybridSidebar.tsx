@@ -6,7 +6,8 @@ import {
   Gamepad2,
   Palette,
   FormInput,
-  MessageSquare
+  MessageSquare,
+  Code2
 } from 'lucide-react';
 import { BackgroundPanel, CompositeElementsPanel, TextEffectsPanel } from '@/components/shared';
 import ImageModulePanel from '../QuizEditor/modules/ImageModulePanel';
@@ -23,6 +24,7 @@ import GameManagementPanel from './panels/GameManagementPanel';
 import WheelConfigPanel from './panels/WheelConfigPanel';
 import MessagesPanel from './panels/MessagesPanel';
 import ArticleModePanel from './panels/ArticleModePanel';
+import CodePanel from './panels/CodePanel';
 import { useEditorStore } from '../../stores/editorStore';
 import { getEditorDeviceOverride } from '@/utils/deviceOverrides';
 import { quizTemplates } from '../../types/quizTemplates';
@@ -488,7 +490,8 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
         { id: 'design', label: 'Design', icon: Palette },
         { id: 'form', label: 'Formulaire', icon: FormInput },
         { id: 'game', label: 'Jeu', icon: Gamepad2 },
-        { id: 'messages', label: 'Sortie', icon: MessageSquare }
+        { id: 'messages', label: 'Sortie', icon: MessageSquare },
+        { id: 'code', label: 'Code', icon: Code2 }
       ]
     : [
         { 
@@ -516,6 +519,11 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
           id: 'messages', 
           label: 'Sortie', 
           icon: MessageSquare
+        },
+        { 
+          id: 'code', 
+          label: 'Code', 
+          icon: Code2
         }
       ];
   
@@ -952,6 +960,14 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
           <MessagesPanel 
             campaign={campaign}
             setCampaign={setCampaign}
+          />
+        );
+      case 'code':
+        return (
+          <CodePanel 
+            campaign={campaign}
+            currentScreen={currentScreen}
+            onCampaignChange={setCampaign}
           />
         );
       default:

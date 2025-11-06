@@ -6,10 +6,11 @@ import { useCampaignValidation } from '@/hooks/useCampaignValidation';
 import { useLocation, useNavigate } from '@/lib/router-adapter';
 import { Save, X } from 'lucide-react';
 
-import HybridSidebar from './HybridSidebar';
-import DesignToolbar from './DesignToolbar';
+const HybridSidebar = lazy(() => import('./HybridSidebar'));
+const DesignToolbar = lazy(() => import('./DesignToolbar'));
 const FunnelUnlockedGame = lazy(() => import('@/components/funnels/FunnelUnlockedGame'));
 const FunnelQuizParticipate = lazy(() => import('../funnels/FunnelQuizParticipate'));
+const FullScreenPreviewModal = lazy(() => import('@/components/shared/modals/FullScreenPreviewModal'));
 // Scratch editor uses FunnelUnlockedGame for preview
 import type { ModularPage, ScreenId, BlocBouton, Module } from '@/types/modularEditor';
 import { createEmptyModularPage } from '@/types/modularEditor';
@@ -276,6 +277,12 @@ const { syncAllStates } = useCampaignStateSync();
     gameConfig: (campaignState as any)?.jackpotConfig
   }, saveCampaign);
 
+  // Only enable autosave when campaign id is a real UUID (avoid temp/new drafts)
+  const isPersistedId = (() => {
+    const id = (campaignState as any)?.id as string | undefined;
+    return !!(id && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id));
+  })();
+
   // 🔄 Auto-save to Supabase every 30 seconds (aligned with QuizEditor)
   useAutoSaveToSupabase(
     {
@@ -290,7 +297,7 @@ const { syncAllStates } = useCampaignStateSync();
       canvasZoom
     },
     {
-      enabled: true,
+      enabled: isPersistedId,
       interval: 30000, // 30 seconds
       onSave: () => {
         console.log('✅ [JackpotEditor AutoSave] Campaign auto-saved to Supabase');
@@ -625,7 +632,9 @@ useEffect(() => {
 // ✅ FIX: Éviter l'autosave lors des simples changements de background
 useEffect(() => {
   const id = (campaignState as any)?.id as string | undefined;
-  if (!id) return;
+  const isUuid = (v?: string) => !!v && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v);
+  if (!isUuid(id)) return;
+
   // Guard: ne sauver que la campagne sélectionnée
   if (selectedCampaignId && id !== selectedCampaignId) return;
 
@@ -1440,6 +1449,8 @@ useEffect(() => {
   const [previewButtonSide, setPreviewButtonSide] = useState<'left' | 'right'>(() =>
     (typeof window !== 'undefined' && localStorage.getItem('previewButtonSide') === 'left') ? 'left' : 'right'
   );
+  const [showFullScreenPreview, setShowFullScreenPreview] = useState(false);
+  const [fullScreenPreviewDevice, setFullScreenPreviewDevice] = useState<'desktop' | 'mobile'>('desktop');
   // Calcul des onglets à masquer selon le mode
   const effectiveHiddenTabs = useMemo(
     () => {
@@ -3362,6 +3373,10 @@ useEffect(() => {
             onNavigateToSettings={handleNavigateToSettings}
             onBeforeOpenSettings={handleBeforeOpenSettings}
             campaignId={(campaignState as any)?.id || new URLSearchParams(location.search).get('campaign') || undefined}
+            onFullScreenPreview={() => {
+              setFullScreenPreviewDevice(selectedDevice === 'mobile' ? 'mobile' : 'desktop');
+              setShowFullScreenPreview(true);
+            }}
           />
 
           {/* Bouton d'aide des raccourcis clavier */}
@@ -4372,6 +4387,23 @@ useEffect(() => {
           </div>
         </div>
       )}
+
+      {/* Full Screen Preview Modal */}
+      <FullScreenPreviewModal
+        isOpen={showFullScreenPreview}
+        onClose={() => setShowFullScreenPreview(false)}
+        device={fullScreenPreviewDevice}
+        onDeviceChange={setFullScreenPreviewDevice}
+      >
+        <div className="w-full h-full overflow-hidden bg-white">
+          <FunnelUnlockedGame
+            campaign={campaignData}
+            previewMode={fullScreenPreviewDevice}
+            wheelModalConfig={wheelModalConfig}
+            launchButtonStyles={{}}
+          />
+        </div>
+      </FullScreenPreviewModal>
     </MobileStableEditor>
     </div>
     </Suspense>

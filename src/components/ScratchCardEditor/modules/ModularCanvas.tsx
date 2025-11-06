@@ -17,6 +17,8 @@ export interface ModularCanvasProps {
   onSelect?: (module: Module) => void;
   selectedModuleId?: string;
   device?: DeviceType;
+  readOnly?: boolean;
+  onButtonClick?: () => void;
 }
 
 type LayoutWidth = NonNullable<Module['layoutWidth']>;
@@ -157,7 +159,9 @@ const Toolbar: React.FC<{
   );
 }
 
-const renderModule = (m: Module, onUpdate: (patch: Partial<Module>) => void, device: DeviceType = 'desktop') => {
+const renderModule = (m: Module, onUpdate: (patch: Partial<Module>) => void, device: DeviceType = 'desktop', readOnly: boolean = false, onButtonClick?: () => void) => {
+  console.log('🎯 [renderModule] Params received:', { moduleType: m.type, readOnly, hasOnButtonClick: !!onButtonClick });
+  
   // const isMobileDevice = device === 'mobile';
 
   const commonStyle: React.CSSProperties = {
@@ -193,10 +197,12 @@ const renderModule = (m: Module, onUpdate: (patch: Partial<Module>) => void, dev
         <div style={{ ...commonStyle }}>
           <QuizModuleRenderer
             modules={[m]}
-            previewMode={false}
+            previewMode={readOnly}
             device={device}
             onModuleClick={() => {}}
             onModuleUpdate={(_id, patch) => onUpdate(patch)}
+            readOnly={readOnly}
+            onButtonClick={onButtonClick}
           />
         </div>
       );
@@ -210,6 +216,7 @@ const renderModule = (m: Module, onUpdate: (patch: Partial<Module>) => void, dev
             device={device}
             onModuleClick={() => {}}
             onModuleUpdate={(_id, patch) => onUpdate(patch)}
+            readOnly={readOnly}
           />
         </div>
       );
@@ -219,10 +226,12 @@ const renderModule = (m: Module, onUpdate: (patch: Partial<Module>) => void, dev
         <div style={{ ...commonStyle }}>
           <QuizModuleRenderer
             modules={[m]}
-            previewMode={false}
+            previewMode={readOnly}
             device={device}
             onModuleClick={() => {}}
             onModuleUpdate={(_id, patch) => onUpdate(patch)}
+            readOnly={readOnly}
+            onButtonClick={onButtonClick}
           />
         </div>
       );
@@ -447,10 +456,11 @@ const renderModule = (m: Module, onUpdate: (patch: Partial<Module>) => void, dev
       return (
         <QuizModuleRenderer
           modules={[m]}
-          previewMode={false}
+          previewMode={readOnly}
           device={device}
           onModuleClick={() => {}}
           onModuleUpdate={(_id, patch) => onUpdate(patch)}
+          readOnly={readOnly}
         />
       );
     case 'BlocPiedDePage':
@@ -461,6 +471,7 @@ const renderModule = (m: Module, onUpdate: (patch: Partial<Module>) => void, dev
           device={device}
           onModuleClick={() => {}}
           onModuleUpdate={(_id, patch) => onUpdate(patch)}
+          readOnly={readOnly}
         />
       );
     default:
@@ -468,7 +479,9 @@ const renderModule = (m: Module, onUpdate: (patch: Partial<Module>) => void, dev
   }
 };
 
-const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate, onDelete, onMove, onDuplicate, onSelect, selectedModuleId, device = 'desktop' }) => {
+const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate, onDelete, onMove, onDuplicate, onSelect, selectedModuleId, device = 'desktop', readOnly = false, onButtonClick }) => {
+  console.log(' [ModularCanvas] Props received:', { readOnly, hasOnButtonClick: !!onButtonClick, modulesCount: modules?.length || 0 });
+  
   const moduleRefs = React.useRef<Record<string, HTMLDivElement | null>>({});
   const modulesRef = React.useRef(modules);
   const onMoveRef = React.useRef(onMove);
@@ -589,32 +602,21 @@ const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate
     event.preventDefault();
     event.stopPropagation();
 
+    if (readOnly || module.absolute) return;
+    const idx = modulesRef.current.findIndex(m => m.id === module.id);
+    if (idx === -1) return;
     const pointerId = event.pointerId;
-    dragStateRef.current = {
-      id: module.id,
-      startPointerY: event.clientY,
-      lastIndex: index,
-      pointerId
-    };
-    activeHandleRef.current = event.currentTarget;
-
+    dragStateRef.current = { id: module.id, startPointerY: event.clientY, lastIndex: idx, pointerId };
+    activeHandleRef.current = handle;
     setDraggingId(module.id);
     setDragOffset(0);
-    lastReorderYRef.current = event.clientY;
-
-    try {
-      event.currentTarget.setPointerCapture(pointerId);
-    } catch {}
-
-    document.addEventListener('pointermove', handleGlobalPointerMove, { passive: true });
-    document.addEventListener('pointerup', stopModuleDrag, { once: true });
-    document.addEventListener('pointercancel', stopModuleDrag, { once: true });
-
+    lastReorderYRef.current = null;
+    document.body.style.cursor = 'grabbing';
     document.body.style.userSelect = 'none';
     document.body.style.touchAction = 'none';
 
     onSelect?.(module);
-  }, [handleGlobalPointerMove, onSelect, stopModuleDrag]);
+  }, [readOnly, handleGlobalPointerMove, onSelect, stopModuleDrag]);
 
   React.useEffect(() => () => {
     stopModuleDrag();
@@ -779,7 +781,7 @@ const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate
               isMobile={device === 'mobile'}
             />
           )}
-          {renderModule(m, (patch) => onUpdate(m.id, patch), device)}
+          {renderModule(m, (patch) => onUpdate(m.id, patch), device, readOnly, onButtonClick)}
         </div>
       ))}
       
@@ -982,11 +984,12 @@ const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate
                 return (
                   <div key={m.id}
                     data-module-id={m.id}
-                    className={`relative group bg-transparent rounded-md transition-colors cursor-pointer ${columnSpanClass} ${isSelected ? 'border border-[#0ea5b7] ring-2 ring-[#0ea5b7]/30' : 'border-0 hover:outline hover:outline-1 hover:outline-gray-400'} ${isDragging ? 'ring-2 ring-[#0ea5b7]/30 shadow-xl shadow-black/10' : ''}`}
+                    className={`relative group bg-transparent rounded-md transition-colors ${readOnly ? 'cursor-default' : 'cursor-pointer'} ${columnSpanClass} ${isSelected ? 'border border-[#0ea5b7] ring-2 ring-[#0ea5b7]/30' : 'border-0'} ${!readOnly ? 'hover:outline hover:outline-1 hover:outline-gray-400' : ''} ${isDragging ? 'ring-2 ring-[#0ea5b7]/30 shadow-xl shadow-black/10' : ''}`}
                     role="button"
                     tabIndex={0}
                     onPointerDown={handleModulePointerDown}
                     onClick={(event) => {
+                      if (readOnly) return;
                       console.log('🎯 [ModularCanvas] Module container clicked!', { id: m.id, type: m.type });
                       event.stopPropagation();
                       onSelect?.(m);
@@ -1001,7 +1004,7 @@ const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate
                     ref={(el) => { moduleRefs.current[m.id] = el; }}
                   >
                     {/* Ne pas afficher la toolbar pour les modules espace */}
-                    {m.type !== 'BlocEspace' && (m as any).type !== 'BlocSeparateur' && (
+                    {!readOnly && m.type !== 'BlocEspace' && (m as any).type !== 'BlocSeparateur' && (
                       <Toolbar
                         visible={isSelected || isDragging}
                         layoutWidth={currentLayoutWidth}
@@ -1017,32 +1020,36 @@ const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate
                         onToggleAbsolute={() => onUpdate(m.id, { absolute: !(m as any).absolute } as any)}
                       />
                     )}
-                    <button
-                      type="button"
-                      data-module-drag-handle="true"
-                      onPointerDown={handleDragHandlePointerDown}
-                      className={`absolute left-2 top-2 inline-flex h-7 w-7 items-center justify-center rounded-md border border-white/40 bg-white/75 text-gray-500 shadow-sm shadow-black/5 transition-all duration-150 active:scale-95 md:hover:text-gray-700 ${isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-90'}`}
-                      aria-label="Réorganiser le module"
-                      style={{ backdropFilter: 'blur(6px)' }}
-                    >
-                      <GripVertical className="h-3.5 w-3.5" />
-                    </button>
+                    {!readOnly && (
+                      <button
+                        type="button"
+                        data-module-drag-handle="true"
+                        onPointerDown={handleDragHandlePointerDown}
+                        className={`absolute left-2 top-2 inline-flex h-7 w-7 items-center justify-center rounded-md border border-white/40 bg-white/75 text-gray-500 shadow-sm shadow-black/5 transition-all duration-150 active:scale-95 md:hover:text-gray-700 ${isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-90'}`}
+                        aria-label="Réorganiser le module"
+                        style={{ backdropFilter: 'blur(6px)' }}
+                      >
+                        <GripVertical className="h-3.5 w-3.5" />
+                      </button>
+                    )}
                     <div className={paddingClass}>
-                      {renderModule(m, (patch) => onUpdate(m.id, patch), device)}
+                      {renderModule(m, (patch) => onUpdate(m.id, patch), device, readOnly, onButtonClick)}
                     </div>
-                    <button
-                      type="button"
-                      onPointerDown={handleResizePointerDown}
-                      className={`absolute bottom-2 right-2 flex h-6 w-6 items-center justify-center rounded-full bg-white/75 text-gray-600 shadow-sm shadow-black/10 border border-white/40 transition-all duration-150 active:scale-95 md:hover:text-gray-700 cursor-nwse-resize ${
-                        isSelected
-                          ? 'opacity-100 pointer-events-auto'
-                          : 'opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto'
-                      }`}
-                      style={{ touchAction: 'none', zIndex: 1002 }}
-                      aria-label={`Ajuster la hauteur (actuellement ${getDisplayHeight()} pixels)`}
-                    >
-                      <MoveDiagonal className="h-3 w-3" />
-                    </button>
+                    {!readOnly && (
+                      <button
+                        type="button"
+                        onPointerDown={handleResizePointerDown}
+                        className={`absolute bottom-2 right-2 flex h-6 w-6 items-center justify-center rounded-full bg-white/75 text-gray-600 shadow-sm shadow-black/10 border border-white/40 transition-all duration-150 active:scale-95 md:hover:text-gray-700 cursor-nwse-resize ${
+                          isSelected
+                            ? 'opacity-100 pointer-events-auto'
+                            : 'opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto'
+                        }`}
+                        style={{ touchAction: 'none', zIndex: 1002 }}
+                        aria-label={`Ajuster la hauteur (actuellement ${getDisplayHeight()} pixels)`}
+                      >
+                        <MoveDiagonal className="h-3 w-3" />
+                      </button>
+                    )}
                   </div>
                 );
               })}
@@ -1055,6 +1062,7 @@ const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate
             {absoluteModules.map((m) => {
               const y = ((m as any).y ?? 0) as number;
               const onPointerDown: React.PointerEventHandler<HTMLDivElement> = (e) => {
+                if (readOnly) return;
                 e.preventDefault();
                 e.stopPropagation();
                 const el = e.currentTarget;
@@ -1078,30 +1086,38 @@ const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate
                 document.addEventListener('pointermove', move);
                 document.addEventListener('pointerup', up, { once: true });
               };
+              const isSelected = m.id === selectedModuleId;
               return (
                 <div
                   key={m.id}
-                  className="absolute cursor-ns-resize"
+                  className={`absolute ${readOnly ? 'cursor-default' : 'cursor-ns-resize'} ${!readOnly && isSelected ? 'border border-[#0ea5b7] ring-2 ring-[#0ea5b7]/30' : 'border-0'} ${!readOnly ? 'hover:outline hover:outline-1 hover:outline-gray-400' : ''} rounded-md transition-colors`}
                   style={{ left: '50%', top: 0, transform: `translate(-50%, ${y}px)`, pointerEvents: 'auto' }}
                   onPointerDown={onPointerDown}
+                  onClick={(e) => {
+                    if (readOnly) return;
+                    e.stopPropagation();
+                    onSelect?.(m);
+                  }}
                 >
                   {/* Toolbar flottante: bascule Libre (retour grille) + supprimer */}
-                  <div className="absolute -top-9 right-0 z-[1004]">
-                    <Toolbar
-                      visible={selectedModuleId === m.id}
-                      layoutWidth={(m.layoutWidth ?? 'full') as LayoutWidth}
-                      onWidthChange={() => {}}
-                      onDelete={() => onDelete(m.id)}
-                      expanded={openToolbarFor === m.id}
-                      onToggle={() => setOpenToolbarFor((prev) => (prev === m.id ? null : m.id))}
-                      isMobile={device === 'mobile'}
-                      isAbsolute={true}
-                      onToggleAbsolute={() => onUpdate(m.id, { absolute: false } as any)}
-                      onDuplicate={onDuplicate ? () => onDuplicate(m.id) : undefined}
-                    />
-                  </div>
+                  {!readOnly && (
+                    <div className="absolute -top-9 right-0 z-[1004]">
+                      <Toolbar
+                        visible={selectedModuleId === m.id}
+                        layoutWidth={(m.layoutWidth ?? 'full') as LayoutWidth}
+                        onWidthChange={() => {}}
+                        onDelete={() => onDelete(m.id)}
+                        expanded={openToolbarFor === m.id}
+                        onToggle={() => setOpenToolbarFor((prev) => (prev === m.id ? null : m.id))}
+                        isMobile={device === 'mobile'}
+                        isAbsolute={true}
+                        onToggleAbsolute={() => onUpdate(m.id, { absolute: false } as any)}
+                        onDuplicate={onDuplicate ? () => onDuplicate(m.id) : undefined}
+                      />
+                    </div>
+                  )}
                   <div className={modulePaddingClass}>
-                    {renderModule(m, (patch) => onUpdate(m.id, patch), device)}
+                    {renderModule(m, (patch) => onUpdate(m.id, patch), device, readOnly, onButtonClick)}
                   </div>
                 </div>
               );
@@ -1153,7 +1169,7 @@ const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate
               isMobile={device === 'mobile'}
             />
           )}
-          {renderModule(m, (patch) => onUpdate(m.id, patch), device)}
+          {renderModule(m, (patch) => onUpdate(m.id, patch), device, readOnly, onButtonClick)}
         </div>
       ))}
     </div>

@@ -11,9 +11,15 @@ import {
   Image,
   Type,
   MousePointer,
-  List
+  List,
+  Code2
 } from 'lucide-react';
-import { BackgroundPanel, CompositeElementsPanel, TextEffectsPanel } from '@/components/shared';
+import { 
+  BackgroundPanel, 
+  CompositeElementsPanel, 
+  TextEffectsPanel 
+} from '@/components/shared';
+import CodePanel from '../DesignEditor/panels/CodePanel';
 import ImageModulePanel from '../QuizEditor/modules/ImageModulePanel';
 import LogoModulePanel from '../QuizEditor/modules/LogoModulePanel';
 import FooterModulePanel from '../QuizEditor/modules/FooterModulePanel';
@@ -505,7 +511,8 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
         { id: 'funnel', label: 'Funnel', icon: List },
         { id: 'form', label: 'Formulaire', icon: FormInput },
         { id: 'game', label: 'Jeu', icon: Gamepad2 },
-        { id: 'messages', label: 'Sortie', icon: MessageSquare }
+        { id: 'messages', label: 'Sortie', icon: MessageSquare },
+        { id: 'code', label: 'Code', icon: Code2 }
       ]
     : [
         { 
@@ -533,6 +540,11 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
           id: 'messages', 
           label: 'Sortie', 
           icon: MessageSquare
+        },
+        { 
+          id: 'code', 
+          label: 'Code', 
+          icon: Code2
         }
       ];
   
@@ -956,6 +968,14 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
           <MessagesPanel 
             campaign={campaign}
             setCampaign={setCampaign}
+          />
+        );
+      case 'code':
+        return (
+          <CodePanel 
+            campaign={campaign}
+            currentScreen={currentScreen}
+            onCampaignChange={setCampaign}
           />
         );
       default:

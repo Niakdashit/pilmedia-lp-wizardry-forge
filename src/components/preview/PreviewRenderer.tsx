@@ -276,19 +276,22 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
   // Les footers doivent être collés en bas sans padding
   const logoModules1 = allModules1.filter((m: any) => m?.type === 'BlocLogo');
   const footerModules1 = allModules1.filter((m: any) => m?.type === 'BlocPiedDePage');
-  const modules1 = allModules1.filter((m: any) => m?.type !== 'BlocLogo' && m?.type !== 'BlocPiedDePage');
+  const absoluteModules1 = allModules1.filter((m: any) => m?.absolute === true && m?.type !== 'BlocLogo' && m?.type !== 'BlocPiedDePage');
+  const modules1 = allModules1.filter((m: any) => !m?.absolute && m?.type !== 'BlocLogo' && m?.type !== 'BlocPiedDePage');
   
   console.log('📦 [PreviewRenderer] Screen1 modules breakdown:', {
     total: allModules1.length,
     logos: logoModules1.length,
     footers: footerModules1.length,
-    others: modules1.length,
-    modulesDetails: modules1.map((m: any) => ({ id: m.id, type: m.type }))
+    absolute: absoluteModules1.length,
+    regular: modules1.length,
+    modulesDetails: modules1.map((m: any) => ({ id: m.id, type: m.type })),
+    absoluteModulesDetails: absoluteModules1.map((m: any) => ({ id: m.id, type: m.type, x: m.x, y: m.y }))
   });
   
   // Log juste avant le rendu
   React.useEffect(() => {
-    console.log('🎨 [PreviewRenderer] About to render modules1:', {
+    console.log(' [PreviewRenderer] About to render modules1:', {
       count: modules1.length,
       modules: modules1.map((m: any) => ({ id: m.id, type: m.type }))
     });
@@ -756,7 +759,7 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
                   </div>
                 )}
 
-                {modules1.length > 0 && campaign?.type !== 'form' ? (
+                {modules1.length > 0 ? (
                   <section 
                     className="space-y-6" 
                     data-screen="screen1"
@@ -771,157 +774,7 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
                     />
                   </section>
                 ) : (
-                  /* Pas de modules sur screen1 */
-                  (
-                    campaign?.type === 'form' ? (
-                      // Mobile: bouton en bas + formulaire slide-up
-                      // Desktop: formulaire inline aligné à droite
-                      previewMode === 'mobile' ? (
-                        <>
-                          {/* Bouton fixé en bas */}
-                          <div 
-                            className="absolute bottom-0 left-0 right-0 flex items-center justify-center"
-                            style={{ 
-                              padding: `${safeZonePadding}px`,
-                              paddingBottom: `${safeZonePadding + 20}px`
-                            }}
-                          >
-                            <button
-                              onClick={() => setShowContactForm(true)}
-                              className="inline-flex items-center px-8 py-4 text-lg backdrop-blur-sm text-white font-semibold border border-white/20 shadow-lg transition-all duration-300 transform hover:-translate-y-0.5"
-                              style={{
-                                background: formConfig?.buttonColor || '#841b60',
-                                borderRadius: (typeof formConfig?.borderRadius === 'number' ? `${formConfig.borderRadius}px` : formConfig?.borderRadius) || '9999px',
-                                color: formConfig?.buttonTextColor || '#ffffff'
-                              }}
-                            >
-                              {formConfig?.submitLabel || 'Participer'}
-                            </button>
-                          </div>
-                          
-                          {/* Formulaire slide-up depuis le bas avec backdrop */}
-                          {showContactForm && (
-                            <>
-                              {/* Backdrop noir semi-transparent */}
-                              <div
-                                className="absolute inset-0"
-                                style={{
-                                  backgroundColor: 'rgba(0, 0, 0, 0.5)',
-                                  zIndex: 49,
-                                  animation: 'fadeIn 0.3s ease-out'
-                                }}
-                                onClick={() => setShowContactForm(false)}
-                              />
-                              
-                              {/* Formulaire */}
-                              <div
-                                className="absolute inset-0 flex items-end"
-                                style={{
-                                  animation: 'slideUpFromBottom 0.4s ease-out',
-                                  zIndex: 50,
-                                  pointerEvents: 'none'
-                                }}
-                              >
-                                <div
-                                  className="w-full shadow-xl p-6"
-                                  style={{
-                                    background: formConfig?.panelBg || '#ffffff',
-                                    borderTopLeftRadius: (typeof formConfig?.borderRadius === 'number' ? `${formConfig.borderRadius}px` : formConfig?.borderRadius) || '12px',
-                                    borderTopRightRadius: (typeof formConfig?.borderRadius === 'number' ? `${formConfig.borderRadius}px` : formConfig?.borderRadius) || '12px',
-                                    border: `1px solid ${formConfig?.borderColor || '#e5e7eb'}`,
-                                    color: formConfig?.textColor || '#111827',
-                                    maxHeight: '80%',
-                                    overflowY: 'auto',
-                                    pointerEvents: 'auto'
-                                  }}
-                                >
-                                <div className="flex items-center justify-between mb-4">
-                                  <h3 className="font-semibold text-lg" style={{ color: formConfig?.textColor || '#111827' }}>
-                                    {formConfig?.title || 'Vos informations'}
-                                  </h3>
-                                  <button
-                                    onClick={() => setShowContactForm(false)}
-                                    className="text-gray-400 hover:text-gray-600 text-2xl leading-none"
-                                  >
-                                    ×
-                                  </button>
-                                </div>
-                                {formConfig?.description && (
-                                  <p className="text-sm mb-4" style={{ color: '#6b7280' }}>
-                                    {formConfig.description}
-                                  </p>
-                                )}
-                                <DynamicContactForm
-                                  fields={contactFields}
-                                  onSubmit={async (data) => {
-                                    await handleFormSubmit(data);
-                                    setShowContactForm(false);
-                                    setCurrentScreen('screen3');
-                                  }}
-                                  submitLabel="Envoyer"
-                                  launchButtonStyles={submitLaunchButtonStyles}
-                                />
-                              </div>
-                            </div>
-                          </>
-                          )}
-                        </>
-                      ) : (
-                        // Desktop: formulaire inline aligné à droite
-                        <div
-                          className="absolute"
-                          style={{
-                            right: `${safeZonePadding}px`,
-                            top: '50%',
-                            transform: 'translateY(-50%)'
-                          }}
-                        >
-                          <div
-                            className="shadow-xl p-6"
-                            style={{
-                              width: (typeof formConfig?.width === 'number' && formConfig.width > 0) ? `${formConfig.width}px` : '420px',
-                              background: formConfig?.panelBg || '#ffffff',
-                              borderRadius: (typeof formConfig?.borderRadius === 'number' ? `${formConfig.borderRadius}px` : formConfig?.borderRadius) || '12px',
-                              border: `1px solid ${formConfig?.borderColor || '#e5e7eb'}`,
-                              color: formConfig?.textColor || '#111827'
-                            }}
-                          >
-                            <h3 className="font-semibold text-lg mb-2" style={{ color: formConfig?.textColor || '#111827' }}>
-                              {formConfig?.title || 'Vos informations'}
-                            </h3>
-                            {formConfig?.description && (
-                              <p className="text-sm mb-4" style={{ color: '#6b7280' }}>
-                                {formConfig.description}
-                              </p>
-                            )}
-                            <DynamicContactForm
-                              fields={contactFields}
-                              onSubmit={async (data) => {
-                                await handleFormSubmit(data);
-                                // Pour les campagnes formulaire uniquement, aller au résultat
-                                setCurrentScreen('screen3');
-                              }}
-                              submitLabel={submitButtonLabel}
-                              launchButtonStyles={submitLaunchButtonStyles}
-                            />
-                          </div>
-                        </div>
-                      )
-                    ) : (
-                      // Autres types: bouton Participer par défaut
-                      <div 
-                        className="flex items-center justify-center"
-                        style={{ padding: safeZonePadding, boxSizing: 'border-box', minHeight: 280 }}
-                      >
-                        <button
-                          onClick={handleParticipate}
-                          className="inline-flex items-center px-8 py-4 text-lg rounded-xl bg-gradient-to-br from-[#841b60] to-[#b41b60] backdrop-blur-sm text-white font-semibold border border-white/20 shadow-lg shadow-[#841b60]/20 hover:from-[#841b60] hover:to-[#6d164f] hover:shadow-xl hover:shadow-[#841b60]/30 transition-all duration-300 transform hover:-translate-y-0.5"
-                        >
-                          Participer
-                        </button>
-                      </div>
-                    )
-                  )
+                  <></>
                 )}
               </div>
               
@@ -949,6 +802,45 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
                     />
                   </div>
                 )
+              )}
+
+              {/* Overlay absolu: modules en position libre (vertical only) */}
+              {absoluteModules1.length > 0 && (
+                <div className="absolute inset-0" style={{ pointerEvents: 'none' }}>
+                  {absoluteModules1.map((m: any) => {
+                    const y = (m.y ?? 0) as number;
+                    const modulePaddingClass = previewMode === 'mobile' ? 'p-0' : 'p-4';
+                    return (
+                      <div
+                        key={m.id}
+                        className="absolute cursor-pointer"
+                        style={{ 
+                          left: '50%', 
+                          top: 0, 
+                          transform: `translate(-50%, ${y}px)`, 
+                          pointerEvents: 'auto' 
+                        }}
+                        onClick={(e) => {
+                          // Si onModuleClick existe, permettre la sélection du module
+                          if (onModuleClick) {
+                            e.stopPropagation();
+                            onModuleClick(m.id);
+                          }
+                        }}
+                      >
+                        <div className={modulePaddingClass}>
+                          <ModuleRenderer
+                            modules={[m] as any}
+                            previewMode={true}
+                            device={previewMode}
+                            onButtonClick={handleParticipate}
+                            onModuleClick={onModuleClick}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               )}
             </div>
           )}
@@ -1042,7 +934,7 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
                       modules={modules2 as any}
                       previewMode={true}
                       device={previewMode}
-                      onButtonClick={() => {}}
+                      onButtonClick={handleParticipate}
                     />
                   </section>
                 )}

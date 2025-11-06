@@ -4,6 +4,7 @@ import EditorModeModal from './EditorModeModal';
 import { GameType } from './types';
 const DashboardHeader: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(false);
   const [selectedEditorType, setSelectedEditorType] = useState<GameType['type'] | null>(null);
 
   const gameTypes: GameType[] = [{
@@ -19,11 +20,12 @@ const DashboardHeader: React.FC = () => {
     type: 'jackpot',
     label: 'Jackpot'
   }, {
-    type: 'pro',
-    label: 'Pro'
-  }, {
     type: 'form',
     label: 'Formulaire'
+  }, {
+    // New advanced shortcut (opens modal)
+    type: 'advanced' as any,
+    label: 'Avancé'
   }];
 
   const handleGameTypeClick = (type: GameType['type']) => {
@@ -52,12 +54,16 @@ const DashboardHeader: React.FC = () => {
                   quiz: '/gamification/shortcuts/quiz.svg',
                   scratch: '/gamification/shortcuts/scratch.svg',
                   jackpot: '/gamification/shortcuts/jackpot.svg',
-                  pro: '/gamification/shortcuts/jackpot.svg',
-                  form: '/gamification/shortcuts/form.svg'
+                  form: '/gamification/shortcuts/form.svg',
+                  advanced: '/gamification/shortcuts/puzzle.svg'
+                };
+                const onClick = () => {
+                  if (game.type === ('advanced' as any)) { setShowAdvanced(true); return; }
+                  handleGameTypeClick(game.type);
                 };
                 return <button 
                   key={game.type} 
-                  onClick={() => handleGameTypeClick(game.type)}
+                  onClick={onClick}
                   className="flex flex-col items-center group cursor-pointer opacity-0 animate-fade-in" 
                   style={{
                     animationDelay: `${index * 0.1}s`,
@@ -92,13 +98,16 @@ const DashboardHeader: React.FC = () => {
                     quiz: '/gamification/shortcuts/quiz.svg',
                     scratch: '/gamification/shortcuts/scratch.svg',
                     jackpot: '/gamification/shortcuts/jackpot.svg',
-                    pro: '/gamification/shortcuts/jackpot.svg',
-                    form: '/gamification/shortcuts/form.svg'
+                    form: '/gamification/shortcuts/form.svg',
+                    advanced: '/gamification/shortcuts/puzzle.svg'
                   };
-                  
+                  const onClick = () => {
+                    if (game.type === ('advanced' as any)) { setShowAdvanced(true); return; }
+                    handleGameTypeClick(game.type);
+                  };
                   return <button 
                     key={game.type} 
-                    onClick={() => handleGameTypeClick(game.type)}
+                    onClick={onClick}
                     className="flex flex-col items-center group cursor-pointer opacity-0 animate-fade-in flex-shrink-0" 
                     style={{
                       animationDelay: `${index * 0.1}s`,
@@ -164,6 +173,36 @@ const DashboardHeader: React.FC = () => {
           }}
           editorType={selectedEditorType as 'wheel' | 'quiz' | 'scratch' | 'jackpot' | 'form' | 'dice' | 'memory' | 'puzzle'}
         />
+      )}
+
+      {/* Modale Avancé: liste des mécaniques */}
+      {showAdvanced && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setShowAdvanced(false)} />
+          <div className="relative z-10 w-full max-w-lg rounded-2xl bg-white shadow-2xl border border-gray-200 p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-800">Mécaniques avancées</h3>
+              <button type="button" onClick={() => setShowAdvanced(false)} className="px-2 py-1 text-gray-500 hover:text-gray-700">✕</button>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              {[
+                { type: 'wheel', label: 'Roue de la fortune', route: '/advanced-wheel' },
+                { type: 'quiz', label: 'Quiz', route: '/advanced-quiz' },
+                { type: 'scratch', label: 'Carte à gratter', route: '/advanced-scratch' },
+                { type: 'jackpot', label: 'Jackpot', route: '/advanced-jackpot' },
+              ].map((m) => (
+                <button
+                  key={m.type}
+                  onClick={() => { setShowAdvanced(false); window.location.href = m.route; }}
+                  className="flex items-center gap-3 p-3 rounded-xl border border-gray-200 hover:border-[#841b60]/40 hover:bg-[#841b60]/5 transition"
+                >
+                  <img src={`/gamification/shortcuts/${m.type}.svg`} alt={m.label} className="w-8 h-8" />
+                  <span className="text-sm font-medium text-gray-800">{m.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
       )}
     </>
   );

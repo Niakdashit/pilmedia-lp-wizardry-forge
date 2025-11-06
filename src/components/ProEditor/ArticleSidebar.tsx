@@ -4,6 +4,7 @@ import { Image, Type, MousePointer, List, Palette, Plus, FormInput, Gamepad2, Me
 import type { ArticleConfig } from '@/components/ArticleEditor/types/ArticleTypes';
 import { BackgroundPanel, CompositeElementsPanel } from '@/components/shared';
 import ModernFormTab from '../ModernEditor/ModernFormTab';
+import GameManagementPanel from '../DesignEditor/panels/GameManagementPanel';
 import MessagesPanel from '../DesignEditor/panels/MessagesPanel';
 
 interface ArticleSidebarProps {
@@ -24,7 +25,7 @@ interface ArticleSidebarProps {
   onElementUpdate?: (updates: any) => void;
 }
 
-type TabType = 'banner' | 'text' | 'button' | 'funnel' | 'background' | 'elements' | 'form' | 'messages';
+type TabType = 'banner' | 'text' | 'button' | 'funnel' | 'background' | 'elements' | 'form' | 'game' | 'messages';
 
 /**
  * ArticleSidebar - Panneau latéral adapté au mode Article
@@ -64,6 +65,7 @@ const ArticleSidebar: React.FC<ArticleSidebarProps> = ({
     { id: 'background' as TabType, label: 'Design', icon: Palette },
     { id: 'elements' as TabType, label: 'Éléments', icon: Plus },
     { id: 'form' as TabType, label: 'Formulaire', icon: FormInput },
+    { id: 'game' as TabType, label: 'Jeu', icon: Gamepad2 },
     { id: 'messages' as TabType, label: 'Sortie', icon: MessageSquare },
   ];
 
@@ -573,6 +575,13 @@ const ArticleSidebar: React.FC<ArticleSidebarProps> = ({
         
         {activeTab === 'form' && campaignConfig && onCampaignConfigChange && (
           <ModernFormTab
+            campaign={campaignConfig}
+            setCampaign={onCampaignConfigChange}
+          />
+        )}
+        
+        {activeTab === 'game' && campaignConfig && onCampaignConfigChange && (
+          <GameManagementPanel
             campaign={campaignConfig}
             setCampaign={onCampaignConfigChange}
           />

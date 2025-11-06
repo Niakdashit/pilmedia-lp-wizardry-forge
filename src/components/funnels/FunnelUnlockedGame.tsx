@@ -407,18 +407,30 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
     timestamp: canonicalData.timestamp
   });
 
-  // Séparer les modules Logo et Footer pour tous les écrans
+  // Séparer les modules Logo, Footer, Absolus et Réguliers pour tous les écrans
   const logoModules1 = (modules || []).filter((m: any) => m?.type === 'BlocLogo');
   const footerModules1 = (modules || []).filter((m: any) => m?.type === 'BlocPiedDePage');
-  const regularModules1 = (modules || []).filter((m: any) => m?.type !== 'BlocLogo' && m?.type !== 'BlocPiedDePage');
+  const absoluteModules1 = (modules || []).filter((m: any) => m?.absolute === true && m?.type !== 'BlocLogo' && m?.type !== 'BlocPiedDePage');
+  const regularModules1 = (modules || []).filter((m: any) => !m?.absolute && m?.type !== 'BlocLogo' && m?.type !== 'BlocPiedDePage');
+  
+  console.log('🔍 [FunnelUnlockedGame] Module separation:', {
+    total: modules?.length,
+    logo: logoModules1.length,
+    footer: footerModules1.length,
+    absolute: absoluteModules1.length,
+    regular: regularModules1.length,
+    absoluteModulesDetails: absoluteModules1.map((m: any) => ({ id: m.id, type: m.type, absolute: m.absolute, x: m.x, y: m.y }))
+  });
   
   const logoModules2 = (modules2 || []).filter((m: any) => m?.type === 'BlocLogo');
   const footerModules2 = (modules2 || []).filter((m: any) => m?.type === 'BlocPiedDePage');
-  const regularModules2 = (modules2 || []).filter((m: any) => m?.type !== 'BlocLogo' && m?.type !== 'BlocPiedDePage');
+  const absoluteModules2 = (modules2 || []).filter((m: any) => m?.absolute === true && m?.type !== 'BlocLogo' && m?.type !== 'BlocPiedDePage');
+  const regularModules2 = (modules2 || []).filter((m: any) => !m?.absolute && m?.type !== 'BlocLogo' && m?.type !== 'BlocPiedDePage');
   
   const logoModules3 = (modules3 || []).filter((m: any) => m?.type === 'BlocLogo');
   const footerModules3 = (modules3 || []).filter((m: any) => m?.type === 'BlocPiedDePage');
-  const regularModules3 = (modules3 || []).filter((m: any) => m?.type !== 'BlocLogo' && m?.type !== 'BlocPiedDePage');
+  const absoluteModules3 = (modules3 || []).filter((m: any) => m?.absolute === true && m?.type !== 'BlocLogo' && m?.type !== 'BlocPiedDePage');
+  const regularModules3 = (modules3 || []).filter((m: any) => !m?.absolute && m?.type !== 'BlocLogo' && m?.type !== 'BlocPiedDePage');
 
   useEffect(() => {
     if (liveCampaign?.type !== 'form') {
@@ -608,6 +620,16 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
     designModular.screens &&
     Object.values(designModular.screens).some((screenModules: any) => Array.isArray(screenModules) && screenModules.length > 0)
   );
+  
+  console.log('🔍 [FunnelUnlockedGame] Route detection:', {
+    campaignType: liveCampaign.type,
+    hasDesignModules,
+    designModular: !!designModular,
+    designModularScreens: designModular?.screens ? Object.keys(designModular.screens) : 'none',
+    currentScreen,
+    willUseDesignModules: hasDesignModules && currentScreen === 'screen1',
+    willUseScratch: liveCampaign.type === 'scratch'
+  });
 
   if (hasDesignModules && currentScreen === 'screen1') {
     if (process.env.NODE_ENV !== 'production') {
@@ -694,6 +716,37 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
                     />
                   </div>
                 )}
+
+                {/* Overlay absolu: modules en position libre (vertical only) */}
+                {absoluteModules1.length > 0 && (
+                  <div className="absolute inset-0" style={{ pointerEvents: 'none' }}>
+                    {absoluteModules1.map((m: any) => {
+                      const y = (m.y ?? 0) as number;
+                      const modulePaddingClass = previewMode === 'mobile' ? 'p-0' : 'p-4';
+                      return (
+                        <div
+                          key={m.id}
+                          className="absolute"
+                          style={{ 
+                            left: '50%', 
+                            top: 0, 
+                            transform: `translate(-50%, ${y}px)`, 
+                            pointerEvents: 'auto' 
+                          }}
+                        >
+                          <div className={modulePaddingClass}>
+                            <DesignModuleRenderer
+                              modules={[m] as any}
+                              previewMode
+                              device={previewMode}
+                              onButtonClick={handleGameButtonClick}
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -776,6 +829,37 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
                       previewMode={true}
                       device={previewMode}
                     />
+                  </div>
+                )}
+
+                {/* Overlay absolu: modules en position libre (vertical only) */}
+                {absoluteModules1.length > 0 && (
+                  <div className="absolute inset-0" style={{ pointerEvents: 'none' }}>
+                    {absoluteModules1.map((m: any) => {
+                      const y = (m.y ?? 0) as number;
+                      const modulePaddingClass = previewMode === 'mobile' ? 'p-0' : 'p-4';
+                      return (
+                        <div
+                          key={m.id}
+                          className="absolute"
+                          style={{ 
+                            left: '50%', 
+                            top: 0, 
+                            transform: `translate(-50%, ${y}px)`, 
+                            pointerEvents: 'auto' 
+                          }}
+                        >
+                          <div className={modulePaddingClass}>
+                            <QuizModuleRenderer 
+                              modules={[m]}
+                              previewMode={true}
+                              device={previewMode}
+                              onButtonClick={handleGameButtonClick}
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </div>
@@ -912,6 +996,36 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
                     />
                   </div>
                 )}
+
+                {/* Overlay absolu: modules en position libre (vertical only) */}
+                {absoluteModules2.length > 0 && (
+                  <div className="absolute inset-0" style={{ pointerEvents: 'none' }}>
+                    {absoluteModules2.map((m: any) => {
+                      const y = (m.y ?? 0) as number;
+                      const modulePaddingClass = previewMode === 'mobile' ? 'p-0' : 'p-4';
+                      return (
+                        <div
+                          key={m.id}
+                          className="absolute"
+                          style={{ 
+                            left: '50%', 
+                            top: 0, 
+                            transform: `translate(-50%, ${y}px)`, 
+                            pointerEvents: 'auto' 
+                          }}
+                        >
+                          <div className={modulePaddingClass}>
+                            <QuizModuleRenderer 
+                              modules={[m]}
+                              previewMode={true}
+                              device={previewMode}
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             )}
 
@@ -968,6 +1082,36 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
                       previewMode={true}
                       device={previewMode}
                     />
+                  </div>
+                )}
+
+                {/* Overlay absolu: modules en position libre (vertical only) */}
+                {absoluteModules3.length > 0 && (
+                  <div className="absolute inset-0" style={{ pointerEvents: 'none' }}>
+                    {absoluteModules3.map((m: any) => {
+                      const y = (m.y ?? 0) as number;
+                      const modulePaddingClass = previewMode === 'mobile' ? 'p-0' : 'p-4';
+                      return (
+                        <div
+                          key={m.id}
+                          className="absolute"
+                          style={{ 
+                            left: '50%', 
+                            top: 0, 
+                            transform: `translate(-50%, ${y}px)`, 
+                            pointerEvents: 'auto' 
+                          }}
+                        >
+                          <div className={modulePaddingClass}>
+                            <QuizModuleRenderer 
+                              modules={[m]}
+                              previewMode={true}
+                              device={previewMode}
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </div>
