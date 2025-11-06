@@ -3877,12 +3877,18 @@ useEffect(() => {
               <div className="min-h-full flex flex-col">
                 {/* Premier Canvas */}
                 <div data-screen-anchor="screen1" className="relative">
-                  {editorMode === 'article' ? (
-                    /* Article Mode: Show ArticleCanvas with funnel */
-                    <div className="w-full h-full flex items-start justify-center bg-gray-100 overflow-y-auto p-8">
-                        <ArticleCanvas
-                          articleConfig={(campaignState as any)?.articleConfig || {}}
-                          onBannerChange={(imageUrl) => {
+                  <div className="flex-1 flex flex-col items-center justify-center overflow-hidden relative">
+                    {editorMode === 'article' && (
+                      <ArticleFunnelView
+                        articleConfig={(campaignState as any)?.articleConfig || {}}
+                        campaignType={(campaignState as any)?.type || 'jackpot'}
+                        campaign={campaignData}
+                        wheelModalConfig={wheelModalConfig}
+                        gameModalConfig={wheelModalConfig}
+                        currentStep={currentStep}
+                        editable={true}
+                        formFields={(campaignState as any)?.formFields}
+                        onBannerChange={(imageUrl) => {
                             if (campaignState) {
                               setCampaign({
                                 ...campaignState,
@@ -3938,21 +3944,13 @@ useEffect(() => {
                               });
                             }
                           }}
-                          onCTAClick={handleCTAClick}
-                          onFormSubmit={handleFormSubmit}
-                          onGameComplete={handleGameComplete}
-                          currentStep={currentStep}
-                          editable={true}
-                          maxWidth={810}
-                          campaignType={(campaignState as any)?.type || 'jackpot'}
-                          formFields={(campaignState as any)?.formFields}
-                          campaign={campaignData}
-                          wheelModalConfig={wheelModalConfig}
-                          gameModalConfig={wheelModalConfig}
-                          onStepChange={setCurrentStep}
-                        />
-                      </div>
-                    ) : null}
+                        onCTAClick={handleCTAClick}
+                        onFormSubmit={handleFormSubmit}
+                        onGameComplete={handleGameComplete}
+                        onStepChange={setCurrentStep}
+                      />
+                    )}
+                  </div>
                   {editorMode !== 'article' && (
                   <DesignCanvas
                     editorMode={editorMode}

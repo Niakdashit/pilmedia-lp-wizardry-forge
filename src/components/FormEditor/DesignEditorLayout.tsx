@@ -3824,6 +3824,80 @@ useEffect(() => {
               <div className="min-h-full flex flex-col">
                 {/* Premier Canvas */}
                 <div data-screen-anchor="screen1" className="relative">
+                  <div className="flex-1 flex flex-col items-center justify-center overflow-hidden relative">
+                    {editorMode === 'article' && (
+                      <ArticleFunnelView
+                        articleConfig={(campaignState as any)?.articleConfig || {}}
+                        campaignType={(campaignState as any)?.type || 'form'}
+                        campaign={memoCampaignData}
+                        wheelModalConfig={undefined}
+                        gameModalConfig={undefined}
+                        currentStep={currentStep}
+                        editable={true}
+                        formFields={(campaignState as any)?.formFields}
+                        onBannerChange={(imageUrl) => {
+                          if (campaignState) {
+                            setCampaign({
+                              ...campaignState,
+                              articleConfig: {
+                                ...(campaignState as any).articleConfig,
+                                banner: {
+                                  ...(campaignState as any).articleConfig?.banner,
+                                  imageUrl,
+                                },
+                              },
+                            });
+                          }
+                        }}
+                        onBannerRemove={() => {
+                          if (campaignState) {
+                            setCampaign({
+                              ...campaignState,
+                              articleConfig: {
+                                ...(campaignState as any).articleConfig,
+                                banner: {
+                                  ...(campaignState as any).articleConfig?.banner,
+                                  imageUrl: undefined,
+                                },
+                              },
+                            });
+                          }
+                        }}
+                        onTitleChange={(title) => {
+                          if (campaignState) {
+                            setCampaign({
+                              ...campaignState,
+                              articleConfig: {
+                                ...(campaignState as any).articleConfig,
+                                content: {
+                                  ...(campaignState as any).articleConfig?.content,
+                                  title,
+                                },
+                              },
+                            });
+                          }
+                        }}
+                        onDescriptionChange={(description) => {
+                          if (campaignState) {
+                            setCampaign({
+                              ...campaignState,
+                              articleConfig: {
+                                ...(campaignState as any).articleConfig,
+                                content: {
+                                  ...(campaignState as any).articleConfig?.content,
+                                  description,
+                                },
+                              },
+                            });
+                          }
+                        }}
+                        onCTAClick={handleCTAClick}
+                        onFormSubmit={handleFormSubmit}
+                        onGameComplete={handleGameComplete}
+                        onStepChange={setCurrentStep}
+                      />
+                    )}
+                  </div>
                   <DesignCanvas
                     editorMode={editorMode}
                     screenId="screen1"
