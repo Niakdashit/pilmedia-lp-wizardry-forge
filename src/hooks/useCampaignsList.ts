@@ -56,16 +56,42 @@ export const useCampaignsList = () => {
   const hydrateFromCache = () => {
     const mem = campaignListCache.get(CAMPAIGN_LIST_CACHE_KEY);
     if (mem && mem.expiresAt > getNow()) {
-      setCampaigns(mem.data);
+      // Recompute names from local drafts to reflect unsaved settings changes
+      const recomputed = (mem.data || []).map((c) => {
+        try {
+          const raw = typeof window !== 'undefined' ? window.localStorage.getItem(`campaign:settings:draft:${c.id}`) : null;
+          if (!raw) return c;
+          const draft = JSON.parse(raw);
+          const draftName = draft?.publication?.name as (string | undefined);
+          if (draftName && draftName.trim()) {
+            return { ...c, name: draftName.trim() };
+          }
+        } catch {}
+        return c;
+      });
+      setCampaigns(recomputed);
       return true;
     }
     const local = readLocalListCache(CAMPAIGN_LIST_CACHE_KEY);
     if (local) {
+      // Recompute names from local drafts
+      const recomputed = (local || []).map((c) => {
+        try {
+          const raw = typeof window !== 'undefined' ? window.localStorage.getItem(`campaign:settings:draft:${c.id}`) : null;
+          if (!raw) return c;
+          const draft = JSON.parse(raw);
+          const draftName = draft?.publication?.name as (string | undefined);
+          if (draftName && draftName.trim()) {
+            return { ...c, name: draftName.trim() };
+          }
+        } catch {}
+        return c;
+      });
       campaignListCache.set(CAMPAIGN_LIST_CACHE_KEY, {
-        data: local,
+        data: recomputed,
         expiresAt: getNow() + CAMPAIGN_LIST_CACHE_TTL_MS,
       });
-      setCampaigns(local);
+      setCampaigns(recomputed);
       return true;
     }
     return false;
@@ -101,6 +127,7 @@ export const useCampaignsList = () => {
             views
           ),
           campaign_settings (
+            publication,
             start_date,
             end_date
           )
@@ -121,6 +148,18 @@ export const useCampaignsList = () => {
         // Extract dates from campaign_settings (preferred) or fallback to campaign columns
         let startDate = '';
         let endDate = '';
+        // Prefer publication.name from campaign_settings for display name
+        const publicationName = campaign.campaign_settings?.[0]?.publication?.name;
+        // Fallback: read local draft (unsaved settings) to keep list name consistent with settings UI
+        let draftName: string | undefined;
+        try {
+          const draftKey = `campaign:settings:draft:${campaign.id}`;
+          const raw = localStorage.getItem(draftKey);
+          if (raw) {
+            const draft = JSON.parse(raw);
+            draftName = draft?.publication?.name || undefined;
+          }
+        } catch {}
         
         // Priority 1: campaign_settings table
         if (campaign.campaign_settings?.[0]?.start_date) {
@@ -152,7 +191,7 @@ export const useCampaignsList = () => {
 
         return {
           id: campaign.id,
-          name: campaign.name,
+          name: publicationName || draftName || campaign.name,
           description: campaign.description,
           type: campaign.type,
           status: campaign.status,

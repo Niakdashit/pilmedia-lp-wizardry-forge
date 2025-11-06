@@ -48,6 +48,25 @@ const ChannelsStep: React.FC<ControlledProps> = (props) => {
     return () => { mounted = false; };
   }, [campaignId, getSettings, isControlled, setForm]);
 
+  // Auto-generate campaign URL when campaignId is available
+  useEffect(() => {
+    if (campaignId && campaignId !== 'new' && campaignId !== 'preview') {
+      const currentUrl = (form.campaign_url as any)?.url;
+      const generatedUrl = `${window.location.origin}/campaign/${campaignId}`;
+      
+      // Only set if URL is empty or not already set
+      if (!currentUrl || currentUrl.trim() === '') {
+        setForm(prev => ({
+          ...prev,
+          campaign_url: {
+            ...(prev.campaign_url as any || {}),
+            url: generatedUrl
+          }
+        }));
+      }
+    }
+  }, [campaignId, form.campaign_url, setForm]);
+
   const handleChange = (path: string, value: any) => {
     setForm(prev => {
       const next: any = { ...(prev || {}) };

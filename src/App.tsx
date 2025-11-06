@@ -36,6 +36,7 @@ const Profile = lazy(() => import('./pages/Profile'));
 const Admin = lazy(() => import('./pages/Admin'));
 const MediaPortal = lazy(() => import('./pages/MediaPortal'));
 const CampaignSettings = lazy(() => import('./pages/CampaignSettings'));
+const PublicCampaign = lazy(() => import('./pages/PublicCampaign'));
 
 function App() {
   // Enregistrement des routes pour le prefetching intelligent
@@ -166,6 +167,12 @@ function App() {
               <Route path="/campaign/:id/settings" element={
                 <LoadingBoundary>
                   <CampaignSettings />
+                </LoadingBoundary>
+              } />
+              {/* Public campaign view */}
+              <Route path="/campaign/:id" element={
+                <LoadingBoundary>
+                  <PublicCampaign />
                 </LoadingBoundary>
               } />
               </Routes>

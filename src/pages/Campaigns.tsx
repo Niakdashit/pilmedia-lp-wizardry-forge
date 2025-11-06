@@ -8,6 +8,7 @@ import { useCampaigns } from '@/hooks/useCampaigns';
 import { supabase } from '@/integrations/supabase/client';
 import ConfirmModal from '@/components/shared/ConfirmModal';
 import { getEditorUrl } from '@/utils/editorRouting';
+import { useEffect } from 'react';
 
 interface ActionModalProps {
   isOpen: boolean;
@@ -121,6 +122,16 @@ const Campaigns: React.FC = () => {
       }
       return 0;
     }), [campaigns, filterStatus, searchTerm, sortBy, sortOrder]);
+
+  // Keep list in sync when a campaign name is updated elsewhere (settings/editor)
+  useEffect(() => {
+    const handler = (_e: Event) => {
+      // silent refresh to avoid flicker
+      try { (refetch as any)({ suppressLoading: true }); } catch { refetch?.(); }
+    };
+    window.addEventListener('campaign:name:update', handler as EventListener);
+    return () => window.removeEventListener('campaign:name:update', handler as EventListener);
+  }, [refetch]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
