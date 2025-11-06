@@ -42,6 +42,9 @@ export const useEditorUnmountSave = (
     return () => {
       console.log(`🧹 [${campaignType}Editor] Unmounting - saving before reset`);
       
+      // ⚠️ CRITICAL: Attendre que les debounced saves se terminent
+      // pour éviter les race conditions
+      
       try {
         const id = (campaignState as any)?.id;
         const isUuid = (v?: string) => 
@@ -86,15 +89,24 @@ export const useEditorUnmountSave = (
             payload[configKey] = currentStates.gameConfig;
           }
 
-          // 3. Save then reset
-          console.log(`💾 [${campaignType}Editor] Saving complete state before unmount`);
-          void saveCampaignToDB(payload, saveCampaignRef.current);
+          // 3. Save synchronously (block unmount until complete)
+          console.log(`💾 [${campaignType}Editor] Saving complete state before unmount (synchronous)`);
+          
+          // ✅ Use synchronous approach to ensure save completes before unmount
+          saveCampaignToDB(payload, saveCampaignRef.current).then(() => {
+            console.log(`✅ [${campaignType}Editor] Unmount save complete`);
+            resetCampaign();
+          }).catch((e) => {
+            console.error(`❌ [${campaignType}Editor] Unmount save failed:`, e);
+            resetCampaign(); // Reset anyway to avoid blocking navigation
+          });
+        } else {
+          resetCampaign();
         }
       } catch (e) {
         console.error(`❌ [${campaignType}Editor] Failed to save on unmount:`, e);
+        resetCampaign();
       }
-      
-      resetCampaign();
     };
   }, [
     campaignType,

@@ -1,9 +1,14 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { onCampaignEvent, emitCampaignEvent } from '@/utils/campaignEvents';
 
 // Cache en mémoire pour chargement instantané
 const campaignCache = new Map<string, any>();
 const imagePreloadCache = new Set<string>();
+
+// Timestamps pour invalidation du cache
+const cacheTimestamps = new Map<string, number>();
+const CACHE_MAX_AGE = 30000; // 30 secondes max
 
 // Précharge une image
 const preloadImage = (url: string): Promise<void> => {
@@ -104,15 +109,26 @@ export const useFastCampaignLoader = ({
     loadingRef.current = true;
 
     try {
-      // 1. Vérifier le cache d'abord (chargement instantané)
+      // 1. Vérifier le cache d'abord avec validation de l'âge
       const cached = campaignCache.get(id);
-      if (cached && mountedRef.current) {
+      const cacheAge = cacheTimestamps.get(id);
+      const isCacheValid = cached && cacheAge && (Date.now() - cacheAge < CACHE_MAX_AGE);
+      
+      if (isCacheValid && mountedRef.current) {
+        console.log('⚡ [useFastCampaignLoader] Using valid cache:', {
+          id,
+          age: Date.now() - (cacheAge || 0)
+        });
         setCampaign(cached);
         setIsLoading(false);
         // Précharger les images en arrière-plan
         preloadCampaignImages(cached);
         loadingRef.current = false;
         return cached;
+      }
+      
+      if (cached && !isCacheValid) {
+        console.log('⚠️ [useFastCampaignLoader] Cache expired, reloading:', id);
       }
 
       // 2. Charger depuis Supabase
@@ -141,8 +157,15 @@ export const useFastCampaignLoader = ({
             : rawData.article_config
         };
 
-        // Mettre en cache
+        // Mettre en cache avec timestamp
         campaignCache.set(id, parsedData);
+        cacheTimestamps.set(id, Date.now());
+        
+        emitCampaignEvent('campaign:loaded', {
+          campaignId: id,
+          data: parsedData,
+          source: 'fast-loader'
+        });
 
         // Afficher immédiatement
         setCampaign(parsedData);
@@ -164,6 +187,21 @@ export const useFastCampaignLoader = ({
     }
   }, [preloadCampaignImages]);
 
+  // Fonction pour mettre à jour le cache avec timestamp
+  const updateCache = useCallback((id: string, data: any) => {
+    campaignCache.set(id, data);
+    cacheTimestamps.set(id, Date.now());
+    
+    console.log('💾 [useFastCampaignLoader] Cache updated:', {
+      id,
+      timestamp: new Date().toISOString()
+    });
+    
+    if (id === campaignId && mountedRef.current) {
+      setCampaign(data);
+    }
+  }, [campaignId]);
+
   // Charge la campagne au montage
   useEffect(() => {
     mountedRef.current = true;
@@ -180,13 +218,36 @@ export const useFastCampaignLoader = ({
     };
   }, [campaignId, enabled, loadCampaign]);
 
-  // Fonction pour mettre à jour le cache
-  const updateCache = useCallback((id: string, data: any) => {
-    campaignCache.set(id, data);
-    if (id === campaignId) {
-      setCampaign(data);
-    }
-  }, [campaignId]);
+  // 🔄 Synchronisation avec les sauvegardes
+  useEffect(() => {
+    if (!campaignId) return;
+
+    // Écouter les événements de sauvegarde pour mettre à jour le cache
+    const unsubscribeSaved = onCampaignEvent('campaign:saved', ({ campaignId: savedId, data }) => {
+      if (savedId === campaignId && data) {
+        console.log('🔄 [useFastCampaignLoader] Cache updated from save event:', savedId);
+        updateCache(savedId, data);
+        if (mountedRef.current) {
+          setCampaign(data);
+        }
+      }
+    });
+
+    const unsubscribeAutosave = onCampaignEvent('campaign:autosave:complete', ({ campaignId: savedId, data }) => {
+      if (savedId === campaignId && data) {
+        console.log('🔄 [useFastCampaignLoader] Cache updated from autosave:', savedId);
+        updateCache(savedId, data);
+        if (mountedRef.current) {
+          setCampaign(data);
+        }
+      }
+    });
+
+    return () => {
+      unsubscribeSaved();
+      unsubscribeAutosave();
+    };
+  }, [campaignId, updateCache]);
 
   // Fonction pour invalider le cache
   const invalidateCache = useCallback((id?: string) => {

@@ -18,10 +18,10 @@ export const useOptimizedCampaignState = (
   const lastSavedRef = useRef<string>('');
   const updateCounterRef = useRef(0);
 
-  // Debounced auto-save
+  // Debounced auto-save with cancellation support
   const debouncedSave = useCallback(
     debounce(async (campaignToSave: any) => {
-      if (!onSave) return;
+      if (!onSave || isSaving) return;
       
       const currentHash = JSON.stringify(campaignToSave);
       if (currentHash === lastSavedRef.current) return;
@@ -37,7 +37,7 @@ export const useOptimizedCampaignState = (
         setIsSaving(false);
       }
     }, autosaveDelay),
-    [onSave, onError, autosaveDelay]
+    [onSave, onError, autosaveDelay, isSaving]
   );
 
   // Optimized campaign setter with change tracking
@@ -82,12 +82,33 @@ export const useOptimizedCampaignState = (
     }
   }, [campaign, onSave, onError, isSaving]);
 
+  // Attendre la fin d'une sauvegarde en cours
+  const waitForSave = useCallback(async () => {
+    if (!isSaving) return;
+    
+    console.log('⏳ [useOptimizedCampaignState] Waiting for save to complete...');
+    
+    const maxWait = 5000;
+    const startTime = Date.now();
+    
+    while (isSaving && (Date.now() - startTime) < maxWait) {
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+  }, [isSaving]);
+
+  // Annuler le debounce lors du cleanup
+  const cancelPendingSave = useCallback(() => {
+    debouncedSave.cancel();
+  }, [debouncedSave]);
+
   return {
     campaign,
     setCampaign,
     isModified,
     isSaving,
     previewKey,
-    forceSave
+    forceSave,
+    waitForSave,
+    cancelPendingSave
   };
 };
