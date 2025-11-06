@@ -13,6 +13,7 @@ const FullScreenPreviewModal = lazy(() => import('@/components/shared/modals/Ful
 const FunnelUnlockedGame = lazy(() => import('@/components/funnels/FunnelUnlockedGame'));
 import PreviewRenderer from '@/components/preview/PreviewRenderer';
 import ArticleFunnelView from '@/components/ArticleEditor/ArticleFunnelView';
+import { getArticleConfigWithDefaults } from '@/utils/articleConfigHelpers';
 import type { ModularPage, ScreenId, BlocBouton, Module } from '@/types/modularEditor';
 import { createEmptyModularPage } from '@/types/modularEditor';
 
@@ -3435,7 +3436,7 @@ useEffect(() => {
                       }}
                     >
                       <ArticleFunnelView
-                        articleConfig={(campaignState as any)?.articleConfig || {}}
+                        articleConfig={getArticleConfigWithDefaults(campaignState, campaignData)}
                         campaignType={(campaignState as any)?.type || 'form'}
                         campaign={campaignData}
                         wheelModalConfig={wheelModalConfig}
@@ -3454,7 +3455,7 @@ useEffect(() => {
                   </div>
                 ) : (
                   <ArticleFunnelView
-                    articleConfig={(campaignState as any)?.articleConfig || {}}
+                    articleConfig={getArticleConfigWithDefaults(campaignState, campaignData)}
                     campaignType={(campaignState as any)?.type || 'form'}
                     campaign={campaignData}
                     wheelModalConfig={wheelModalConfig}
@@ -3827,7 +3828,7 @@ useEffect(() => {
                   <div className="flex-1 flex flex-col items-center justify-center overflow-hidden relative">
                     {editorMode === 'article' && (
                       <ArticleFunnelView
-                        articleConfig={(campaignState as any)?.articleConfig || {}}
+                        articleConfig={getArticleConfigWithDefaults(campaignState, memoCampaignData)}
                         campaignType={(campaignState as any)?.type || 'form'}
                         campaign={memoCampaignData}
                         wheelModalConfig={undefined}
