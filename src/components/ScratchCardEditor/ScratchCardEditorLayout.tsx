@@ -373,6 +373,9 @@ useEffect(() => {
           id: (data as any).id,
           name: (data as any).name || 'Campaign',
           type: (data as any).type || 'scratch',
+          // Map DB fields to editor-friendly shape
+          editorMode: (data as any).editor_mode || (data as any).editorMode || editorMode,
+          articleConfig: (data as any).article_config || (data as any).articleConfig || {},
           design: (data as any).design || {},
           gameConfig: ((data as any).game_config || {}) as any,
           buttonConfig: {},
@@ -878,6 +881,8 @@ const handleSaveCampaignName = useCallback(async () => {
   const payload: any = {
     ...(updatedCampaign || {}),
     editorMode, // Ajouter le mode éditeur (article ou fullscreen)
+    editor_mode: editorMode, // Champ DB normalisé
+    articleConfig: (updatedCampaign as any)?.articleConfig || {},
     id: isUuid(currentId) ? currentId : undefined,
     name,
     type: 'scratch'
@@ -2772,6 +2777,8 @@ const handleSaveCampaignName = useCallback(async () => {
       const payload: any = {
         ...base,
         editorMode, // Ajouter le mode éditeur (article ou fullscreen)
+        editor_mode: editorMode, // Champ DB normalisé
+        articleConfig: (base as any)?.articleConfig || {},
         modularPage,
         canvasElements,
         screenBackgrounds,
@@ -2903,6 +2910,8 @@ const handleSaveCampaignName = useCallback(async () => {
       const payload: any = {
         ...(campaignState || {}),
         editorMode, // Ajouter le mode éditeur (article ou fullscreen)
+        editor_mode: editorMode, // Champ DB normalisé
+        articleConfig: (campaignState as any)?.articleConfig || {},
         modularPage,
         canvasElements,
         screenBackgrounds,
