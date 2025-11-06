@@ -3952,7 +3952,6 @@ const handleSaveCampaignName = useCallback(async () => {
                         onStepChange={setCurrentStep}
                       />
                     )}
-                  </div>
                   {editorMode !== 'article' && (
                     <div className="flex flex-col w-full">
                       {/* Screen 1 */}
@@ -4053,9 +4052,10 @@ const handleSaveCampaignName = useCallback(async () => {
                     selectedModule={selectedModule}
                     onSelectedModuleChange={setSelectedModuleId}
                   />
-                  )}
-                  </div>
                 </div>
+              )}
+            </div>
+          </div>
                 
                 {/* Deuxième Canvas - Seulement en mode Fullscreen */}
                 {editorMode === 'fullscreen' && (
