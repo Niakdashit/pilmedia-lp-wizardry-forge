@@ -288,9 +288,7 @@ export const useCampaigns = () => {
           try {
             await supabase
               .from('campaigns')
-              .select(
-                'id,name,description,slug,type,status,created_by,created_at,updated_at,published_at,thumbnail_url,banner_url,start_date,end_date,config,game_config,design,form_fields'
-              )
+              .select('*')
               .eq('slug', slug)
               .single();
           } catch {}
@@ -300,9 +298,7 @@ export const useCampaigns = () => {
 
       const { data, error } = await supabase
         .from('campaigns')
-        .select(
-          'id,name,description,slug,type,status,created_by,created_at,updated_at,published_at,thumbnail_url,banner_url,start_date,end_date,config,game_config,design,form_fields'
-        )
+        .select('*')
         .eq('slug', slug)
         .single();
       

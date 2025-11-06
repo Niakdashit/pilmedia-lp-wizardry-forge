@@ -14,6 +14,7 @@ export interface CampaignListItem {
   participants: number;
   startDate: string;
   endDate: string;
+  editor_mode?: 'article' | 'fullscreen' | null;
 }
 
 const CAMPAIGN_LIST_CACHE_TTL_MS = 30_000; // 30s is enough for dashboard refocus
@@ -196,6 +197,7 @@ export const useCampaignsList = () => {
           description: campaign.description,
           type: campaign.type,
           status: campaign.status,
+          editor_mode: campaign.editor_mode ?? null,
           created_at: campaign.created_at,
           created_by: campaign.created_by,
           banner_url: campaign.banner_url,
