@@ -17,7 +17,7 @@ const ScratchCardCanvas: React.FC<ScratchCardCanvasProps> = ({
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
 
   // Store state
-  const { config, updateCardProgress, revealCard, resetAllCards } = useScratchCardStore();
+  const { config, updateCardProgress, revealCard } = useScratchCardStore();
   const { cards, grid, brush, threshold, globalCover, globalReveal, logic } = config;
 
   // Appliquer le cap global (4 ou 6 cartes max)

@@ -209,7 +209,7 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
 
   const previewQuizCampaign = React.useMemo(() => {
     if (!campaign) return null;
-    const design = { ...(campaign as any)?.design } || {};
+    const design = (campaign as any)?.design || {};
     return {
       ...(campaign as any),
       design: {
@@ -589,37 +589,6 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
     buttonTextColor: '#ffffff',
     borderRadius: 12,
     fieldBorderRadius: 2,
-  };
-
-  // Helper: normalize borderRadius to valid CSS (add px when numeric or numeric-string)
-  const toRadius = (v: any): string | undefined => {
-    if (v === undefined || v === null) return undefined;
-    if (typeof v === 'number') return `${v}px`;
-    if (typeof v === 'string') {
-      const t = v.trim();
-      return /^\d+$/.test(t) ? `${t}px` : t; // add px if pure number string
-    }
-    return undefined;
-  };
-
-  // Derive form submit button styles/label from formConfig first, then overrides
-  const quizStyleOverrides = (campaign as any)?.design?.quizConfig?.style || {};
-  const buttonModule1 = (modules1 || []).find((m: any) => m?.type === 'BlocBouton');
-  const _submitButtonLabel = (formConfig?.submitLabel as string)
-    || (buttonModule1?.label as string)
-    || (quizStyleOverrides.buttonLabel as string)
-    || 'Envoyer';
-  const _submitLaunchButtonStyles: React.CSSProperties = {
-    background: formConfig?.buttonColor || quizStyleOverrides.buttonBackgroundColor,
-    backgroundColor: formConfig?.buttonColor || quizStyleOverrides.buttonBackgroundColor,
-    color: formConfig?.buttonTextColor || quizStyleOverrides.buttonTextColor,
-    padding: quizStyleOverrides.buttonPadding || '14px 20px',
-    borderRadius: toRadius(formConfig?.borderRadius)
-      || toRadius(quizStyleOverrides.borderRadius)
-      || '12px',
-    boxShadow: quizStyleOverrides.buttonBoxShadow || '0 6px 16px rgba(0,0,0,0.15)',
-    width: '100%',
-    fontWeight: 600,
   };
 
   const isPhoneFrame = constrainedHeight && previewMode === 'mobile';
