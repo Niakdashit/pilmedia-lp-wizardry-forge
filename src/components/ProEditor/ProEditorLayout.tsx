@@ -42,8 +42,7 @@ import type { GameModalConfig } from '@/types/gameConfig';
 import { createGameConfigFromQuiz } from '@/types/gameConfig';
 import { supabase } from '@/integrations/supabase/client';
 import { generateTempCampaignId } from '@/utils/tempCampaignId';
-import { useAutoSaveToSupabase } from '@/hooks/useAutoSaveToSupabase';
-import { useEditorUnmountSave } from '@/hooks/useEditorUnmountSave';
+import { useCentralizedAutosave } from '@/hooks/useCentralizedAutosave';
 
 import KeyboardShortcutsHelp from '../shared/KeyboardShortcutsHelp';
 import MobileStableEditor from './components/MobileStableEditor';
@@ -264,42 +263,40 @@ const { syncAllStates } = useCampaignStateSync();
   
   const [canvasZoom, setCanvasZoom] = useState(getDefaultZoom(selectedDevice));
 
-  // 🧹 CRITICAL: Save complete state before unmount to prevent data loss
-  // Placed here AFTER all state declarations to avoid TDZ errors
-  useEditorUnmountSave('pro', {
-    canvasElements,
-    modularPage,
-    screenBackgrounds,
-    extractedColors,
-    selectedDevice,
-    canvasZoom,
-    gameConfig: (campaignState as any)?.proConfig
-  }, saveCampaign);
-
-  // 🔄 Auto-save to Supabase every 30 seconds (aligned with QuizEditor)
-  useAutoSaveToSupabase(
-    {
-      campaign: {
-        ...campaignState,
-        type: 'pro',
-        proConfig: (campaignState as any)?.proConfig
+  // 🔄 Centralized autosave with unmount protection
+  const { forceSave } = useCentralizedAutosave({
+    campaign: {
+      ...campaignState,
+      type: 'pro',
+      config: {
+        ...(campaignState as any)?.config,
+        canvasConfig: {
+          elements: canvasElements,
+          screenBackgrounds,
+          device: selectedDevice,
+          zoom: canvasZoom
+        }
       },
-      canvasElements,
-      modularPage,
-      screenBackgrounds,
-      canvasZoom
+      design: {
+        ...(campaignState as any)?.design,
+        quizModules: modularPage
+      },
+      proConfig: (campaignState as any)?.proConfig
     },
-    {
-      enabled: true,
-      interval: 30000, // 30 seconds
-      onSave: () => {
-        console.log('✅ [ProEditor AutoSave] Campaign auto-saved to Supabase');
-      },
-      onError: (error) => {
-        console.error('❌ [ProEditor AutoSave] Auto-save failed:', error);
-      }
+    saveCampaign,
+    delay: 2000,
+    enabled: true,
+    onError: (error) => {
+      console.error('❌ [ProEditor Autosave] Failed:', error);
     }
-  );
+  });
+
+  // Force save before unmount
+  useEffect(() => {
+    return () => {
+      forceSave();
+    };
+  }, [forceSave]);
 
 // 🔄 Load campaign data from Supabase when campaign ID is in URL
 useEffect(() => {

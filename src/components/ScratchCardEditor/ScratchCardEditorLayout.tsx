@@ -47,7 +47,7 @@ import { useScratchCardStore } from './state/scratchcard.store';
 import type { GameModalConfig } from '@/types/gameConfig';
 import { createGameConfigFromQuiz } from '@/types/gameConfig';
 import { generateTempCampaignId } from '@/utils/tempCampaignId';
-import { useAutoSaveToSupabase } from '@/hooks/useAutoSaveToSupabase';
+import { useCentralizedAutosave } from '@/hooks/useCentralizedAutosave';
 
 const KeyboardShortcutsHelp = lazy(() => import('../shared/KeyboardShortcutsHelp'));
 const MobileStableEditor = lazy(() => import('./components/MobileStableEditor'));
@@ -510,42 +510,40 @@ useEffect(() => {
   const [modularPage, setModularPage] = useState<ModularPage>(createEmptyModularPage());
   const [extractedColors, setExtractedColors] = useState<string[]>([]);
 
-  // 🧹 CRITICAL: Save complete state before unmount to prevent data loss
-  // Placed here AFTER all state declarations to avoid TDZ errors
-  useEditorUnmountSave('scratch', {
-    canvasElements,
-    modularPage,
-    screenBackgrounds,
-    extractedColors,
-    selectedDevice,
-    canvasZoom,
-    gameConfig: (campaignState as any)?.scratchConfig
-  }, saveCampaign);
-
-  // 🔄 Auto-save to Supabase every 30 seconds (aligned with QuizEditor)
-  useAutoSaveToSupabase(
-    {
-      campaign: {
-        ...campaignState,
-        type: 'scratch',
-        scratchConfig: (campaignState as any)?.scratchConfig
+  // 🔄 Centralized autosave with unmount protection
+  const { forceSave } = useCentralizedAutosave({
+    campaign: {
+      ...campaignState,
+      type: 'scratch',
+      config: {
+        ...(campaignState as any)?.config,
+        canvasConfig: {
+          elements: canvasElements,
+          screenBackgrounds,
+          device: selectedDevice,
+          zoom: canvasZoom
+        }
       },
-      canvasElements,
-      modularPage,
-      screenBackgrounds,
-      canvasZoom
+      design: {
+        ...(campaignState as any)?.design,
+        quizModules: modularPage
+      },
+      scratchConfig: (campaignState as any)?.scratchConfig
     },
-    {
-      enabled: true,
-      interval: 30000, // 30 seconds
-      onSave: () => {
-        console.log('✅ [ScratchEditor AutoSave] Campaign auto-saved to Supabase');
-      },
-      onError: (error) => {
-        console.error('❌ [ScratchEditor AutoSave] Auto-save failed:', error);
-      }
+    saveCampaign,
+    delay: 2000,
+    enabled: true,
+    onError: (error) => {
+      console.error('❌ [ScratchEditor Autosave] Failed:', error);
     }
-  );
+  });
+
+  // Force save before unmount
+  useEffect(() => {
+    return () => {
+      forceSave();
+    };
+  }, [forceSave]);
 
   useEffect(() => {
     if (!canvasElements.length) return;

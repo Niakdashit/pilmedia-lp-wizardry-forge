@@ -29,7 +29,7 @@ import { getDeviceDimensions } from '../../utils/deviceDimensions';
 import { getEditorDeviceOverride } from '@/utils/deviceOverrides';
 import { useEditorPreviewSync } from '@/hooks/useEditorPreviewSync';
 import { useCampaignSettings } from '@/hooks/useCampaignSettings';
-import { useEditorUnmountSave } from '@/hooks/useEditorUnmountSave';
+import { useCentralizedAutosave } from '@/hooks/useCentralizedAutosave';
 // FormEditor types removed - using inline types for 2-screen layout
 
 
@@ -514,17 +514,40 @@ useEffect(() => {
   const [modularPage, setModularPage] = useState<ModularPage>(createEmptyModularPage());
   const [extractedColors, setExtractedColors] = useState<string[]>([]);
 
-  // 🧹 CRITICAL: Save complete state before unmount to prevent data loss
-  // Placed here AFTER all state declarations to avoid TDZ errors
-  useEditorUnmountSave('form', {
-    canvasElements,
-    modularPage,
-    screenBackgrounds,
-    extractedColors,
-    selectedDevice,
-    canvasZoom,
-    gameConfig: (campaignState as any)?.formConfig
-  }, saveCampaign);
+  // 🔄 Centralized autosave with unmount protection
+  const { forceSave } = useCentralizedAutosave({
+    campaign: {
+      ...campaignState,
+      type: 'form',
+      config: {
+        ...(campaignState as any)?.config,
+        canvasConfig: {
+          elements: canvasElements,
+          screenBackgrounds,
+          device: selectedDevice,
+          zoom: canvasZoom
+        }
+      },
+      design: {
+        ...(campaignState as any)?.design,
+        quizModules: modularPage
+      },
+      formConfig: (campaignState as any)?.formConfig
+    },
+    saveCampaign,
+    delay: 2000,
+    enabled: true,
+    onError: (error) => {
+      console.error('❌ [FormEditor Autosave] Failed:', error);
+    }
+  });
+
+  // Force save before unmount
+  useEffect(() => {
+    return () => {
+      forceSave();
+    };
+  }, [forceSave]);
 
   useEffect(() => {
     if (!canvasElements.length) return;

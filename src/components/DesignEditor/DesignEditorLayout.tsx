@@ -29,7 +29,7 @@ import { getEditorDeviceOverride } from '@/utils/deviceOverrides';
 import { recalculateAllElements } from '../../utils/recalculateAllModules';
 import { useEditorPreviewSync } from '@/hooks/useEditorPreviewSync';
 import { useCampaignSettings } from '@/hooks/useCampaignSettings';
-import { useEditorUnmountSave } from '@/hooks/useEditorUnmountSave';
+import { useCentralizedAutosave } from '@/hooks/useCentralizedAutosave';
 
 
 
@@ -230,16 +230,40 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
     return () => window.removeEventListener('editor-request-save', handler as any);
   }, [canvasElements, screenBackgrounds, selectedDevice, canvasZoom, canvasBackground, modularPage, saveCampaign, setIsModified]);
 
-  // 🧹 CRITICAL: Save complete state before unmount to prevent data loss
-  useEditorUnmountSave('wheel', {
-    canvasElements,
-    modularPage,
-    screenBackgrounds,
-    extractedColors,
-    selectedDevice,
-    canvasZoom,
-    gameConfig: (campaignState as any)?.wheelConfig
-  }, saveCampaign);
+  // 🔄 Centralized autosave with unmount protection
+  const { forceSave } = useCentralizedAutosave({
+    campaign: {
+      ...campaignState,
+      type: 'wheel',
+      config: {
+        ...(campaignState as any)?.config,
+        canvasConfig: {
+          elements: canvasElements,
+          screenBackgrounds,
+          device: selectedDevice,
+          zoom: canvasZoom
+        }
+      },
+      design: {
+        ...(campaignState as any)?.design,
+        quizModules: modularPage
+      },
+      wheelConfig: (campaignState as any)?.wheelConfig
+    },
+    saveCampaign,
+    delay: 2000,
+    enabled: true,
+    onError: (error) => {
+      console.error('❌ [WheelEditor Autosave] Failed:', error);
+    }
+  });
+
+  // Force save before unmount
+  useEffect(() => {
+    return () => {
+      forceSave();
+    };
+  }, [forceSave]);
 
 // 🔄 Load campaign data from Supabase when campaign ID is in URL
 useEffect(() => {

@@ -31,7 +31,7 @@ import { getEditorDeviceOverride } from '@/utils/deviceOverrides';
 import { useEditorPreviewSync } from '@/hooks/useEditorPreviewSync';
 import { useCampaignSettings } from '@/hooks/useCampaignSettings';
 import type { ScreenBackgrounds } from '@/types/background';
-import { useEditorUnmountSave } from '@/hooks/useEditorUnmountSave';
+import { useCentralizedAutosave } from '@/hooks/useCentralizedAutosave';
 
 
 import { useCampaigns } from '@/hooks/useCampaigns';
@@ -39,8 +39,6 @@ import { saveCampaignToDB } from '@/hooks/useModernCampaignEditor/saveHandler';
 import { useCampaignStateSync } from '@/hooks/useCampaignStateSync';
 import { quizTemplates } from '../../types/quizTemplates';
 import { supabase } from '@/integrations/supabase/client';
-// import { CampaignStorage } from '@/utils/campaignStorage';
-import { useAutoSaveToSupabase } from '@/hooks/useAutoSaveToSupabase';
 import { generateTempCampaignId, isTempCampaignId, isPersistedCampaignId, clearTempCampaignData, replaceTempWithPersistedId } from '@/utils/tempCampaignId';
 
 const KeyboardShortcutsHelp = lazy(() => import('../shared/KeyboardShortcutsHelp'));
@@ -524,17 +522,39 @@ const { syncAllStates, syncModularPage } = useCampaignStateSync();
     canvasZoomRef.current = canvasZoom;
   }, [canvasZoom]);
 
-  // 🧹 CRITICAL: Save complete state before unmount to prevent data loss
-  // Placed here AFTER all state declarations to avoid TDZ errors
-  useEditorUnmountSave('quiz', {
-    canvasElements,
-    modularPage,
-    screenBackgrounds,
-    extractedColors,
-    selectedDevice,
-    canvasZoom,
-    gameConfig: (campaignState as any)?.quizConfig
-  }, saveCampaign);
+  // 🔄 Centralized autosave with unmount protection
+  const { forceSave } = useCentralizedAutosave({
+    campaign: {
+      ...campaignState,
+      config: {
+        ...(campaignState as any)?.config,
+        canvasConfig: {
+          elements: canvasElements,
+          screenBackgrounds,
+          device: selectedDevice,
+          zoom: canvasZoom
+        }
+      },
+      design: {
+        ...(campaignState as any)?.design,
+        quizModules: modularPage
+      },
+      quizConfig: (campaignState as any)?.quizConfig
+    },
+    saveCampaign,
+    delay: 2000,
+    enabled: true,
+    onError: (error) => {
+      console.error('❌ [QuizEditor Autosave] Failed:', error);
+    }
+  });
+
+  // Force save before unmount
+  useEffect(() => {
+    return () => {
+      forceSave();
+    };
+  }, [forceSave]);
 
   useEffect(() => {
     if (!canvasElements.length) return;
@@ -1251,27 +1271,6 @@ const handleSaveCampaignName = useCallback(async () => {
     return allModules.find((module) => module.id === selectedModuleId) || null;
   }, [selectedModuleId, modularPage.screens]);
   
-  // 🔄 Auto-save to Supabase every 30 seconds
-  // Placed here after all state declarations to avoid TDZ issues
-  useAutoSaveToSupabase(
-    {
-      campaign: campaignState,
-      canvasElements,
-      modularPage,
-      screenBackgrounds,
-      canvasZoom
-    },
-    {
-      enabled: true,
-      interval: 30000, // 30 seconds
-      onSave: () => {
-        console.log('✅ [AutoSave] Campaign auto-saved to Supabase');
-      },
-      onError: (error) => {
-        console.error('❌ [AutoSave] Auto-save failed:', error);
-      }
-    }
-  );
   
   // Détecter la position de scroll pour changer l'écran courant
   useEffect(() => {
