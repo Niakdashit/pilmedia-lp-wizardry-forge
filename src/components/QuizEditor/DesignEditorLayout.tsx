@@ -13,7 +13,6 @@ const FullScreenPreviewModal = lazy(() => import('@/components/shared/modals/Ful
 const FunnelUnlockedGame = lazy(() => import('@/components/funnels/FunnelUnlockedGame'));
 import PreviewRenderer from '@/components/preview/PreviewRenderer';
 import ArticleFunnelView from '@/components/ArticleEditor/ArticleFunnelView';
-import { getArticleConfigWithDefaults } from '@/utils/articleConfigHelpers';
 import type { ModularPage, ScreenId, BlocBouton, Module } from '@/types/modularEditor';
 import { createEmptyModularPage } from '@/types/modularEditor';
 
@@ -3696,7 +3695,7 @@ const handleSaveCampaignName = useCallback(async () => {
                 >
                   {editorMode === 'article' ? (
                     <ArticleFunnelView
-                      articleConfig={getArticleConfigWithDefaults(campaignState, campaignData)}
+                      articleConfig={(campaignState as any)?.articleConfig || {}}
                       campaignType={(campaignState as any)?.type || 'quiz'}
                       campaign={campaignData}
                       wheelModalConfig={wheelModalConfig}
@@ -3725,7 +3724,7 @@ const handleSaveCampaignName = useCallback(async () => {
               /* Desktop/Tablet Preview OU Mobile physique: Fullscreen sans cadre */
               editorMode === 'article' ? (
                 <ArticleFunnelView
-                  articleConfig={getArticleConfigWithDefaults(campaignState, campaignData)}
+                  articleConfig={(campaignState as any)?.articleConfig || {}}
                   campaignType={(campaignState as any)?.type || 'quiz'}
                   campaign={campaignData}
                   wheelModalConfig={wheelModalConfig}
@@ -4090,7 +4089,7 @@ const handleSaveCampaignName = useCallback(async () => {
                   <div className="flex-1 flex flex-col items-center justify-center overflow-hidden relative">
                     {editorMode === 'article' && (
                       <ArticleFunnelView
-                        articleConfig={getArticleConfigWithDefaults(campaignState, campaignData)}
+                        articleConfig={(campaignState as any)?.articleConfig || {}}
                         campaignType={(campaignState as any)?.type || 'quiz'}
                         campaign={campaignData}
                         wheelModalConfig={quizModalConfig}

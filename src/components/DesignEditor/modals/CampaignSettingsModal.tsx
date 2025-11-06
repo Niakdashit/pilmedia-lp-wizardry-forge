@@ -168,14 +168,6 @@ useEffect(() => {
         console.log('✅ [CampaignSettingsModal] Settings saved successfully');
         try { window.dispatchEvent(new CustomEvent('campaign:settings:saved')); } catch {}
         
-        // Notify list views to refresh campaign name immediately
-        try {
-          const pubName = (form.publication as any)?.name as string | undefined;
-          if (pubName && savedCampaignId) {
-            window.dispatchEvent(new CustomEvent('campaign:name:update', { detail: { campaignId: savedCampaignId, name: pubName } }));
-          }
-        } catch {}
-        
         // Step 3: Redirect to editor with campaign ID (preserve mode parameter)
         if (campaign?.type) {
           // Determine editor mode from current URL or campaign data
