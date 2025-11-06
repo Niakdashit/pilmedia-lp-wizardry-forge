@@ -9,18 +9,72 @@ interface CentralizedAutosaveOptions {
   delay?: number;
   enabled?: boolean;
   onError?: (error: Error) => void;
+  maxRetries?: number;
+}
+
+/**
+ * Métriques de performance pour le debugging
+ */
+interface SaveMetrics {
+  totalSaves: number;
+  successfulSaves: number;
+  failedSaves: number;
+  averageSaveTime: number;
+  lastSaveDuration: number;
+}
+
+const globalMetrics: SaveMetrics = {
+  totalSaves: 0,
+  successfulSaves: 0,
+  failedSaves: 0,
+  averageSaveTime: 0,
+  lastSaveDuration: 0
+};
+
+/**
+ * Utilitaire de retry avec backoff exponentiel
+ */
+async function retryWithBackoff<T>(
+  fn: () => Promise<T>,
+  maxRetries: number = 3,
+  baseDelay: number = 1000
+): Promise<T> {
+  let lastError: Error;
+  
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error as Error;
+      
+      if (attempt < maxRetries) {
+        const delay = baseDelay * Math.pow(2, attempt); // Exponential backoff
+        console.warn(`⚠️ [CentralizedAutosave] Retry ${attempt + 1}/${maxRetries} after ${delay}ms`, error);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+  }
+  
+  throw lastError!;
 }
 
 /**
  * Hook centralisé pour gérer l'autosave de manière coordonnée
- * Remplace tous les systèmes d'autosave éparpillés
+ * 
+ * Features:
+ * - Debounced autosave avec détection de changements
+ * - Retry automatique avec backoff exponentiel (3 tentatives)
+ * - Métriques de performance (temps de sauvegarde, taux de succès)
+ * - Gestion d'erreurs robuste
+ * - Protection contre les sauvegardes concurrentes
  */
 export const useCentralizedAutosave = ({
   campaign,
   saveCampaign,
   delay = 2000,
   enabled = true,
-  onError
+  onError,
+  maxRetries = 3
 }: CentralizedAutosaveOptions) => {
   const isSavingRef = useRef(false);
   const lastSavedHashRef = useRef<string>('');
@@ -57,6 +111,8 @@ export const useCentralizedAutosave = ({
       setIsSaving(true);
       setSaveError(null);
       
+      const startTime = performance.now();
+      
       try {
         emitCampaignEvent('campaign:autosave:start', {
           campaignId: campaignToSave?.id || 'new',
@@ -65,7 +121,21 @@ export const useCentralizedAutosave = ({
         
         console.log('💾 [CentralizedAutosave] Saving campaign:', campaignToSave?.id);
         
-        const saved = await saveCampaignToDB(campaignToSave, saveCampaign);
+        // Sauvegarde avec retry automatique
+        const saved = await retryWithBackoff(
+          () => saveCampaignToDB(campaignToSave, saveCampaign),
+          maxRetries,
+          1000 // 1s base delay
+        );
+        
+        const duration = performance.now() - startTime;
+        
+        // Mise à jour des métriques
+        globalMetrics.totalSaves++;
+        globalMetrics.successfulSaves++;
+        globalMetrics.lastSaveDuration = duration;
+        globalMetrics.averageSaveTime = 
+          (globalMetrics.averageSaveTime * (globalMetrics.totalSaves - 1) + duration) / globalMetrics.totalSaves;
         
         lastSavedHashRef.current = currentHash;
         setLastSavedAt(new Date());
@@ -76,9 +146,30 @@ export const useCentralizedAutosave = ({
           source: 'centralized-autosave'
         });
         
-        console.log('✅ [CentralizedAutosave] Save complete:', saved?.id);
+        console.log(`✅ [CentralizedAutosave] Save complete in ${duration.toFixed(0)}ms:`, saved?.id);
+        
+        // Log metrics en dev
+        if (process.env.NODE_ENV !== 'production') {
+          console.log('📊 [SaveMetrics]', {
+            totalSaves: globalMetrics.totalSaves,
+            successRate: `${((globalMetrics.successfulSaves / globalMetrics.totalSaves) * 100).toFixed(1)}%`,
+            avgTime: `${globalMetrics.averageSaveTime.toFixed(0)}ms`,
+            lastTime: `${duration.toFixed(0)}ms`
+          });
+        }
       } catch (error) {
-        console.error('❌ [CentralizedAutosave] Save failed:', error);
+        const duration = performance.now() - startTime;
+        
+        // Mise à jour des métriques d'erreur
+        globalMetrics.totalSaves++;
+        globalMetrics.failedSaves++;
+        globalMetrics.lastSaveDuration = duration;
+        
+        console.error(`❌ [CentralizedAutosave] Save failed after ${duration.toFixed(0)}ms:`, error);
+        console.error('📊 [SaveMetrics] Failure rate:', 
+          `${((globalMetrics.failedSaves / globalMetrics.totalSaves) * 100).toFixed(1)}%`
+        );
+        
         setSaveError(error as Error);
         onError?.(error as Error);
       } finally {
@@ -107,9 +198,19 @@ export const useCentralizedAutosave = ({
     setIsSaving(true);
     setSaveError(null);
     
+    const startTime = performance.now();
+    
     try {
       console.log('⚡ [CentralizedAutosave] Force saving campaign:', campaign.id);
-      const saved = await saveCampaignToDB(campaign, saveCampaign);
+      
+      // Force save avec retry
+      const saved = await retryWithBackoff(
+        () => saveCampaignToDB(campaign, saveCampaign),
+        maxRetries,
+        1000
+      );
+      
+      const duration = performance.now() - startTime;
       
       lastSavedHashRef.current = JSON.stringify({
         id: campaign?.id,
@@ -122,10 +223,11 @@ export const useCentralizedAutosave = ({
       
       setLastSavedAt(new Date());
       
-      console.log('✅ [CentralizedAutosave] Force save complete:', saved?.id);
+      console.log(`✅ [CentralizedAutosave] Force save complete in ${duration.toFixed(0)}ms:`, saved?.id);
       return saved;
     } catch (error) {
-      console.error('❌ [CentralizedAutosave] Force save failed:', error);
+      const duration = performance.now() - startTime;
+      console.error(`❌ [CentralizedAutosave] Force save failed after ${duration.toFixed(0)}ms:`, error);
       setSaveError(error as Error);
       onError?.(error as Error);
       throw error;
@@ -188,6 +290,13 @@ export const useCentralizedAutosave = ({
     lastSavedAt,
     forceSave,
     waitForSave,
-    cancelPendingSave: () => debouncedSave.cancel()
+    cancelPendingSave: () => debouncedSave.cancel(),
+    // Métriques exposées pour debugging
+    metrics: globalMetrics
   };
 };
+
+/**
+ * Hook pour accéder aux métriques globales de sauvegarde
+ */
+export const useSaveMetrics = () => globalMetrics;

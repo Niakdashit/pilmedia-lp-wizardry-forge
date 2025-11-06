@@ -1,16 +1,152 @@
-# Guide de persistance des campagnes
+# Campaign Persistence System v2.0
 
-## Problème résolu
+## Vue d'ensemble
 
-Auparavant, seules certaines métadonnées (nom, type, statut) étaient sauvegardées lors de l'enregistrement d'une campagne. Les configurations internes des onglets Design, Éléments, Jeu, Formulaire, et Sortie n'étaient pas intégralement persistées.
+Le système de persistance des campagnes a été complètement refactorisé pour offrir :
+- **Autosave centralisé** : Un seul hook `useCentralizedAutosave` pour tous les éditeurs
+- **Synchronisation par événements** : Cache automatiquement synchronisé via `campaignEvents`
+- **Retry automatique** : 3 tentatives avec backoff exponentiel en cas d'échec
+- **Métriques de performance** : Suivi du temps de sauvegarde et taux de succès
+- **Indicateur visuel** : Affichage en temps réel de l'état de sauvegarde
 
-## Solution implémentée
+## Problème résolu (v1)
 
-### 1. Sauvegarde exhaustive (`saveCampaignToDB`)
+Auparavant, seuls les champs de base de la campagne étaient sauvegardés :
+- `name`, `status`, `type`
+- Aucune persistance de l'état de l'éditeur (canvas, modules, configurations)
 
-La fonction `saveCampaignToDB` dans `src/hooks/useModernCampaignEditor/saveHandler.ts` capture maintenant **tous** les états de l'éditeur :
+## Architecture v2.0
 
-#### Structure de sauvegarde complète :
+### 1. Hook centralisé `useCentralizedAutosave`
+
+Remplace tous les anciens systèmes d'autosave éparpillés (`useAutoSaveToSupabase`, `useEditorUnmountSave`).
+
+**Features:**
+- ✅ Debounce intelligent (2s par défaut)
+- ✅ Détection de changements (évite les sauvegardes inutiles)
+- ✅ Retry automatique avec backoff exponentiel (3 tentatives)
+- ✅ Protection contre les sauvegardes concurrentes
+- ✅ Sauvegarde au démontage (unmount protection)
+- ✅ Métriques de performance en temps réel
+- ✅ Gestion d'erreurs robuste
+
+### 2. Système d'événements `campaignEvents`
+
+Synchronisation automatique entre les composants via des événements :
+
+```typescript
+// Événements disponibles
+'campaign:saved'              // Sauvegarde manuelle complète
+'campaign:loaded'             // Campagne chargée depuis DB
+'campaign:autosave:start'     // Début d'autosave
+'campaign:autosave:complete'  // Autosave terminée
+'campaign:cache:invalidate'   // Cache invalidé
+```
+
+### 3. Cache intelligent `useFastCampaignLoader`
+
+- Cache en mémoire avec validation d'âge (30s max)
+- Synchronisation automatique via événements (pas de `updateCache` manuel)
+- Préchargement des images en arrière-plan
+- Invalidation automatique du cache expiré
+
+### 4. Indicateur visuel `SaveIndicator`
+
+Composant dans le header affichant :
+- 🔵 "Sauvegarde..." (pendant la sauvegarde)
+- 🟢 "Sauvegardé il y a X secondes/minutes" (succès)
+- 🔴 "Erreur de sauvegarde" (échec)
+
+## Usage in Editors (v2.0)
+
+Tous les éditeurs utilisent maintenant le système centralisé.
+
+### 1. Importer le hook centralisé
+
+```typescript
+import { useCentralizedAutosave } from '@/hooks/useCentralizedAutosave';
+import { useCampaigns } from '@/hooks/useCampaigns';
+```
+
+### 2. Dans le composant éditeur
+
+```typescript
+const DesignEditorLayout = () => {
+  const { saveCampaign } = useCampaigns();
+  const campaignState = useEditorStore((s) => s.campaign);
+  
+  // États locaux de l'éditeur
+  const [canvasElements, setCanvasElements] = useState([]);
+  const [modularPage, setModularPage] = useState(createEmptyModularPage());
+  
+  // 🔄 Hook centralisé d'autosave avec toutes les fonctionnalités
+  const { 
+    isSaving, 
+    saveError, 
+    lastSavedAt, 
+    forceSave,
+    metrics 
+  } = useCentralizedAutosave({
+    campaign: {
+      ...campaignState,
+      canvasElements,
+      modularPage,
+      screenBackgrounds,
+      // Tous les états de l'éditeur
+    },
+    saveCampaign,
+    delay: 2000, // Debounce de 2s
+    enabled: true,
+    maxRetries: 3, // 3 tentatives avec backoff exponentiel
+    onError: (error) => {
+      console.error('Autosave error:', error);
+      toast.error('Erreur de sauvegarde');
+    }
+  });
+  
+  // Protection au démontage
+  useEffect(() => {
+    return () => {
+      forceSave();
+    };
+  }, [forceSave]);
+  
+  // Passer les états au header pour l'indicateur visuel
+  return (
+    <div>
+      <EditorHeader 
+        isSaving={isSaving}
+        saveError={saveError}
+        lastSavedAt={lastSavedAt}
+      />
+      {/* ... reste de l'éditeur */}
+    </div>
+  );
+};
+```
+
+### 3. Système d'événements
+
+Le système utilise des événements pour synchroniser automatiquement le cache :
+
+```typescript
+// Événements émis automatiquement
+emitCampaignEvent('campaign:autosave:start', { campaignId, source });
+emitCampaignEvent('campaign:autosave:complete', { campaignId, data, source });
+emitCampaignEvent('campaign:saved', { campaignId, data, source });
+
+// Le loader se synchronise automatiquement
+useEffect(() => {
+  const unsubscribe = onCampaignEvent('campaign:saved', ({ data }) => {
+    updateCampaignCache(campaignId, data); // Mise à jour automatique du cache
+  });
+  return unsubscribe;
+}, [campaignId]);
+```
+
+## Structure de sauvegarde complète
+
+Tous les états de l'éditeur sont sauvegardés :
 
 ```typescript
 {
@@ -75,192 +211,177 @@ La fonction `saveCampaignToDB` dans `src/hooks/useModernCampaignEditor/saveHandl
 }
 ```
 
-### 2. Chargement exhaustif (`campaignLoader`)
+## API Reference v2.0
 
-La fonction `loadCampaign` dans `src/hooks/useModernCampaignEditor/campaignLoader.ts` restaure **tous** les états :
+### `useCentralizedAutosave(options)`
 
-- ✅ Canvas elements
-- ✅ Modular page structure
-- ✅ Screen backgrounds
-- ✅ Extracted colors
-- ✅ Button and screen configs
-- ✅ Game-specific configurations
-- ✅ Design modules and custom elements
+Hook principal pour gérer l'autosave de manière centralisée.
 
-### 3. Hook de synchronisation (`useCampaignStateSync`)
-
-Le nouveau hook `useCampaignStateSync` facilite la synchronisation des états locaux vers l'objet campaign :
-
+**Options:**
 ```typescript
-import { useCampaignStateSync } from '@/hooks/useCampaignStateSync';
-
-// Dans votre éditeur
-const { syncAllStates } = useCampaignStateSync();
-
-// Avant de sauvegarder, synchroniser tous les états
-syncAllStates({
-  canvasElements,
-  modularPage,
-  screenBackgrounds,
-  extractedColors,
-  selectedDevice,
-  canvasZoom,
-  // ... autres états
-});
-
-// Puis sauvegarder
-await saveCampaign(campaign);
+{
+  campaign: any;              // État complet de la campagne
+  saveCampaign: Function;     // Fonction de sauvegarde Supabase
+  delay?: number;             // Délai de debounce (défaut: 2000ms)
+  enabled?: boolean;          // Activer/désactiver (défaut: true)
+  maxRetries?: number;        // Nombre de tentatives (défaut: 3)
+  onError?: (error) => void;  // Callback d'erreur
+}
 ```
 
-## Utilisation dans les éditeurs
-
-### Dans chaque éditeur (DesignEditor, QuizEditor, FormEditor, etc.)
-
-#### 1. Importer le hook de synchronisation :
-
+**Returns:**
 ```typescript
-import { useCampaignStateSync } from '@/hooks/useCampaignStateSync';
+{
+  isSaving: boolean;          // État de sauvegarde en cours
+  saveError: Error | null;    // Dernière erreur
+  lastSavedAt: Date;          // Date de dernière sauvegarde
+  forceSave: () => Promise;   // Sauvegarde immédiate
+  waitForSave: () => Promise; // Attendre la sauvegarde en cours
+  cancelPendingSave: () => void; // Annuler le debounce
+  metrics: SaveMetrics;       // Métriques de performance
+}
 ```
 
-#### 2. Utiliser le hook :
+### `useFastCampaignLoader(options)`
 
+Hook pour charger les campagnes avec cache intelligent.
+
+**Options:**
 ```typescript
-const { syncAllStates } = useCampaignStateSync();
+{
+  campaignId: string | null;
+  enabled?: boolean;
+}
 ```
 
-#### 3. Synchroniser avant chaque sauvegarde :
-
+**Returns:**
 ```typescript
-const handleSave = async () => {
-  // 1. Synchroniser tous les états locaux vers campaign
-  syncAllStates({
-    canvasElements,
-    modularPage,
-    screenBackgrounds,
-    extractedColors,
-    selectedDevice,
-    canvasZoom,
-    campaignConfig,
-    buttonConfig,
-    // Type-specific configs
-    quizConfig,      // pour QuizEditor
-    scratchConfig,   // pour ScratchEditor
-    jackpotConfig,   // pour JackpotEditor
-    wheelConfig      // pour DesignEditor (Wheel)
-  });
-  
-  // 2. Sauvegarder
-  await saveCampaign(campaign);
-};
+{
+  campaign: any;              // Campagne chargée
+  isLoading: boolean;         // État de chargement
+  error: Error | null;        // Erreur de chargement
+  reload: () => Promise;      // Recharger
+  invalidateCache: () => void; // Invalider le cache
+}
 ```
 
-### Autosave automatique
+**Features:**
+- Cache en mémoire avec validation d'âge (30s max)
+- Synchronisation automatique via événements
+- Préchargement des images en arrière-plan
 
-Pour l'autosave, utiliser un debounce pour éviter trop de sauvegardes :
+### `SaveIndicator` Component
+
+Composant d'indicateur visuel dans le header.
+
+**Props:**
+```typescript
+{
+  isSaving: boolean;        // État de sauvegarde
+  error?: Error | null;     // Erreur éventuelle
+  lastSavedAt?: Date;       // Date de dernière sauvegarde
+}
+```
+
+**Affichage:**
+- 🔵 "Sauvegarde..." (pendant la sauvegarde)
+- 🟢 "Sauvegardé il y a X" (succès)
+- 🔴 "Erreur de sauvegarde" (échec)
+
+### Métriques de performance
 
 ```typescript
-import { useDebounce } from 'use-debounce';
+const { metrics } = useCentralizedAutosave({ ... });
 
-useEffect(() => {
-  const timeout = setTimeout(() => {
-    syncAllStates({
-      canvasElements,
-      modularPage,
-      screenBackgrounds,
-      // ...
-    });
-    saveCampaign(campaign);
-  }, 1500); // Attendre 1.5s après le dernier changement
-  
-  return () => clearTimeout(timeout);
-}, [canvasElements, modularPage, screenBackgrounds, /* ... */]);
+console.log(metrics);
+// {
+//   totalSaves: 42,
+//   successfulSaves: 40,
+//   failedSaves: 2,
+//   averageSaveTime: 234,  // ms
+//   lastSaveDuration: 189   // ms
+// }
+```
+
+## Système de retry
+
+En cas d'échec, le système retry automatiquement avec backoff exponentiel :
+- **Tentative 1** : immédiate
+- **Tentative 2** : après 1 seconde
+- **Tentative 3** : après 2 secondes
+- **Tentative 4** : après 4 secondes
+
+Après 3 échecs, l'erreur est propagée à `onError` et affichée dans l'indicateur.
+
+## Logs de debugging
+
+Le système inclut des logs détaillés pour le debugging :
+
+```javascript
+// Autosave
+💾 [CentralizedAutosave] Saving campaign: campaign-id-123
+✅ [CentralizedAutosave] Save complete in 234ms: campaign-id-123
+📊 [SaveMetrics] { totalSaves: 42, successRate: "95.2%", avgTime: "189ms", lastTime: "234ms" }
+
+// Cache
+📦 [FastCampaignLoader] Cache updated for campaign-id-123
+⚡ [FastCampaignLoader] Using valid cache: { id: "campaign-id-123", age: 1234 }
+🔄 [FastCampaignLoader] Auto-updating cache from save event
+
+// Retry
+⚠️ [CentralizedAutosave] Retry 1/3 after 1000ms
+⚠️ [CentralizedAutosave] Retry 2/3 after 2000ms
+❌ [CentralizedAutosave] Save failed after 5234ms
+📊 [SaveMetrics] Failure rate: 4.8%
+```
+
+## Migration depuis v1
+
+### Avant (v1)
+```typescript
+// Plusieurs hooks éparpillés
+useAutoSaveToSupabase({ ... });
+useEditorUnmountSave({ ... });
+
+// Gestion manuelle du cache
+useFastCampaignLoader({ ... }).updateCache(id, data);
+```
+
+### Après (v2)
+```typescript
+// Un seul hook centralisé
+const { isSaving, saveError, lastSavedAt } = useCentralizedAutosave({ ... });
+
+// Cache auto-synchronisé via événements
+useFastCampaignLoader({ ... }); // Plus besoin d'updateCache manuel
 ```
 
 ## Tests de validation
 
-Pour vérifier que tout est correctement sauvegardé et restauré :
+Pour vérifier que tout fonctionne :
 
-1. ✅ Créer une campagne complète avec :
-   - Éléments canvas
-   - Modules modulaires
-   - Images de fond (desktop et mobile)
-   - Champs de formulaire
-   - Configuration de jeu
-   
-2. ✅ Sauvegarder la campagne
-
-3. ✅ Naviguer vers `/campaigns`
-
-4. ✅ Rouvrir la campagne
-
-5. ✅ Vérifier que TOUS les éléments sont restaurés :
-   - Éléments canvas visibles
-   - Modules présents
-   - Images de fond correctes
-   - Formulaire complet
-   - Configuration de jeu intacte
-
-## Logs de debugging
-
-Les fonctions de sauvegarde et chargement incluent des logs détaillés :
-
-```javascript
-// Lors de la sauvegarde
-💾 [saveCampaignToDB] Saving campaign with complete state
-💾 [saveCampaignToDB] Complete payload structure
-✅ [saveCampaignToDB] Campaign saved successfully
-
-// Lors du chargement
-✅ [campaignLoader] Loaded campaign from DB
-✅ [campaignLoader] Complete restored campaign
-```
-
-Utilisez ces logs pour diagnostiquer les problèmes de persistance.
+1. ✅ Créer une campagne complète avec tous les types d'éléments
+2. ✅ Observer l'indicateur "Sauvegarde..." puis "Sauvegardé il y a X"
+3. ✅ Fermer l'éditeur (vérifier unmount save dans les logs)
+4. ✅ Rouvrir la campagne → Vérifier que tout est restauré
+5. ✅ Simuler une erreur réseau → Vérifier les 3 retry automatiques
+6. ✅ Consulter les métriques dans la console en mode dev
 
 ## Problèmes connus et solutions
 
-### Problème : Éléments canvas non restaurés
-**Solution** : Vérifier que `canvasElements` est bien synchronisé avant la sauvegarde avec `syncCanvasElements(canvasElements)`
+### Problème : "isSaving" reste bloqué à true
+**Solution** : Vérifier qu'il n'y a pas d'erreur dans `saveCampaignToDB`. Le `finally` reset toujours `isSaving`.
 
-### Problème : Modules modulaires manquants
-**Solution** : Vérifier que `modularPage` est bien synchronisé avant la sauvegarde avec `syncModularPage(modularPage)`
+### Problème : Cache non synchronisé après sauvegarde
+**Solution** : Vérifier que les événements `campaign:saved` sont bien émis et écoutés.
 
-### Problème : Images de fond disparues
-**Solution** : Vérifier que les images sont sauvegardées dans `design.backgroundImage` (desktop) et `design.mobileBackgroundImage` (mobile)
+### Problème : Retry échoue même après 3 tentatives
+**Solution** : Vérifier la connexion réseau et les logs Supabase pour identifier l'erreur persistante.
 
-### Problème : Configuration de jeu perdue
-**Solution** : S'assurer que la config spécifique au type (wheelConfig, quizConfig, etc.) est bien incluse dans la synchronisation
+## Améliorations futures
 
-## API Reference
-
-### `saveCampaignToDB(campaign, saveCampaignFn)`
-
-Sauvegarde exhaustive d'une campagne avec tous ses états.
-
-**Paramètres:**
-- `campaign`: Objet campaign complet avec tous les états synchronisés
-- `saveCampaignFn`: Fonction de sauvegarde Supabase
-
-**Retour:** Promise<Campaign>
-
-### `loadCampaign(campaignId, campaignType, getCampaign)`
-
-Charge une campagne avec restauration complète de tous les états.
-
-**Paramètres:**
-- `campaignId`: ID de la campagne à charger
-- `campaignType`: Type de campagne
-- `getCampaign`: Fonction de récupération Supabase
-
-**Retour:** Promise<Campaign>
-
-### `useCampaignStateSync()`
-
-Hook de synchronisation des états locaux vers l'objet campaign.
-
-**Méthodes:**
-- `syncAllStates(editorStates)`: Synchronise tous les états
-- `syncCanvasElements(elements)`: Synchronise uniquement les éléments canvas
-- `syncModularPage(modularPage)`: Synchronise uniquement les modules
-- `syncBackgrounds(backgrounds)`: Synchronise uniquement les backgrounds
-- `syncColors(colors)`: Synchronise uniquement les couleurs
+- [ ] Détection de conflits de sauvegarde (vérification `updated_at`)
+- [ ] Mode offline avec queue IndexedDB
+- [ ] Compression des payloads pour réduire la taille
+- [ ] Historique des versions avec possibilité de restauration
+- [ ] Dashboard d'analytics de performance

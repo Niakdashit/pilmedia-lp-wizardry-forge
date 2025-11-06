@@ -2,13 +2,32 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { onCampaignEvent, emitCampaignEvent } from '@/utils/campaignEvents';
 
-// Cache en mémoire pour chargement instantané
-const campaignCache = new Map<string, any>();
+/**
+ * Cache en mémoire pour chargement instantané
+ * Structure: { [campaignId]: { data, timestamp } }
+ */
+const campaignCache = new Map<string, { data: any; timestamp: number }>();
 const imagePreloadCache = new Set<string>();
-
-// Timestamps pour invalidation du cache
-const cacheTimestamps = new Map<string, number>();
 const CACHE_MAX_AGE = 30000; // 30 secondes max
+
+/**
+ * Met à jour le cache avec les dernières données (appelé automatiquement via événements)
+ */
+export const updateCampaignCache = (campaignId: string, data: any) => {
+  campaignCache.set(campaignId, {
+    data,
+    timestamp: Date.now()
+  });
+  console.log(`📦 [FastCampaignLoader] Cache updated for ${campaignId}`);
+};
+
+/**
+ * Invalide le cache d'une campagne
+ */
+export const invalidateCampaignCache = (campaignId: string) => {
+  campaignCache.delete(campaignId);
+  console.log(`📦 [FastCampaignLoader] Cache invalidated for ${campaignId}`);
+};
 
 // Précharge une image
 const preloadImage = (url: string): Promise<void> => {
@@ -111,24 +130,23 @@ export const useFastCampaignLoader = ({
     try {
       // 1. Vérifier le cache d'abord avec validation de l'âge
       const cached = campaignCache.get(id);
-      const cacheAge = cacheTimestamps.get(id);
-      const isCacheValid = cached && cacheAge && (Date.now() - cacheAge < CACHE_MAX_AGE);
+      const isCacheValid = cached && (Date.now() - cached.timestamp < CACHE_MAX_AGE);
       
       if (isCacheValid && mountedRef.current) {
-        console.log('⚡ [useFastCampaignLoader] Using valid cache:', {
+        console.log('⚡ [FastCampaignLoader] Using valid cache:', {
           id,
-          age: Date.now() - (cacheAge || 0)
+          age: Date.now() - cached.timestamp
         });
-        setCampaign(cached);
+        setCampaign(cached.data);
         setIsLoading(false);
         // Précharger les images en arrière-plan
-        preloadCampaignImages(cached);
+        preloadCampaignImages(cached.data);
         loadingRef.current = false;
-        return cached;
+        return cached.data;
       }
       
       if (cached && !isCacheValid) {
-        console.log('⚠️ [useFastCampaignLoader] Cache expired, reloading:', id);
+        console.log('⚠️ [FastCampaignLoader] Cache expired, reloading:', id);
       }
 
       // 2. Charger depuis Supabase
@@ -157,9 +175,8 @@ export const useFastCampaignLoader = ({
             : rawData.article_config
         };
 
-        // Mettre en cache avec timestamp
-        campaignCache.set(id, parsedData);
-        cacheTimestamps.set(id, Date.now());
+        // Mettre en cache avec timestamp via la fonction centralisée
+        updateCampaignCache(id, parsedData);
         
         emitCampaignEvent('campaign:loaded', {
           campaignId: id,
@@ -187,20 +204,6 @@ export const useFastCampaignLoader = ({
     }
   }, [preloadCampaignImages]);
 
-  // Fonction pour mettre à jour le cache avec timestamp
-  const updateCache = useCallback((id: string, data: any) => {
-    campaignCache.set(id, data);
-    cacheTimestamps.set(id, Date.now());
-    
-    console.log('💾 [useFastCampaignLoader] Cache updated:', {
-      id,
-      timestamp: new Date().toISOString()
-    });
-    
-    if (id === campaignId && mountedRef.current) {
-      setCampaign(data);
-    }
-  }, [campaignId]);
 
   // Charge la campagne au montage
   useEffect(() => {
@@ -218,15 +221,15 @@ export const useFastCampaignLoader = ({
     };
   }, [campaignId, enabled, loadCampaign]);
 
-  // 🔄 Synchronisation avec les sauvegardes
+  // 🔄 Synchronisation automatique avec les sauvegardes via événements
   useEffect(() => {
     if (!campaignId) return;
 
-    // Écouter les événements de sauvegarde pour mettre à jour le cache
+    // Écouter les événements de sauvegarde pour mettre à jour le cache automatiquement
     const unsubscribeSaved = onCampaignEvent('campaign:saved', ({ campaignId: savedId, data }) => {
       if (savedId === campaignId && data) {
-        console.log('🔄 [useFastCampaignLoader] Cache updated from save event:', savedId);
-        updateCache(savedId, data);
+        console.log('🔄 [FastCampaignLoader] Auto-updating cache from save event:', savedId);
+        updateCampaignCache(savedId, data);
         if (mountedRef.current) {
           setCampaign(data);
         }
@@ -235,8 +238,8 @@ export const useFastCampaignLoader = ({
 
     const unsubscribeAutosave = onCampaignEvent('campaign:autosave:complete', ({ campaignId: savedId, data }) => {
       if (savedId === campaignId && data) {
-        console.log('🔄 [useFastCampaignLoader] Cache updated from autosave:', savedId);
-        updateCache(savedId, data);
+        console.log('🔄 [FastCampaignLoader] Auto-updating cache from autosave:', savedId);
+        updateCampaignCache(savedId, data);
         if (mountedRef.current) {
           setCampaign(data);
         }
@@ -247,24 +250,14 @@ export const useFastCampaignLoader = ({
       unsubscribeSaved();
       unsubscribeAutosave();
     };
-  }, [campaignId, updateCache]);
-
-  // Fonction pour invalider le cache
-  const invalidateCache = useCallback((id?: string) => {
-    if (id) {
-      campaignCache.delete(id);
-    } else {
-      campaignCache.clear();
-    }
-  }, []);
+  }, [campaignId]);
 
   return {
     campaign,
     isLoading,
     error,
     reload: () => campaignId && loadCampaign(campaignId),
-    updateCache,
-    invalidateCache
+    invalidateCache: () => campaignId ? invalidateCampaignCache(campaignId) : undefined
   };
 };
 
