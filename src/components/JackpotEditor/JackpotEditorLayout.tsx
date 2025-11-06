@@ -3881,9 +3881,9 @@ useEffect(() => {
                   <div className="flex-1 flex flex-col items-center justify-center overflow-hidden relative">
                     {editorMode === 'article' && (
                       <ArticleFunnelView
-                        articleConfig={(campaignState as any)?.articleConfig || {}}
+                        articleConfig={(campaignState as any)?.articleConfig || (typeof (campaignData as any)?.article_config === 'string' ? JSON.parse((campaignData as any).article_config) : (campaignData as any)?.article_config) || {}}
                         campaignType={(campaignState as any)?.type || 'jackpot'}
-                        campaign={campaignData}
+                        campaign={(campaignState as any) || campaignData}
                         wheelModalConfig={wheelModalConfig}
                         gameModalConfig={wheelModalConfig}
                         currentStep={currentStep}
