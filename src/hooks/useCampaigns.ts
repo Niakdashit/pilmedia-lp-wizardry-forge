@@ -116,6 +116,7 @@ export const useCampaigns = () => {
         thumbnail_url: campaign.thumbnail_url,
         banner_url: campaign.banner_url,
         editor_mode: (campaign as any).editorMode || (campaign as any).editor_mode || 'fullscreen',
+        article_config: (campaign as any).article_config || (campaign as any).articleConfig, // ✅ persist article config
         updated_at: new Date().toISOString()
       };
 
@@ -138,6 +139,7 @@ export const useCampaigns = () => {
         maybeSet('thumbnail_url', campaign.thumbnail_url);
         maybeSet('banner_url', campaign.banner_url);
         maybeSet('editor_mode', (campaign as any).editorMode || (campaign as any).editor_mode);
+        maybeSet('article_config', (campaign as any).article_config || (campaign as any).articleConfig);
 
         console.log('📤 [useCampaigns] UPDATE campaigns:', {
           id: campaign.id,
@@ -234,9 +236,7 @@ export const useCampaigns = () => {
           try {
             await supabase
               .from('campaigns')
-              .select(
-                'id,name,description,slug,type,status,created_by,created_at,updated_at,published_at,thumbnail_url,banner_url,start_date,end_date,config,game_config,design,form_fields'
-              )
+              .select('*')
               .eq('id', id)
               .single();
           } catch {}
@@ -247,9 +247,7 @@ export const useCampaigns = () => {
       // Network fetch with explicit projection to reduce payload
       const { data, error } = await supabase
         .from('campaigns')
-        .select(
-          'id,name,description,slug,type,status,created_by,created_at,updated_at,published_at,thumbnail_url,banner_url,start_date,end_date,config,game_config,design,form_fields'
-        )
+        .select('*')
         .eq('id', id)
         .single();
       

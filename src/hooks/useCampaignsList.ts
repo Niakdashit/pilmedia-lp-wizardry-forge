@@ -121,6 +121,7 @@ export const useCampaignsList = () => {
           banner_url,
           start_date,
           end_date,
+          editor_mode,
           config,
           campaign_stats (
             participations,
