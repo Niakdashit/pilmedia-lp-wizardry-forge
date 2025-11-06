@@ -168,9 +168,16 @@ useEffect(() => {
         console.log('✅ [CampaignSettingsModal] Settings saved successfully');
         try { window.dispatchEvent(new CustomEvent('campaign:settings:saved')); } catch {}
         
-        // Step 3: Redirect to editor with campaign ID
+        // Step 3: Redirect to editor with campaign ID (preserve mode parameter)
         if (campaign?.type) {
-          const editorUrl = getEditorUrl(campaign.type, savedCampaignId);
+          // Determine editor mode from current URL or campaign data
+          const currentUrl = new URL(window.location.href);
+          const currentMode = currentUrl.searchParams.get('mode');
+          const campaignEditorMode = (campaign as any)?.editorMode || (updatedCampaign as any)?.editorMode;
+          const editorMode = currentMode === 'article' || campaignEditorMode === 'article' ? 'article' : undefined;
+          
+          const editorUrl = getEditorUrl(campaign.type, savedCampaignId, editorMode as 'article' | 'fullscreen' | undefined);
+          
           // Build a snapshot of current modularPage to guard against stale reloads
           const snapshotCampaign: any = useEditorStore.getState().campaign as any;
           const snapshotMP = snapshotCampaign?.modularPage

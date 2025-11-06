@@ -417,7 +417,9 @@ const Campaigns: React.FC = () => {
                       const target = e.target as HTMLElement;
                       if (target.closest('input, button, a')) return;
                       
-                      const editorUrl = getEditorUrl(campaign.type, campaign.id);
+                      // Preserve editor_mode from campaign data
+                      const editorMode = (campaign as any)?.editor_mode === 'article' ? 'article' : undefined;
+                      const editorUrl = getEditorUrl(campaign.type, campaign.id, editorMode as 'article' | 'fullscreen' | undefined);
                       navigate(editorUrl);
                     };
                     

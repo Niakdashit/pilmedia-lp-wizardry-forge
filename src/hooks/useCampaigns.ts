@@ -115,6 +115,7 @@ export const useCampaigns = () => {
         end_date: campaign.end_date,
         thumbnail_url: campaign.thumbnail_url,
         banner_url: campaign.banner_url,
+        editor_mode: (campaign as any).editorMode || (campaign as any).editor_mode || 'fullscreen',
         updated_at: new Date().toISOString()
       };
 
@@ -136,6 +137,7 @@ export const useCampaigns = () => {
         maybeSet('end_date', campaign.end_date);
         maybeSet('thumbnail_url', campaign.thumbnail_url);
         maybeSet('banner_url', campaign.banner_url);
+        maybeSet('editor_mode', (campaign as any).editorMode || (campaign as any).editor_mode);
 
         console.log('📤 [useCampaigns] UPDATE campaigns:', {
           id: campaign.id,

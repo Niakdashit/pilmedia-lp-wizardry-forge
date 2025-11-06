@@ -26,9 +26,14 @@ export function getEditorRoute(type: string | null | undefined): string {
  * Build a full editor URL with campaign ID
  * @param type - The campaign type
  * @param campaignId - The campaign ID
+ * @param editorMode - Optional editor mode ('article' or 'fullscreen')
  * @returns The complete editor URL with query params
  */
-export function getEditorUrl(type: string | null | undefined, campaignId: string): string {
+export function getEditorUrl(type: string | null | undefined, campaignId: string, editorMode?: 'article' | 'fullscreen'): string {
   const route = getEditorRoute(type);
-  return `${route}?campaign=${campaignId}`;
+  const params = new URLSearchParams({ campaign: campaignId });
+  if (editorMode === 'article') {
+    params.set('mode', 'article');
+  }
+  return `${route}?${params.toString()}`;
 }

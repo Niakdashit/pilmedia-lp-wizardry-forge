@@ -227,85 +227,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   }, [isArticleMode, onCampaignChange, campaign]);
 
   // ============================================
-  // MODE ARTICLE - Rendu simplifié
-  // ============================================
-  if (editorMode === 'article') {
-    const articleConfig = campaign?.articleConfig || DEFAULT_ARTICLE_CONFIG;
-    
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-100 p-8">
-        <ArticleCanvas
-          articleConfig={articleConfig}
-          onBannerChange={(imageUrl) => {
-            if (onCampaignChange && campaign) {
-              onCampaignChange({
-                ...campaign,
-                articleConfig: {
-                  ...articleConfig,
-                  banner: {
-                    ...articleConfig.banner,
-                    imageUrl,
-                  },
-                },
-              });
-            }
-          }}
-          onBannerRemove={() => {
-            if (onCampaignChange && campaign) {
-              onCampaignChange({
-                ...campaign,
-                articleConfig: {
-                  ...articleConfig,
-                  banner: {
-                    ...articleConfig.banner,
-                    imageUrl: undefined,
-                  },
-                },
-              });
-            }
-          }}
-          onTitleChange={(title) => {
-            if (onCampaignChange && campaign) {
-              onCampaignChange({
-                ...campaign,
-                articleConfig: {
-                  ...articleConfig,
-                  content: {
-                    ...articleConfig.content,
-                    title,
-                  },
-                },
-              });
-            }
-          }}
-          onDescriptionChange={(description) => {
-            if (onCampaignChange && campaign) {
-              onCampaignChange({
-                ...campaign,
-                articleConfig: {
-                  ...articleConfig,
-                  content: {
-                    ...articleConfig.content,
-                    description,
-                  },
-                },
-              });
-            }
-          }}
-          onCTAClick={() => {
-            console.log('🎯 Article CTA clicked - Navigation vers étape suivante');
-          }}
-          currentStep="article"
-          editable={!readOnly}
-          maxWidth={810}
-          campaignType={campaign?.type || 'quiz'}
-        />
-      </div>
-    );
-  }
-
-  // ============================================
-  // MODE FULLSCREEN - Rendu normal avec modules
+  // TOUS LES HOOKS DOIVENT ÊTRE ICI (avant tout return conditionnel)
   // ============================================
   const canvasRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -2341,6 +2263,87 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   }, [background, onBackgroundChange, onExtractedColorsChange]);
   const selectedElementData = selectedElement ? elementById.get(selectedElement) ?? null : null;
 
+  // ============================================
+  // MODE ARTICLE - Rendu simplifié (après tous les hooks)
+  // ============================================
+  if (editorMode === 'article') {
+    const articleConfig = campaign?.articleConfig || DEFAULT_ARTICLE_CONFIG;
+    
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-100 p-8">
+        <ArticleCanvas
+          articleConfig={articleConfig}
+          onBannerChange={(imageUrl) => {
+            if (onCampaignChange && campaign) {
+              onCampaignChange({
+                ...campaign,
+                articleConfig: {
+                  ...articleConfig,
+                  banner: {
+                    ...articleConfig.banner,
+                    imageUrl,
+                  },
+                },
+              });
+            }
+          }}
+          onBannerRemove={() => {
+            if (onCampaignChange && campaign) {
+              onCampaignChange({
+                ...campaign,
+                articleConfig: {
+                  ...articleConfig,
+                  banner: {
+                    ...articleConfig.banner,
+                    imageUrl: undefined,
+                  },
+                },
+              });
+            }
+          }}
+          onTitleChange={(title) => {
+            if (onCampaignChange && campaign) {
+              onCampaignChange({
+                ...campaign,
+                articleConfig: {
+                  ...articleConfig,
+                  content: {
+                    ...articleConfig.content,
+                    title,
+                  },
+                },
+              });
+            }
+          }}
+          onDescriptionChange={(description) => {
+            if (onCampaignChange && campaign) {
+              onCampaignChange({
+                ...campaign,
+                articleConfig: {
+                  ...articleConfig,
+                  content: {
+                    ...articleConfig.content,
+                    description,
+                  },
+                },
+              });
+            }
+          }}
+          onCTAClick={() => {
+            console.log('🎯 Article CTA clicked - Navigation vers étape suivante');
+          }}
+          currentStep="article"
+          editable={!readOnly}
+          maxWidth={810}
+          campaignType={campaign?.type || 'quiz'}
+        />
+      </div>
+    );
+  }
+
+  // ============================================
+  // MODE FULLSCREEN - Rendu normal avec modules
+  // ============================================
   // Les questions et réponses sont maintenant gérées par StandardizedQuiz
   return (
     <DndProvider backend={HTML5Backend}>

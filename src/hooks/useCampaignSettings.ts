@@ -310,7 +310,12 @@ export const useCampaignSettings = () => {
         selectCampaign(realId as string);
         if (typeof window !== 'undefined') {
           const url = new URL(window.location.href);
+          // Preserve existing mode parameter (article/fullscreen)
+          const currentMode = url.searchParams.get('mode');
           url.searchParams.set('campaign', realId as string);
+          if (currentMode) {
+            url.searchParams.set('mode', currentMode);
+          }
           window.history.replaceState({}, '', url.toString());
         }
       } catch (e) {
