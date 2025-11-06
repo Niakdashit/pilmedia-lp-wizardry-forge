@@ -2252,6 +2252,9 @@ useEffect(() => {
       const payload: any = {
         ...updatedCampaign,
         editorMode, // Ajouter le mode éditeur (article ou fullscreen)
+        editor_mode: editorMode, // DB field pour cohérence
+        // Inclure explicitement la config Article si présente
+        ...(updatedCampaign as any)?.articleConfig ? { articleConfig: (updatedCampaign as any).articleConfig } : {},
         modularPage,
         design: {
           ...((updatedCampaign as any)?.design || {}),
