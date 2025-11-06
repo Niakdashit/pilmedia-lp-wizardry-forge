@@ -1,6 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useCampaignSettings, CampaignSettings } from '@/hooks/useCampaignSettings';
+import ShortUrlGenerator from '@/components/ShortUrlGenerator';
+import QRCodeGenerator from '@/components/QRCodeGenerator';
 
 type ControlledProps = {
   form?: Partial<CampaignSettings>;
@@ -210,8 +212,44 @@ const ChannelsStep: React.FC<ControlledProps> = (props) => {
         </div>
       </div>
 
-      {/* Intégrations auto-générées */}
-      <IntegrationsBlock campaignId={campaignId} url={(form.campaign_url as any)?.url || ''} />
+      {/* URL Publique */}
+      <div className="bg-white rounded-lg border border-[hsl(var(--sidebar-border))] shadow-sm p-4">
+        <h2 className="font-medium text-black mb-3">URL Publique</h2>
+        <p className="text-sm text-gray-600 mb-3">
+          Définissez une URL personnalisée pour votre campagne. Si laissé vide, l'URL générée automatiquement sera utilisée.
+        </p>
+        <div className="flex gap-2">
+          <input
+            type="text"
+            placeholder="https://votre-campagne-personnalisee.com"
+            value={(form.campaign_url as any)?.custom_url || ''}
+            onChange={e => handleChange('campaign_url.custom_url', e.target.value)}
+            className="flex-1 px-3 py-2 border border-[hsl(var(--sidebar-border))] rounded-lg focus:outline-none focus:ring-2 focus:ring-[hsl(var(--sidebar-glow))] focus:border-[hsl(var(--sidebar-glow))] bg-[hsl(var(--sidebar-surface))]"
+          />
+          <button
+            type="button"
+            onClick={() => {
+              const customUrl = (form.campaign_url as any)?.custom_url;
+              if (customUrl && customUrl.trim()) {
+                window.open(customUrl, '_blank');
+              }
+            }}
+            disabled={!(form.campaign_url as any)?.custom_url?.trim()}
+            className="px-3 py-2 border border-[hsl(var(--sidebar-border))] rounded-lg text-sm text-black hover:bg-[hsl(var(--sidebar-hover))] disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Ouvrir
+          </button>
+        </div>
+      </div>
+
+      {/* Intégrations avec Short URL & QR Code */}
+      <IntegrationsBlock
+        campaignId={campaignId}
+        url={(form.campaign_url as any)?.custom_url || (form.campaign_url as any)?.url || ''}
+        customUrl={(form.campaign_url as any)?.custom_url}
+        generatedUrl={(form.campaign_url as any)?.url}
+        campaignName={(form.publication as any)?.name || 'Campagne'}
+      />
 
       {/* Per-step action buttons removed in favor of global fixed bottom action bar */}
     </div>
@@ -221,14 +259,39 @@ const ChannelsStep: React.FC<ControlledProps> = (props) => {
 export default ChannelsStep;
 
 // --- Intégrations ---
-type IntegrationTab = 'javascript' | 'html' | 'webview' | 'oembed' | 'smart';
+type IntegrationTab = 'javascript' | 'html' | 'webview' | 'oembed' | 'smart' | 'shorturl' | 'qrcode';
 
-const IntegrationsBlock: React.FC<{ campaignId: string; url: string }> = ({ campaignId, url }) => {
+const IntegrationsBlock: React.FC<{ 
+  campaignId: string; 
+  url: string; 
+  customUrl?: string; 
+  generatedUrl?: string;
+  campaignName?: string;
+}> = ({ campaignId, url, customUrl, generatedUrl, campaignName = 'Campagne' }) => {
   const [tab, setTab] = useState<IntegrationTab>('javascript');
+  const [shortUrl, setShortUrl] = useState('');
   const safeUrl = url && url.trim().length > 0 ? url.trim() : `${window.location.origin}/campaign/${campaignId}`;
   const origin = useMemo(() => {
     try { return new URL(safeUrl).origin; } catch { return window.location.origin; }
   }, [safeUrl]);
+
+  // Charger la Short URL existante si disponible
+  useEffect(() => {
+    if (campaignId) {
+      const stored = localStorage.getItem('prosplay_short_urls');
+      if (stored) {
+        try {
+          const mappings = JSON.parse(stored);
+          const existing = mappings.find((m: any) => m.campaignId === campaignId);
+          if (existing) {
+            setShortUrl(`${window.location.origin}/s/${existing.code}`);
+          }
+        } catch (error) {
+          console.error('Error loading short URL:', error);
+        }
+      }
+    }
+  }, [campaignId]);
 
   const snippets = useMemo(() => buildIntegrationSnippets({ campaignId, url: safeUrl, origin }), [campaignId, safeUrl, origin]);
 
@@ -269,19 +332,60 @@ const IntegrationsBlock: React.FC<{ campaignId: string; url: string }> = ({ camp
 
   return (
     <div className="bg-white rounded-lg border border-[hsl(var(--sidebar-border))] shadow-sm p-4">
-      <h2 className="font-medium text-black mb-3">Intégrations</h2>
-      <div className="flex items-center bg-[hsl(var(--sidebar-surface))] rounded-lg p-1 border border-[hsl(var(--sidebar-border))] mb-4">
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="font-medium text-black">Intégrations</h2>
+        {customUrl && customUrl.trim() && (
+          <span className="text-xs px-2 py-1 bg-green-100 text-green-800 rounded-full">
+            URL personnalisée
+          </span>
+        )}
+      </div>
+      <div className="flex items-center bg-[hsl(var(--sidebar-surface))] rounded-lg p-1 border border-[hsl(var(--sidebar-border))] mb-4 flex-wrap gap-1">
         <TabBtn id="javascript" label="Javascript" />
         <TabBtn id="html" label="HTML" />
         <TabBtn id="webview" label="Webview" />
         <TabBtn id="oembed" label="oEmbed" />
         <TabBtn id="smart" label="Smart URL" />
+        <TabBtn id="shorturl" label="Short URL" />
+        <TabBtn id="qrcode" label="QR Code" />
       </div>
       {tab === 'javascript' && <CodeBlock value={snippets.javascript} />}
       {tab === 'html' && <CodeBlock value={snippets.html} />}
       {tab === 'webview' && <CodeBlock value={snippets.webview} />}
       {tab === 'oembed' && <CodeBlock value={snippets.oembed} />}
       {tab === 'smart' && <CodeBlock value={snippets.smart} />}
+      {tab === 'shorturl' && (
+        <ShortUrlGenerator
+          longUrl={safeUrl}
+          campaignId={campaignId}
+          onShortUrlCreated={(url) => setShortUrl(url)}
+        />
+      )}
+      {tab === 'qrcode' && (
+        <div className="space-y-3">
+          <QRCodeGenerator
+            data={safeUrl}
+            campaignId={campaignId}
+            title="QR Code - URL Complète"
+            defaultColor="0F172A"
+          />
+          {shortUrl && (
+            <div className="relative">
+              <div className="absolute -top-2 left-4 z-10">
+                <span className="px-2 py-1 bg-green-500 text-white text-xs font-medium rounded-full shadow-sm">
+                  Recommandé
+                </span>
+              </div>
+              <QRCodeGenerator
+                data={shortUrl}
+                campaignId={`${campaignId}-short`}
+                title="QR Code - Short URL"
+                defaultColor="16A34A"
+              />
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };
@@ -292,13 +396,35 @@ function buildIntegrationSnippets({ campaignId, url, origin }: { campaignId: str
   const webview = `${url}`;
   const oembedJson = `${origin}/oembed?format=json&url=${encodeURIComponent(url)}&id=${encodeURIComponent(campaignId)}`;
   const oembedXml = `${origin}/oembed?format=xml&url=${encodeURIComponent(url)}&id=${encodeURIComponent(campaignId)}`;
-  const smart = `${url}`;
+  
+  // Smart URL with device detection and responsive behavior
+  const smart = `<!-- Smart URL avec détection automatique -->
+<script type="text/javascript">
+(function() {
+  var campaignUrl = '${url}';
+  var isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  var isTablet = /iPad|Android/i.test(navigator.userAgent) && window.innerWidth >= 768;
+  
+  if (isMobile && !isTablet) {
+    // Mobile: Redirection plein écran
+    window.location.href = campaignUrl;
+  } else {
+    // Desktop/Tablet: Iframe responsive
+    var container = document.currentScript.parentElement;
+    var iframe = document.createElement('iframe');
+    iframe.src = campaignUrl;
+    iframe.style.cssText = 'width:100%;height:2000px;border:0;max-width:800px;margin:0 auto;display:block;';
+    iframe.setAttribute('scrolling', 'no');
+    container.appendChild(iframe);
+  }
+})();
+<\/script>`;
 
   return {
     javascript: js,
     html: iframeHtml,
     webview,
-    oembed: `JSON\n${oembedJson}\n\nXML\n${oembedXml}`,
+    oembed: `JSON:\n${oembedJson}\n\nXML:\n${oembedXml}`,
     smart,
   } as const;
 }

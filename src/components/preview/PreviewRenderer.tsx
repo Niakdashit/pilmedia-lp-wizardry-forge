@@ -939,10 +939,10 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
                   </section>
                 )}
 
-                {/* Jeu (Roue, Scratch, etc.) - Centré */}
+                {/* Jeu (Roue, Scratch, etc.) - Centré - TOUJOURS AFFICHER */}
                 <div 
                   className="flex items-center justify-center"
-                  style={{ padding: safeZonePadding, boxSizing: 'border-box', minHeight: '400px' }}
+                  style={{ padding: safeZonePadding, boxSizing: 'border-box', minHeight: modules2.length > 0 ? '400px' : '100vh' }}
                 >
                   {campaign.type === 'wheel' && (
                     <StandardizedWheel
@@ -981,6 +981,14 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
                         }, 1000);
                       }}
                     />
+                  )}
+
+                  {/* Fallback si aucun jeu configuré */}
+                  {!campaign.type && modules2.length === 0 && (
+                    <div className="text-center p-8 bg-white/10 backdrop-blur rounded-xl">
+                      <p className="text-white text-lg font-semibold mb-2">Jeu non configuré</p>
+                      <p className="text-white/70 text-sm">Veuillez configurer un type de jeu dans l'éditeur</p>
+                    </div>
                   )}
                 </div>
               </div>

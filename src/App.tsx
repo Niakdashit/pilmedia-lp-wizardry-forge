@@ -37,6 +37,9 @@ const Admin = lazy(() => import('./pages/Admin'));
 const MediaPortal = lazy(() => import('./pages/MediaPortal'));
 const CampaignSettings = lazy(() => import('./pages/CampaignSettings'));
 const PublicCampaign = lazy(() => import('./pages/PublicCampaign'));
+const OEmbed = lazy(() => import('./pages/OEmbed'));
+const IntegrationsTest = lazy(() => import('./pages/IntegrationsTest'));
+const ShortUrlRedirect = lazy(() => import('./pages/ShortUrlRedirect'));
 
 function App() {
   // Enregistrement des routes pour le prefetching intelligent
@@ -173,6 +176,24 @@ function App() {
               <Route path="/campaign/:id" element={
                 <LoadingBoundary>
                   <PublicCampaign />
+                </LoadingBoundary>
+              } />
+              {/* oEmbed endpoint */}
+              <Route path="/oembed" element={
+                <LoadingBoundary>
+                  <OEmbed />
+                </LoadingBoundary>
+              } />
+              {/* Integrations test page */}
+              <Route path="/integrations-test" element={
+                <LoadingBoundary>
+                  <IntegrationsTest />
+                </LoadingBoundary>
+              } />
+              {/* Short URL redirect */}
+              <Route path="/s/:code" element={
+                <LoadingBoundary>
+                  <ShortUrlRedirect />
                 </LoadingBoundary>
               } />
               </Routes>

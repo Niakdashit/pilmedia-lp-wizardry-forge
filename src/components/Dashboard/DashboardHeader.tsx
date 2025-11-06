@@ -55,7 +55,7 @@ const DashboardHeader: React.FC = () => {
                   scratch: '/gamification/shortcuts/scratch.svg',
                   jackpot: '/gamification/shortcuts/jackpot.svg',
                   form: '/gamification/shortcuts/form.svg',
-                  advanced: '/gamification/shortcuts/puzzle.svg'
+                  advanced: '/gamification/shortcuts/advanced_v2.svg'
                 };
                 const onClick = () => {
                   if (game.type === ('advanced' as any)) { setShowAdvanced(true); return; }
@@ -99,7 +99,7 @@ const DashboardHeader: React.FC = () => {
                     scratch: '/gamification/shortcuts/scratch.svg',
                     jackpot: '/gamification/shortcuts/jackpot.svg',
                     form: '/gamification/shortcuts/form.svg',
-                    advanced: '/gamification/shortcuts/puzzle.svg'
+                    advanced: '/gamification/shortcuts/advanced_v2.svg'
                   };
                   const onClick = () => {
                     if (game.type === ('advanced' as any)) { setShowAdvanced(true); return; }

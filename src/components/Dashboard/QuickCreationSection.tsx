@@ -12,7 +12,7 @@ const shortcutIconMap: Record<string, string> = {
   puzzle: '/gamification/shortcuts/puzzle.svg',
   form: '/gamification/shortcuts/form.svg',
   // alias for the new Advanced entry
-  advanced: '/gamification/shortcuts/puzzle.svg',
+  advanced: '/gamification/shortcuts/advanced_v2.svg',
 };
 
 const getShortcutIcon = (type: string) => shortcutIconMap[type] ?? shortcutIconMap.wheel;
