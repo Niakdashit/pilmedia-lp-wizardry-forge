@@ -300,6 +300,7 @@ useEffect(() => {
         const normalizedConfig = normalizeJsonField((data as any).config);
         const normalizedGameConfig = normalizeJsonField((data as any).game_config);
         const normalizedDesign = normalizeJsonField((data as any).design);
+        const normalizedArticleConfig = normalizeJsonField((data as any).article_config);
         const normalizedFormFields = Array.isArray((data as any).form_fields)
           ? (data as any).form_fields
           : normalizeJsonField((data as any).form_fields);
@@ -318,6 +319,9 @@ useEffect(() => {
           id: data.id,
           name: data.name || 'Campaign',
           type: data.type || 'wheel',
+          // Map DB fields to editor-friendly shape
+          editorMode: (data as any).editor_mode || (data as any).editorMode || editorMode,
+          articleConfig: normalizedArticleConfig || (data as any).articleConfig || {},
           design: normalizedDesign || {},
           gameConfig: normalizedGameConfig || {},
           buttonConfig: {},
@@ -525,6 +529,10 @@ useEffect(() => {
       const currentScreens = nextScreens || screenBackgrounds;
       const payload: any = {
         ...campaignState,
+        editorMode, // Mode éditeur
+        editor_mode: editorMode, // Champ DB
+        // Inclure explicitement la config Article pour la persistance
+        ...(campaignState as any)?.articleConfig ? { articleConfig: (campaignState as any).articleConfig } : {},
         design: {
           ...(campaignState?.design || {}),
           background: bg.type === 'color' ? bg.value : (campaignState?.design as any)?.background,
@@ -579,6 +587,10 @@ useEffect(() => {
     try {
       const payload: any = {
         ...(campaignState || {}),
+        editorMode,
+        editor_mode: editorMode,
+        // Inclure articleConfig pour le mode article
+        ...(campaignState as any)?.articleConfig ? { articleConfig: (campaignState as any).articleConfig } : {},
         type: 'wheel',
         extractedColors, // ✅ Include extracted colors
         modularPage,
