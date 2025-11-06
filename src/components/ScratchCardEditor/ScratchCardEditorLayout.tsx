@@ -17,6 +17,7 @@ import { createEmptyModularPage } from '@/types/modularEditor';
 
 import PreviewRenderer from '@/components/preview/PreviewRenderer';
 import ArticleCanvas from '@/components/ArticleEditor/ArticleCanvas';
+import ArticleFunnelView from '@/components/ArticleEditor/ArticleFunnelView';
 import ZoomSlider from './components/ZoomSlider';
 import EditorHeader from '@/components/shared/EditorHeader';
 const DesignCanvas = lazy(() => import('./DesignCanvas'));
