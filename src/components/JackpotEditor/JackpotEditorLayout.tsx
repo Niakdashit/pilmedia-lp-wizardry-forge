@@ -267,7 +267,7 @@ const { syncAllStates } = useCampaignStateSync();
   const [canvasZoom, setCanvasZoom] = useState(getDefaultZoom(selectedDevice));
 
   // 🔄 Centralized autosave with unmount protection
-  const { forceSave } = useCentralizedAutosave({
+  const { forceSave, isSaving, saveError, lastSavedAt } = useCentralizedAutosave({
     campaign: {
       ...campaignState,
       type: 'jackpot',
@@ -3335,7 +3335,13 @@ useEffect(() => {
           boxSizing: 'border-box'
         }}
       >
-        {!showFunnel && <EditorHeader />}
+        {!showFunnel && (
+          <EditorHeader 
+            isSaving={isSaving}
+            saveError={saveError}
+            lastSavedAt={lastSavedAt}
+          />
+        )}
         {!showFunnel && (
           <div
             className="fixed z-10"

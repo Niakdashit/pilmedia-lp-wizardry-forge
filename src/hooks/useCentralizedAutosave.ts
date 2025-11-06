@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useState } from 'react';
 import { debounce } from 'lodash-es';
 import { saveCampaignToDB } from './useModernCampaignEditor/saveHandler';
 import { emitCampaignEvent } from '@/utils/campaignEvents';
@@ -26,6 +26,11 @@ export const useCentralizedAutosave = ({
   const lastSavedHashRef = useRef<string>('');
   const pendingSaveRef = useRef<NodeJS.Timeout | null>(null);
   
+  // États pour l'indicateur visuel
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<Error | null>(null);
+  const [lastSavedAt, setLastSavedAt] = useState<Date | undefined>();
+  
   /**
    * Sauvegarde avec debounce et gestion des conflits
    */
@@ -49,6 +54,8 @@ export const useCentralizedAutosave = ({
       }
       
       isSavingRef.current = true;
+      setIsSaving(true);
+      setSaveError(null);
       
       try {
         emitCampaignEvent('campaign:autosave:start', {
@@ -61,6 +68,7 @@ export const useCentralizedAutosave = ({
         const saved = await saveCampaignToDB(campaignToSave, saveCampaign);
         
         lastSavedHashRef.current = currentHash;
+        setLastSavedAt(new Date());
         
         emitCampaignEvent('campaign:autosave:complete', {
           campaignId: saved?.id || campaignToSave?.id,
@@ -71,9 +79,11 @@ export const useCentralizedAutosave = ({
         console.log('✅ [CentralizedAutosave] Save complete:', saved?.id);
       } catch (error) {
         console.error('❌ [CentralizedAutosave] Save failed:', error);
+        setSaveError(error as Error);
         onError?.(error as Error);
       } finally {
         isSavingRef.current = false;
+        setIsSaving(false);
       }
     }, delay),
     [saveCampaign, delay, enabled, onError]
@@ -94,6 +104,8 @@ export const useCentralizedAutosave = ({
     if (!campaign?.id) return;
     
     isSavingRef.current = true;
+    setIsSaving(true);
+    setSaveError(null);
     
     try {
       console.log('⚡ [CentralizedAutosave] Force saving campaign:', campaign.id);
@@ -108,14 +120,18 @@ export const useCentralizedAutosave = ({
         extractedColors: campaign?.extractedColors
       });
       
+      setLastSavedAt(new Date());
+      
       console.log('✅ [CentralizedAutosave] Force save complete:', saved?.id);
       return saved;
     } catch (error) {
       console.error('❌ [CentralizedAutosave] Force save failed:', error);
+      setSaveError(error as Error);
       onError?.(error as Error);
       throw error;
     } finally {
       isSavingRef.current = false;
+      setIsSaving(false);
     }
   }, [campaign, saveCampaign, onError, debouncedSave]);
   
@@ -167,7 +183,9 @@ export const useCentralizedAutosave = ({
   }, [debouncedSave]);
   
   return {
-    isSaving: isSavingRef.current,
+    isSaving,
+    saveError,
+    lastSavedAt,
     forceSave,
     waitForSave,
     cancelPendingSave: () => debouncedSave.cancel()

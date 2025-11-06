@@ -231,7 +231,7 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
   }, [canvasElements, screenBackgrounds, selectedDevice, canvasZoom, canvasBackground, modularPage, saveCampaign, setIsModified]);
 
   // 🔄 Centralized autosave with unmount protection
-  const { forceSave } = useCentralizedAutosave({
+  const { forceSave, isSaving, saveError, lastSavedAt } = useCentralizedAutosave({
     campaign: {
       ...campaignState,
       type: 'wheel',
@@ -2740,7 +2740,13 @@ useEffect(() => {
         boxSizing: 'border-box'
       }}
     >
-      {!showFunnel && <EditorHeader />}
+      {!showFunnel && (
+        <EditorHeader 
+          isSaving={isSaving}
+          saveError={saveError}
+          lastSavedAt={lastSavedAt}
+        />
+      )}
       {!showFunnel && (
         <div
           className="fixed z-20"

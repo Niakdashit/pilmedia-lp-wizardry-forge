@@ -2,10 +2,21 @@ import React from 'react';
 import { User, LogOut } from 'lucide-react';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { useNavigate } from '@/lib/router-adapter';
+import SaveIndicator from './SaveIndicator';
 
 const headerLogo = '/logos/prosplay-header-logo.svg';
 
-const EditorHeader: React.FC = () => {
+interface EditorHeaderProps {
+  isSaving?: boolean;
+  saveError?: Error | null;
+  lastSavedAt?: Date;
+}
+
+const EditorHeader: React.FC<EditorHeaderProps> = ({ 
+  isSaving = false, 
+  saveError = null, 
+  lastSavedAt 
+}) => {
   const navigate = useNavigate();
   const { signOut } = useAuthContext();
 
@@ -50,7 +61,14 @@ const EditorHeader: React.FC = () => {
           }}
         />
       </button>
-      <div className="flex items-center gap-2.5">
+      <div className="flex items-center gap-3">
+        {/* Save Indicator */}
+        <SaveIndicator 
+          isSaving={isSaving} 
+          error={saveError} 
+          lastSavedAt={lastSavedAt} 
+        />
+        
         <button
           onClick={handleAccount}
           className="text-white/90 hover:text-white hover:bg-white/10 p-2 rounded-full transition-colors duration-200"

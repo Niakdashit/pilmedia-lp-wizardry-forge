@@ -515,7 +515,7 @@ useEffect(() => {
   const [extractedColors, setExtractedColors] = useState<string[]>([]);
 
   // 🔄 Centralized autosave with unmount protection
-  const { forceSave } = useCentralizedAutosave({
+  const { forceSave, isSaving, saveError, lastSavedAt } = useCentralizedAutosave({
     campaign: {
       ...campaignState,
       type: 'form',
