@@ -55,7 +55,10 @@ const ArticleBanner: React.FC<ArticleBannerProps> = ({
           />
         ) : (
           <div className="absolute inset-0 flex items-center justify-center bg-transparent">
-            <div className="text-center text-gray-400 text-sm">Aucune bannière</div>
+            <div className="text-center text-white text-lg font-medium">
+              <div className="mb-2">🎯 Mode Article</div>
+              <div className="text-sm opacity-75">Cliquez ici pour ajouter une bannière</div>
+            </div>
           </div>
         )}
       </div>

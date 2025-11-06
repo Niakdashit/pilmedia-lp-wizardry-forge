@@ -18,6 +18,7 @@ import { createEmptyModularPage } from '@/types/modularEditor';
 import PreviewRenderer from '@/components/preview/PreviewRenderer';
 import ArticleCanvas from '@/components/ArticleEditor/ArticleCanvas';
 import ArticleFunnelView from '@/components/ArticleEditor/ArticleFunnelView';
+import { getArticleConfigWithDefaults } from '@/utils/articleConfigHelpers';
 import ZoomSlider from './components/ZoomSlider';
 import EditorHeader from '@/components/shared/EditorHeader';
 const DesignCanvas = lazy(() => import('./DesignCanvas'));
@@ -3883,9 +3884,9 @@ const handleSaveCampaignName = useCallback(async () => {
                   <div className="flex-1 flex flex-col items-center justify-center overflow-hidden relative">
                     {editorMode === 'article' && (
                       <ArticleFunnelView
-                        articleConfig={(campaignState as any)?.articleConfig || {}}
+                        articleConfig={getArticleConfigWithDefaults(campaignState, campaignData)}
                         campaignType={(campaignState as any)?.type || 'scratch'}
-                        campaign={campaignData}
+                        campaign={(campaignState as any) || campaignData}
                         wheelModalConfig={wheelModalConfig}
                         gameModalConfig={wheelModalConfig}
                         currentStep={currentStep}
