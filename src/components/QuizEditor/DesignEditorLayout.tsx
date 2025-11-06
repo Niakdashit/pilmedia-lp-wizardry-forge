@@ -363,6 +363,9 @@ useEffect(() => {
           id: data.id,
           name: data.name || 'Campaign',
           type: data.type || 'quiz',
+          // Map DB fields to editor-friendly shape
+          editorMode: (data as any).editor_mode || (data as any).editorMode || editorMode,
+          articleConfig: (data as any).article_config || (data as any).articleConfig,
           design: data.design || {},
           gameConfig: (data.game_config || {}) as any,
           buttonConfig: {},
@@ -1048,7 +1051,11 @@ const handleSaveCampaignName = useCallback(async () => {
   const payload: any = {
     ...(updatedCampaign || {}),
     editorMode, // Ajouter le mode éditeur (article ou fullscreen)
+    editor_mode: editorMode, // Champ DB normalisé
+    // Inclure explicitement la config Article (depuis l'état global ou local)
+    articleConfig: (updatedCampaign as any)?.articleConfig || (campaignConfig as any)?.articleConfig,
     id: isUuid(currentId) ? currentId : undefined,
+    _allowFirstInsert: !isUuid(currentId), // Autoriser la première insertion lors de la saisie du nom
     name,
     type: 'quiz'
   };
@@ -1347,6 +1354,9 @@ const handleSaveCampaignName = useCallback(async () => {
         const payload: any = {
           ...(campaignState || {}),
           editorMode, // Ajouter le mode éditeur (article ou fullscreen)
+          editor_mode: editorMode, // Champ DB
+          // Inclure explicitement la config Article (depuis l'état global ou local)
+          articleConfig: (campaignState as any)?.articleConfig || (campaignConfig as any)?.articleConfig,
           // Save modules in multiple locations for compatibility
           modularPage,
           design: {
@@ -3100,12 +3110,27 @@ const handleSaveCampaignName = useCallback(async () => {
       // Récupérer le campaign mis à jour après synchronisation
       const updatedCampaign = useEditorStore.getState().campaign;
       
+      // Déterminer un nom valide pour la première insertion
+      const isUuid = (v?: string) => !!v && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v);
+      const currentId = (updatedCampaign as any)?.id as string | undefined;
+      const rawName = (updatedCampaign as any)?.name || '';
+      const isDefaultName = !rawName || /^(nouvelle campagne|ma campagne|new campaign|untitled)/i.test(String(rawName).trim());
+      const finalName = !isUuid(currentId) && isDefaultName
+        ? `Campagne Article ${new Date().toISOString().slice(0,19).replace('T',' ')}`
+        : rawName;
+      
       // Build complete payload with modules in all required locations
       const payload = {
         ...updatedCampaign,
         editorMode, // Ajouter le mode éditeur (article ou fullscreen)
+        editor_mode: editorMode, // Champ DB normalisé
         // Save modules at multiple locations for compatibility
         modularPage,
+        // Inclure explicitement la config Article (depuis l'état global ou local)
+        articleConfig: (updatedCampaign as any)?.articleConfig || (campaignConfig as any)?.articleConfig,
+        name: finalName,
+        // Autoriser la première insertion si id temporaire ou manquant
+        _allowFirstInsert: !isUuid(currentId),
         design: {
           ...((updatedCampaign as any)?.design || {}),
           quizModules: modularPage
