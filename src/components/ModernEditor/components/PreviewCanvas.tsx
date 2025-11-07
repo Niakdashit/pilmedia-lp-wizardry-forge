@@ -2,6 +2,7 @@
 import React from 'react';
 import { Eye } from 'lucide-react';
 import GameCanvasPreview from './GameCanvasPreview';
+import { usePreloadCampaignImages } from '@/hooks/useFastCampaignLoader';
 
 interface PreviewCanvasProps {
   campaign: any;
@@ -12,6 +13,8 @@ const PreviewCanvas: React.FC<PreviewCanvasProps> = ({
   campaign,
   selectedDevice
 }) => {
+  // Précharge les images immédiatement
+  usePreloadCampaignImages(campaign);
   const getDeviceStyles = () => {
     switch (selectedDevice) {
       case 'mobile':
@@ -52,6 +55,7 @@ const PreviewCanvas: React.FC<PreviewCanvasProps> = ({
             <GameCanvasPreview
               campaign={campaign}
               previewDevice={selectedDevice}
+              isLoading={false}
             />
           ) : (
             <div className="w-full max-w-lg">
