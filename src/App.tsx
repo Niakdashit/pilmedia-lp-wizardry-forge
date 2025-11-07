@@ -36,6 +36,7 @@ const Profile = lazy(() => import('./pages/Profile'));
 const Admin = lazy(() => import('./pages/Admin'));
 const MediaPortal = lazy(() => import('./pages/MediaPortal'));
 const CampaignSettings = lazy(() => import('./pages/CampaignSettings'));
+const CampaignBackups = lazy(() => import('./pages/CampaignBackups'));
 const PublicCampaign = lazy(() => import('./pages/PublicCampaign'));
 const OEmbed = lazy(() => import('./pages/OEmbed'));
 const IntegrationsTest = lazy(() => import('./pages/IntegrationsTest'));
@@ -170,6 +171,12 @@ function App() {
               <Route path="/campaign/:id/settings" element={
                 <LoadingBoundary>
                   <CampaignSettings />
+                </LoadingBoundary>
+              } />
+              {/* Campaign Backups - Dedicated backup space */}
+              <Route path="/campaign/:id/backups" element={
+                <LoadingBoundary>
+                  <CampaignBackups />
                 </LoadingBoundary>
               } />
               {/* Public campaign view */}

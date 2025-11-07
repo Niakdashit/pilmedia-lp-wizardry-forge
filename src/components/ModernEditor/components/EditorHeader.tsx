@@ -1,7 +1,8 @@
 import React from 'react';
-import { Eye, Save, Share2, MoreHorizontal } from 'lucide-react';
+import { Eye, Save, Share2, MoreHorizontal, Archive } from 'lucide-react';
 import PreviewDeviceButtons from './PreviewDeviceButtons';
 import { OfflineSyncIndicator } from '@/components/OfflineSyncIndicator';
+import { useNavigate } from 'react-router-dom';
 
 interface EditorHeaderProps {
   campaign: any;
@@ -28,6 +29,8 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
   queueSize = 0,
   isSyncing = false,
 }) => {
+  const navigate = useNavigate();
+  
   return <div className="bg-white/95 backdrop-blur-sm border-b border-gray-100 flex-shrink-0 z-50">
       <div className="px-6 py-4">
         <div className="flex items-center justify-between">
@@ -73,6 +76,16 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
               <Share2 className="w-4 h-4" />
               <span>Partager</span>
             </button>
+
+            {!isNewCampaign && campaign?.id && (
+              <button 
+                onClick={() => navigate(`/campaign/${campaign.id}/backups`)}
+                className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-all"
+              >
+                <Archive className="w-4 h-4" />
+                <span>Sauvegardes</span>
+              </button>
+            )}
 
             <button className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-all">
               <MoreHorizontal className="w-5 h-5" />
