@@ -21,6 +21,7 @@ export const useCampaignBackups = () => {
    * Fetch all backups for a campaign
    */
   const fetchBackups = useCallback(async (campaignId: string) => {
+    console.log('[useCampaignBackups] Fetching backups for campaign:', campaignId);
     setIsLoading(true);
     try {
       const { data, error } = await supabase
@@ -29,7 +30,13 @@ export const useCampaignBackups = () => {
         .eq('campaign_id', campaignId)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('[useCampaignBackups] Supabase error:', error);
+        throw error;
+      }
+      
+      console.log('[useCampaignBackups] Backups fetched:', data?.length || 0, 'backups');
+      console.log('[useCampaignBackups] Backups data:', data);
       setBackups(data || []);
       return data || [];
     } catch (error) {

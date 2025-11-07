@@ -18,9 +18,16 @@ const CampaignBackupsPage: React.FC = () => {
   const [isCreating, setIsCreating] = useState(false);
 
   useEffect(() => {
+    console.log('[CampaignBackups] Campaign ID from URL:', id);
     if (id) {
+      console.log('[CampaignBackups] Fetching backups for campaign:', id);
       fetchBackups(id);
-      getCampaign(id).then(setCampaign);
+      getCampaign(id).then((camp) => {
+        console.log('[CampaignBackups] Campaign loaded:', camp);
+        setCampaign(camp);
+      });
+    } else {
+      console.warn('[CampaignBackups] No campaign ID found in URL');
     }
   }, [id, fetchBackups, getCampaign]);
 
