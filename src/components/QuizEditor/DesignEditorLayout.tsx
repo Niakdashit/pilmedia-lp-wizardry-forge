@@ -33,6 +33,8 @@ import type { ScreenBackgrounds } from '@/types/background';
 import { useEditorUnmountSave } from '@/hooks/useEditorUnmountSave';
 import { useEnhancedAutosave } from '@/hooks/useEnhancedAutosave';
 import { OfflineSyncIndicator } from '@/components/OfflineSyncIndicator';
+import { useSaveAndExit } from '@/hooks/useSaveAndExit';
+import { toast } from 'sonner';
 
 import { useCampaigns } from '@/hooks/useCampaigns';
 import { saveCampaignToDB } from '@/hooks/useModernCampaignEditor/saveHandler';
@@ -1268,7 +1270,7 @@ const handleSaveCampaignName = useCallback(async () => {
       gameConfig: (campaignState as any)?.quizConfig
     },
     {
-      enabled: true,
+      enabled: false, // ⚠️ Disabled: Save only on "Sauvegarder et quitter" button
       delay: 3000,
     }
   );
@@ -3223,6 +3225,7 @@ const handleSaveCampaignName = useCallback(async () => {
   const [isValidationModalOpen, setIsValidationModalOpen] = useState(false);
   const { validateCampaign } = useCampaignValidation();
   const validation = validateCampaign();
+  const { saveAndExit, isSaving: isSavingAndExiting } = useSaveAndExit();
 
   const handleSaveAndQuit = useCallback(async () => {
     const result = validateCampaign();
@@ -3243,19 +3246,47 @@ const handleSaveCampaignName = useCallback(async () => {
       return;
     }
     
-    // 🔄 Synchroniser tous les états locaux avec le campaign avant la sauvegarde
-    syncAllStates({
-      canvasElements,
-      modularPage,
-      screenBackgrounds,
-      extractedColors,
-      selectedDevice,
-      canvasZoom
+    // Get campaign ID
+    const campaignId = (campaignState as any)?.id;
+    if (!campaignId) {
+      toast.error('ID de campagne manquant');
+      return;
+    }
+
+    // 🔄 Prepare campaign data with all latest states
+    const campaignData = {
+      ...campaignState,
+      config: {
+        ...(campaignState as any)?.config,
+        canvasElements,
+        modularPage,
+        screenBackgrounds,
+        extractedColors,
+      },
+      design: (campaignState as any)?.design,
+      game_config: (campaignState as any)?.quizConfig,
+      article_config: (campaignState as any)?.article_config,
+      form_fields: (campaignState as any)?.form_fields,
+      name: (campaignState as any)?.name,
+      description: (campaignState as any)?.description,
+    };
+
+    // Call the save and exit hook
+    await saveAndExit({
+      campaignId,
+      campaignData,
+      onBeforeSave: () => {
+        syncAllStates({
+          canvasElements,
+          modularPage,
+          screenBackgrounds,
+          extractedColors,
+          selectedDevice,
+          canvasZoom
+        });
+      }
     });
-    
-    await handleSave();
-    navigate('/dashboard');
-  }, [validateCampaign, handleSave, navigate, syncAllStates, canvasElements, modularPage, screenBackgrounds, extractedColors, selectedDevice, canvasZoom, campaignState]);
+  }, [validateCampaign, saveAndExit, syncAllStates, canvasElements, modularPage, screenBackgrounds, extractedColors, selectedDevice, canvasZoom, campaignState]);
 
   // Navigate to settings without saving (same destination as Save & Continue)
   // @ts-expect-error - Fonction de navigation, peut être ignorée
@@ -4527,12 +4558,13 @@ const handleSaveCampaignName = useCallback(async () => {
           </button>
           <button
             onClick={handleSaveAndQuit}
-            className="flex items-center px-3 py-2 text-xs sm:text-sm rounded-lg text-white bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] hover:opacity-95 transition-colors shadow-sm"
+            disabled={isSavingAndExiting}
+            className="flex items-center px-3 py-2 text-xs sm:text-sm rounded-lg text-white bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] hover:opacity-95 transition-colors shadow-sm disabled:opacity-50"
             title="Sauvegarder et quitter"
           >
             <Save className="w-4 h-4 mr-1" />
-            <span className="hidden sm:inline">Sauvegarder et quitter</span>
-            <span className="sm:hidden">Sauvegarder</span>
+            <span className="hidden sm:inline">{isSavingAndExiting ? 'Sauvegarde...' : 'Sauvegarder et quitter'}</span>
+            <span className="sm:hidden">{isSavingAndExiting ? 'Sauvegarde...' : 'Sauvegarder'}</span>
           </button>
         </div>
       )}
