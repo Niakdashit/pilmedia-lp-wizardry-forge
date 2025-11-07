@@ -205,8 +205,12 @@ export const useEnhancedAutosave = (
   // Trigger autosave on campaign changes
   useEffect(() => {
     if (campaign && enabled) {
-      setHasUnsavedChanges(true);
-      debouncedSave(campaign);
+      const currentData = JSON.stringify(campaign);
+      // Only mark as unsaved if data actually changed
+      if (currentData !== lastSaveDataRef.current) {
+        setHasUnsavedChanges(true);
+        debouncedSave(campaign);
+      }
     }
   }, [campaign, enabled, debouncedSave]);
 
