@@ -21,6 +21,8 @@ import { getDeviceDimensions } from '../../utils/deviceDimensions';
 import { getEditorDeviceOverride } from '@/utils/deviceOverrides';
 import { useEditorPreviewSync } from '@/hooks/useEditorPreviewSync';
 import EditorStateCleanup from '../EditorStateCleanup';
+import { useEnhancedAutosave } from '@/hooks/useEnhancedAutosave';
+import { OfflineSyncIndicator } from '@/components/OfflineSyncIndicator';
 
 
 import { useCampaigns } from '@/hooks/useCampaigns';
@@ -141,6 +143,31 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
   // Modular editor JSON state - DOIT être déclaré AVANT les callbacks
   const [modularPage, setModularPage] = useState<ModularPage>(createEmptyModularPage());
   const [extractedColors, setExtractedColors] = useState<string[]>([]);
+
+  // 🚀 Phase 2 & 3: Enhanced autosave with offline support, compression, and metrics
+  const {
+    isSaving,
+    lastSaved,
+    hasUnsavedChanges,
+    triggerManualSave,
+    isOnline,
+    queueSize,
+    isSyncing,
+  } = useEnhancedAutosave(
+    (campaignState as any)?.id,
+    {
+      ...campaignState,
+      canvasElements,
+      modularPage,
+      extractedColors,
+      selectedDevice,
+      canvasZoom,
+    },
+    {
+      enabled: true,
+      delay: 3000,
+    }
+  );
 
   // Sauvegarder le zoom à chaque changement pour persistance entre modes
   useEffect(() => {
@@ -1626,6 +1653,15 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
             onNavigateToSettings={handleNavigateToSettings}
             campaignId={(campaignState as any)?.id || new URLSearchParams(location.search).get('campaign') || undefined}
           />
+
+          {/* Offline Sync Indicator - Phase 2 & 3 */}
+          <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-50">
+            <OfflineSyncIndicator
+              isOnline={isOnline}
+              queueSize={queueSize}
+              isSyncing={isSyncing}
+            />
+          </div>
 
           {/* Bouton d'aide des raccourcis clavier */}
           <div className="absolute top-4 right-4 z-10">

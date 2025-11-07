@@ -30,6 +30,8 @@ import { recalculateAllElements } from '../../utils/recalculateAllModules';
 import { useEditorPreviewSync } from '@/hooks/useEditorPreviewSync';
 import { useCampaignSettings } from '@/hooks/useCampaignSettings';
 import { useEditorUnmountSave } from '@/hooks/useEditorUnmountSave';
+import { useEnhancedAutosave } from '@/hooks/useEnhancedAutosave';
+import { OfflineSyncIndicator } from '@/components/OfflineSyncIndicator';
 
 
 
@@ -229,6 +231,33 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
     window.addEventListener('editor-request-save', handler as any);
     return () => window.removeEventListener('editor-request-save', handler as any);
   }, [canvasElements, screenBackgrounds, selectedDevice, canvasZoom, canvasBackground, modularPage, saveCampaign, setIsModified]);
+
+  // 🚀 Phase 2 & 3: Enhanced autosave with offline support, compression, and metrics
+  const {
+    isSaving,
+    lastSaved,
+    hasUnsavedChanges,
+    triggerManualSave,
+    isOnline,
+    queueSize,
+    isSyncing,
+  } = useEnhancedAutosave(
+    (campaignState as any)?.id,
+    {
+      ...campaignState,
+      canvasElements,
+      modularPage,
+      screenBackgrounds,
+      extractedColors,
+      selectedDevice,
+      canvasZoom,
+      gameConfig: (campaignState as any)?.wheelConfig
+    },
+    {
+      enabled: true,
+      delay: 3000,
+    }
+  );
 
   // 🧹 CRITICAL: Save complete state before unmount to prevent data loss
   useEditorUnmountSave('wheel', {
@@ -2717,6 +2746,16 @@ useEffect(() => {
       }}
     >
       {!showFunnel && <EditorHeader />}
+      {/* Offline Sync Indicator - Phase 2 & 3 */}
+      {!showFunnel && (
+        <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50">
+          <OfflineSyncIndicator
+            isOnline={isOnline}
+            queueSize={queueSize}
+            isSyncing={isSyncing}
+          />
+        </div>
+      )}
       {!showFunnel && (
         <div
           className="fixed z-20"
