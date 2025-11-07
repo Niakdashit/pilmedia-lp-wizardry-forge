@@ -68,50 +68,73 @@ export const useOfflineAutosave = (campaignId: string) => {
     }
   }, [campaignId, updateQueueSize]);
 
-  // Sync queue to server
+  // Sync queue to server with batching
   const syncQueue = useCallback(async () => {
     if (!isOnline || isSyncing) return;
 
     setIsSyncing(true);
+    const startTime = Date.now();
+    
     try {
       const queue = await offlineDB.getQueue();
       console.log(`🔄 [OfflineAutosave] Syncing ${queue.length} items...`);
 
-      for (const item of queue) {
+      if (queue.length === 0) return;
+
+      // Group by campaign and sort by timestamp
+      const grouped = queue.reduce((acc, item) => {
+        if (!acc[item.campaignId]) acc[item.campaignId] = [];
+        acc[item.campaignId].push(item);
+        return acc;
+      }, {} as Record<string, QueuedSave[]>);
+
+      // Process each campaign's queue
+      for (const [campaignId, items] of Object.entries(grouped)) {
+        const sorted = items.sort((a, b) => a.timestamp - b.timestamp);
+        
+        // Batch: take only the latest item per campaign if multiple
+        const latestItem = sorted[sorted.length - 1];
+        
         try {
           const result = await saveWithVersionCheck({
-            campaignId: item.campaignId,
-            data: item.data,
-            expectedRevision: item.data.revision,
+            campaignId: latestItem.campaignId,
+            data: latestItem.data,
+            expectedRevision: latestItem.data.revision,
           });
 
           if (result.success) {
-            await offlineDB.removeFromQueue(item.id);
-            await offlineDB.clearDraft(item.campaignId);
-            console.log('✅ [OfflineAutosave] Synced:', item.id);
+            // Remove all synced items for this campaign
+            for (const item of sorted) {
+              await offlineDB.removeFromQueue(item.id);
+            }
+            await offlineDB.clearDraft(latestItem.campaignId);
+            console.log(`✅ [OfflineAutosave] Synced ${sorted.length} items for ${campaignId}`);
           } else if (result.conflict) {
-            console.warn('⚠️ [OfflineAutosave] Conflict for:', item.id);
-            item.error = 'Version conflict';
-            item.retries++;
+            console.warn('⚠️ [OfflineAutosave] Conflict for:', latestItem.id);
+            latestItem.error = 'Version conflict';
+            latestItem.retries++;
             
-            if (item.retries < 3) {
-              await offlineDB.addToQueue(item);
+            if (latestItem.retries < 3) {
+              await offlineDB.addToQueue(latestItem);
             } else {
-              toast.error(`Conflit de version pour ${item.campaignId}`);
+              toast.error(`Conflit de version pour ${latestItem.campaignId}`);
             }
           }
         } catch (error) {
           console.error('[OfflineAutosave] Sync error:', error);
-          item.error = error instanceof Error ? error.message : 'Unknown error';
-          item.retries++;
+          latestItem.error = error instanceof Error ? error.message : 'Unknown error';
+          latestItem.retries++;
           
-          if (item.retries < 3) {
-            await offlineDB.addToQueue(item);
+          if (latestItem.retries < 3) {
+            await offlineDB.addToQueue(latestItem);
           }
         }
       }
 
       await updateQueueSize();
+      
+      const duration = Date.now() - startTime;
+      console.log(`✅ [OfflineAutosave] Sync completed in ${duration}ms`);
       
       if (queue.length > 0) {
         toast.success('Synchronisation terminée');

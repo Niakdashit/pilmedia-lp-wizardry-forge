@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useOfflineAutosave } from './useOfflineAutosave';
 import { useCampaignVersion } from './useCampaignVersion';
 import { toast } from 'sonner';
+import { saveMetrics } from '@/lib/analytics/saveMetrics';
+import { estimateSize } from '@/lib/compression/payloadCompressor';
 
 interface AutosaveOptions {
   enabled?: boolean;
@@ -50,16 +52,27 @@ export const useEnhancedAutosave = (
     }
   }, [campaignId]);
 
-  // Main save function with retry and offline support
+  // Main save function with retry, offline support, and metrics tracking
   const performSave = useCallback(
     async (dataToSave: any, attempt = 1): Promise<boolean> => {
+      const startTime = Date.now();
       const maxRetries = 3;
       const backoffDelay = Math.pow(2, attempt - 1) * 1000;
+      const payloadSize = estimateSize(dataToSave);
 
       // If offline, save to IndexedDB
       if (!isOnline) {
         console.log('📴 [Autosave] Offline - Saving to queue');
         await saveOffline(dataToSave, campaign?.revision || 1);
+        
+        saveMetrics.track({
+          duration: Date.now() - startTime,
+          payloadSize,
+          success: true,
+          retryCount: 0,
+          isOnline: false,
+        });
+        
         return true;
       }
 
@@ -75,12 +88,30 @@ export const useEnhancedAutosave = (
         if (result.conflict) {
           console.warn('⚠️ [Autosave] Version conflict');
           toast.error('Conflit de version détecté');
+          
+          saveMetrics.track({
+            duration: Date.now() - startTime,
+            payloadSize,
+            success: false,
+            retryCount: attempt - 1,
+            isOnline: true,
+            error: 'Version conflict',
+          });
+          
           return false;
         }
 
         if (!result.success) {
           throw new Error('Save failed');
         }
+
+        saveMetrics.track({
+          duration: Date.now() - startTime,
+          payloadSize,
+          success: true,
+          retryCount: attempt - 1,
+          isOnline: true,
+        });
 
         return true;
       } catch (error) {
@@ -93,6 +124,16 @@ export const useEnhancedAutosave = (
 
         // Fallback to offline
         await saveOffline(dataToSave, campaign?.revision || 1);
+        
+        saveMetrics.track({
+          duration: Date.now() - startTime,
+          payloadSize,
+          success: false,
+          retryCount: attempt - 1,
+          isOnline: true,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        });
+        
         throw error;
       }
     },

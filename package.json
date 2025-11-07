@@ -46,6 +46,7 @@
     "date-fns": "^2.30.0",
     "dnd-core": "^16.0.1",
     "esbuild": "^0.25.9",
+    "fast-json-patch": "^3.1.1",
     "framer-motion": "^12.23.6",
     "gsap": "^3.13.0",
     "howler": "^2.2.4",
