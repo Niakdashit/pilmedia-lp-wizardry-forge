@@ -1,5 +1,4 @@
 import { extractAllCampaignImages } from '@/utils/extractImagesFromModules';
-import { emitCampaignEvent } from '@/utils/campaignEvents';
 
 // Global save lock to prevent concurrent saves creating duplicates
 const activeSaves = new Set<string>();
@@ -329,13 +328,6 @@ export const saveCampaignToDB = async (
       id: saved?.id,
       name: saved?.name,
       type: saved?.type
-    });
-    
-    // 📡 Émettre l'événement de sauvegarde pour synchroniser le cache
-    emitCampaignEvent('campaign:saved', {
-      campaignId: saved?.id || payload.id,
-      data: saved,
-      source: 'save-handler'
     });
     
     return saved;

@@ -1,33 +1,9 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { onCampaignEvent, emitCampaignEvent } from '@/utils/campaignEvents';
 
-/**
- * Cache en mémoire pour chargement instantané
- * Structure: { [campaignId]: { data, timestamp } }
- */
-const campaignCache = new Map<string, { data: any; timestamp: number }>();
+// Cache en mémoire pour chargement instantané
+const campaignCache = new Map<string, any>();
 const imagePreloadCache = new Set<string>();
-const CACHE_MAX_AGE = 30000; // 30 secondes max
-
-/**
- * Met à jour le cache avec les dernières données (appelé automatiquement via événements)
- */
-export const updateCampaignCache = (campaignId: string, data: any) => {
-  campaignCache.set(campaignId, {
-    data,
-    timestamp: Date.now()
-  });
-  console.log(`📦 [FastCampaignLoader] Cache updated for ${campaignId}`);
-};
-
-/**
- * Invalide le cache d'une campagne
- */
-export const invalidateCampaignCache = (campaignId: string) => {
-  campaignCache.delete(campaignId);
-  console.log(`📦 [FastCampaignLoader] Cache invalidated for ${campaignId}`);
-};
 
 // Précharge une image
 const preloadImage = (url: string): Promise<void> => {
@@ -128,25 +104,15 @@ export const useFastCampaignLoader = ({
     loadingRef.current = true;
 
     try {
-      // 1. Vérifier le cache d'abord avec validation de l'âge
+      // 1. Vérifier le cache d'abord (chargement instantané)
       const cached = campaignCache.get(id);
-      const isCacheValid = cached && (Date.now() - cached.timestamp < CACHE_MAX_AGE);
-      
-      if (isCacheValid && mountedRef.current) {
-        console.log('⚡ [FastCampaignLoader] Using valid cache:', {
-          id,
-          age: Date.now() - cached.timestamp
-        });
-        setCampaign(cached.data);
+      if (cached && mountedRef.current) {
+        setCampaign(cached);
         setIsLoading(false);
         // Précharger les images en arrière-plan
-        preloadCampaignImages(cached.data);
+        preloadCampaignImages(cached);
         loadingRef.current = false;
-        return cached.data;
-      }
-      
-      if (cached && !isCacheValid) {
-        console.log('⚠️ [FastCampaignLoader] Cache expired, reloading:', id);
+        return cached;
       }
 
       // 2. Charger depuis Supabase
@@ -175,14 +141,8 @@ export const useFastCampaignLoader = ({
             : rawData.article_config
         };
 
-        // Mettre en cache avec timestamp via la fonction centralisée
-        updateCampaignCache(id, parsedData);
-        
-        emitCampaignEvent('campaign:loaded', {
-          campaignId: id,
-          data: parsedData,
-          source: 'fast-loader'
-        });
+        // Mettre en cache
+        campaignCache.set(id, parsedData);
 
         // Afficher immédiatement
         setCampaign(parsedData);
@@ -204,7 +164,6 @@ export const useFastCampaignLoader = ({
     }
   }, [preloadCampaignImages]);
 
-
   // Charge la campagne au montage
   useEffect(() => {
     mountedRef.current = true;
@@ -221,43 +180,30 @@ export const useFastCampaignLoader = ({
     };
   }, [campaignId, enabled, loadCampaign]);
 
-  // 🔄 Synchronisation automatique avec les sauvegardes via événements
-  useEffect(() => {
-    if (!campaignId) return;
-
-    // Écouter les événements de sauvegarde pour mettre à jour le cache automatiquement
-    const unsubscribeSaved = onCampaignEvent('campaign:saved', ({ campaignId: savedId, data }) => {
-      if (savedId === campaignId && data) {
-        console.log('🔄 [FastCampaignLoader] Auto-updating cache from save event:', savedId);
-        updateCampaignCache(savedId, data);
-        if (mountedRef.current) {
-          setCampaign(data);
-        }
-      }
-    });
-
-    const unsubscribeAutosave = onCampaignEvent('campaign:autosave:complete', ({ campaignId: savedId, data }) => {
-      if (savedId === campaignId && data) {
-        console.log('🔄 [FastCampaignLoader] Auto-updating cache from autosave:', savedId);
-        updateCampaignCache(savedId, data);
-        if (mountedRef.current) {
-          setCampaign(data);
-        }
-      }
-    });
-
-    return () => {
-      unsubscribeSaved();
-      unsubscribeAutosave();
-    };
+  // Fonction pour mettre à jour le cache
+  const updateCache = useCallback((id: string, data: any) => {
+    campaignCache.set(id, data);
+    if (id === campaignId) {
+      setCampaign(data);
+    }
   }, [campaignId]);
+
+  // Fonction pour invalider le cache
+  const invalidateCache = useCallback((id?: string) => {
+    if (id) {
+      campaignCache.delete(id);
+    } else {
+      campaignCache.clear();
+    }
+  }, []);
 
   return {
     campaign,
     isLoading,
     error,
     reload: () => campaignId && loadCampaign(campaignId),
-    invalidateCache: () => campaignId ? invalidateCampaignCache(campaignId) : undefined
+    updateCache,
+    invalidateCache
   };
 };
 

@@ -45,7 +45,8 @@ import type { GameModalConfig } from '@/types/gameConfig';
 import { createGameConfigFromQuiz } from '@/types/gameConfig';
 import { supabase } from '@/integrations/supabase/client';
 import { generateTempCampaignId } from '@/utils/tempCampaignId';
-import { useCentralizedAutosave } from '@/hooks/useCentralizedAutosave';
+import { useAutoSaveToSupabase } from '@/hooks/useAutoSaveToSupabase';
+import { useEditorUnmountSave } from '@/hooks/useEditorUnmountSave';
 
 import KeyboardShortcutsHelp from '../shared/KeyboardShortcutsHelp';
 import MobileStableEditor from './components/MobileStableEditor';
@@ -266,40 +267,48 @@ const { syncAllStates } = useCampaignStateSync();
   
   const [canvasZoom, setCanvasZoom] = useState(getDefaultZoom(selectedDevice));
 
-  // 🔄 Centralized autosave with unmount protection
-  const { forceSave, isSaving, saveError, lastSavedAt } = useCentralizedAutosave({
-    campaign: {
-      ...campaignState,
-      type: 'jackpot',
-      config: {
-        ...(campaignState as any)?.config,
-        canvasConfig: {
-          elements: canvasElements,
-          screenBackgrounds,
-          device: selectedDevice,
-          zoom: canvasZoom
-        }
-      },
-      design: {
-        ...(campaignState as any)?.design,
-        quizModules: modularPage
-      },
-      jackpotConfig: (campaignState as any)?.jackpotConfig
-    },
-    saveCampaign,
-    delay: 2000,
-    enabled: true,
-    onError: (error) => {
-      console.error('❌ [JackpotEditor Autosave] Failed:', error);
-    }
-  });
+  // 🧹 CRITICAL: Save complete state before unmount to prevent data loss
+  // Placed here AFTER all state declarations to avoid TDZ errors
+  useEditorUnmountSave('jackpot', {
+    canvasElements,
+    modularPage,
+    screenBackgrounds,
+    extractedColors,
+    selectedDevice,
+    canvasZoom,
+    gameConfig: (campaignState as any)?.jackpotConfig
+  }, saveCampaign);
 
-  // Force save before unmount
-  useEffect(() => {
-    return () => {
-      forceSave();
-    };
-  }, [forceSave]);
+  // Only enable autosave when campaign id is a real UUID (avoid temp/new drafts)
+  const isPersistedId = (() => {
+    const id = (campaignState as any)?.id as string | undefined;
+    return !!(id && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id));
+  })();
+
+  // 🔄 Auto-save to Supabase every 30 seconds (aligned with QuizEditor)
+  useAutoSaveToSupabase(
+    {
+      campaign: {
+        ...campaignState,
+        type: 'jackpot',
+        jackpotConfig: (campaignState as any)?.jackpotConfig
+      },
+      canvasElements,
+      modularPage,
+      screenBackgrounds,
+      canvasZoom
+    },
+    {
+      enabled: isPersistedId,
+      interval: 30000, // 30 seconds
+      onSave: () => {
+        console.log('✅ [JackpotEditor AutoSave] Campaign auto-saved to Supabase');
+      },
+      onError: (error) => {
+        console.error('❌ [JackpotEditor AutoSave] Auto-save failed:', error);
+      }
+    }
+  );
 
 // 🔄 Load campaign data from Supabase when campaign ID is in URL
 useEffect(() => {
@@ -3335,13 +3344,7 @@ useEffect(() => {
           boxSizing: 'border-box'
         }}
       >
-        {!showFunnel && (
-          <EditorHeader 
-            isSaving={isSaving}
-            saveError={saveError}
-            lastSavedAt={lastSavedAt}
-          />
-        )}
+        {!showFunnel && <EditorHeader />}
         {!showFunnel && (
           <div
             className="fixed z-10"
