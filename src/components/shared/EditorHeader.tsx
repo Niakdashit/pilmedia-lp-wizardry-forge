@@ -40,7 +40,7 @@ const EditorHeader: React.FC = () => {
 
   return (
     <header
-      className="absolute z-40 flex items-center justify-between px-7"
+      className="absolute z-[60] flex items-center justify-between px-7"
       style={{
         left: '9px',
         right: '9px',
