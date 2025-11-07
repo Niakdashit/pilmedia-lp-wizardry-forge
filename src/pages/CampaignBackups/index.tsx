@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useCampaignBackups } from '@/hooks/useCampaignBackups';
 import { useCampaigns } from '@/hooks/useCampaigns';
 import { Save, Trash2, RotateCcw, ArrowLeft, Clock, Plus } from 'lucide-react';
@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 const CampaignBackupsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { getCampaign } = useCampaigns();
   const { backups, isLoading, fetchBackups, createBackup, restoreBackup, deleteBackup } = useCampaignBackups();
   
@@ -17,49 +18,54 @@ const CampaignBackupsPage: React.FC = () => {
   const [backupDescription, setBackupDescription] = useState('');
   const [isCreating, setIsCreating] = useState(false);
 
+  const isUuid = (v?: string | null) => !!v && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v || '');
+  const routeId = id;
+  const queryId = searchParams.get('campaign');
+  const effectiveId = isUuid(routeId) ? routeId! : (isUuid(queryId) ? queryId! : null);
+
   useEffect(() => {
-    console.log('[CampaignBackups] Campaign ID from URL:', id);
-    if (id) {
-      console.log('[CampaignBackups] Fetching backups for campaign:', id);
-      fetchBackups(id);
-      getCampaign(id).then((camp) => {
-        console.log('[CampaignBackups] Campaign loaded:', camp);
+    console.log('[CampaignBackups] Route id:', id, 'Query id:', queryId, 'Effective id:', effectiveId);
+    if (effectiveId) {
+      console.log('[CampaignBackups] Fetching backups for campaign:', effectiveId);
+      fetchBackups(effectiveId);
+      getCampaign(effectiveId).then((camp) => {
+        console.log('[CampaignBackups] Campaign loaded:', camp?.name);
         setCampaign(camp);
       });
     } else {
-      console.warn('[CampaignBackups] No campaign ID found in URL');
+      console.warn('[CampaignBackups] No valid campaign ID found in URL');
     }
-  }, [id, fetchBackups, getCampaign]);
+  }, [effectiveId, id, queryId, fetchBackups, getCampaign]);
 
   const handleCreateBackup = async () => {
-    if (!id || !backupName.trim()) {
-      toast.error('Veuillez entrer un nom pour la sauvegarde');
+    if (!effectiveId || !backupName.trim()) {
+      toast.error('ID de campagne invalide ou nom manquant');
       return;
     }
 
     setIsCreating(true);
-    const result = await createBackup(id, backupName.trim(), backupDescription.trim() || undefined);
+    const result = await createBackup(effectiveId as string, backupName.trim(), backupDescription.trim() || undefined);
     setIsCreating(false);
 
     if (result) {
       setShowCreateDialog(false);
       setBackupName('');
       setBackupDescription('');
-      fetchBackups(id);
+      fetchBackups(effectiveId as string);
     }
   };
 
   const handleRestore = async (backupId: string, backupName: string) => {
-    if (!id) return;
+    if (!effectiveId) return;
     
     const confirmed = window.confirm(
       `Êtes-vous sûr de vouloir restaurer la sauvegarde "${backupName}" ?\n\nCela écrasera la version actuelle de la campagne.`
     );
     
     if (confirmed) {
-      const success = await restoreBackup(id, backupId);
+      const success = await restoreBackup(effectiveId as string, backupId);
       if (success) {
-        setTimeout(() => navigate(`/campaign/${id}`), 1500);
+        setTimeout(() => navigate(`/campaign/${effectiveId}`), 1500);
       }
     }
   };
@@ -81,7 +87,7 @@ const CampaignBackupsPage: React.FC = () => {
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
             <button
-              onClick={() => navigate(`/campaign/${id}`)}
+              onClick={() => (effectiveId ? navigate(`/campaign/${effectiveId}`) : navigate('/campaigns'))}
               className="p-2 hover:bg-accent rounded-lg transition-colors"
             >
               <ArrowLeft className="w-5 h-5" />
