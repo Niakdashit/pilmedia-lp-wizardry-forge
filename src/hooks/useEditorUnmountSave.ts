@@ -64,7 +64,7 @@ export const useEditorUnmountSave = (
           const base = useEditorStore.getState().campaign || {};
           const payload: any = {
             ...base,
-            type: campaignType,
+            // Preserve existing type from DB instead of overwriting with editor type
             extractedColors: currentStates.extractedColors,
             modularPage: currentStates.modularPage,
             canvasElements: currentStates.canvasElements,
