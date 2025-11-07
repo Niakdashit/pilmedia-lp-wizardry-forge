@@ -1,13 +1,21 @@
 import React from 'react';
-import { User, LogOut } from 'lucide-react';
+import { User, LogOut, Archive } from 'lucide-react';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { useNavigate } from '@/lib/router-adapter';
+import { useSearchParams } from 'react-router-dom';
 
 const headerLogo = '/logos/prosplay-header-logo.svg';
 
 const EditorHeader: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { signOut } = useAuthContext();
+  
+  // Get campaign ID from URL and check if it's valid (not temporary)
+  const campaignId = searchParams.get('campaign');
+  const isValidCampaignId = campaignId && 
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(campaignId) &&
+    !campaignId.startsWith('temp-');
 
   const handleLogout = async () => {
     const { error } = await signOut();
@@ -22,6 +30,12 @@ const EditorHeader: React.FC = () => {
 
   const handleGoToDashboard = () => {
     navigate('/dashboard');
+  };
+  
+  const handleBackups = () => {
+    if (campaignId) {
+      navigate(`/campaign/${campaignId}/backups`);
+    }
   };
 
   return (
@@ -51,6 +65,15 @@ const EditorHeader: React.FC = () => {
         />
       </button>
       <div className="flex items-center gap-2.5">
+        {isValidCampaignId && (
+          <button
+            onClick={handleBackups}
+            className="text-white/90 hover:text-white hover:bg-white/10 p-2 rounded-full transition-colors duration-200"
+            title="Gérer les sauvegardes"
+          >
+            <Archive className="w-4 h-4" />
+          </button>
+        )}
         <button
           onClick={handleAccount}
           className="text-white/90 hover:text-white hover:bg-white/10 p-2 rounded-full transition-colors duration-200"
