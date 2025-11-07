@@ -1,8 +1,7 @@
 import React from 'react';
 import { Eye, Save, Share2, MoreHorizontal } from 'lucide-react';
-import PreviewDeviceButtons from './PreviewDeviceButtons';
-import { OfflineSyncIndicator } from '@/components/OfflineSyncIndicator';
 
+import PreviewDeviceButtons from './PreviewDeviceButtons';
 interface EditorHeaderProps {
   campaign: any;
   onSave: () => void;
@@ -11,10 +10,6 @@ interface EditorHeaderProps {
   isNewCampaign?: boolean;
   selectedDevice?: 'desktop' | 'tablet' | 'mobile';
   onDeviceChange?: (device: 'desktop' | 'tablet' | 'mobile') => void;
-  // Offline sync props
-  isOnline?: boolean;
-  queueSize?: number;
-  isSyncing?: boolean;
 }
 const EditorHeader: React.FC<EditorHeaderProps> = ({
   campaign,
@@ -23,10 +18,7 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
   isLoading = false,
   isNewCampaign = false,
   selectedDevice = 'desktop',
-  onDeviceChange = () => {},
-  isOnline = true,
-  queueSize = 0,
-  isSyncing = false,
+  onDeviceChange = () => {}
 }) => {
   return <div className="bg-white/95 backdrop-blur-sm border-b border-gray-100 flex-shrink-0 z-50">
       <div className="px-6 py-4">
@@ -47,12 +39,6 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
                 <span className={`px-2 py-1 rounded-full text-xs ${campaign.status === 'published' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
                   {campaign.status === 'published' ? 'Publié' : 'Brouillon'}
                 </span>
-                <span>•</span>
-                <OfflineSyncIndicator
-                  isOnline={isOnline}
-                  queueSize={queueSize}
-                  isSyncing={isSyncing}
-                />
               </div>
             </div>
           </div>

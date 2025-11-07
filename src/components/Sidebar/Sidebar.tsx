@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Target, Gamepad2, BarChart3, Handshake, Shield, Globe, Save } from 'lucide-react';
+import { LayoutDashboard, Target, Gamepad2, BarChart3, Handshake, Shield, Globe } from 'lucide-react';
 import { useProfile } from '../../hooks/useProfile';
 const logoIcon = '/prosplay-icon.svg';
 
@@ -15,7 +15,6 @@ const Sidebar: React.FC = () => {
   const routePrefetchers: Record<string, () => Promise<any>> = {
     '/dashboard': () => import('../../pages/Dashboard'),
     '/campaigns': () => import('../../pages/Campaigns'),
-    '/sauvegardes': () => import('../../pages/SavedSnapshots'),
     '/gamification': () => import('../../pages/Gamification'),
     '/statistics': () => import('../../pages/Statistics'),
     '/partnerships': () => import('../../pages/Partnerships'),
@@ -34,7 +33,6 @@ const Sidebar: React.FC = () => {
   const baseNavItems = [
     { name: 'Accueil', path: '/dashboard', icon: <LayoutDashboard className="w-5 h-5" /> },
     { name: 'Campagnes', path: '/campaigns', icon: <Target className="w-5 h-5" /> },
-    { name: 'Sauvegardes', path: '/sauvegardes', icon: <Save className="w-5 h-5" /> },
     { name: 'Gamification', path: '/gamification', icon: <Gamepad2 className="w-5 h-5" /> },
     { name: 'Partenariats', path: '/partnerships', icon: <Handshake className="w-5 h-5" /> },
     { name: 'Stats', path: '/statistics', icon: <BarChart3 className="w-5 h-5" /> }

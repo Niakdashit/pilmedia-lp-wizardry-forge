@@ -13,6 +13,7 @@ const FullScreenPreviewModal = lazy(() => import('@/components/shared/modals/Ful
 const FunnelUnlockedGame = lazy(() => import('@/components/funnels/FunnelUnlockedGame'));
 import PreviewRenderer from '@/components/preview/PreviewRenderer';
 import ArticleFunnelView from '@/components/ArticleEditor/ArticleFunnelView';
+import { getArticleConfigWithDefaults } from '@/utils/articleConfigHelpers';
 import type { ModularPage, ScreenId, BlocBouton, Module } from '@/types/modularEditor';
 import { createEmptyModularPage } from '@/types/modularEditor';
 
@@ -31,10 +32,7 @@ import { useEditorPreviewSync } from '@/hooks/useEditorPreviewSync';
 import { useCampaignSettings } from '@/hooks/useCampaignSettings';
 import type { ScreenBackgrounds } from '@/types/background';
 import { useEditorUnmountSave } from '@/hooks/useEditorUnmountSave';
-import { useEnhancedAutosave } from '@/hooks/useEnhancedAutosave';
-import { OfflineSyncIndicator } from '@/components/OfflineSyncIndicator';
-import { useSaveAndExit } from '@/hooks/useSaveAndExit';
-import { toast } from 'sonner';
+
 
 import { useCampaigns } from '@/hooks/useCampaigns';
 import { saveCampaignToDB } from '@/hooks/useModernCampaignEditor/saveHandler';
@@ -42,6 +40,7 @@ import { useCampaignStateSync } from '@/hooks/useCampaignStateSync';
 import { quizTemplates } from '../../types/quizTemplates';
 import { supabase } from '@/integrations/supabase/client';
 // import { CampaignStorage } from '@/utils/campaignStorage';
+import { useAutoSaveToSupabase } from '@/hooks/useAutoSaveToSupabase';
 import { generateTempCampaignId, isTempCampaignId, isPersistedCampaignId, clearTempCampaignData, replaceTempWithPersistedId } from '@/utils/tempCampaignId';
 
 const KeyboardShortcutsHelp = lazy(() => import('../shared/KeyboardShortcutsHelp'));
@@ -1252,26 +1251,25 @@ const handleSaveCampaignName = useCallback(async () => {
     return allModules.find((module) => module.id === selectedModuleId) || null;
   }, [selectedModuleId, modularPage.screens]);
   
-  // 🚀 Phase 2 & 3: Enhanced autosave with offline support, compression, and metrics
-  const {
-    isOnline,
-    queueSize,
-    isSyncing,
-  } = useEnhancedAutosave(
-    (campaignState as any)?.id,
+  // 🔄 Auto-save to Supabase every 30 seconds
+  // Placed here after all state declarations to avoid TDZ issues
+  useAutoSaveToSupabase(
     {
-      ...campaignState,
+      campaign: campaignState,
       canvasElements,
       modularPage,
       screenBackgrounds,
-      extractedColors,
-      selectedDevice,
-      canvasZoom,
-      gameConfig: (campaignState as any)?.quizConfig
+      canvasZoom
     },
     {
-      enabled: false, // ⚠️ Disabled: Save only on "Sauvegarder et quitter" button
-      delay: 3000,
+      enabled: true,
+      interval: 30000, // 30 seconds
+      onSave: () => {
+        console.log('✅ [AutoSave] Campaign auto-saved to Supabase');
+      },
+      onError: (error) => {
+        console.error('❌ [AutoSave] Auto-save failed:', error);
+      }
     }
   );
   
@@ -3225,7 +3223,6 @@ const handleSaveCampaignName = useCallback(async () => {
   const [isValidationModalOpen, setIsValidationModalOpen] = useState(false);
   const { validateCampaign } = useCampaignValidation();
   const validation = validateCampaign();
-  const { saveAndExit, isSaving: isSavingAndExiting } = useSaveAndExit();
 
   const handleSaveAndQuit = useCallback(async () => {
     const result = validateCampaign();
@@ -3246,47 +3243,19 @@ const handleSaveCampaignName = useCallback(async () => {
       return;
     }
     
-    // Get campaign ID
-    const campaignId = (campaignState as any)?.id;
-    if (!campaignId) {
-      toast.error('ID de campagne manquant');
-      return;
-    }
-
-    // 🔄 Prepare campaign data with all latest states
-    const campaignData = {
-      ...campaignState,
-      config: {
-        ...(campaignState as any)?.config,
-        canvasElements,
-        modularPage,
-        screenBackgrounds,
-        extractedColors,
-      },
-      design: (campaignState as any)?.design,
-      game_config: (campaignState as any)?.quizConfig,
-      article_config: (campaignState as any)?.article_config,
-      form_fields: (campaignState as any)?.form_fields,
-      name: (campaignState as any)?.name,
-      description: (campaignState as any)?.description,
-    };
-
-    // Call the save and exit hook
-    await saveAndExit({
-      campaignId,
-      campaignData,
-      onBeforeSave: () => {
-        syncAllStates({
-          canvasElements,
-          modularPage,
-          screenBackgrounds,
-          extractedColors,
-          selectedDevice,
-          canvasZoom
-        });
-      }
+    // 🔄 Synchroniser tous les états locaux avec le campaign avant la sauvegarde
+    syncAllStates({
+      canvasElements,
+      modularPage,
+      screenBackgrounds,
+      extractedColors,
+      selectedDevice,
+      canvasZoom
     });
-  }, [validateCampaign, saveAndExit, syncAllStates, canvasElements, modularPage, screenBackgrounds, extractedColors, selectedDevice, canvasZoom, campaignState]);
+    
+    await handleSave();
+    navigate('/dashboard');
+  }, [validateCampaign, handleSave, navigate, syncAllStates, canvasElements, modularPage, screenBackgrounds, extractedColors, selectedDevice, canvasZoom, campaignState]);
 
   // Navigate to settings without saving (same destination as Save & Continue)
   // @ts-expect-error - Fonction de navigation, peut être ignorée
@@ -3645,18 +3614,7 @@ const handleSaveCampaignName = useCallback(async () => {
         boxSizing: 'border-box'
       }}
     >
-      {!showFunnel && (
-        <>
-          <EditorHeader />
-          <div className="fixed top-4 right-4 z-50">
-            <OfflineSyncIndicator
-              isOnline={isOnline}
-              queueSize={queueSize}
-              isSyncing={isSyncing}
-            />
-          </div>
-        </>
-      )}
+      {!showFunnel && <EditorHeader />}
       {!showFunnel && (
         <div
           className="fixed z-20"
@@ -3738,7 +3696,7 @@ const handleSaveCampaignName = useCallback(async () => {
                 >
                   {editorMode === 'article' ? (
                     <ArticleFunnelView
-                      articleConfig={(campaignState as any)?.articleConfig || {}}
+                      articleConfig={getArticleConfigWithDefaults(campaignState, campaignData)}
                       campaignType={(campaignState as any)?.type || 'quiz'}
                       campaign={campaignData}
                       wheelModalConfig={wheelModalConfig}
@@ -3767,7 +3725,7 @@ const handleSaveCampaignName = useCallback(async () => {
               /* Desktop/Tablet Preview OU Mobile physique: Fullscreen sans cadre */
               editorMode === 'article' ? (
                 <ArticleFunnelView
-                  articleConfig={(campaignState as any)?.articleConfig || {}}
+                  articleConfig={getArticleConfigWithDefaults(campaignState, campaignData)}
                   campaignType={(campaignState as any)?.type || 'quiz'}
                   campaign={campaignData}
                   wheelModalConfig={wheelModalConfig}
@@ -4132,7 +4090,7 @@ const handleSaveCampaignName = useCallback(async () => {
                   <div className="flex-1 flex flex-col items-center justify-center overflow-hidden relative">
                     {editorMode === 'article' && (
                       <ArticleFunnelView
-                        articleConfig={(campaignState as any)?.articleConfig || {}}
+                        articleConfig={getArticleConfigWithDefaults(campaignState, campaignData)}
                         campaignType={(campaignState as any)?.type || 'quiz'}
                         campaign={campaignData}
                         wheelModalConfig={quizModalConfig}
@@ -4558,13 +4516,12 @@ const handleSaveCampaignName = useCallback(async () => {
           </button>
           <button
             onClick={handleSaveAndQuit}
-            disabled={isSavingAndExiting}
-            className="flex items-center px-3 py-2 text-xs sm:text-sm rounded-lg text-white bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] hover:opacity-95 transition-colors shadow-sm disabled:opacity-50"
+            className="flex items-center px-3 py-2 text-xs sm:text-sm rounded-lg text-white bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] hover:opacity-95 transition-colors shadow-sm"
             title="Sauvegarder et quitter"
           >
             <Save className="w-4 h-4 mr-1" />
-            <span className="hidden sm:inline">{isSavingAndExiting ? 'Sauvegarde...' : 'Sauvegarder et quitter'}</span>
-            <span className="sm:hidden">{isSavingAndExiting ? 'Sauvegarde...' : 'Sauvegarder'}</span>
+            <span className="hidden sm:inline">Sauvegarder et quitter</span>
+            <span className="sm:hidden">Sauvegarder</span>
           </button>
         </div>
       )}

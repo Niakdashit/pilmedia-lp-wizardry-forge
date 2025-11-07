@@ -18,6 +18,7 @@ import { createEmptyModularPage } from '@/types/modularEditor';
 import PreviewRenderer from '@/components/preview/PreviewRenderer';
 import ArticleCanvas from '@/components/ArticleEditor/ArticleCanvas';
 import ArticleFunnelView from '@/components/ArticleEditor/ArticleFunnelView';
+import { getArticleConfigWithDefaults } from '@/utils/articleConfigHelpers';
 import ZoomSlider from './components/ZoomSlider';
 import EditorHeader from '@/components/shared/EditorHeader';
 import DesignCanvas from './DesignCanvas';
@@ -32,9 +33,6 @@ import { getEditorDeviceOverride } from '@/utils/deviceOverrides';
 import { recalculateAllElements } from '../../utils/recalculateAllModules';
 import { useEditorPreviewSync } from '@/hooks/useEditorPreviewSync';
 import { useCampaignSettings } from '@/hooks/useCampaignSettings';
-import { useEditorUnmountSave } from '@/hooks/useEditorUnmountSave';
-import { useEnhancedAutosave } from '@/hooks/useEnhancedAutosave';
-import { OfflineSyncIndicator } from '@/components/OfflineSyncIndicator';
 import type { ScreenBackgrounds, DeviceSpecificBackground } from '@/types/background';
 import { isTempCampaignId, clearTempCampaignData } from '@/utils/tempCampaignId';
 
@@ -47,6 +45,8 @@ import type { GameModalConfig } from '@/types/gameConfig';
 import { createGameConfigFromQuiz } from '@/types/gameConfig';
 import { supabase } from '@/integrations/supabase/client';
 import { generateTempCampaignId } from '@/utils/tempCampaignId';
+import { useAutoSaveToSupabase } from '@/hooks/useAutoSaveToSupabase';
+import { useEditorUnmountSave } from '@/hooks/useEditorUnmountSave';
 
 import KeyboardShortcutsHelp from '../shared/KeyboardShortcutsHelp';
 import MobileStableEditor from './components/MobileStableEditor';
@@ -279,26 +279,34 @@ const { syncAllStates } = useCampaignStateSync();
     gameConfig: (campaignState as any)?.jackpotConfig
   }, saveCampaign);
 
-  // 🚀 Phase 2 & 3: Enhanced autosave with offline support, compression, and metrics
-  const {
-    isOnline,
-    queueSize,
-    isSyncing,
-  } = useEnhancedAutosave(
-    (campaignState as any)?.id,
+  // Only enable autosave when campaign id is a real UUID (avoid temp/new drafts)
+  const isPersistedId = (() => {
+    const id = (campaignState as any)?.id as string | undefined;
+    return !!(id && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id));
+  })();
+
+  // 🔄 Auto-save to Supabase every 30 seconds (aligned with QuizEditor)
+  useAutoSaveToSupabase(
     {
-      ...campaignState,
+      campaign: {
+        ...campaignState,
+        type: 'jackpot',
+        jackpotConfig: (campaignState as any)?.jackpotConfig
+      },
       canvasElements,
       modularPage,
       screenBackgrounds,
-      extractedColors,
-      selectedDevice,
-      canvasZoom,
-      gameConfig: (campaignState as any)?.jackpotConfig
+      canvasZoom
     },
     {
-      enabled: true,
-      delay: 3000,
+      enabled: isPersistedId,
+      interval: 30000, // 30 seconds
+      onSave: () => {
+        console.log('✅ [JackpotEditor AutoSave] Campaign auto-saved to Supabase');
+      },
+      onError: (error) => {
+        console.error('❌ [JackpotEditor AutoSave] Auto-save failed:', error);
+      }
     }
   );
 
@@ -3336,18 +3344,7 @@ useEffect(() => {
           boxSizing: 'border-box'
         }}
       >
-        {!showFunnel && (
-          <>
-            <EditorHeader />
-            <div className="fixed top-4 right-4 z-50">
-              <OfflineSyncIndicator
-                isOnline={isOnline}
-                queueSize={queueSize}
-                isSyncing={isSyncing}
-              />
-            </div>
-          </>
-        )}
+        {!showFunnel && <EditorHeader />}
         {!showFunnel && (
           <div
             className="fixed z-10"
@@ -3885,9 +3882,9 @@ useEffect(() => {
                   <div className="flex-1 flex flex-col items-center justify-center overflow-hidden relative">
                     {editorMode === 'article' && (
                       <ArticleFunnelView
-                        articleConfig={(campaignState as any)?.articleConfig || {}}
+                        articleConfig={getArticleConfigWithDefaults(campaignState, campaignData)}
                         campaignType={(campaignState as any)?.type || 'jackpot'}
-                        campaign={campaignData}
+                        campaign={(campaignState as any) || campaignData}
                         wheelModalConfig={wheelModalConfig}
                         gameModalConfig={wheelModalConfig}
                         currentStep={currentStep}

@@ -40,7 +40,6 @@ const PublicCampaign = lazy(() => import('./pages/PublicCampaign'));
 const OEmbed = lazy(() => import('./pages/OEmbed'));
 const IntegrationsTest = lazy(() => import('./pages/IntegrationsTest'));
 const ShortUrlRedirect = lazy(() => import('./pages/ShortUrlRedirect'));
-const SavedSnapshots = lazy(() => import('./pages/SavedSnapshots'));
 
 function App() {
   // Enregistrement des routes pour le prefetching intelligent
@@ -99,7 +98,6 @@ function App() {
                   <Route path="profile" element={<Profile />} />
                   <Route path="admin" element={<Admin />} />
                   <Route path="media" element={<MediaPortal />} />
-                  <Route path="sauvegardes" element={<SavedSnapshots />} />
                 </Route>
 
               {/* Routes éditeur en plein écran */}

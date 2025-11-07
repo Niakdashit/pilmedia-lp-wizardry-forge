@@ -193,7 +193,7 @@ export const useCampaignsList = () => {
 
         return {
           id: campaign.id,
-          name: campaign.name || draftName || publicationName,
+          name: publicationName || draftName || campaign.name,
           description: campaign.description,
           type: campaign.type,
           status: campaign.status,

@@ -57,7 +57,7 @@ const DeviceFrame: React.FC<DeviceFrameProps> = ({ device, children }) => {
         }}
       >
         <div className={`${styles.inner} flex items-center justify-center w-full h-full overflow-hidden`}>
-          <div className={`${styles.screen} w-full h-full flex flex-col overflow-hidden`} style={{ willChange: 'transform, opacity', transform: 'translateZ(0)', backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden', contain: 'layout paint size' }}>
+          <div className={`${styles.screen} w-full h-full flex flex-col overflow-hidden`}>
             {/* Éléments spécifiques au device */}
             {device === 'mobile' && (
               <>

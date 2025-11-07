@@ -83,13 +83,6 @@ export const useFastCampaignLoader = ({
   const [error, setError] = useState<Error | null>(null);
   const loadingRef = useRef(false);
   const mountedRef = useRef(true);
-  
-  // Check if reload parameter is in URL to bypass cache
-  const shouldBypassCache = useRef(false);
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    shouldBypassCache.current = params.get('reload') === 'true';
-  }, []);
 
   // Précharge les images d'une campagne
   const preloadCampaignImages = useCallback(async (campaignData: any) => {
@@ -111,54 +104,13 @@ export const useFastCampaignLoader = ({
     loadingRef.current = true;
 
     try {
-      // 1. Vérifier le cache d'abord (chargement instantané) - sauf si reload forcé
-      const cached = shouldBypassCache.current ? null : campaignCache.get(id);
+      // 1. Vérifier le cache d'abord (chargement instantané)
+      const cached = campaignCache.get(id);
       if (cached && mountedRef.current) {
         setCampaign(cached);
         setIsLoading(false);
         // Précharger les images en arrière-plan
         preloadCampaignImages(cached);
-        
-        // CRITICAL: Fetch fresh data from server in background
-        (async () => {
-          try {
-            const { data: freshData } = await supabase
-              .from('campaigns')
-              .select('*')
-              .eq('id', id)
-              .single();
-            
-            if (freshData && mountedRef.current) {
-              // Compare revision or updated_at
-              const cachedRevision = cached.revision || 0;
-              const freshRevision = freshData.revision || 0;
-              const cachedUpdatedAt = new Date(cached.updated_at || 0).getTime();
-              const freshUpdatedAt = new Date(freshData.updated_at || 0).getTime();
-              
-              if (freshRevision > cachedRevision || freshUpdatedAt > cachedUpdatedAt) {
-                console.log('🔄 [FastLoader] Server has newer version, updating cache');
-                const parsedFreshData = {
-                  ...freshData,
-                  config: typeof freshData.config === 'string' ? JSON.parse(freshData.config) : freshData.config,
-                  modularPages: typeof (freshData as any).modular_pages === 'string' 
-                    ? JSON.parse((freshData as any).modular_pages) 
-                    : (freshData as any).modular_pages,
-                  backgrounds: typeof (freshData as any).backgrounds === 'string'
-                    ? JSON.parse((freshData as any).backgrounds)
-                    : (freshData as any).backgrounds,
-                  articleConfig: typeof freshData.article_config === 'string'
-                    ? JSON.parse(freshData.article_config)
-                    : freshData.article_config
-                };
-                campaignCache.set(id, parsedFreshData);
-                setCampaign(parsedFreshData);
-              }
-            }
-          } catch (error) {
-            console.warn('[FastLoader] Background refresh failed:', error);
-          }
-        })();
-        
         loadingRef.current = false;
         return cached;
       }

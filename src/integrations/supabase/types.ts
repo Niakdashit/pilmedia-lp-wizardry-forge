@@ -14,59 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      campaign_audit_logs: {
-        Row: {
-          action: string
-          actor_email: string | null
-          actor_id: string | null
-          campaign_id: string
-          changes: Json | null
-          created_at: string
-          description: string | null
-          id: string
-          ip_address: unknown
-          revision_after: number | null
-          revision_before: number | null
-          user_agent: string | null
-        }
-        Insert: {
-          action: string
-          actor_email?: string | null
-          actor_id?: string | null
-          campaign_id: string
-          changes?: Json | null
-          created_at?: string
-          description?: string | null
-          id?: string
-          ip_address?: unknown
-          revision_after?: number | null
-          revision_before?: number | null
-          user_agent?: string | null
-        }
-        Update: {
-          action?: string
-          actor_email?: string | null
-          actor_id?: string | null
-          campaign_id?: string
-          changes?: Json | null
-          created_at?: string
-          description?: string | null
-          id?: string
-          ip_address?: unknown
-          revision_after?: number | null
-          revision_before?: number | null
-          user_agent?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "campaign_audit_logs_campaign_id_fkey"
-            columns: ["campaign_id"]
-            isOneToOne: false
-            referencedRelation: "campaigns"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       campaign_integrations: {
         Row: {
           campaign_id: string
@@ -203,62 +150,6 @@ export type Database = {
           },
         ]
       }
-      campaign_snapshots: {
-        Row: {
-          article_config: Json | null
-          campaign_id: string
-          config: Json | null
-          created_at: string
-          created_by: string | null
-          description: string | null
-          design: Json | null
-          form_fields: Json | null
-          game_config: Json | null
-          id: string
-          payload_size_bytes: number | null
-          revision: number
-          snapshot_type: string
-        }
-        Insert: {
-          article_config?: Json | null
-          campaign_id: string
-          config?: Json | null
-          created_at?: string
-          created_by?: string | null
-          description?: string | null
-          design?: Json | null
-          form_fields?: Json | null
-          game_config?: Json | null
-          id?: string
-          payload_size_bytes?: number | null
-          revision: number
-          snapshot_type?: string
-        }
-        Update: {
-          article_config?: Json | null
-          campaign_id?: string
-          config?: Json | null
-          created_at?: string
-          created_by?: string | null
-          description?: string | null
-          design?: Json | null
-          form_fields?: Json | null
-          game_config?: Json | null
-          id?: string
-          payload_size_bytes?: number | null
-          revision?: number
-          snapshot_type?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "campaign_snapshots_campaign_id_fkey"
-            columns: ["campaign_id"]
-            isOneToOne: false
-            referencedRelation: "campaigns"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       campaign_stats: {
         Row: {
           campaign_id: string
@@ -346,21 +237,18 @@ export type Database = {
       }
       campaigns: {
         Row: {
-          article_config: Json | null
           banner_url: string | null
           config: Json
           created_at: string | null
           created_by: string | null
           description: string | null
           design: Json
-          editor_mode: string | null
           end_date: string | null
           form_fields: Json
           game_config: Json
           id: string
           name: string
           published_at: string | null
-          revision: number
           slug: string
           start_date: string | null
           status: Database["public"]["Enums"]["campaign_status"]
@@ -371,21 +259,18 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
-          article_config?: Json | null
           banner_url?: string | null
           config?: Json
           created_at?: string | null
           created_by?: string | null
           description?: string | null
           design?: Json
-          editor_mode?: string | null
           end_date?: string | null
           form_fields?: Json
           game_config?: Json
           id?: string
           name: string
           published_at?: string | null
-          revision?: number
           slug: string
           start_date?: string | null
           status?: Database["public"]["Enums"]["campaign_status"]
@@ -396,21 +281,18 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
-          article_config?: Json | null
           banner_url?: string | null
           config?: Json
           created_at?: string | null
           created_by?: string | null
           description?: string | null
           design?: Json
-          editor_mode?: string | null
           end_date?: string | null
           form_fields?: Json
           game_config?: Json
           id?: string
           name?: string
           published_at?: string | null
-          revision?: number
           slug?: string
           start_date?: string | null
           status?: Database["public"]["Enums"]["campaign_status"]
@@ -594,10 +476,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      cleanup_old_snapshots: {
-        Args: { p_keep_count?: number; p_keep_days?: number }
-        Returns: number
-      }
       generate_campaign_slug: {
         Args: { campaign_name: string }
         Returns: string
@@ -612,17 +490,6 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
-      }
-      log_campaign_action: {
-        Args: {
-          p_action: string
-          p_campaign_id: string
-          p_changes?: Json
-          p_description?: string
-          p_revision_after?: number
-          p_revision_before?: number
-        }
-        Returns: string
       }
     }
     Enums: {

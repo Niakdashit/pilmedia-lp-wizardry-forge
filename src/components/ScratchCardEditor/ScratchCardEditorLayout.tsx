@@ -18,6 +18,7 @@ import { createEmptyModularPage } from '@/types/modularEditor';
 import PreviewRenderer from '@/components/preview/PreviewRenderer';
 import ArticleCanvas from '@/components/ArticleEditor/ArticleCanvas';
 import ArticleFunnelView from '@/components/ArticleEditor/ArticleFunnelView';
+import { getArticleConfigWithDefaults } from '@/utils/articleConfigHelpers';
 import ZoomSlider from './components/ZoomSlider';
 import EditorHeader from '@/components/shared/EditorHeader';
 const DesignCanvas = lazy(() => import('./DesignCanvas'));
@@ -34,8 +35,6 @@ import { recalculateAllElements } from '../../utils/recalculateAllModules';
 import { useEditorPreviewSync } from '@/hooks/useEditorPreviewSync';
 import { useCampaignSettings } from '@/hooks/useCampaignSettings';
 import { useEditorUnmountSave } from '@/hooks/useEditorUnmountSave';
-import { useEnhancedAutosave } from '@/hooks/useEnhancedAutosave';
-import { OfflineSyncIndicator } from '@/components/OfflineSyncIndicator';
 import type { ScreenBackgrounds, DeviceSpecificBackground } from '@/types/background';
 import { isTempCampaignId, clearTempCampaignData } from '@/utils/tempCampaignId';
 
@@ -48,6 +47,7 @@ import { useScratchCardStore } from './state/scratchcard.store';
 import type { GameModalConfig } from '@/types/gameConfig';
 import { createGameConfigFromQuiz } from '@/types/gameConfig';
 import { generateTempCampaignId } from '@/utils/tempCampaignId';
+import { useAutoSaveToSupabase } from '@/hooks/useAutoSaveToSupabase';
 
 const KeyboardShortcutsHelp = lazy(() => import('../shared/KeyboardShortcutsHelp'));
 const MobileStableEditor = lazy(() => import('./components/MobileStableEditor'));
@@ -522,26 +522,28 @@ useEffect(() => {
     gameConfig: (campaignState as any)?.scratchConfig
   }, saveCampaign);
 
-  // 🚀 Phase 2 & 3: Enhanced autosave with offline support, compression, and metrics
-  const {
-    isOnline,
-    queueSize,
-    isSyncing,
-  } = useEnhancedAutosave(
-    (campaignState as any)?.id,
+  // 🔄 Auto-save to Supabase every 30 seconds (aligned with QuizEditor)
+  useAutoSaveToSupabase(
     {
-      ...campaignState,
+      campaign: {
+        ...campaignState,
+        type: 'scratch',
+        scratchConfig: (campaignState as any)?.scratchConfig
+      },
       canvasElements,
       modularPage,
       screenBackgrounds,
-      extractedColors,
-      selectedDevice,
-      canvasZoom,
-      gameConfig: (campaignState as any)?.scratchConfig
+      canvasZoom
     },
     {
       enabled: true,
-      delay: 3000,
+      interval: 30000, // 30 seconds
+      onSave: () => {
+        console.log('✅ [ScratchEditor AutoSave] Campaign auto-saved to Supabase');
+      },
+      onError: (error) => {
+        console.error('❌ [ScratchEditor AutoSave] Auto-save failed:', error);
+      }
     }
   );
 
@@ -3358,18 +3360,7 @@ const handleSaveCampaignName = useCallback(async () => {
         boxSizing: 'border-box'
       }}
     >
-      {!showFunnel && (
-        <>
-          <EditorHeader />
-          <div className="fixed top-4 right-4 z-50">
-            <OfflineSyncIndicator
-              isOnline={isOnline}
-              queueSize={queueSize}
-              isSyncing={isSyncing}
-            />
-          </div>
-        </>
-      )}
+      {!showFunnel && <EditorHeader />}
       {!showFunnel && (
         <div
           className="fixed z-20"
@@ -3893,9 +3884,9 @@ const handleSaveCampaignName = useCallback(async () => {
                   <div className="flex-1 flex flex-col items-center justify-center overflow-hidden relative">
                     {editorMode === 'article' && (
                       <ArticleFunnelView
-                        articleConfig={(campaignState as any)?.articleConfig || {}}
+                        articleConfig={getArticleConfigWithDefaults(campaignState, campaignData)}
                         campaignType={(campaignState as any)?.type || 'scratch'}
-                        campaign={campaignData}
+                        campaign={(campaignState as any) || campaignData}
                         wheelModalConfig={wheelModalConfig}
                         gameModalConfig={wheelModalConfig}
                         currentStep={currentStep}

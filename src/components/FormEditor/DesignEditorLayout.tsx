@@ -13,6 +13,7 @@ const FullScreenPreviewModal = lazy(() => import('@/components/shared/modals/Ful
 const FunnelUnlockedGame = lazy(() => import('@/components/funnels/FunnelUnlockedGame'));
 import PreviewRenderer from '@/components/preview/PreviewRenderer';
 import ArticleFunnelView from '@/components/ArticleEditor/ArticleFunnelView';
+import { getArticleConfigWithDefaults } from '@/utils/articleConfigHelpers';
 import type { ModularPage, ScreenId, BlocBouton, Module } from '@/types/modularEditor';
 import { createEmptyModularPage } from '@/types/modularEditor';
 
@@ -29,8 +30,6 @@ import { getEditorDeviceOverride } from '@/utils/deviceOverrides';
 import { useEditorPreviewSync } from '@/hooks/useEditorPreviewSync';
 import { useCampaignSettings } from '@/hooks/useCampaignSettings';
 import { useEditorUnmountSave } from '@/hooks/useEditorUnmountSave';
-import { useEnhancedAutosave } from '@/hooks/useEnhancedAutosave';
-import { OfflineSyncIndicator } from '@/components/OfflineSyncIndicator';
 // FormEditor types removed - using inline types for 2-screen layout
 
 
@@ -514,33 +513,6 @@ useEffect(() => {
   // Modular editor JSON state - DOIT être déclaré AVANT les callbacks qui l'utilisent
   const [modularPage, setModularPage] = useState<ModularPage>(createEmptyModularPage());
   const [extractedColors, setExtractedColors] = useState<string[]>([]);
-
-  // 🚀 Phase 2 & 3: Enhanced autosave with offline support, compression, and metrics
-  const {
-    isSaving,
-    lastSaved,
-    hasUnsavedChanges,
-    triggerManualSave,
-    isOnline,
-    queueSize,
-    isSyncing,
-  } = useEnhancedAutosave(
-    (campaignState as any)?.id,
-    {
-      ...campaignState,
-      canvasElements,
-      modularPage,
-      screenBackgrounds,
-      extractedColors,
-      selectedDevice,
-      canvasZoom,
-      gameConfig: (campaignState as any)?.formConfig
-    },
-    {
-      enabled: true,
-      delay: 3000,
-    }
-  );
 
   // 🧹 CRITICAL: Save complete state before unmount to prevent data loss
   // Placed here AFTER all state declarations to avoid TDZ errors
@@ -3404,16 +3376,6 @@ useEffect(() => {
       }}
     >
     <MobileStableEditor className={showFunnel ? "h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden" : (isWindowMobile ? "h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden pb-[6px] rounded-tl-[18px] rounded-tr-[18px] rounded-br-[18px] transform -translate-y-[0.4vh]" : "h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden pt-[1.25cm] pb-[6px] rounded-tl-[18px] rounded-tr-[18px] rounded-br-[18px] transform -translate-y-[0.4vh]")}> 
-      {/* Offline Sync Indicator - Phase 2 & 3 */}
-      {!showFunnel && (
-        <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50">
-          <OfflineSyncIndicator
-            isOnline={isOnline}
-            queueSize={queueSize}
-            isSyncing={isSyncing}
-          />
-        </div>
-      )}
 
       {/* Top Toolbar - Hidden only in preview mode */}
       {!showFunnel && (
@@ -3474,7 +3436,7 @@ useEffect(() => {
                       }}
                     >
                       <ArticleFunnelView
-                        articleConfig={(campaignState as any)?.articleConfig || {}}
+                        articleConfig={getArticleConfigWithDefaults(campaignState, campaignData)}
                         campaignType={(campaignState as any)?.type || 'form'}
                         campaign={campaignData}
                         wheelModalConfig={wheelModalConfig}
@@ -3493,7 +3455,7 @@ useEffect(() => {
                   </div>
                 ) : (
                   <ArticleFunnelView
-                    articleConfig={(campaignState as any)?.articleConfig || {}}
+                    articleConfig={getArticleConfigWithDefaults(campaignState, campaignData)}
                     campaignType={(campaignState as any)?.type || 'form'}
                     campaign={campaignData}
                     wheelModalConfig={wheelModalConfig}
@@ -3866,7 +3828,7 @@ useEffect(() => {
                   <div className="flex-1 flex flex-col items-center justify-center overflow-hidden relative">
                     {editorMode === 'article' && (
                       <ArticleFunnelView
-                        articleConfig={(campaignState as any)?.articleConfig || {}}
+                        articleConfig={getArticleConfigWithDefaults(campaignState, memoCampaignData)}
                         campaignType={(campaignState as any)?.type || 'form'}
                         campaign={memoCampaignData}
                         wheelModalConfig={undefined}

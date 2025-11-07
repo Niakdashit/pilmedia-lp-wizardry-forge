@@ -13,7 +13,7 @@ const FullScreenPreviewModal = lazy(() => import('@/components/shared/modals/Ful
 const FunnelUnlockedGame = lazy(() => import('@/components/funnels/FunnelUnlockedGame'));
 import PreviewRenderer from '@/components/preview/PreviewRenderer';
 import ArticleFunnelView from '@/components/ArticleEditor/ArticleFunnelView';
-import { toast } from 'sonner';
+// import GradientBand from '../shared/GradientBand';
 import type { ModularPage, ScreenId, BlocBouton, Module } from '@/types/modularEditor';
 import { createEmptyModularPage } from '@/types/modularEditor';
 
@@ -30,9 +30,6 @@ import { recalculateAllElements } from '../../utils/recalculateAllModules';
 import { useEditorPreviewSync } from '@/hooks/useEditorPreviewSync';
 import { useCampaignSettings } from '@/hooks/useCampaignSettings';
 import { useEditorUnmountSave } from '@/hooks/useEditorUnmountSave';
-import { useEnhancedAutosave } from '@/hooks/useEnhancedAutosave';
-import { OfflineSyncIndicator } from '@/components/OfflineSyncIndicator';
-import { useSaveAndExit } from '@/hooks/useSaveAndExit';
 
 
 
@@ -232,33 +229,6 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
     window.addEventListener('editor-request-save', handler as any);
     return () => window.removeEventListener('editor-request-save', handler as any);
   }, [canvasElements, screenBackgrounds, selectedDevice, canvasZoom, canvasBackground, modularPage, saveCampaign, setIsModified]);
-
-  // 🚀 Phase 2 & 3: Enhanced autosave with offline support, compression, and metrics
-  const {
-    isSaving,
-    lastSaved,
-    hasUnsavedChanges,
-    triggerManualSave,
-    isOnline,
-    queueSize,
-    isSyncing,
-  } = useEnhancedAutosave(
-    (campaignState as any)?.id,
-    {
-      ...campaignState,
-      canvasElements,
-      modularPage,
-      screenBackgrounds,
-      extractedColors,
-      selectedDevice,
-      canvasZoom,
-      gameConfig: (campaignState as any)?.wheelConfig
-    },
-    {
-      enabled: false, // ⚠️ Disabled: Save only on "Sauvegarder et quitter" button
-      delay: 3000,
-    }
-  );
 
   // 🧹 CRITICAL: Save complete state before unmount to prevent data loss
   useEditorUnmountSave('wheel', {
@@ -2408,7 +2378,6 @@ useEffect(() => {
   const [isValidationModalOpen, setIsValidationModalOpen] = useState(false);
   const { validateCampaign } = useCampaignValidation();
   const validation = validateCampaign();
-  const { saveAndExit, isSaving: isSavingAndExiting } = useSaveAndExit();
 
   const handleSaveAndQuit = useCallback(async () => {
     const result = validateCampaign();
@@ -2428,47 +2397,19 @@ useEffect(() => {
       return;
     }
     
-    // Get campaign ID
-    const campaignId = (campaignState as any)?.id;
-    if (!campaignId) {
-      toast.error('ID de campagne manquant');
-      return;
-    }
-
-    // 🔄 Prepare campaign data with all latest states
-    const campaignData = {
-      ...campaignState,
-      config: {
-        ...(campaignState as any)?.config,
-        canvasElements,
-        modularPage,
-        screenBackgrounds,
-        extractedColors,
-      },
-      design: (campaignState as any)?.design,
-      game_config: (campaignState as any)?.wheelConfig,
-      article_config: (campaignState as any)?.article_config,
-      form_fields: (campaignState as any)?.form_fields,
-      name: (campaignState as any)?.name,
-      description: (campaignState as any)?.description,
-    };
-
-    // Call the save and exit hook
-    await saveAndExit({
-      campaignId,
-      campaignData,
-      onBeforeSave: () => {
-        syncAllStates({
-          canvasElements,
-          modularPage,
-          screenBackgrounds,
-          extractedColors,
-          selectedDevice,
-          canvasZoom
-        });
-      }
+    // 🔄 Synchroniser tous les états locaux avec le campaign avant la sauvegarde
+    syncAllStates({
+      canvasElements,
+      modularPage,
+      screenBackgrounds,
+      extractedColors,
+      selectedDevice,
+      canvasZoom
     });
-  }, [validateCampaign, saveAndExit, syncAllStates, canvasElements, modularPage, screenBackgrounds, extractedColors, selectedDevice, canvasZoom, campaignState]);
+    
+    await handleSave();
+    navigate('/dashboard');
+  }, [validateCampaign, handleSave, navigate, syncAllStates, canvasElements, modularPage, screenBackgrounds, extractedColors, selectedDevice, canvasZoom, campaignState]);
 
   // Navigate to settings without saving (same destination as Save & Continue)
   const handleNavigateToSettings = useCallback(() => {
@@ -2776,16 +2717,6 @@ useEffect(() => {
       }}
     >
       {!showFunnel && <EditorHeader />}
-      {/* Offline Sync Indicator - Phase 2 & 3 */}
-      {!showFunnel && (
-        <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50">
-          <OfflineSyncIndicator
-            isOnline={isOnline}
-            queueSize={queueSize}
-            isSyncing={isSyncing}
-          />
-        </div>
-      )}
       {!showFunnel && (
         <div
           className="fixed z-20"
@@ -3544,13 +3475,12 @@ useEffect(() => {
           </button>
           <button
             onClick={handleSaveAndQuit}
-            disabled={isSavingAndExiting}
             className="inline-flex items-center px-4 py-2 text-sm rounded-xl bg-gradient-to-br from-[#841b60] to-[#b41b60] backdrop-blur-sm text-white font-medium border border-white/20 shadow-lg shadow-[#841b60]/20 hover:from-[#841b60] hover:to-[#6d164f] hover:shadow-xl hover:shadow-[#841b60]/30 transition-all duration-300 transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-[#841b60]/20"
             title="Sauvegarder et quitter"
           >
             <Save className="w-4 h-4 mr-1" />
-            <span className="hidden sm:inline">{isSavingAndExiting ? 'Sauvegarde...' : 'Sauvegarder et quitter'}</span>
-            <span className="sm:hidden">{isSavingAndExiting ? 'Sauvegarde...' : 'Sauvegarder'}</span>
+            <span className="hidden sm:inline">Sauvegarder et quitter</span>
+            <span className="sm:hidden">Sauvegarder</span>
           </button>
         </div>
       )}
