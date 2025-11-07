@@ -57,42 +57,18 @@ export const useCampaignsList = () => {
   const hydrateFromCache = () => {
     const mem = campaignListCache.get(CAMPAIGN_LIST_CACHE_KEY);
     if (mem && mem.expiresAt > getNow()) {
-      // Recompute names from local drafts to reflect unsaved settings changes
-      const recomputed = (mem.data || []).map((c) => {
-        try {
-          const raw = typeof window !== 'undefined' ? window.localStorage.getItem(`campaign:settings:draft:${c.id}`) : null;
-          if (!raw) return c;
-          const draft = JSON.parse(raw);
-          const draftName = draft?.publication?.name as (string | undefined);
-          if (draftName && draftName.trim()) {
-            return { ...c, name: draftName.trim() };
-          }
-        } catch {}
-        return c;
-      });
-      setCampaigns(recomputed);
+      // Use cached server data as-is to avoid overriding with stale local drafts
+      setCampaigns(mem.data || []);
       return true;
     }
     const local = readLocalListCache(CAMPAIGN_LIST_CACHE_KEY);
     if (local) {
-      // Recompute names from local drafts
-      const recomputed = (local || []).map((c) => {
-        try {
-          const raw = typeof window !== 'undefined' ? window.localStorage.getItem(`campaign:settings:draft:${c.id}`) : null;
-          if (!raw) return c;
-          const draft = JSON.parse(raw);
-          const draftName = draft?.publication?.name as (string | undefined);
-          if (draftName && draftName.trim()) {
-            return { ...c, name: draftName.trim() };
-          }
-        } catch {}
-        return c;
-      });
+      // Mirror to memory cache for fast next access
       campaignListCache.set(CAMPAIGN_LIST_CACHE_KEY, {
-        data: recomputed,
+        data: local,
         expiresAt: getNow() + CAMPAIGN_LIST_CACHE_TTL_MS,
       });
-      setCampaigns(recomputed);
+      setCampaigns(local);
       return true;
     }
     return false;
@@ -191,21 +167,21 @@ export const useCampaignsList = () => {
         // Get participants count
         const participants = campaign.campaign_stats?.[0]?.participations || 0;
 
-        return {
-          id: campaign.id,
-          name: publicationName || draftName || campaign.name,
-          description: campaign.description,
-          type: campaign.type,
-          status: campaign.status,
-          editor_mode: campaign.editor_mode ?? null,
-          created_at: campaign.created_at,
-          created_by: campaign.created_by,
-          banner_url: campaign.banner_url,
-          participants,
-          // Fallback to created_at if dates are missing (ensures all campaigns have displayable dates)
-          startDate: startDate || campaign.created_at,
-          endDate: endDate || new Date(new Date(campaign.created_at).getTime() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-        };
+          return {
+            id: campaign.id,
+            name: publicationName || campaign.name || draftName,
+            description: campaign.description,
+            type: campaign.type,
+            status: campaign.status,
+            editor_mode: campaign.editor_mode ?? null,
+            created_at: campaign.created_at,
+            created_by: campaign.created_by,
+            banner_url: campaign.banner_url,
+            participants,
+            // Fallback to created_at if dates are missing (ensures all campaigns have displayable dates)
+            startDate: startDate || campaign.created_at,
+            endDate: endDate || new Date(new Date(campaign.created_at).getTime() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+          };
       });
 
       setCampaigns(transformedCampaigns);
