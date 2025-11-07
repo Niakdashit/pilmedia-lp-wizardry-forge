@@ -67,47 +67,6 @@ export type Database = {
           },
         ]
       }
-      campaign_backups: {
-        Row: {
-          backup_name: string
-          campaign_id: string
-          created_at: string
-          created_by: string | null
-          description: string | null
-          full_snapshot: Json
-          id: string
-          metadata: Json | null
-        }
-        Insert: {
-          backup_name: string
-          campaign_id: string
-          created_at?: string
-          created_by?: string | null
-          description?: string | null
-          full_snapshot: Json
-          id?: string
-          metadata?: Json | null
-        }
-        Update: {
-          backup_name?: string
-          campaign_id?: string
-          created_at?: string
-          created_by?: string | null
-          description?: string | null
-          full_snapshot?: Json
-          id?: string
-          metadata?: Json | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "campaign_backups_campaign_id_fkey"
-            columns: ["campaign_id"]
-            isOneToOne: false
-            referencedRelation: "campaigns"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       campaign_integrations: {
         Row: {
           campaign_id: string
