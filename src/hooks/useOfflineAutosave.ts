@@ -3,6 +3,21 @@ import { offlineDB, QueuedSave } from '@/lib/db/offlineQueue';
 import { useCampaignVersion } from './useCampaignVersion';
 import { toast } from 'sonner';
 
+// Minimal sanitizer to avoid server errors on volatile/local-only fields
+const VOLATILE_KEYS = new Set(['_syncTimestamp', '_updatedAt', '_lastUpdate']);
+const sanitizeReplacer = (key: string, value: any) => {
+  if (VOLATILE_KEYS.has(key)) return undefined;
+  if (typeof value === 'function') return undefined;
+  return value;
+};
+const sanitizePayload = (obj: any) => {
+  try {
+    return JSON.parse(JSON.stringify(obj, sanitizeReplacer));
+  } catch {
+    return obj;
+  }
+};
+
 export const useOfflineAutosave = (campaignId: string) => {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [queueSize, setQueueSize] = useState(0);
@@ -48,16 +63,17 @@ export const useOfflineAutosave = (campaignId: string) => {
   // Save offline
   const saveOffline = useCallback(async (data: any, revision: number) => {
     try {
+      const sanitized = sanitizePayload(data);
       const queueItem: QueuedSave = {
         id: `${campaignId}-${Date.now()}`,
         campaignId,
-        data: { ...data, revision },
+        data: { ...sanitized, revision },
         timestamp: Date.now(),
         retries: 0,
       };
 
       await offlineDB.addToQueue(queueItem);
-      await offlineDB.saveDraft(campaignId, data);
+      await offlineDB.saveDraft(campaignId, sanitized);
       await updateQueueSize();
 
       console.log('💾 [OfflineAutosave] Saved offline:', queueItem.id);
@@ -96,10 +112,11 @@ export const useOfflineAutosave = (campaignId: string) => {
         const latestItem = sorted[sorted.length - 1];
         
         try {
+          const sanitized = sanitizePayload(latestItem.data);
           const result = await saveWithVersionCheck({
             campaignId: latestItem.campaignId,
-            data: latestItem.data,
-            expectedRevision: latestItem.data.revision,
+            data: sanitized,
+            expectedRevision: sanitized.revision,
           });
 
           if (result.success) {
