@@ -6,6 +6,32 @@ import { saveMetrics } from '@/lib/analytics/saveMetrics';
 import { estimateSize } from '@/lib/compression/payloadCompressor';
 import { supabase } from '@/integrations/supabase/client';
 
+// Helpers to avoid autosave loops on volatile fields
+const isVolatileKey = (key: string) =>
+  key === '_syncTimestamp' || key === '_updatedAt' || key === '_lastUpdate';
+
+const autosaveReplacer = (key: string, value: any) => {
+  if (isVolatileKey(key)) return undefined;
+  if (typeof value === 'function') return undefined;
+  return value;
+};
+
+const stableStringify = (obj: any) => {
+  try {
+    return JSON.stringify(obj, autosaveReplacer);
+  } catch {
+    return '';
+  }
+};
+
+const sanitizeAutosavePayload = (obj: any) => {
+  try {
+    return JSON.parse(stableStringify(obj));
+  } catch {
+    return obj;
+  }
+};
+
 interface AutosaveOptions {
   enabled?: boolean;
   delay?: number;
@@ -177,8 +203,9 @@ export const useEnhancedAutosave = (
       saveTimeoutRef.current = setTimeout(async () => {
         if (!campaignId || !enabled) return;
 
-        const currentData = JSON.stringify(dataToSave);
-        if (currentData === lastSaveDataRef.current) {
+        const sanitized = sanitizeAutosavePayload(dataToSave);
+        const sanitizedStr = stableStringify(sanitized);
+        if (sanitizedStr === lastSaveDataRef.current) {
           return;
         }
 
@@ -186,8 +213,8 @@ export const useEnhancedAutosave = (
         setHasUnsavedChanges(false);
 
         try {
-          await performSave(dataToSave);
-          lastSaveDataRef.current = currentData;
+          await performSave(sanitized);
+          lastSaveDataRef.current = sanitizedStr;
           setLastSaved(new Date());
           onSuccess?.();
         } catch (error) {
@@ -205,11 +232,11 @@ export const useEnhancedAutosave = (
   // Trigger autosave on campaign changes
   useEffect(() => {
     if (campaign && enabled) {
-      const currentData = JSON.stringify(campaign);
-      // Only mark as unsaved if data actually changed
-      if (currentData !== lastSaveDataRef.current) {
+      const sanitized = sanitizeAutosavePayload(campaign);
+      const sanitizedStr = stableStringify(sanitized);
+      if (sanitizedStr !== lastSaveDataRef.current) {
         setHasUnsavedChanges(true);
-        debouncedSave(campaign);
+        debouncedSave(sanitized);
       }
     }
   }, [campaign, enabled, debouncedSave]);
@@ -229,7 +256,9 @@ export const useEnhancedAutosave = (
 
     setIsSaving(true);
     try {
-      await performSave(campaign);
+      const sanitized = sanitizeAutosavePayload(campaign);
+      await performSave(sanitized);
+      lastSaveDataRef.current = stableStringify(sanitized);
       setLastSaved(new Date());
       setHasUnsavedChanges(false);
       toast.success('Sauvegarde réussie');
