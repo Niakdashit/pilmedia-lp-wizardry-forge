@@ -110,50 +110,66 @@ const CampaignBackupsPage: React.FC = () => {
           </div>
         ) : (
           <div className="grid gap-4">
-            {backups.map((backup) => (
-              <div
-                key={backup.id}
-                className="bg-card border border-border rounded-lg p-6 hover:shadow-md transition-shadow"
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-foreground mb-1">
-                      {backup.backup_name}
-                    </h3>
-                    {backup.description && (
-                      <p className="text-sm text-muted-foreground mb-3">
-                        {backup.description}
-                      </p>
-                    )}
-                    <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                      <div className="flex items-center gap-1">
-                        <Clock className="w-3 h-3" />
-                        {new Date(backup.created_at).toLocaleString('fr-FR')}
+            {backups.map((backup) => {
+              const campaignName = backup.full_snapshot?.name || 'Sans nom';
+              const campaignType = backup.full_snapshot?.type || backup.metadata?.type || 'wheel';
+              
+              return (
+                <div
+                  key={backup.id}
+                  className="bg-card border border-border rounded-lg p-6 hover:shadow-md transition-shadow"
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <h3 className="text-lg font-semibold text-foreground">
+                          {backup.backup_name}
+                        </h3>
+                        <span className="px-2 py-0.5 text-xs bg-primary/10 text-primary rounded-full">
+                          {campaignType}
+                        </span>
                       </div>
-                      {backup.metadata?.revision && (
-                        <div>Révision {backup.metadata.revision}</div>
+                      <p className="text-sm text-muted-foreground mb-3">
+                        Campagne: <span className="font-medium text-foreground">{campaignName}</span>
+                      </p>
+                      {backup.description && (
+                        <p className="text-sm text-muted-foreground mb-3 italic">
+                          {backup.description}
+                        </p>
                       )}
+                      <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                        <div className="flex items-center gap-1">
+                          <Clock className="w-3 h-3" />
+                          {new Date(backup.created_at).toLocaleString('fr-FR')}
+                        </div>
+                        {backup.metadata?.revision && (
+                          <div>Révision {backup.metadata.revision}</div>
+                        )}
+                        {backup.metadata?.status && (
+                          <div className="capitalize">{backup.metadata.status}</div>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => handleRestore(backup.id, backup.backup_name)}
+                        className="p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors"
+                        title="Restaurer cette sauvegarde"
+                      >
+                        <RotateCcw className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(backup.id, backup.backup_name)}
+                        className="p-2 text-destructive hover:bg-destructive/10 rounded-lg transition-colors"
+                        title="Supprimer cette sauvegarde"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => handleRestore(backup.id, backup.backup_name)}
-                      className="p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors"
-                      title="Restaurer cette sauvegarde"
-                    >
-                      <RotateCcw className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(backup.id, backup.backup_name)}
-                      className="p-2 text-destructive hover:bg-destructive/10 rounded-lg transition-colors"
-                      title="Supprimer cette sauvegarde"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
