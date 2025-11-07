@@ -4,6 +4,7 @@ import { useCampaignVersion } from './useCampaignVersion';
 import { toast } from 'sonner';
 import { saveMetrics } from '@/lib/analytics/saveMetrics';
 import { estimateSize } from '@/lib/compression/payloadCompressor';
+import { supabase } from '@/integrations/supabase/client';
 
 interface AutosaveOptions {
   enabled?: boolean;
@@ -103,6 +104,32 @@ export const useEnhancedAutosave = (
 
         if (!result.success) {
           throw new Error('Save failed');
+        }
+
+        // Synchronize campaign_settings.publication.name with campaign.name
+        if (dataToSave.name && campaignId) {
+          try {
+            const { data: settings } = await supabase
+              .from('campaign_settings')
+              .select('publication')
+              .eq('campaign_id', campaignId)
+              .single();
+            
+            const existingPublication = (settings?.publication || {}) as Record<string, any>;
+            
+            await supabase
+              .from('campaign_settings')
+              .upsert({
+                campaign_id: campaignId,
+                publication: {
+                  ...existingPublication,
+                  name: dataToSave.name
+                }
+              });
+          } catch (syncError) {
+            // Non-blocking error, just log it
+            console.warn('[Autosave] Failed to sync campaign_settings name:', syncError);
+          }
         }
 
         saveMetrics.track({
