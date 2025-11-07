@@ -111,7 +111,8 @@ const SavedSnapshots: React.FC = () => {
     };
 
     const route = editorRoutes[campaign.type || 'wheel'];
-    navigate(`${route}?campaign=${campaign.id}`);
+    // Force reload from DB by adding reload parameter and timestamp to bypass cache
+    navigate(`${route}?campaign=${campaign.id}&reload=true&t=${Date.now()}`);
   };
 
   const handleDuplicate = async (campaign: Campaign) => {

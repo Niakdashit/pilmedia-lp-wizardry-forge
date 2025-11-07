@@ -86,7 +86,10 @@ export const useSaveAndExit = () => {
 
       toast.success('Campagne sauvegardée avec succès');
       
-      // 4. Navigate to campaigns list
+      // 4. Clear any cached data for this campaign
+      sessionStorage.removeItem(`campaign_${campaignId}`);
+      
+      // 5. Navigate to campaigns list
       navigate(redirectPath);
     } catch (error) {
       console.error('Error saving campaign:', error);

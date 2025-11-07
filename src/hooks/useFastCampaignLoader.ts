@@ -83,6 +83,13 @@ export const useFastCampaignLoader = ({
   const [error, setError] = useState<Error | null>(null);
   const loadingRef = useRef(false);
   const mountedRef = useRef(true);
+  
+  // Check if reload parameter is in URL to bypass cache
+  const shouldBypassCache = useRef(false);
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    shouldBypassCache.current = params.get('reload') === 'true';
+  }, []);
 
   // Précharge les images d'une campagne
   const preloadCampaignImages = useCallback(async (campaignData: any) => {
@@ -104,8 +111,8 @@ export const useFastCampaignLoader = ({
     loadingRef.current = true;
 
     try {
-      // 1. Vérifier le cache d'abord (chargement instantané)
-      const cached = campaignCache.get(id);
+      // 1. Vérifier le cache d'abord (chargement instantané) - sauf si reload forcé
+      const cached = shouldBypassCache.current ? null : campaignCache.get(id);
       if (cached && mountedRef.current) {
         setCampaign(cached);
         setIsLoading(false);
