@@ -32,6 +32,9 @@ import { getEditorDeviceOverride } from '@/utils/deviceOverrides';
 import { recalculateAllElements } from '../../utils/recalculateAllModules';
 import { useEditorPreviewSync } from '@/hooks/useEditorPreviewSync';
 import { useCampaignSettings } from '@/hooks/useCampaignSettings';
+import { useEditorUnmountSave } from '@/hooks/useEditorUnmountSave';
+import { useEnhancedAutosave } from '@/hooks/useEnhancedAutosave';
+import { OfflineSyncIndicator } from '@/components/OfflineSyncIndicator';
 import type { ScreenBackgrounds, DeviceSpecificBackground } from '@/types/background';
 import { isTempCampaignId, clearTempCampaignData } from '@/utils/tempCampaignId';
 
@@ -44,8 +47,6 @@ import type { GameModalConfig } from '@/types/gameConfig';
 import { createGameConfigFromQuiz } from '@/types/gameConfig';
 import { supabase } from '@/integrations/supabase/client';
 import { generateTempCampaignId } from '@/utils/tempCampaignId';
-import { useAutoSaveToSupabase } from '@/hooks/useAutoSaveToSupabase';
-import { useEditorUnmountSave } from '@/hooks/useEditorUnmountSave';
 
 import KeyboardShortcutsHelp from '../shared/KeyboardShortcutsHelp';
 import MobileStableEditor from './components/MobileStableEditor';
@@ -278,34 +279,26 @@ const { syncAllStates } = useCampaignStateSync();
     gameConfig: (campaignState as any)?.jackpotConfig
   }, saveCampaign);
 
-  // Only enable autosave when campaign id is a real UUID (avoid temp/new drafts)
-  const isPersistedId = (() => {
-    const id = (campaignState as any)?.id as string | undefined;
-    return !!(id && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id));
-  })();
-
-  // 🔄 Auto-save to Supabase every 30 seconds (aligned with QuizEditor)
-  useAutoSaveToSupabase(
+  // 🚀 Phase 2 & 3: Enhanced autosave with offline support, compression, and metrics
+  const {
+    isOnline,
+    queueSize,
+    isSyncing,
+  } = useEnhancedAutosave(
+    (campaignState as any)?.id,
     {
-      campaign: {
-        ...campaignState,
-        type: 'jackpot',
-        jackpotConfig: (campaignState as any)?.jackpotConfig
-      },
+      ...campaignState,
       canvasElements,
       modularPage,
       screenBackgrounds,
-      canvasZoom
+      extractedColors,
+      selectedDevice,
+      canvasZoom,
+      gameConfig: (campaignState as any)?.jackpotConfig
     },
     {
-      enabled: isPersistedId,
-      interval: 30000, // 30 seconds
-      onSave: () => {
-        console.log('✅ [JackpotEditor AutoSave] Campaign auto-saved to Supabase');
-      },
-      onError: (error) => {
-        console.error('❌ [JackpotEditor AutoSave] Auto-save failed:', error);
-      }
+      enabled: true,
+      delay: 3000,
     }
   );
 
@@ -3343,7 +3336,18 @@ useEffect(() => {
           boxSizing: 'border-box'
         }}
       >
-        {!showFunnel && <EditorHeader />}
+        {!showFunnel && (
+          <>
+            <EditorHeader />
+            <div className="fixed top-4 right-4 z-50">
+              <OfflineSyncIndicator
+                isOnline={isOnline}
+                queueSize={queueSize}
+                isSyncing={isSyncing}
+              />
+            </div>
+          </>
+        )}
         {!showFunnel && (
           <div
             className="fixed z-10"

@@ -34,6 +34,8 @@ import { recalculateAllElements } from '../../utils/recalculateAllModules';
 import { useEditorPreviewSync } from '@/hooks/useEditorPreviewSync';
 import { useCampaignSettings } from '@/hooks/useCampaignSettings';
 import { useEditorUnmountSave } from '@/hooks/useEditorUnmountSave';
+import { useEnhancedAutosave } from '@/hooks/useEnhancedAutosave';
+import { OfflineSyncIndicator } from '@/components/OfflineSyncIndicator';
 import type { ScreenBackgrounds, DeviceSpecificBackground } from '@/types/background';
 import { isTempCampaignId, clearTempCampaignData } from '@/utils/tempCampaignId';
 
@@ -46,7 +48,6 @@ import { useScratchCardStore } from './state/scratchcard.store';
 import type { GameModalConfig } from '@/types/gameConfig';
 import { createGameConfigFromQuiz } from '@/types/gameConfig';
 import { generateTempCampaignId } from '@/utils/tempCampaignId';
-import { useAutoSaveToSupabase } from '@/hooks/useAutoSaveToSupabase';
 
 const KeyboardShortcutsHelp = lazy(() => import('../shared/KeyboardShortcutsHelp'));
 const MobileStableEditor = lazy(() => import('./components/MobileStableEditor'));
@@ -521,28 +522,26 @@ useEffect(() => {
     gameConfig: (campaignState as any)?.scratchConfig
   }, saveCampaign);
 
-  // 🔄 Auto-save to Supabase every 30 seconds (aligned with QuizEditor)
-  useAutoSaveToSupabase(
+  // 🚀 Phase 2 & 3: Enhanced autosave with offline support, compression, and metrics
+  const {
+    isOnline,
+    queueSize,
+    isSyncing,
+  } = useEnhancedAutosave(
+    (campaignState as any)?.id,
     {
-      campaign: {
-        ...campaignState,
-        type: 'scratch',
-        scratchConfig: (campaignState as any)?.scratchConfig
-      },
+      ...campaignState,
       canvasElements,
       modularPage,
       screenBackgrounds,
-      canvasZoom
+      extractedColors,
+      selectedDevice,
+      canvasZoom,
+      gameConfig: (campaignState as any)?.scratchConfig
     },
     {
       enabled: true,
-      interval: 30000, // 30 seconds
-      onSave: () => {
-        console.log('✅ [ScratchEditor AutoSave] Campaign auto-saved to Supabase');
-      },
-      onError: (error) => {
-        console.error('❌ [ScratchEditor AutoSave] Auto-save failed:', error);
-      }
+      delay: 3000,
     }
   );
 
@@ -3359,7 +3358,18 @@ const handleSaveCampaignName = useCallback(async () => {
         boxSizing: 'border-box'
       }}
     >
-      {!showFunnel && <EditorHeader />}
+      {!showFunnel && (
+        <>
+          <EditorHeader />
+          <div className="fixed top-4 right-4 z-50">
+            <OfflineSyncIndicator
+              isOnline={isOnline}
+              queueSize={queueSize}
+              isSyncing={isSyncing}
+            />
+          </div>
+        </>
+      )}
       {!showFunnel && (
         <div
           className="fixed z-20"

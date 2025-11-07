@@ -31,7 +31,8 @@ import { useEditorPreviewSync } from '@/hooks/useEditorPreviewSync';
 import { useCampaignSettings } from '@/hooks/useCampaignSettings';
 import type { ScreenBackgrounds } from '@/types/background';
 import { useEditorUnmountSave } from '@/hooks/useEditorUnmountSave';
-
+import { useEnhancedAutosave } from '@/hooks/useEnhancedAutosave';
+import { OfflineSyncIndicator } from '@/components/OfflineSyncIndicator';
 
 import { useCampaigns } from '@/hooks/useCampaigns';
 import { saveCampaignToDB } from '@/hooks/useModernCampaignEditor/saveHandler';
@@ -39,7 +40,6 @@ import { useCampaignStateSync } from '@/hooks/useCampaignStateSync';
 import { quizTemplates } from '../../types/quizTemplates';
 import { supabase } from '@/integrations/supabase/client';
 // import { CampaignStorage } from '@/utils/campaignStorage';
-import { useAutoSaveToSupabase } from '@/hooks/useAutoSaveToSupabase';
 import { generateTempCampaignId, isTempCampaignId, isPersistedCampaignId, clearTempCampaignData, replaceTempWithPersistedId } from '@/utils/tempCampaignId';
 
 const KeyboardShortcutsHelp = lazy(() => import('../shared/KeyboardShortcutsHelp'));
@@ -1250,25 +1250,26 @@ const handleSaveCampaignName = useCallback(async () => {
     return allModules.find((module) => module.id === selectedModuleId) || null;
   }, [selectedModuleId, modularPage.screens]);
   
-  // 🔄 Auto-save to Supabase every 30 seconds
-  // Placed here after all state declarations to avoid TDZ issues
-  useAutoSaveToSupabase(
+  // 🚀 Phase 2 & 3: Enhanced autosave with offline support, compression, and metrics
+  const {
+    isOnline,
+    queueSize,
+    isSyncing,
+  } = useEnhancedAutosave(
+    (campaignState as any)?.id,
     {
-      campaign: campaignState,
+      ...campaignState,
       canvasElements,
       modularPage,
       screenBackgrounds,
-      canvasZoom
+      extractedColors,
+      selectedDevice,
+      canvasZoom,
+      gameConfig: (campaignState as any)?.quizConfig
     },
     {
       enabled: true,
-      interval: 30000, // 30 seconds
-      onSave: () => {
-        console.log('✅ [AutoSave] Campaign auto-saved to Supabase');
-      },
-      onError: (error) => {
-        console.error('❌ [AutoSave] Auto-save failed:', error);
-      }
+      delay: 3000,
     }
   );
   
@@ -3613,7 +3614,18 @@ const handleSaveCampaignName = useCallback(async () => {
         boxSizing: 'border-box'
       }}
     >
-      {!showFunnel && <EditorHeader />}
+      {!showFunnel && (
+        <>
+          <EditorHeader />
+          <div className="fixed top-4 right-4 z-50">
+            <OfflineSyncIndicator
+              isOnline={isOnline}
+              queueSize={queueSize}
+              isSyncing={isSyncing}
+            />
+          </div>
+        </>
+      )}
       {!showFunnel && (
         <div
           className="fixed z-20"
