@@ -5,10 +5,11 @@ import { toast } from 'sonner';
 import { saveMetrics } from '@/lib/analytics/saveMetrics';
 import { estimateSize } from '@/lib/compression/payloadCompressor';
 import { supabase } from '@/integrations/supabase/client';
+import { buildCampaignUpdatePayload } from '@/lib/campaign/buildDbPayload';
 
 // Helpers to avoid autosave loops on volatile fields
 const isVolatileKey = (key: string) =>
-  key === '_syncTimestamp' || key === '_updatedAt' || key === '_lastUpdate';
+  key.startsWith('_') || key === 'selectedDevice' || key === 'canvasZoom';
 
 const autosaveReplacer = (key: string, value: any) => {
   if (isVolatileKey(key)) return undefined;
@@ -106,9 +107,12 @@ export const useEnhancedAutosave = (
       try {
         console.log(`💾 [Autosave] Attempt ${attempt}/${maxRetries}`);
 
+        // Build clean DB payload
+        const dbPayload = buildCampaignUpdatePayload(dataToSave);
+
         const result = await saveWithVersionCheck({
           campaignId: campaignId!,
-          data: dataToSave,
+          data: dbPayload,
           expectedRevision: campaign?.revision || 1,
         });
 

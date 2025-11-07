@@ -2,10 +2,12 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { offlineDB, QueuedSave } from '@/lib/db/offlineQueue';
 import { useCampaignVersion } from './useCampaignVersion';
 import { toast } from 'sonner';
+import { buildCampaignUpdatePayload } from '@/lib/campaign/buildDbPayload';
 
 // Minimal sanitizer to avoid server errors on volatile/local-only fields
 const VOLATILE_KEYS = new Set(['_syncTimestamp', '_updatedAt', '_lastUpdate']);
 const sanitizeReplacer = (key: string, value: any) => {
+  if (key.startsWith('_')) return undefined;
   if (VOLATILE_KEYS.has(key)) return undefined;
   if (typeof value === 'function') return undefined;
   return value;
@@ -113,9 +115,11 @@ export const useOfflineAutosave = (campaignId: string) => {
         
         try {
           const sanitized = sanitizePayload(latestItem.data);
+          const dbPayload = buildCampaignUpdatePayload(sanitized);
+          
           const result = await saveWithVersionCheck({
             campaignId: latestItem.campaignId,
-            data: sanitized,
+            data: dbPayload,
             expectedRevision: sanitized.revision,
           });
 

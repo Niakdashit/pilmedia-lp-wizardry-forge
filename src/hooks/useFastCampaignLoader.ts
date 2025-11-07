@@ -111,6 +111,47 @@ export const useFastCampaignLoader = ({
         setIsLoading(false);
         // Précharger les images en arrière-plan
         preloadCampaignImages(cached);
+        
+        // CRITICAL: Fetch fresh data from server in background
+        (async () => {
+          try {
+            const { data: freshData } = await supabase
+              .from('campaigns')
+              .select('*')
+              .eq('id', id)
+              .single();
+            
+            if (freshData && mountedRef.current) {
+              // Compare revision or updated_at
+              const cachedRevision = cached.revision || 0;
+              const freshRevision = freshData.revision || 0;
+              const cachedUpdatedAt = new Date(cached.updated_at || 0).getTime();
+              const freshUpdatedAt = new Date(freshData.updated_at || 0).getTime();
+              
+              if (freshRevision > cachedRevision || freshUpdatedAt > cachedUpdatedAt) {
+                console.log('🔄 [FastLoader] Server has newer version, updating cache');
+                const parsedFreshData = {
+                  ...freshData,
+                  config: typeof freshData.config === 'string' ? JSON.parse(freshData.config) : freshData.config,
+                  modularPages: typeof (freshData as any).modular_pages === 'string' 
+                    ? JSON.parse((freshData as any).modular_pages) 
+                    : (freshData as any).modular_pages,
+                  backgrounds: typeof (freshData as any).backgrounds === 'string'
+                    ? JSON.parse((freshData as any).backgrounds)
+                    : (freshData as any).backgrounds,
+                  articleConfig: typeof freshData.article_config === 'string'
+                    ? JSON.parse(freshData.article_config)
+                    : freshData.article_config
+                };
+                campaignCache.set(id, parsedFreshData);
+                setCampaign(parsedFreshData);
+              }
+            }
+          } catch (error) {
+            console.warn('[FastLoader] Background refresh failed:', error);
+          }
+        })();
+        
         loadingRef.current = false;
         return cached;
       }

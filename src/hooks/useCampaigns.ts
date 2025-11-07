@@ -231,14 +231,29 @@ export const useCampaigns = () => {
       if (local) {
         // Warm memory cache and return fast while refreshing in background
         campaignCache.set(makeCacheKeyById(id), { data: local, expiresAt: getNow() + CAMPAIGN_CACHE_TTL_MS });
-        // Fire-and-forget refresh (no throw)
+        // Fire-and-forget refresh with comparison
         (async () => {
           try {
-            await supabase
+            const { data: freshData } = await supabase
               .from('campaigns')
               .select('*')
               .eq('id', id)
               .single();
+            
+            if (freshData) {
+              const localRevision = local.revision || 0;
+              const freshRevision = freshData.revision || 0;
+              const localUpdatedAt = new Date(local.updated_at || 0).getTime();
+              const freshUpdatedAt = new Date(freshData.updated_at || 0).getTime();
+              
+              if (freshRevision > localRevision || freshUpdatedAt > localUpdatedAt) {
+                console.log('🔄 [useCampaigns] Server has newer version, updating cache');
+                const key = makeCacheKeyById(id);
+                const entry: CacheEntry = { data: freshData, expiresAt: getNow() + CAMPAIGN_CACHE_TTL_MS };
+                campaignCache.set(key, entry);
+                writeLocalCache(key, freshData);
+              }
+            }
           } catch {}
         })();
         return local as Campaign;
@@ -283,14 +298,31 @@ export const useCampaigns = () => {
         // Rehydrate id mapping if present
         if (local?.id) slugCacheIndex.set(slug, local.id);
         campaignCache.set(makeCacheKeyById(local?.id || slug), { data: local, expiresAt: getNow() + CAMPAIGN_CACHE_TTL_MS });
-        // Background refresh
+        // Background refresh with comparison
         (async () => {
           try {
-            await supabase
+            const { data: freshData } = await supabase
               .from('campaigns')
               .select('*')
               .eq('slug', slug)
               .single();
+            
+            if (freshData) {
+              const localRevision = local.revision || 0;
+              const freshRevision = freshData.revision || 0;
+              const localUpdatedAt = new Date(local.updated_at || 0).getTime();
+              const freshUpdatedAt = new Date(freshData.updated_at || 0).getTime();
+              
+              if (freshRevision > localRevision || freshUpdatedAt > localUpdatedAt) {
+                console.log('🔄 [useCampaigns] Server has newer version (by slug), updating cache');
+                const idKey = makeCacheKeyById(freshData.id);
+                const slugKey = makeCacheKeyBySlug(slug);
+                const entry: CacheEntry = { data: freshData, expiresAt: getNow() + CAMPAIGN_CACHE_TTL_MS };
+                campaignCache.set(idKey, entry);
+                writeLocalCache(idKey, freshData);
+                writeLocalCache(slugKey, freshData);
+              }
+            }
           } catch {}
         })();
         return local as Campaign;

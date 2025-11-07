@@ -36,22 +36,23 @@ export const useCampaignVersion = () => {
         .eq('id', campaignId)
         .eq('revision', expectedRevision) // Optimistic lock
         .select('revision')
-        .single();
+        .maybeSingle();
 
-      if (error) {
-        console.error('[useCampaignVersion] Save error:', error);
-        throw error;
-      }
-
-      if (!updated) {
+      // Check for "no rows" error (PGRST116 or no data returned)
+      if (error?.code === 'PGRST116' || (!error && !updated)) {
         // No rows updated = conflict detected
         const { data: serverData } = await supabase
           .from('campaigns')
           .select('revision')
           .eq('id', campaignId)
-          .single();
+          .maybeSingle();
 
         const serverRevision = (serverData as any)?.revision || expectedRevision + 1;
+        
+        console.warn('[useCampaignVersion] Version conflict detected:', {
+          expected: expectedRevision,
+          server: serverRevision
+        });
         
         setConflict({
           currentRevision: expectedRevision,
@@ -65,6 +66,11 @@ export const useCampaignVersion = () => {
           newRevision: null,
           serverRevision,
         };
+      }
+
+      if (error) {
+        console.error('[useCampaignVersion] Save error:', error);
+        throw error;
       }
 
       // Success
