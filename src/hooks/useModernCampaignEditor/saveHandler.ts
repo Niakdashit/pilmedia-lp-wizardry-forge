@@ -1,4 +1,5 @@
 import { extractAllCampaignImages } from '@/utils/extractImagesFromModules';
+import { validateCampaign } from '@/lib/schemas/campaignSchema';
 
 // Global save lock to prevent concurrent saves creating duplicates
 const activeSaves = new Set<string>();
@@ -117,10 +118,20 @@ export const saveCampaignToDB = async (
         return { ...campaign };
       }
     }
+    console.log('💾 [saveCampaignToDB] Starting save with validation...');
+    
+    // Validate campaign before saving
+    const validation = validateCampaign(campaign);
+    if (!validation.success) {
+      console.warn('⚠️ [saveCampaignToDB] Validation warnings:', validation.errors);
+      // Continue with save but log warnings
+    }
+    
     console.log('💾 [saveCampaignToDB] Saving campaign with complete state:', {
     id: campaign?.id,
     name: campaign?.name,
     type: campaign?.type,
+    revision: campaign?.revision,
     hasCanvasElements: !!campaign?.canvasElements,
     hasModularPage: !!campaign?.modularPage,
     hasScreenBackgrounds: !!campaign?.screenBackgrounds,
