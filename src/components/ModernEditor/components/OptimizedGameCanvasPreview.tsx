@@ -4,8 +4,6 @@ import { useOptimizedDragDrop } from '../hooks/useOptimizedDragDrop';
 import { useSmartSnapping } from '../hooks/useSmartSnapping';
 import InteractiveDragDropOverlay from './InteractiveDragDropOverlay';
 import GameCanvasPreview from './GameCanvasPreview';
-import { usePreloadCampaignImages } from '@/hooks/useFastCampaignLoader';
-import OptimizedPreviewWrapper from './OptimizedPreviewWrapper';
 
 interface OptimizedGameCanvasPreviewProps {
   campaign: any;
@@ -24,9 +22,6 @@ const OptimizedGameCanvasPreview: React.FC<OptimizedGameCanvasPreviewProps> = me
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const { showGridLines } = useEditorStore();
-  
-  // Précharge les images dès que la campagne est disponible
-  usePreloadCampaignImages(campaign);
   
   // Optimized drag and drop with performance enhancements
   const dragDropProps = useOptimizedDragDrop({
@@ -134,16 +129,14 @@ const OptimizedGameCanvasPreview: React.FC<OptimizedGameCanvasPreviewProps> = me
       {/* Grid overlay */}
       <GridOverlay />
       
-      {/* Main canvas avec wrapper optimisé */}
-      <OptimizedPreviewWrapper campaign={campaign} isLoading={isLoading}>
-        <GameCanvasPreview
-          campaign={campaign}
-          previewDevice={previewDevice}
-          isLoading={isLoading}
-          setCampaign={setCampaign}
-          key={previewKey}
-        />
-      </OptimizedPreviewWrapper>
+      {/* Main canvas */}
+      <GameCanvasPreview
+        campaign={campaign}
+        previewDevice={previewDevice}
+        isLoading={isLoading}
+        setCampaign={setCampaign}
+        key={previewKey}
+      />
       
       {/* Interactive overlay for drag and drop */}
       <InteractiveDragDropOverlay
@@ -156,6 +149,16 @@ const OptimizedGameCanvasPreview: React.FC<OptimizedGameCanvasPreviewProps> = me
       
       {/* Snap guides overlay */}
       <SnapGuidesOverlay />
+      
+      {/* Loading overlay */}
+      {isLoading && (
+        <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-40 flex items-center justify-center">
+          <div className="flex items-center gap-3">
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-brand-primary"></div>
+            <span className="text-sm text-gray-600">Optimisation...</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 });
