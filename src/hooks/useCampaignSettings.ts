@@ -142,13 +142,14 @@ export const useCampaignSettings = () => {
         console.log('[useCampaignSettings] Campaign ID not found, creating campaign first');
         const slugSuffix = Math.random().toString(36).slice(2, 10);
         const campaignName = (values?.publication as any)?.name || 'Campaign';
+        const currentType = (useEditorStore.getState().campaign as any)?.type || 'wheel';
         
         const insertCampaignResp: any = await (supabase as any)
           .from('campaigns')
           .insert({
             name: campaignName,
             slug: `camp-${slugSuffix}`,
-            type: 'jackpot', // Default type, will be updated if needed
+            type: currentType, // Respect current editor type
             status: 'draft',
             created_by: user.id,
             updated_at: new Date().toISOString(),
@@ -201,13 +202,14 @@ export const useCampaignSettings = () => {
           // eslint-disable-next-line no-console
           console.log('[useCampaignSettings] Campaign not found, creating minimal row before settings upsert');
           const slugSuffix = Math.random().toString(36).slice(2, 10);
+          const currentType = (useEditorStore.getState().campaign as any)?.type || 'wheel';
           const insertCampaignResp: any = await (supabase as any)
             .from('campaigns')
             .insert({
               id: realId,
               name: (values?.publication as any)?.name || 'Campaign',
               slug: `camp-${slugSuffix}`,
-              type: 'wheel',
+              type: currentType,
               status: 'draft',
               created_by: user.id,
               updated_at: new Date().toISOString(),

@@ -277,7 +277,7 @@ export const saveCampaignToDB = async (
     name: campaign?.name || 'Nouvelle campagne',
     description: campaign?.description,
     slug: campaign?.slug,
-    type: campaign?.type || 'form',
+    type: campaign?.type, // do not force a default here
     status: campaign?.status || 'draft',
     
     // Editor mode (article or fullscreen)
