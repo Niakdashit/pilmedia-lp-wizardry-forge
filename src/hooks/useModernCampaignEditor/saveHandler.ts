@@ -396,6 +396,11 @@ export const saveCampaignToDB = async (
       revision: saved?.revision
     });
     
+    // Dispatch event to refresh campaigns list
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('campaign:updated'));
+    }
+    
     // Vérification post-sauvegarde : les données sont-elles bien présentes ?
     const verification = {
       hasConfig: !!saved.config,

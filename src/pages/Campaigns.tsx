@@ -130,7 +130,11 @@ const Campaigns: React.FC = () => {
       try { (refetch as any)({ suppressLoading: true }); } catch { refetch?.(); }
     };
     window.addEventListener('campaign:name:update', handler as EventListener);
-    return () => window.removeEventListener('campaign:name:update', handler as EventListener);
+    window.addEventListener('campaign:updated', handler as EventListener);
+    return () => {
+      window.removeEventListener('campaign:name:update', handler as EventListener);
+      window.removeEventListener('campaign:updated', handler as EventListener);
+    };
   }, [refetch]);
 
   const getStatusColor = (status: string) => {
@@ -143,6 +147,8 @@ const Campaigns: React.FC = () => {
         return 'bg-blue-100 text-blue-800';
       case 'ended':
         return 'bg-red-100 text-red-800';
+      case 'paused':
+        return 'bg-yellow-100 text-yellow-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
@@ -151,13 +157,15 @@ const Campaigns: React.FC = () => {
   const getStatusText = (status: string) => {
     switch (status) {
       case 'active':
-        return 'Actif';
+        return 'En ligne';
       case 'draft':
         return 'Brouillon';
       case 'scheduled':
         return 'Programmé';
       case 'ended':
-        return 'Terminé';
+        return 'Terminée';
+      case 'paused':
+        return 'En pause';
       default:
         return status;
     }
@@ -174,9 +182,33 @@ const Campaigns: React.FC = () => {
   };
 
   const handleStatusToggle = async (campaignId: string, currentStatus: string) => {
-    const newStatus = currentStatus === 'active' ? 'draft' : 'active';
+    // Toggle isActive flag in database to enable/disable campaign regardless of dates
+    const isCurrentlyActive = currentStatus === 'active' || currentStatus === 'paused';
     try {
-      await updateCampaignStatus(campaignId, newStatus);
+      // Fetch current config
+      const { data: campaign, error: fetchError } = await supabase
+        .from('campaigns')
+        .select('config')
+        .eq('id', campaignId)
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      const currentConfig = (campaign?.config && typeof campaign.config === 'object' && !Array.isArray(campaign.config)) 
+        ? campaign.config 
+        : {};
+      const updatedConfig = {
+        ...(currentConfig as Record<string, any>),
+        isActive: !isCurrentlyActive
+      };
+
+      const { error } = await supabase
+        .from('campaigns')
+        .update({ config: updatedConfig })
+        .eq('id', campaignId);
+
+      if (error) throw error;
+      await refetch();
     } catch (err) {
       console.error('Erreur lors de la mise à jour du statut:', err);
     }

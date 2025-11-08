@@ -1,10 +1,12 @@
 import React, { useMemo } from 'react';
 import { Calendar, Clock, Globe, Tag, Activity, Power } from 'lucide-react';
 import { toast } from 'sonner';
+
 interface ModernGeneralTabProps {
   campaign: any;
   setCampaign: React.Dispatch<React.SetStateAction<any>>;
 }
+
 const ModernGeneralTab: React.FC<ModernGeneralTabProps> = ({
   campaign,
   setCampaign
@@ -38,7 +40,9 @@ const ModernGeneralTab: React.FC<ModernGeneralTabProps> = ({
       return { value: 'ended', label: 'Terminée', color: 'text-red-600 bg-red-100' };
     }
   }, [campaign.startDate, campaign.endDate, campaign.startTime, campaign.endTime, campaign.isActive]);
-  return <div className="space-y-6">
+
+  return (
+    <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-bold text-gray-900 mb-2 text-left">Configuration générale</h2>
         <p className="text-sm text-gray-600">
@@ -52,13 +56,25 @@ const ModernGeneralTab: React.FC<ModernGeneralTabProps> = ({
           <Tag className="w-4 h-4 mr-2" />
           Nom de la campagne
         </label>
-        <input type="text" value={campaign.name || ''} onChange={e => handleInputChange('name', e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60] focus:border-transparent" placeholder="Ma nouvelle campagne" />
+        <input
+          type="text"
+          value={campaign.name || ''}
+          onChange={e => handleInputChange('name', e.target.value)}
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
+          placeholder="Ma nouvelle campagne"
+        />
       </div>
 
       {/* Description */}
       <div className="space-y-2">
         <label className="text-sm font-medium text-gray-700">Description</label>
-        <textarea value={campaign.description || ''} onChange={e => handleInputChange('description', e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60] focus:border-transparent" rows={3} placeholder="Description de la campagne..." />
+        <textarea
+          value={campaign.description || ''}
+          onChange={e => handleInputChange('description', e.target.value)}
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
+          rows={3}
+          placeholder="Description de la campagne..."
+        />
       </div>
 
       {/* URL */}
@@ -67,7 +83,13 @@ const ModernGeneralTab: React.FC<ModernGeneralTabProps> = ({
           <Globe className="w-4 h-4 mr-2" />
           URL de la campagne
         </label>
-        <input type="url" value={campaign.url || ''} onChange={e => handleInputChange('url', e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60] focus:border-transparent" placeholder="https://example.com/campagne" />
+        <input
+          type="url"
+          value={campaign.url || ''}
+          onChange={e => handleInputChange('url', e.target.value)}
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
+          placeholder="https://example.com/campagne"
+        />
       </div>
 
       {/* Dates */}
@@ -77,14 +99,24 @@ const ModernGeneralTab: React.FC<ModernGeneralTabProps> = ({
             <Calendar className="w-4 h-4 mr-2" />
             Date de début
           </label>
-          <input type="date" value={campaign.startDate || ''} onChange={e => handleInputChange('startDate', e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60] focus:border-transparent" />
+          <input
+            type="date"
+            value={campaign.startDate || ''}
+            onChange={e => handleInputChange('startDate', e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
+          />
         </div>
         <div className="space-y-2">
           <label className="flex items-center text-sm font-medium text-gray-700">
             <Calendar className="w-4 h-4 mr-2" />
             Date de fin
           </label>
-          <input type="date" value={campaign.endDate || ''} onChange={e => handleInputChange('endDate', e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60] focus:border-transparent" />
+          <input
+            type="date"
+            value={campaign.endDate || ''}
+            onChange={e => handleInputChange('endDate', e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
+          />
         </div>
       </div>
 
@@ -95,14 +127,24 @@ const ModernGeneralTab: React.FC<ModernGeneralTabProps> = ({
             <Clock className="w-4 h-4 mr-2" />
             Heure de début
           </label>
-          <input type="time" value={campaign.startTime || '09:00'} onChange={e => handleInputChange('startTime', e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60] focus:border-transparent" />
+          <input
+            type="time"
+            value={campaign.startTime || '09:00'}
+            onChange={e => handleInputChange('startTime', e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
+          />
         </div>
         <div className="space-y-2">
           <label className="flex items-center text-sm font-medium text-gray-700">
             <Clock className="w-4 h-4 mr-2" />
             Heure de fin
           </label>
-          <input type="time" value={campaign.endTime || '18:00'} onChange={e => handleInputChange('endTime', e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60] focus:border-transparent" />
+          <input
+            type="time"
+            value={campaign.endTime || '18:00'}
+            onChange={e => handleInputChange('endTime', e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
+          />
         </div>
       </div>
 
@@ -119,37 +161,24 @@ const ModernGeneralTab: React.FC<ModernGeneralTabProps> = ({
               {computedStatus.value === 'draft' && 'Pas encore commencée'}
               {computedStatus.value === 'active' && 'En cours'}
               {computedStatus.value === 'ended' && 'Période terminée'}
+              {computedStatus.value === 'paused' && 'Désactivée manuellement'}
             </span>
           </div>
         </div>
       </div>
 
-      {/* Activation / Désactivation */}
+      {/* Activation / Désactivation - Pas de validation pour permettre désactivation d'urgence */}
       <div className="space-y-2">
         <label className="flex items-center text-sm font-medium text-gray-700">
           <Power className="w-4 h-4 mr-2" />
-          Activation
+          Activation (toggle d'urgence)
         </label>
         <button
           type="button"
           onClick={() => {
             const next = !campaign.isActive;
-            if (next) {
-              // Validation: dates doivent être définies et cohérentes
-              if (!campaign.startDate || !campaign.endDate) {
-                toast.warning('Définissez les dates de début et de fin avant d’activer.');
-                return;
-              }
-              const start = new Date(campaign.startDate + 'T' + (campaign.startTime || '00:00'));
-              const end = new Date(campaign.endDate + 'T' + (campaign.endTime || '23:59'));
-              if (isNaN(start.getTime()) || isNaN(end.getTime())) {
-                toast.warning('Dates invalides. Vérifiez les valeurs saisies.');
-                return;
-              }
-              if (end < start) {
-                toast.warning('La date de fin doit être postérieure à la date de début.');
-                return;
-              }
+            if (next && (!campaign.startDate || !campaign.endDate)) {
+              toast.warning('Dates non définies: la campagne sera en pause jusqu\'à ce que les dates soient configurées.');
             }
             handleInputChange('isActive', next);
           }}
@@ -164,9 +193,13 @@ const ModernGeneralTab: React.FC<ModernGeneralTabProps> = ({
           />
         </button>
         <p className="text-xs text-gray-500 mt-2">
-          {campaign.isActive ? 'Campagne activée' : 'Campagne désactivée'}
+          {campaign.isActive
+            ? '✓ Activée - visible selon dates et conditions'
+            : '✗ Désactivée - invisible même si dates valides (urgence)'}
         </p>
       </div>
-    </div>;
+    </div>
+  );
 };
+
 export default ModernGeneralTab;
