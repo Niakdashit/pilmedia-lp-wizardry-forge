@@ -12,7 +12,6 @@ const FunnelUnlockedGame = lazy(() => import('@/components/funnels/FunnelUnlocke
 const FunnelQuizParticipate = lazy(() => import('../funnels/FunnelQuizParticipate'));
 const FullScreenPreviewModal = lazy(() => import('@/components/shared/modals/FullScreenPreviewModal'));
 import GameCanvasPreview from '@/components/ModernEditor/components/GameCanvasPreview';
-import GameCanvasPreview from '@/components/ModernEditor/components/GameCanvasPreview';
 // Scratch editor uses FunnelUnlockedGame for preview
 import type { ModularPage, ScreenId, BlocBouton, Module } from '@/types/modularEditor';
 import { createEmptyModularPage } from '@/types/modularEditor';
