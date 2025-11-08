@@ -29,6 +29,7 @@ const CampaignSettingsModal: React.FC<CampaignSettingsModalProps> = ({ isOpen, o
   const [activeTab, setActiveTab] = useState('channels');
   const { getSettings, upsertSettings, loading, error, saveDraft } = useCampaignSettings();
   const [form, setForm] = useState<Partial<CampaignSettings>>({});
+  const [isLoadingData, setIsLoadingData] = useState(true);
   const effectiveCampaignId = campaignId || '';
   const campaignStoreName = useEditorStore((s) => (s.campaign as any)?.name as string | undefined);
   const campaign = useEditorStore((s) => s.campaign);
@@ -37,8 +38,12 @@ const CampaignSettingsModal: React.FC<CampaignSettingsModalProps> = ({ isOpen, o
 
 // Load settings when modal opens
 useEffect(() => {
-  if (!isOpen || !effectiveCampaignId) return;
+  if (!isOpen || !effectiveCampaignId) {
+    setIsLoadingData(false);
+    return;
+  }
   let mounted = true;
+  setIsLoadingData(true);
   (async () => {
     const data = await getSettings(effectiveCampaignId);
     if (mounted) {
@@ -48,6 +53,7 @@ useEffect(() => {
         incoming.publication = { ...(incoming.publication || {}), name: campaignStoreName };
       }
       setForm(incoming);
+      setIsLoadingData(false);
     }
   })();
   return () => { mounted = false; };
@@ -297,18 +303,27 @@ useEffect(() => {
             </div>
           )}
           
-          <div className="max-w-4xl mx-auto">
-            {ActiveStepComponent && (
-              // Pass down controlled form state so steps edit the modal's form
-              // Steps should treat props.form as source of truth and call props.setForm to update
-              <ActiveStepComponent
-                // @ts-ignore allow steps to accept these props without strict typing here
-                form={form}
-                setForm={setForm}
-                campaignId={effectiveCampaignId}
-              />
-            )}
-          </div>
+          {isLoadingData ? (
+            <div className="flex items-center justify-center h-full">
+              <div className="flex flex-col items-center gap-3">
+                <div className="w-10 h-10 border-4 border-[#841b60]/30 border-t-[#841b60] rounded-full animate-spin" />
+                <p className="text-sm text-gray-600">Chargement des paramètres...</p>
+              </div>
+            </div>
+          ) : (
+            <div className="max-w-4xl mx-auto">
+              {ActiveStepComponent && (
+                // Pass down controlled form state so steps edit the modal's form
+                // Steps should treat props.form as source of truth and call props.setForm to update
+                <ActiveStepComponent
+                  // @ts-ignore allow steps to accept these props without strict typing here
+                  form={form}
+                  setForm={setForm}
+                  campaignId={effectiveCampaignId}
+                />
+              )}
+            </div>
+          )}
         </div>
 
         {/* Footer */}
