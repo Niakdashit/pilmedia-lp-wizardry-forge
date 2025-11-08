@@ -65,6 +65,19 @@ const ScratchToolbar: React.FC<ScratchToolbarProps> = React.memo(({
   useEffect(() => {
     const handler = () => setIsSettingsModalOpen(true);
     window.addEventListener('openCampaignSettingsModal', handler as any);
+    
+    // Auto-open settings modal if URL contains openSettings=true
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('openSettings') === 'true') {
+      setIsSettingsModalOpen(true);
+      // Clean up URL parameter
+      urlParams.delete('openSettings');
+      const newUrl = urlParams.toString() 
+        ? `${window.location.pathname}?${urlParams.toString()}`
+        : window.location.pathname;
+      window.history.replaceState({}, '', newUrl);
+    }
+    
     return () => window.removeEventListener('openCampaignSettingsModal', handler as any);
   }, []);
   

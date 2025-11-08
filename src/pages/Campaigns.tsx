@@ -419,7 +419,9 @@ const Campaigns: React.FC = () => {
                       
                       // Preserve editor_mode from campaign data
                       const editorMode = (campaign as any)?.editor_mode === 'article' ? 'article' : undefined;
-                      const editorUrl = getEditorUrl(campaign.type, campaign.id, editorMode as 'article' | 'fullscreen' | undefined);
+                      const baseUrl = getEditorUrl(campaign.type, campaign.id, editorMode as 'article' | 'fullscreen' | undefined);
+                      // Add openSettings parameter to automatically open settings modal
+                      const editorUrl = `${baseUrl}${baseUrl.includes('?') ? '&' : '?'}openSettings=true`;
                       navigate(editorUrl);
                     };
                     
