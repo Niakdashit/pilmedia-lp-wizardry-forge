@@ -149,19 +149,26 @@ export const useCampaignsList = () => {
 
       // Transform data to match our interface
       const transformedCampaigns: CampaignListItem[] = (data || []).map((campaign: any) => {
-        // Extract dates with a strict priority to avoid stale config overriding DB
+        // Extract dates with STRICT priority: DB columns first (synchronized by trigger)
         let startDate = '';
         let endDate = '';
         
         // Prefer publication.name from campaign_settings for display name
         const publicationName = campaign.campaign_settings?.[0]?.publication?.name;
         
-        // 1) campaign_settings (dedicated cols -> publication ISO)
-        {
+        // PRIORITY 1: campaigns table columns (now always up-to-date via trigger)
+        if (campaign.start_date) {
+          try { startDate = new Date(campaign.start_date).toISOString(); } catch { startDate = campaign.start_date; }
+        }
+        if (campaign.end_date) {
+          try { endDate = new Date(campaign.end_date).toISOString(); } catch { endDate = campaign.end_date; }
+        }
+        
+        // PRIORITY 2: campaign_settings (fallback if DB columns empty - shouldn't happen after trigger)
+        if (!startDate || !endDate) {
           const cs: any = campaign.campaign_settings;
           const csRow = Array.isArray(cs) ? cs[0] : cs;
           if (csRow) {
-            // Dedicated columns
             if (!startDate && csRow.start_date) {
               const d = String(csRow.start_date);
               const t = typeof csRow.start_time === 'string' ? csRow.start_time : undefined;
@@ -172,7 +179,7 @@ export const useCampaignsList = () => {
               const t = typeof csRow.end_time === 'string' ? csRow.end_time : undefined;
               endDate = d.includes('T') ? d : new Date(`${d}T${t || '23:59'}`).toISOString();
             }
-            // Publication ISO (fallback)
+            // Publication ISO (last resort)
             if (!startDate && csRow.publication?.start) {
               try { startDate = new Date(csRow.publication.start).toISOString(); } catch {}
             }
@@ -182,15 +189,7 @@ export const useCampaignsList = () => {
           }
         }
         
-        // 2) campaigns top-level columns (authoritative after settings save)
-        if (!startDate && campaign.start_date) {
-          try { startDate = new Date(campaign.start_date).toISOString(); } catch { startDate = campaign.start_date; }
-        }
-        if (!endDate && campaign.end_date) {
-          try { endDate = new Date(campaign.end_date).toISOString(); } catch { endDate = campaign.end_date; }
-        }
-        
-        // 3) config separate date/time fields (legacy UI state)
+        // PRIORITY 3: config (legacy - should rarely be used now)
         if ((!startDate || !endDate) && campaign.config) {
           try {
             const config = typeof campaign.config === 'string' ? JSON.parse(campaign.config) : campaign.config;
@@ -202,19 +201,13 @@ export const useCampaignsList = () => {
               const time = config.endTime || '23:59';
               endDate = new Date(`${config.endDate}T${time}`).toISOString();
             }
-          } catch {}
-        }
-        
-        // 4) config legacy single ISO
-        if ((!startDate || !endDate) && campaign.config) {
-          try {
-            const config = typeof campaign.config === 'string' ? JSON.parse(campaign.config) : campaign.config;
+            // Legacy single ISO
             if (!startDate && config.startDate) startDate = config.startDate;
             if (!endDate && config.endDate) endDate = config.endDate;
           } catch {}
         }
 
-        // Fallback: keep empty when not configured (no misleading defaults)
+        // Fallback: keep empty when not configured
         let draftName: string | undefined;
         try {
           const raw = typeof window !== 'undefined' ? localStorage.getItem(`campaign:settings:draft:${campaign.id}`) : null;

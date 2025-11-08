@@ -127,6 +127,20 @@ const Campaigns: React.FC = () => {
   // Keep list in sync when a campaign name is updated elsewhere (settings/editor)
   useEffect(() => {
     const handler = (_e: Event) => {
+      // Invalidate cache to force fresh data from DB
+      const invalidate = () => {
+        try { 
+          if (typeof window !== 'undefined') {
+            localStorage.removeItem('campaign:list:default');
+          }
+        } catch {}
+      };
+      
+      // For settings saved, invalidate cache first then refetch
+      if ((_e as any).type === 'campaign:settings:saved') {
+        invalidate();
+      }
+      
       // silent refresh to avoid flicker
       try { (refetch as any)({ suppressLoading: true }); } catch { refetch?.(); }
     };
@@ -173,21 +187,7 @@ const Campaigns: React.FC = () => {
       default:
         return status;
     }
-   };
- 
-   const computeDisplayStatus = (dbStatus: string, startDate?: string, endDate?: string) => {
-     // Preserve paused
-     if (dbStatus === 'paused') return 'paused';
-     if (startDate && endDate) {
-       const now = new Date();
-       const s = new Date(startDate as any);
-       const e = new Date(endDate as any);
-       if (now < s) return 'draft';
-       if (now >= s && now <= e) return 'active';
-       return 'ended';
-     }
-     return dbStatus;
-   };
+  };
   const handleActionClick = (e: React.MouseEvent, campaign: any) => {
     e.preventDefault();
     const rect = e.currentTarget.getBoundingClientRect();
