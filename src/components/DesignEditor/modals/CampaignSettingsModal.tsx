@@ -201,6 +201,13 @@ useEffect(() => {
 
       if (saved) {
         console.log('✅ [CampaignSettingsModal] Settings saved successfully');
+        
+        // CRITICAL: Invalidate campaign list cache immediately
+        try {
+          console.log('🧹 [CampaignSettingsModal] Invalidating campaign list cache');
+          localStorage.removeItem('campaign:list:default');
+        } catch {}
+        
         try { window.dispatchEvent(new CustomEvent('campaign:settings:saved')); } catch {}
         
         // Notify list views to refresh campaign name immediately

@@ -293,6 +293,49 @@ export const useCampaignsList = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile?.id]);
 
+  // Auto-refresh when page becomes visible (after SQL migrations, settings changes, etc.)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && profile?.id) {
+        console.log('🔄 [useCampaignsList] Page visible - invalidating cache and refetching');
+        invalidateCache();
+        fetchCampaigns({ suppressLoading: true });
+      }
+    };
+    
+    // Also listen to focus event for immediate refresh when returning to tab
+    const handleFocus = () => {
+      if (profile?.id) {
+        console.log('🔄 [useCampaignsList] Window focused - invalidating cache and refetching');
+        invalidateCache();
+        fetchCampaigns({ suppressLoading: true });
+      }
+    };
+    
+    // CRITICAL: Listen for campaign settings saved event and force immediate refresh
+    const handleSettingsSaved = () => {
+      if (profile?.id) {
+        console.log('💾 [useCampaignsList] Campaign settings saved - forcing immediate refresh');
+        invalidateCache();
+        // Wait 500ms to let database sync complete, then refetch
+        setTimeout(() => {
+          console.log('🔄 [useCampaignsList] Refetching campaigns after settings save...');
+          fetchCampaigns({ suppressLoading: false });
+        }, 500);
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleFocus);
+    window.addEventListener('campaign:settings:saved', handleSettingsSaved as EventListener);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
+      window.removeEventListener('campaign:settings:saved', handleSettingsSaved as EventListener);
+    };
+  }, [profile?.id]);
+
   const invalidateCache = () => {
     try { campaignListCache.delete(CAMPAIGN_LIST_CACHE_KEY); } catch {}
     try { if (typeof window !== 'undefined') localStorage.removeItem(CAMPAIGN_LIST_CACHE_KEY); } catch {}

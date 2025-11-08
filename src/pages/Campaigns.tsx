@@ -84,6 +84,7 @@ const Campaigns: React.FC = () => {
   const [modalPosition, setModalPosition] = useState({ x: 0, y: 0 });
   const [showEditorMenu, setShowEditorMenu] = useState(false);
   const [selectedCampaigns, setSelectedCampaigns] = useState<string[]>([]);
+  const [optimisticVisibility, setOptimisticVisibility] = useState<Record<string, boolean>>({});
 
   const editorOptions = [
     { name: 'Roue de la Fortune', path: '/design-editor', icon: '🎯' },
@@ -198,54 +199,64 @@ const Campaigns: React.FC = () => {
     setSelectedCampaign(campaign);
   };
 
-  const handleStatusToggle = async (campaignId: string, currentStatus: string) => {
-    // Emergency toggle: can be switched regardless of dates
-    const wasActiveOrPaused = currentStatus === 'active' || currentStatus === 'paused';
-    const newIsActive = !wasActiveOrPaused;
+  const handleVisibilityToggle = async (campaignId: string) => {
+    console.log('🔄 Toggle clicked!', { campaignId });
     try {
-      // Fetch current timing + config
+      // Fetch current config
       const { data: campaign, error: fetchError } = await supabase
         .from('campaigns')
-        .select('config, start_date, end_date')
+        .select('config')
         .eq('id', campaignId)
         .single();
 
       if (fetchError) throw fetchError;
 
+      console.log('📦 Current config:', campaign?.config);
+
       const currentConfig = (campaign?.config && typeof campaign.config === 'object' && !Array.isArray(campaign.config)) 
         ? campaign.config 
         : {};
+      
+      // Get actual current value from database
+      const currentIsPublic = (currentConfig as any).isPublic !== false; // Default to true if not set
+      const newIsPublic = !currentIsPublic;
+      
+      console.log('📝 Current visibility:', currentIsPublic, '→ New visibility:', newIsPublic);
+      
+      // Optimistic UI update
+      setOptimisticVisibility(prev => ({ ...prev, [campaignId]: newIsPublic }));
+      
       const updatedConfig = {
         ...(currentConfig as Record<string, any>),
-        isActive: newIsActive
+        isPublic: newIsPublic
       };
 
-      // Compute new status synced with dates
-      const now = new Date();
-      const s = campaign?.start_date ? new Date(campaign.start_date as any) : undefined;
-      const e = campaign?.end_date ? new Date(campaign.end_date as any) : undefined;
-      let newStatus: 'draft' | 'active' | 'ended' | 'paused' = 'draft';
-      if (!newIsActive) {
-        newStatus = 'paused';
-      } else if (!s || !e) {
-        newStatus = 'draft';
-      } else if (now < s) {
-        newStatus = 'draft';
-      } else if (now >= s && now <= e) {
-        newStatus = 'active';
-      } else {
-        newStatus = 'ended';
-      }
+      console.log('✨ Updated config:', updatedConfig);
 
       const { error } = await supabase
         .from('campaigns')
-        .update({ config: updatedConfig, status: newStatus })
+        .update({ config: updatedConfig })
         .eq('id', campaignId);
 
-      if (error) throw error;
+      if (error) {
+        // Revert optimistic update on error
+        setOptimisticVisibility(prev => ({ ...prev, [campaignId]: currentIsPublic }));
+        throw error;
+      }
+      
+      console.log('✅ Visibility updated successfully!');
       await refetch();
+      
+      // Clear optimistic state after refetch
+      setTimeout(() => {
+        setOptimisticVisibility(prev => {
+          const newState = { ...prev };
+          delete newState[campaignId];
+          return newState;
+        });
+      }, 500);
     } catch (err) {
-      console.error('Erreur lors de la mise à jour du statut:', err);
+      console.error('❌ Erreur lors de la mise à jour de la visibilité:', err);
     }
   };
 
@@ -450,6 +461,9 @@ const Campaigns: React.FC = () => {
                       Type
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Mode
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       <button
                         className="flex items-center space-x-1"
                         onClick={() => {
@@ -467,9 +481,6 @@ const Campaigns: React.FC = () => {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Participants
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Période
-                    </th>
                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-20">
                       Actions
                     </th>
@@ -482,7 +493,7 @@ const Campaigns: React.FC = () => {
                     const handleRowClick = (e: React.MouseEvent) => {
                       // Ignore clicks on interactive elements (toggle, action button)
                       const target = e.target as HTMLElement;
-                      if (target.closest('input, button, a')) return;
+                      if (target.closest('input, button, a, label')) return;
                       
                       // Preserve editor_mode from campaign data
                       const editorMode = (campaign as any)?.editor_mode === 'article' ? 'article' : undefined;
@@ -515,6 +526,11 @@ const Campaigns: React.FC = () => {
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                            {(campaign as any)?.editor_mode === 'article' ? 'Article' : 'Full screen'}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center">
                             <div>
                               <div className="text-sm font-medium text-gray-900">{campaign.name}</div>
@@ -524,12 +540,19 @@ const Campaigns: React.FC = () => {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center">
-                            <label className="relative inline-flex items-center cursor-pointer mr-3">
+                            <label 
+                              className="relative inline-flex items-center cursor-pointer mr-3" 
+                              title="Activer/Désactiver la visibilité publique"
+                            >
                               <input
                                 type="checkbox"
                                 className="sr-only peer"
-                                checked={campaign.status === 'active'}
-                                onChange={() => handleStatusToggle(campaign.id, campaign.status)}
+                                checked={
+                                  campaign.id in optimisticVisibility 
+                                    ? optimisticVisibility[campaign.id]
+                                    : (campaign as any)?.config?.isPublic !== false
+                                }
+                                onChange={() => handleVisibilityToggle(campaign.id)}
                               />
                               <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#841b60]/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gradient-to-br peer-checked:from-[#841b60] peer-checked:to-[#b41b60]"></div>
                             </label>
@@ -539,13 +562,6 @@ const Campaigns: React.FC = () => {
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{campaign.participants}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm">
-                          <CampaignPeriodCell 
-                            startDate={campaign.startDate}
-                            endDate={campaign.endDate}
-                            status={campaign.status}
-                          />
-                        </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                           <button
                             onClick={(e) => handleActionClick(e, campaign)}

@@ -320,24 +320,81 @@ export const useCampaignSettings = () => {
       // clear draft on success
       try { localStorage.removeItem(draftKey(campaignId)); } catch {}
 
-      // Sync basic fields to campaigns for listing/search (best-effort)
-      try {
-        const pub: any = values.publication || {};
-        const name = pub.name as (string | undefined);
-        const startIso = pub.start as (string | undefined);
-        const endIso = pub.end as (string | undefined);
-        const updatePayload: any = { updated_at: new Date().toISOString() };
-        if (name && typeof name === 'string' && name.trim().length > 0) {
-          updatePayload.name = name.trim();
+      // ========================================================================
+      // CRITICAL: FORCE SYNC dates to campaigns table (BLOCKING, NOT BEST-EFFORT)
+      // ========================================================================
+      console.log('🔄 [useCampaignSettings] FORCING date sync to campaigns table...');
+      
+      const pub: any = values.publication || {};
+      const name = pub.name as (string | undefined);
+      const startIso = pub.start as (string | undefined);
+      const endIso = pub.end as (string | undefined);
+      
+      // Extract dates from ISO strings
+      const extractDate = (iso?: string): string | null => {
+        if (!iso || typeof iso !== 'string') return null;
+        const match = iso.match(/^(\d{4}-\d{2}-\d{2})/);
+        return match ? match[1] : null;
+      };
+      
+      const startDate = extractDate(startIso);
+      const endDate = extractDate(endIso);
+      
+      console.log('� [useCampaignSettings] Extracted dates:', {
+        campaignId: realId,
+        campaignName: name,
+        'publication.start (ISO)': startIso,
+        'publication.end (ISO)': endIso,
+        'extracted start_date': startDate,
+        'extracted end_date': endDate,
+      });
+      
+      // Build update payload
+      const campaignsUpdatePayload: any = {
+        updated_at: new Date().toISOString(),
+      };
+      
+      if (name && typeof name === 'string' && name.trim().length > 0) {
+        campaignsUpdatePayload.name = name.trim();
+      }
+      
+      if (startDate) {
+        campaignsUpdatePayload.start_date = startDate;
+      }
+      
+      if (endDate) {
+        campaignsUpdatePayload.end_date = endDate;
+      }
+      
+      // FORCE UPDATE (blocking)
+      if (Object.keys(campaignsUpdatePayload).length > 1) {
+        console.log('� [useCampaignSettings] Updating campaigns table with:', campaignsUpdatePayload);
+        
+        const { data: updateData, error: syncError } = await supabase
+          .from('campaigns')
+          .update(campaignsUpdatePayload)
+          .eq('id', realId)
+          .select('id, name, start_date, end_date');
+        
+        if (syncError) {
+          console.error('❌ [useCampaignSettings] FAILED to sync dates to campaigns table:', syncError);
+          throw new Error(`Failed to sync campaign dates: ${syncError.message}`);
         }
-        if (startIso) updatePayload.start_date = startIso;
-        if (endIso) updatePayload.end_date = endIso;
-        if (Object.keys(updatePayload).length > 1) {
-          await supabase.from('campaigns').update(updatePayload).eq('id', realId);
+        
+        console.log('✅ [useCampaignSettings] Successfully synced to campaigns table:', updateData);
+        
+        // Verify the update worked
+        if (updateData && updateData.length > 0) {
+          const updated = updateData[0];
+          console.log('🔍 [useCampaignSettings] Verification - campaigns table now has:', {
+            id: updated.id,
+            name: updated.name,
+            start_date: updated.start_date,
+            end_date: updated.end_date,
+          });
         }
-      } catch (e) {
-        // non bloquant
-        console.warn('[useCampaignSettings] campaigns sync skipped', e);
+      } else {
+        console.warn('⚠️ [useCampaignSettings] No dates to sync (payload empty)');
       }
 
       // Also update the local editor store so validation passes immediately
