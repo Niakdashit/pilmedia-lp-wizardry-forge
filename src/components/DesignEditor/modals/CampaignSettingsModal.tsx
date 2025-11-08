@@ -157,7 +157,9 @@ useEffect(() => {
 
       const saved = await upsertSettings(savedCampaignId, {
         publication: pub,
-        campaign_url: form.campaign_url ?? {},
+        campaign_url: (typeof (form.campaign_url as any) === 'string')
+          ? { url: (form.campaign_url as any) }
+          : (form.campaign_url ?? {}),
         soft_gate: form.soft_gate ?? {},
         limits: form.limits ?? {},
         email_verification: form.email_verification ?? {},

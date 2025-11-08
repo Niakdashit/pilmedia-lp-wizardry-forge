@@ -65,10 +65,42 @@ export const useCampaignSettings = () => {
     }
   }, []);
 
+  // Normalize campaign_url value to a safe shape for the app/UI
+  const normalizeCampaignUrl = useCallback((cu: any): any => {
+    try {
+      if (!cu) return null;
+      if (typeof cu === 'string') {
+        // Try to parse JSON string; fallback to plain URL string
+        try {
+          const parsed = JSON.parse(cu);
+          if (parsed && typeof parsed === 'object') {
+            const url = typeof parsed.url === 'string' ? parsed.url : undefined;
+            const custom_url = typeof parsed.custom_url === 'string' ? parsed.custom_url : undefined;
+            return url || custom_url ? { url, custom_url } : null;
+          }
+        } catch {}
+        return { url: cu };
+      }
+      if (typeof cu === 'object') {
+        // If a string was previously spread ("{0:'h',1:'t',...}"), ignore numeric keys
+        const url = typeof (cu as any).url === 'string' ? (cu as any).url : undefined;
+        const custom_url = typeof (cu as any).custom_url === 'string' ? (cu as any).custom_url : undefined;
+        return url || custom_url ? { url, custom_url } : null;
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  }, []);
+
   const loadDraft = useCallback((campaignId: string): Partial<CampaignSettings> | null => {
     try {
       const raw = localStorage.getItem(draftKey(campaignId));
-      return raw ? JSON.parse(raw) : null;
+      const parsed = raw ? JSON.parse(raw) : null;
+      if (parsed && typeof (parsed as any).campaign_url !== 'undefined') {
+        (parsed as any).campaign_url = normalizeCampaignUrl((parsed as any).campaign_url);
+      }
+      return parsed;
     } catch {
       return null;
     }
@@ -111,13 +143,16 @@ export const useCampaignSettings = () => {
         const draft = loadDraft(keyId);
         return draft ? ({ campaign_id: keyId, ...draft } as CampaignSettings) : null;
       }
-      return (resp.data as unknown) as CampaignSettings;
+      const data: any = resp.data;
+      data.campaign_url = normalizeCampaignUrl(data.campaign_url);
+      return (data as unknown) as CampaignSettings;
     } catch (err: any) {
       console.error('[useCampaignSettings.getSettings] Error', err);
       setError(err.message || 'Erreur lors du chargement des paramètres');
       // also try draft
       const draft = loadDraft(campaignId);
-      return draft ? ({ campaign_id: campaignId, ...draft } as CampaignSettings) : null;
+      const normalizedDraft = draft ? { ...draft, campaign_url: normalizeCampaignUrl((draft as any).campaign_url) } : null;
+      return normalizedDraft ? ({ campaign_id: campaignId, ...normalizedDraft } as CampaignSettings) : null;
     } finally {
       setLoading(false);
     }
@@ -171,10 +206,18 @@ export const useCampaignSettings = () => {
         throw new Error('Unable to resolve or create campaign ID');
       }
 
+      // Normalize and coerce campaign_url to a safe value for DB
+      const normalizedUrlObj = normalizeCampaignUrl(values.campaign_url);
+      const campaignUrlValue: string | null = (() => {
+        if (!normalizedUrlObj) return null;
+        // Prefer storing the main URL as a string to be compatible with TEXT or JSONB columns
+        return typeof (normalizedUrlObj as any).url === 'string' ? (normalizedUrlObj as any).url : (typeof normalizedUrlObj === 'string' ? normalizedUrlObj : null);
+      })();
+
       const payload: any = {
         campaign_id: realId,
         publication: values.publication ?? null,
-        campaign_url: values.campaign_url ?? null,
+        campaign_url: campaignUrlValue, // store as string for maximum compatibility
         soft_gate: values.soft_gate ?? null,
         limits: values.limits ?? null,
         email_verification: values.email_verification ?? null,

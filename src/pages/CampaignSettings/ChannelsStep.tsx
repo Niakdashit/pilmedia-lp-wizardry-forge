@@ -61,7 +61,7 @@ const ChannelsStep: React.FC<ControlledProps> = (props) => {
         setForm(prev => ({
           ...prev,
           campaign_url: {
-            ...(prev.campaign_url as any || {}),
+            ...(typeof (prev.campaign_url as any) === 'string' ? {} : ((prev.campaign_url as any) || {})),
             url: generatedUrl
           }
         }));
