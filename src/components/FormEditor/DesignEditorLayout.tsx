@@ -16,7 +16,6 @@ import ArticleFunnelView from '@/components/ArticleEditor/ArticleFunnelView';
 import { getArticleConfigWithDefaults } from '@/utils/articleConfigHelpers';
 import type { ModularPage, ScreenId, BlocBouton, Module } from '@/types/modularEditor';
 import { createEmptyModularPage } from '@/types/modularEditor';
-import { EditorLoader } from '@/components/shared/LoadingBoundary';
 
 import ZoomSlider from './components/ZoomSlider';
 const DesignCanvas = lazy(() => import('./DesignCanvas'));
@@ -236,7 +235,6 @@ const FormEditorLayout: React.FC<FormEditorLayoutProps> = ({ mode = 'campaign', 
     saveToCampaignCache,
     loadFromCampaignCache
   } = useEditorStore();
-  const isLoading = useEditorStore((s) => s.isLoading);
   const isNewCampaignGlobal = useEditorStore((s) => s.isNewCampaignGlobal);
   const beginNewCampaign = useEditorStore((s) => s.beginNewCampaign);
   const clearNewCampaignFlag = useEditorStore((s) => s.clearNewCampaignFlag);
@@ -3368,18 +3366,6 @@ useEffect(() => {
     }
   });
 
-  // Afficher le loader si les données sont en cours de chargement
-  if (isLoading && !dataHydratedRef.current) {
-    return (
-      <div
-        className="min-h-screen w-full flex items-center justify-center"
-        style={{ background: 'linear-gradient(180deg, #943c56, #370e4b)' }}
-      >
-        <EditorLoader />
-      </div>
-    );
-  }
-
   return (
     <div
       className="min-h-screen w-full"
@@ -3389,7 +3375,7 @@ useEffect(() => {
         boxSizing: 'border-box'
       }}
     >
-    <MobileStableEditor className={showFunnel ? "h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden" : (isWindowMobile ? "h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden pb-[6px] rounded-tl-[18px] rounded-tr-[18px] rounded-br-[18px] transform -translate-y-[0.4vh]" : "h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden pt-[1.25cm] pb-[6px] rounded-tl-[18px] rounded-tr-[18px] rounded-br-[18px] transform -translate-y-[0.4vh]")}>
+    <MobileStableEditor className={showFunnel ? "h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden" : (isWindowMobile ? "h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden pb-[6px] rounded-tl-[18px] rounded-tr-[18px] rounded-br-[18px] transform -translate-y-[0.4vh]" : "h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden pt-[1.25cm] pb-[6px] rounded-tl-[18px] rounded-tr-[18px] rounded-br-[18px] transform -translate-y-[0.4vh]")}> 
 
       {/* Top Toolbar - Hidden only in preview mode */}
       {!showFunnel && (

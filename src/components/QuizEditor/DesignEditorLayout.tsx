@@ -16,7 +16,6 @@ import ArticleFunnelView from '@/components/ArticleEditor/ArticleFunnelView';
 import { getArticleConfigWithDefaults } from '@/utils/articleConfigHelpers';
 import type { ModularPage, ScreenId, BlocBouton, Module } from '@/types/modularEditor';
 import { createEmptyModularPage } from '@/types/modularEditor';
-import { EditorLoader } from '@/components/shared/LoadingBoundary';
 
 import ZoomSlider from './components/ZoomSlider';
 const DesignCanvas = lazy(() => import('./DesignCanvas'));
@@ -273,7 +272,6 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
     loadFromCampaignCache,
     initializeNewCampaignWithId
   } = useEditorStore();
-  const isLoading = useEditorStore((s) => s.isLoading);
   const isNewCampaignGlobal = useEditorStore((s) => s.isNewCampaignGlobal);
   const beginNewCampaign = useEditorStore((s) => s.beginNewCampaign);
   const clearNewCampaignFlag = useEditorStore((s) => s.clearNewCampaignFlag);
@@ -3606,18 +3604,6 @@ const handleSaveCampaignName = useCallback(async () => {
       }
     }
   });
-
-  // Afficher le loader si les données sont en cours de chargement
-  if (isLoading && !dataHydratedRef.current) {
-    return (
-      <div
-        className="min-h-screen w-full flex items-center justify-center"
-        style={{ background: 'linear-gradient(180deg, #943c56, #370e4b)' }}
-      >
-        <EditorLoader />
-      </div>
-    );
-  }
 
   return (
     <div
