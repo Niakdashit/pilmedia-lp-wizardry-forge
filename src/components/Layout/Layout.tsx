@@ -97,7 +97,7 @@ const Layout: React.FC = () => {
             left: '9px',
             right: '9px',
             boxSizing: 'border-box',
-            backgroundColor: '#f9fafb',
+            background: 'transparent',
           }}
         />
 

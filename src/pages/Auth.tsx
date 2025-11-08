@@ -86,7 +86,7 @@ const Auth: React.FC = () => {
           margin: 0;
         }
       `}</style>
-      <div className="min-h-screen flex items-center justify-center p-4" style={{ height: '100vh', margin: 0 }}>
+      <div className="min-h-screen flex items-center justify-center p-4" style={{ height: '100vh', margin: 0, background: 'linear-gradient(180deg, #943c56, #370e4b)' }}>
         <div className="max-w-md mx-auto">
           {/* Logo */}
           <div className="text-center mb-8">
