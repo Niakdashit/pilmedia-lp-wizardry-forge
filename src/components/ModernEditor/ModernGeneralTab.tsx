@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import { Calendar, Clock, Globe, Tag, Activity, Power } from 'lucide-react';
+import { toast } from 'sonner';
 interface ModernGeneralTabProps {
   campaign: any;
   setCampaign: React.Dispatch<React.SetStateAction<any>>;
@@ -15,8 +16,12 @@ const ModernGeneralTab: React.FC<ModernGeneralTabProps> = ({
     }));
   };
 
-  // Calcul automatique du statut basé sur les dates
+  // Calcul automatique du statut basé sur les dates + prise en compte de l'activation
   const computedStatus = useMemo(() => {
+    if (campaign.isActive === false) {
+      return { value: 'paused', label: 'En pause', color: 'text-yellow-700 bg-yellow-100' };
+    }
+
     if (!campaign.startDate || !campaign.endDate) {
       return { value: 'draft', label: 'Brouillon', color: 'text-gray-600 bg-gray-100' };
     }
@@ -32,7 +37,7 @@ const ModernGeneralTab: React.FC<ModernGeneralTabProps> = ({
     } else {
       return { value: 'ended', label: 'Terminée', color: 'text-red-600 bg-red-100' };
     }
-  }, [campaign.startDate, campaign.endDate, campaign.startTime, campaign.endTime]);
+  }, [campaign.startDate, campaign.endDate, campaign.startTime, campaign.endTime, campaign.isActive]);
   return <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-bold text-gray-900 mb-2 text-left">Configuration générale</h2>
@@ -127,9 +132,29 @@ const ModernGeneralTab: React.FC<ModernGeneralTabProps> = ({
         </label>
         <button
           type="button"
-          onClick={() => handleInputChange('isActive', !campaign.isActive)}
-          className={`relative inline-flex h-10 w-20 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#841b60] focus:ring-offset-2 ${
-            campaign.isActive ? 'bg-[#841b60]' : 'bg-gray-300'
+          onClick={() => {
+            const next = !campaign.isActive;
+            if (next) {
+              // Validation: dates doivent être définies et cohérentes
+              if (!campaign.startDate || !campaign.endDate) {
+                toast.warning('Définissez les dates de début et de fin avant d’activer.');
+                return;
+              }
+              const start = new Date(campaign.startDate + 'T' + (campaign.startTime || '00:00'));
+              const end = new Date(campaign.endDate + 'T' + (campaign.endTime || '23:59'));
+              if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+                toast.warning('Dates invalides. Vérifiez les valeurs saisies.');
+                return;
+              }
+              if (end < start) {
+                toast.warning('La date de fin doit être postérieure à la date de début.');
+                return;
+              }
+            }
+            handleInputChange('isActive', next);
+          }}
+          className={`relative inline-flex h-10 w-20 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[hsl(var(--primary))] focus:ring-offset-2 ${
+            campaign.isActive ? 'bg-[hsl(var(--primary))]' : 'bg-gray-300'
           }`}
         >
           <span

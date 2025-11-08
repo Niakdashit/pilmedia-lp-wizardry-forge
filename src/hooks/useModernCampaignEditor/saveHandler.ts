@@ -293,13 +293,42 @@ export const saveCampaignToDB = async (
     ? (isDefaultName ? undefined : campaign?.name)
     : (campaign?.name || 'Nouvelle campagne');
 
+  // Normalize dates coming from editor fields (startDate/endDate + time)
+  const combine = (dateStr?: string, timeStr?: string, defaultTime = '00:00'): string | undefined => {
+    if (!dateStr) return undefined;
+    try {
+      return new Date(`${dateStr}T${timeStr || defaultTime}`).toISOString();
+    } catch {
+      return undefined;
+    }
+  };
+
+  const startIsoCamel = combine(campaign?.startDate, campaign?.startTime, '00:00');
+  const endIsoCamel = combine(campaign?.endDate, campaign?.endTime, '23:59');
+  const startIso = startIsoCamel || campaign?.start_date;
+  const endIso = endIsoCamel || campaign?.end_date;
+
+  // Compute status to sync with DB
+  const computeStatusFromDates = (): 'draft' | 'active' | 'ended' | 'paused' => {
+    if (campaign?.isActive === false) return 'paused';
+    if (!startIso || !endIso) return 'draft';
+    const now = new Date();
+    const s = new Date(startIso);
+    const e = new Date(endIso);
+    if (now < s) return 'draft';
+    if (now >= s && now <= e) return 'active';
+    return 'ended';
+  };
+
+  const syncedStatus = computeStatusFromDates();
+
   const payload: any = {
     id: isExisting ? campaign?.id : undefined,
     // name is added conditionally below to avoid accidental rename
     description: campaign?.description,
     slug: campaign?.slug,
     type: campaign?.type, // do not force a default here
-    status: campaign?.status || 'draft',
+    status: syncedStatus,
     
     // Editor mode (article or fullscreen)
     editor_mode: editorMode,
@@ -319,9 +348,9 @@ export const saveCampaignToDB = async (
     // Form fields
     form_fields: normalizedFormFields,
     
-    // Campaign timing - with default dates to ensure campaigns always have valid dates
-    start_date: campaign?.start_date || new Date().toISOString(),
-    end_date: campaign?.end_date || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+    // Campaign timing - prefer normalized editor values when present
+    start_date: startIso || new Date().toISOString(),
+    end_date: endIso || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
     
     // Media assets
     thumbnail_url: campaign?.thumbnail_url,
