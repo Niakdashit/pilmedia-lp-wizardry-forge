@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useCampaignSettings, CampaignSettings } from '@/hooks/useCampaignSettings';
@@ -179,8 +180,9 @@ useEffect(() => {
       };
 
       // Normalize publication ISO fields from date/time inputs
-      pub.start = pub.start || combine(pub.startDate, pub.startTime);
-      pub.end = pub.end || combine(pub.endDate, pub.endTime);
+      // IMPORTANT: Always use form values (startDate/endDate) if present, not the old ISO values
+      pub.start = combine(pub.startDate, pub.startTime) || pub.start;
+      pub.end = combine(pub.endDate, pub.endTime) || pub.end;
 
       const saved = await upsertSettings(savedCampaignId, {
         publication: pub,
@@ -266,8 +268,20 @@ useEffect(() => {
 
   // Validation du campaignId
   if (!effectiveCampaignId) {
-    return (
-      <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm">
+    return createPortal(
+      <div 
+        className="fixed z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm"
+        style={{
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          width: '100vw',
+          height: '100vh',
+          minHeight: '100vh',
+          minWidth: '100vw'
+        }}
+      >
         <div className="bg-white rounded-2xl shadow-2xl w-[95vw] max-w-md p-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-semibold text-gray-900">Erreur</h2>
@@ -291,14 +305,27 @@ useEffect(() => {
             Fermer
           </button>
         </div>
-      </div>
+      </div>,
+      document.body
     );
   }
 
   const ActiveStepComponent = steps.find(s => s.id === activeTab)?.component;
 
-  return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm">
+  return createPortal(
+    <div 
+      className="fixed z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm"
+      style={{
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        width: '100vw',
+        height: '100vh',
+        minHeight: '100vh',
+        minWidth: '100vw'
+      }}
+    >
       <div className="bg-white rounded-2xl shadow-2xl w-[95vw] max-w-5xl h-[90vh] flex flex-col overflow-hidden">
         {/* Header */}
         <div className="bg-white border-b border-[hsl(var(--sidebar-border))] px-6 py-4 flex items-center justify-between">
@@ -379,7 +406,8 @@ useEffect(() => {
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 

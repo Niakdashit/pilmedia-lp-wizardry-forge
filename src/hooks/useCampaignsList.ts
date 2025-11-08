@@ -15,6 +15,7 @@ export interface CampaignListItem {
   startDate: string;
   endDate: string;
   editor_mode?: 'article' | 'fullscreen' | null;
+  config?: any;
 }
 
 const CAMPAIGN_LIST_CACHE_TTL_MS = 30_000; // 30s is enough for dashboard refocus
@@ -217,6 +218,23 @@ export const useCampaignsList = () => {
           }
         } catch {}
 
+        // Debug log for jackpot fs
+        if (campaign.name === 'jackpot fs') {
+          const cs: any = campaign.campaign_settings;
+          const csRow = Array.isArray(cs) ? cs[0] : cs;
+          console.log('🔍 [useCampaignsList] Loading jackpot fs dates:', {
+            name: campaign.name,
+            'campaign.start_date': campaign.start_date,
+            'campaign.end_date': campaign.end_date,
+            'csRow?.start_date': csRow?.start_date,
+            'csRow?.end_date': csRow?.end_date,
+            'csRow?.publication?.start': csRow?.publication?.start,
+            'csRow?.publication?.end': csRow?.publication?.end,
+            'final startDate': startDate,
+            'final endDate': endDate,
+          });
+        }
+
         return {
           id: campaign.id,
           name: publicationName || draftName || campaign.name,
@@ -230,6 +248,7 @@ export const useCampaignsList = () => {
           participants: campaign.campaign_stats?.[0]?.participations || 0,
           startDate,
           endDate,
+          config: campaign.config,
         };
       });
 

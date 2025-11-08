@@ -1,13 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { LoadingBoundary, MinimalLoader } from '@/components/shared/LoadingBoundary';
-import { useCampaigns } from '@/hooks/useCampaigns';
+import { supabase } from '@/integrations/supabase/client';
 import ArticleFunnelView from '@/components/ArticleEditor/ArticleFunnelView';
 import PreviewRenderer from '@/components/preview/PreviewRenderer';
 
 const PublicCampaign: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const { getCampaign } = useCampaigns();
   const [campaign, setCampaign] = useState<any | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -19,12 +18,36 @@ const PublicCampaign: React.FC = () => {
         setLoading(true);
         setError(null);
         if (!id) throw new Error('Aucune campagne');
-        const data = await getCampaign(id);
+        
+        // Fetch campaign directly from Supabase to bypass cache and check visibility
+        const { data, error: fetchError } = await supabase
+          .from('campaigns')
+          .select('*')
+          .eq('id', id)
+          .single();
+        
+        if (fetchError) throw fetchError;
         if (!mounted) return;
+        
         if (!data) {
           setError('Campagne introuvable');
         } else {
-          setCampaign(data);
+          // Check if campaign is publicly accessible
+          // Explicitly: true = public, false = private, undefined = public (default)
+          const config = data.config as any;
+          const isPublic = config?.isPublic !== false;
+          console.log('🔒 Public access check:', { campaignId: id, isPublic, configValue: config?.isPublic });
+          
+          // Check if campaign has ended (status or end_date)
+          const now = new Date();
+          const endDate = data.end_date ? new Date(data.end_date) : null;
+          const hasEnded = data.status === 'ended' || (endDate && endDate < now);
+          
+          if (!isPublic || hasEnded) {
+            setError('Cette campagne est désormais terminée');
+          } else {
+            setCampaign(data);
+          }
         }
       } catch (e: any) {
         setError(e?.message || 'Erreur lors du chargement');
@@ -34,7 +57,7 @@ const PublicCampaign: React.FC = () => {
     };
     load();
     return () => { mounted = false; };
-  }, [getCampaign, id]);
+  }, [id]);
 
   if (loading) {
     return (
@@ -47,10 +70,7 @@ const PublicCampaign: React.FC = () => {
   if (error || !campaign) {
     return (
       <div className="min-h-screen flex items-center justify-center p-6">
-        <div className="max-w-md w-full bg-white border rounded-xl shadow p-6 text-center">
-          <h1 className="text-lg font-semibold mb-2">Impossible d'afficher la campagne</h1>
-          <p className="text-sm text-gray-600">{error || 'Campagne introuvable.'}</p>
-        </div>
+        <p className="text-sm text-gray-600">{error || 'Campagne introuvable.'}</p>
       </div>
     );
   }

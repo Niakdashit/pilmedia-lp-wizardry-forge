@@ -74,7 +74,7 @@ const ActionModal: React.FC<ActionModalProps> = ({ isOpen, onClose, campaign, po
 
 const Campaigns: React.FC = () => {
   const navigate = useNavigate();
-  const { campaigns, loading, error, updateCampaignStatus, deleteCampaign, refetch } = useCampaignsList();
+  const { campaigns, loading, error, updateCampaignStatus, deleteCampaign, refetch, invalidateCache } = useCampaignsList();
   const { getCampaign } = useCampaigns();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
@@ -84,7 +84,6 @@ const Campaigns: React.FC = () => {
   const [modalPosition, setModalPosition] = useState({ x: 0, y: 0 });
   const [showEditorMenu, setShowEditorMenu] = useState(false);
   const [selectedCampaigns, setSelectedCampaigns] = useState<string[]>([]);
-  const [optimisticVisibility, setOptimisticVisibility] = useState<Record<string, boolean>>({});
 
   const editorOptions = [
     { name: 'Roue de la Fortune', path: '/design-editor', icon: '🎯' },
@@ -189,6 +188,26 @@ const Campaigns: React.FC = () => {
         return status;
     }
   };
+
+  // Calculate actual status based on dates
+  const getActualStatus = (campaign: any) => {
+    const now = new Date();
+    const endDate = campaign.endDate ? new Date(campaign.endDate) : null;
+    const startDate = campaign.startDate ? new Date(campaign.startDate) : null;
+
+    // If end date is passed, campaign is ended
+    if (endDate && endDate < now) {
+      return 'ended';
+    }
+
+    // If start date is in the future, campaign is scheduled
+    if (startDate && startDate > now && campaign.status === 'active') {
+      return 'scheduled';
+    }
+
+    // Otherwise, return the stored status
+    return campaign.status;
+  };
   const handleActionClick = (e: React.MouseEvent, campaign: any) => {
     e.preventDefault();
     const rect = e.currentTarget.getBoundingClientRect();
@@ -218,13 +237,15 @@ const Campaigns: React.FC = () => {
         : {};
       
       // Get actual current value from database
-      const currentIsPublic = (currentConfig as any).isPublic !== false; // Default to true if not set
+      // Explicitly check: true = public, false = private, undefined = public (default)
+      const rawIsPublic = (currentConfig as any).isPublic;
+      console.log('🔍 Raw isPublic value from DB:', rawIsPublic, '(type:', typeof rawIsPublic, ')');
+      
+      const currentIsPublic = rawIsPublic !== false;
       const newIsPublic = !currentIsPublic;
       
       console.log('📝 Current visibility:', currentIsPublic, '→ New visibility:', newIsPublic);
-      
-      // Optimistic UI update
-      setOptimisticVisibility(prev => ({ ...prev, [campaignId]: newIsPublic }));
+      console.log('🎯 Will set isPublic to:', newIsPublic);
       
       const updatedConfig = {
         ...(currentConfig as Record<string, any>),
@@ -238,23 +259,16 @@ const Campaigns: React.FC = () => {
         .update({ config: updatedConfig })
         .eq('id', campaignId);
 
-      if (error) {
-        // Revert optimistic update on error
-        setOptimisticVisibility(prev => ({ ...prev, [campaignId]: currentIsPublic }));
-        throw error;
-      }
+      if (error) throw error;
       
       console.log('✅ Visibility updated successfully!');
-      await refetch();
       
-      // Clear optimistic state after refetch
-      setTimeout(() => {
-        setOptimisticVisibility(prev => {
-          const newState = { ...prev };
-          delete newState[campaignId];
-          return newState;
-        });
-      }, 500);
+      // Invalidate cache and refetch with a longer delay to ensure state update
+      invalidateCache();
+      await refetch({ suppressLoading: true });
+      
+      // Additional delay to let React update the state
+      await new Promise(resolve => setTimeout(resolve, 300));
     } catch (err) {
       console.error('❌ Erreur lors de la mise à jour de la visibilité:', err);
     }
@@ -547,17 +561,13 @@ const Campaigns: React.FC = () => {
                               <input
                                 type="checkbox"
                                 className="sr-only peer"
-                                checked={
-                                  campaign.id in optimisticVisibility 
-                                    ? optimisticVisibility[campaign.id]
-                                    : (campaign as any)?.config?.isPublic !== false
-                                }
+                                checked={(campaign as any)?.config?.isPublic !== false}
                                 onChange={() => handleVisibilityToggle(campaign.id)}
                               />
                               <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#841b60]/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gradient-to-br peer-checked:from-[#841b60] peer-checked:to-[#b41b60]"></div>
                             </label>
-                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(campaign.status)}`}>
-                              {getStatusText(campaign.status)}
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(getActualStatus(campaign))}`}>
+                              {getStatusText(getActualStatus(campaign))}
                             </span>
                           </div>
                         </td>
