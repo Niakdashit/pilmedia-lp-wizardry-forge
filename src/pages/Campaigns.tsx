@@ -173,8 +173,21 @@ const Campaigns: React.FC = () => {
       default:
         return status;
     }
-  };
-
+   };
+ 
+   const computeDisplayStatus = (dbStatus: string, startDate?: string, endDate?: string) => {
+     // Preserve paused
+     if (dbStatus === 'paused') return 'paused';
+     if (startDate && endDate) {
+       const now = new Date();
+       const s = new Date(startDate as any);
+       const e = new Date(endDate as any);
+       if (now < s) return 'draft';
+       if (now >= s && now <= e) return 'active';
+       return 'ended';
+     }
+     return dbStatus;
+   };
   const handleActionClick = (e: React.MouseEvent, campaign: any) => {
     e.preventDefault();
     const rect = e.currentTarget.getBoundingClientRect();

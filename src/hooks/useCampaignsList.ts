@@ -149,34 +149,25 @@ export const useCampaignsList = () => {
 
       // Transform data to match our interface
       const transformedCampaigns: CampaignListItem[] = (data || []).map((campaign: any) => {
-        // Extract dates from campaign_settings (preferred) or fallback to campaign columns
+        // Extract dates with a strict priority to avoid stale config overriding DB
         let startDate = '';
         let endDate = '';
+        
         // Prefer publication.name from campaign_settings for display name
         const publicationName = campaign.campaign_settings?.[0]?.publication?.name;
-        // Fallback: read local draft (unsaved settings) to keep list name consistent with settings UI
-        let draftName: string | undefined;
-        try {
-          const draftKey = `campaign:settings:draft:${campaign.id}`;
-          const raw = localStorage.getItem(draftKey);
-          if (raw) {
-            const draft = JSON.parse(raw);
-            draftName = draft?.publication?.name || undefined;
-          }
-        } catch {}
         
-        // Priority 1: campaign_settings table (handle 1-1 object or array)
+        // 1) campaign_settings (dedicated cols -> publication ISO)
         {
           const cs: any = campaign.campaign_settings;
           const csRow = Array.isArray(cs) ? cs[0] : cs;
           if (csRow) {
             // Dedicated columns
-            if (csRow.start_date) {
+            if (!startDate && csRow.start_date) {
               const d = String(csRow.start_date);
               const t = typeof csRow.start_time === 'string' ? csRow.start_time : undefined;
               startDate = d.includes('T') ? d : new Date(`${d}T${t || '00:00'}`).toISOString();
             }
-            if (csRow.end_date) {
+            if (!endDate && csRow.end_date) {
               const d = String(csRow.end_date);
               const t = typeof csRow.end_time === 'string' ? csRow.end_time : undefined;
               endDate = d.includes('T') ? d : new Date(`${d}T${t || '23:59'}`).toISOString();
@@ -191,12 +182,18 @@ export const useCampaignsList = () => {
           }
         }
         
-        // Priority 2: Extract dates and times from config if stored in those fields (ModernGeneralTab)
+        // 2) campaigns top-level columns (authoritative after settings save)
+        if (!startDate && campaign.start_date) {
+          try { startDate = new Date(campaign.start_date).toISOString(); } catch { startDate = campaign.start_date; }
+        }
+        if (!endDate && campaign.end_date) {
+          try { endDate = new Date(campaign.end_date).toISOString(); } catch { endDate = campaign.end_date; }
+        }
+        
+        // 3) config separate date/time fields (legacy UI state)
         if ((!startDate || !endDate) && campaign.config) {
           try {
             const config = typeof campaign.config === 'string' ? JSON.parse(campaign.config) : campaign.config;
-            
-            // If we have separate date/time fields, combine them
             if (config.startDate && !startDate) {
               const time = config.startTime || '00:00';
               startDate = new Date(`${config.startDate}T${time}`).toISOString();
@@ -205,28 +202,27 @@ export const useCampaignsList = () => {
               const time = config.endTime || '23:59';
               endDate = new Date(`${config.endDate}T${time}`).toISOString();
             }
-          } catch (e) {
-            // Ignore parsing errors
-          }
+          } catch {}
         }
         
-        // Priority 3 (legacy single ISO in config): config.startDate/endDate
+        // 4) config legacy single ISO
         if ((!startDate || !endDate) && campaign.config) {
           try {
             const config = typeof campaign.config === 'string' ? JSON.parse(campaign.config) : campaign.config;
             if (!startDate && config.startDate) startDate = config.startDate;
             if (!endDate && config.endDate) endDate = config.endDate;
-          } catch (e) {
-            // Ignore parsing errors
-          }
+          } catch {}
         }
-        
-        // Priority 4: campaign.start_date / end_date columns (DB top-level)
-        if (!startDate && campaign.start_date) startDate = campaign.start_date;
-        if (!endDate && campaign.end_date) endDate = campaign.end_date;
 
-        // Get participants count
-        const participants = campaign.campaign_stats?.[0]?.participations || 0;
+        // Fallback: keep empty when not configured (no misleading defaults)
+        let draftName: string | undefined;
+        try {
+          const raw = typeof window !== 'undefined' ? localStorage.getItem(`campaign:settings:draft:${campaign.id}`) : null;
+          if (raw) {
+            const draft = JSON.parse(raw);
+            draftName = draft?.publication?.name || undefined;
+          }
+        } catch {}
 
         return {
           id: campaign.id,
@@ -238,11 +234,9 @@ export const useCampaignsList = () => {
           created_at: campaign.created_at,
           created_by: campaign.created_by,
           banner_url: campaign.banner_url,
-          participants,
-          // Keep empty when not configured (no misleading defaults)
-          startDate: startDate,
-          endDate: endDate,
-
+          participants: campaign.campaign_stats?.[0]?.participations || 0,
+          startDate,
+          endDate,
         };
       });
 

@@ -150,8 +150,35 @@ useEffect(() => {
       // Step 2: Save campaign settings
       console.log('💾 [CampaignSettingsModal] Saving campaign settings...');
       const pub: any = { ...(form.publication || {}) };
-      const combine = (d?: string, t?: string) =>
-        d && t ? `${d}T${t}` : (d ? `${d}T00:00` : (t ? `${new Date().toISOString().slice(0,10)}T${t}` : ''));
+      const parseDateToISO = (d?: string): string | null => {
+        if (!d || typeof d !== 'string') return null;
+        // Already ISO-like
+        if (/^\d{4}-\d{2}-\d{2}/.test(d)) return d.slice(0, 10);
+        // French DMY format: 14/12/2025
+        const m = d.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+        if (m) {
+          const dd = m[1].padStart(2, '0');
+          const mm = m[2].padStart(2, '0');
+          const yyyy = m[3];
+          return `${yyyy}-${mm}-${dd}`;
+        }
+        // Fallback: let Date parse and convert back to YYYY-MM-DD
+        const parsed = new Date(d);
+        if (!isNaN(parsed.getTime())) {
+          const yyyy = parsed.getFullYear();
+          const mm = String(parsed.getMonth() + 1).padStart(2, '0');
+          const dd = String(parsed.getDate()).padStart(2, '0');
+          return `${yyyy}-${mm}-${dd}`;
+        }
+        return null;
+      };
+      const combine = (d?: string, t?: string) => {
+        const dateISO = parseDateToISO(d);
+        const time = (t && /^\d{2}:\d{2}$/.test(t)) ? t : '00:00';
+        return dateISO ? `${dateISO}T${time}` : '';
+      };
+
+      // Normalize publication ISO fields from date/time inputs
       pub.start = pub.start || combine(pub.startDate, pub.startTime);
       pub.end = pub.end || combine(pub.endDate, pub.endTime);
 
