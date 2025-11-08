@@ -1,9 +1,7 @@
 
 import React, { useState } from 'react';
 import { X, Monitor, Smartphone } from 'lucide-react';
-import FunnelUnlockedGame from '../funnels/FunnelUnlockedGame';
-import FunnelStandard from '../funnels/FunnelStandard';
-import FormPreview from '../GameTypes/FormPreview';
+import GameCanvasPreview from './components/GameCanvasPreview';
 import { createSynchronizedQuizCampaign } from '../../utils/quizConfigSync';
 import PreviewLoadingState from './components/PreviewLoadingState';
 import DeviceTransition from './components/DeviceTransition';
@@ -80,41 +78,6 @@ const ModernPreviewModal: React.FC<ModernPreviewModalProps> = ({
   // Utiliser le système de synchronisation centralisé
   const enhancedCampaign = createSynchronizedQuizCampaign(campaign);
 
-  const getFunnelComponent = () => {
-    // Gestion spéciale pour le type 'form'
-    if (campaign.type === 'form') {
-      return (
-        <FormPreview
-          campaign={enhancedCampaign}
-          gameSize={campaign.gameSize || 'medium'}
-        />
-      );
-    }
-
-    // Types utilisant le funnel unlocked_game
-    const unlockedTypes = ['wheel', 'scratch', 'jackpot', 'dice'];
-    const shouldUseUnlockedFunnel = unlockedTypes.includes(enhancedCampaign.type) || 
-      enhancedCampaign.funnel === 'unlocked_game';
-    
-    if (shouldUseUnlockedFunnel) {
-      return (
-        <FunnelUnlockedGame
-          campaign={enhancedCampaign}
-          previewMode={device === 'desktop' ? 'desktop' : device}
-          key={`unlocked-${enhancedCampaign.type}-${device}-${JSON.stringify(enhancedCampaign.gameConfig)}`}
-        />
-      );
-    }
-    
-    // Utiliser le funnel standard pour quiz et autres
-    return (
-      <FunnelStandard 
-        campaign={enhancedCampaign} 
-        key={`standard-${enhancedCampaign.type}-${device}-${JSON.stringify(enhancedCampaign.gameConfig)}`}
-      />
-    );
-  };
-
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <div className="bg-white w-full h-full flex flex-col relative overflow-hidden rounded-[2px] shadow-2xl max-w-7xl max-h-[90vh]">
@@ -179,7 +142,11 @@ const ModernPreviewModal: React.FC<ModernPreviewModalProps> = ({
                           justifyContent: 'center'
                         }}
                       >
-                        {getFunnelComponent()}
+                        <GameCanvasPreview
+                          campaign={enhancedCampaign}
+                          previewDevice={device}
+                          key={`canvas-preview-${device}-${enhancedCampaign.type}-${JSON.stringify(enhancedCampaign.gameConfig)}`}
+                        />
                       </div>
                     </div>
                   </div>
