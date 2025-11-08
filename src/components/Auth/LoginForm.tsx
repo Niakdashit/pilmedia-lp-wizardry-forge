@@ -108,7 +108,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister, onSwit
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-gradient-to-r from-[#841b60] to-[#b41b60] text-white py-3 px-4 rounded-xl font-medium hover:from-[#6d164f] hover:to-[#9a1b4f] focus:ring-2 focus:ring-offset-2 focus:ring-[#841b60] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-gradient-to-r from-[#841b60] via-[#9a1b60] to-[#d41b60] text-white py-3 px-4 rounded-xl font-medium hover:from-[#6d164f] hover:via-[#841b60] hover:to-[#b41b60] focus:ring-2 focus:ring-offset-2 focus:ring-[#841b60] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
           >
             {loading ? 'Connexion...' : 'Se connecter'}
           </button>
