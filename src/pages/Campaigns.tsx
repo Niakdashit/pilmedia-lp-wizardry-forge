@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import ConfirmModal from '@/components/shared/ConfirmModal';
 import { getEditorUrl } from '@/utils/editorRouting';
 import { useEffect } from 'react';
+import CampaignPeriodCell from '../components/Campaigns/CampaignPeriodCell';
 
 
 interface ActionModalProps {
@@ -502,6 +503,9 @@ const Campaigns: React.FC = () => {
                       Statut
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Période
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Participants
                     </th>
                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-20">
@@ -579,6 +583,13 @@ const Campaigns: React.FC = () => {
                               {getStatusText(getActualStatus(campaign))}
                             </span>
                           </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          <CampaignPeriodCell
+                            startDate={campaign.startDate}
+                            endDate={campaign.endDate}
+                            status={getActualStatus(campaign)}
+                          />
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{campaign.participants}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
