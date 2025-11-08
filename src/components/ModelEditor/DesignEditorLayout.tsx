@@ -8,6 +8,7 @@ import { Save, X } from 'lucide-react';
 const HybridSidebar = lazy(() => import('./HybridSidebar'));
 const DesignToolbar = lazy(() => import('./DesignToolbar'));
 import FunnelUnlockedGame from '@/components/funnels/FunnelUnlockedGame';
+import { EditorLoader } from '@/components/shared/LoadingBoundary';
 
 import ZoomSlider from './components/ZoomSlider';
 const DesignCanvas = lazy(() => import('./DesignCanvas'));
@@ -100,6 +101,7 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
     resetCampaign,
     initializeNewCampaign
   } = useEditorStore();
+  const isLoading = useEditorStore((s) => s.isLoading);
   // Campagne centralisée (source de vérité pour les champs de contact)
   const campaignState = useEditorStore((s) => s.campaign);
 
@@ -1589,6 +1591,23 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
     };
   }, []);
 
+
+  // Afficher le loader si les données sont en cours de chargement
+  if (isLoading) {
+    return (
+      <div
+        className="min-h-screen w-full flex items-center justify-center"
+        style={{
+          backgroundImage:
+            'radial-gradient(130% 130% at 12% 20%, rgba(235, 155, 100, 0.8) 0%, rgba(235, 155, 100, 0) 55%), radial-gradient(120% 120% at 78% 18%, rgba(128, 82, 180, 0.85) 0%, rgba(128, 82, 180, 0) 60%), radial-gradient(150% 150% at 55% 82%, rgba(68, 52, 128, 0.75) 0%, rgba(68, 52, 128, 0) 65%), linear-gradient(90deg, #E07A3A 0%, #9A5CA9 50%, #3D2E72 100%)',
+          backgroundBlendMode: 'screen, screen, lighten, normal',
+          backgroundColor: '#3D2E72'
+        }}
+      >
+        <EditorLoader />
+      </div>
+    );
+  }
 
   return (
     <div

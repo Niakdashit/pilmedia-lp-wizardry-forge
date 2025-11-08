@@ -13,6 +13,7 @@ const FullScreenPreviewModal = lazy(() => import('@/components/shared/modals/Ful
 const FunnelUnlockedGame = lazy(() => import('@/components/funnels/FunnelUnlockedGame'));
 import PreviewRenderer from '@/components/preview/PreviewRenderer';
 import ArticleFunnelView from '@/components/ArticleEditor/ArticleFunnelView';
+import { EditorLoader } from '@/components/shared/LoadingBoundary';
 // import GradientBand from '../shared/GradientBand';
 import type { ModularPage, ScreenId, BlocBouton, Module } from '@/types/modularEditor';
 import { createEmptyModularPage } from '@/types/modularEditor';
@@ -157,6 +158,7 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
     initializeNewCampaignWithId,
     selectCampaign
   } = useEditorStore();
+  const isLoading = useEditorStore((s) => s.isLoading);
   // Campagne centralisée (source de vérité pour les champs de contact)
   const campaignState = useEditorStore((s) => s.campaign);
   const selectedCampaignId = useEditorStore((s) => s.selectedCampaignId);
@@ -2706,6 +2708,18 @@ useEffect(() => {
       }
     }
   });
+
+  // Afficher le loader si les données sont en cours de chargement
+  if (isLoading && !dataHydratedRef.current) {
+    return (
+      <div
+        className="min-h-screen w-full flex items-center justify-center"
+        style={{ background: 'linear-gradient(180deg, #943c56, #370e4b)' }}
+      >
+        <EditorLoader />
+      </div>
+    );
+  }
 
   return (
     <div

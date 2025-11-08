@@ -14,6 +14,7 @@ const FullScreenPreviewModal = lazy(() => import('@/components/shared/modals/Ful
 // Scratch editor uses FunnelUnlockedGame for preview
 import type { ModularPage, ScreenId, BlocBouton, Module } from '@/types/modularEditor';
 import { createEmptyModularPage } from '@/types/modularEditor';
+import { EditorLoader } from '@/components/shared/LoadingBoundary';
 
 import PreviewRenderer from '@/components/preview/PreviewRenderer';
 import ArticleCanvas from '@/components/ArticleEditor/ArticleCanvas';
@@ -302,6 +303,7 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
     initializeNewCampaignWithId,
     selectCampaign
   } = useEditorStore();
+  const isLoading = useEditorStore((s) => s.isLoading);
   const isNewCampaignGlobal = useEditorStore((s) => s.isNewCampaignGlobal);
   const beginNewCampaign = useEditorStore((s) => s.beginNewCampaign);
   const clearNewCampaignFlag = useEditorStore((s) => s.clearNewCampaignFlag);
@@ -3350,6 +3352,18 @@ const handleSaveCampaignName = useCallback(async () => {
       }
     }
   });
+
+  // Afficher le loader si les données sont en cours de chargement
+  if (isLoading && !dataHydratedRef.current) {
+    return (
+      <div
+        className="min-h-screen w-full flex items-center justify-center"
+        style={{ background: 'linear-gradient(180deg, #943c56, #370e4b)' }}
+      >
+        <EditorLoader />
+      </div>
+    );
+  }
 
   return (
     <div
