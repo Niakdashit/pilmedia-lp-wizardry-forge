@@ -1235,7 +1235,7 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
               disablePointerAnimation={true}
               theme="modern"
               brandColors={{
-                primary: extractedColors?.[0] || (campaign as any)?.design?.customColors?.primary || '#E0004D',
+                primary: extractedColors?.[0] || (campaign as any)?.design?.customColors?.primary || '#841b60',
                 secondary: extractedColors?.[1] || (campaign as any)?.design?.customColors?.secondary || '#ffffff',
                 accent: extractedColors?.[2] || (campaign as any)?.design?.customColors?.accent || '#4ecdc4'
               }}

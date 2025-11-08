@@ -22,7 +22,7 @@ const AdminClientsFilters: React.FC<AdminClientsFiltersProps> = ({
           <input
             type="text"
             placeholder="Rechercher par nom, entreprise ou email..."
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E0004D]"
+            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60]"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -30,7 +30,7 @@ const AdminClientsFilters: React.FC<AdminClientsFiltersProps> = ({
         </div>
 
         <select
-          className="border border-gray-300 rounded-lg py-2 px-3 focus:outline-none focus:ring-2 focus:ring-[#E0004D]"
+          className="border border-gray-300 rounded-lg py-2 px-3 focus:outline-none focus:ring-2 focus:ring-[#841b60]"
           value={filterStatus}
           onChange={(e) => setFilterStatus(e.target.value)}
         >

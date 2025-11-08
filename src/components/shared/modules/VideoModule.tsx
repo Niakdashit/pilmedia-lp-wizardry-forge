@@ -64,7 +64,7 @@ const VideoModule: React.FC<VideoModuleProps> = ({ module, onClick, isSelected =
             overflow: 'hidden',
             background: '#000000',
             boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-            outline: isSelected ? '2px solid #E0004D' : 'none',
+            outline: isSelected ? '2px solid #841b60' : 'none',
             outlineOffset: '2px',
             border: borderWidth > 0 ? `${borderWidth}px solid ${borderColor}` : 'none'
           }}

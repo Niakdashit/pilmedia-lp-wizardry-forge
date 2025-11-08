@@ -9,7 +9,7 @@ const Gamification: React.FC = () => {
     {
       name: 'Roue de la fortune',
       description: 'Faites tourner la roue pour gagner des réductions, cadeaux ou surprises',
-      color: '#E0004D',
+      color: '#841b60',
       image: '/gamification/wheel.svg',
       type: 'wheel' as CampaignType
     },

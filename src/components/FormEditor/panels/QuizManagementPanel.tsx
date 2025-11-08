@@ -219,7 +219,7 @@ const QuizManagementPanel: React.FC<QuizManagementPanelProps> = ({
       {/* Header */}
       <div className="px-4 py-3 border-b border-gray-200">
         <h3 className="text-sm font-semibold text-gray-900 flex items-center">
-          <HelpCircle className="w-4 h-4 mr-2" style={{ color: '#E0004D' }} />
+          <HelpCircle className="w-4 h-4 mr-2" style={{ color: '#841b60' }} />
           Gestion du Quiz
         </h3>
       </div>
@@ -233,7 +233,7 @@ const QuizManagementPanel: React.FC<QuizManagementPanelProps> = ({
               ? 'border-b-2 bg-white'
               : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
           }`}
-          style={activeTab === 'questions' ? { color: '#E0004D', borderBottomColor: '#E0004D' } : {}}
+          style={activeTab === 'questions' ? { color: '#841b60', borderBottomColor: '#841b60' } : {}}
         >
           <HelpCircle className="w-4 h-4 inline mr-2" />
           Questions
@@ -245,7 +245,7 @@ const QuizManagementPanel: React.FC<QuizManagementPanelProps> = ({
               ? 'border-b-2 bg-white'
               : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
           }`}
-          style={activeTab === 'settings' ? { color: '#E0004D', borderBottomColor: '#E0004D' } : {}}
+          style={activeTab === 'settings' ? { color: '#841b60', borderBottomColor: '#841b60' } : {}}
         >
           <Clock className="w-4 h-4 inline mr-2" />
           Paramètres
@@ -262,7 +262,7 @@ const QuizManagementPanel: React.FC<QuizManagementPanelProps> = ({
               className="w-full p-4 border-2 border-dashed border-gray-300 rounded-xl transition-all duration-200 group backdrop-blur-sm"
               style={{ background: 'linear-gradient(135deg, rgba(132, 27, 96, 0.05), rgba(109, 22, 79, 0.05))' }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = '#E0004D';
+                e.currentTarget.style.borderColor = '#841b60';
                 e.currentTarget.style.background = 'linear-gradient(135deg, rgba(132, 27, 96, 0.1), rgba(109, 22, 79, 0.1))';
               }}
               onMouseLeave={(e) => {
@@ -272,12 +272,12 @@ const QuizManagementPanel: React.FC<QuizManagementPanelProps> = ({
             >
               <Plus 
                 className="w-5 h-5 mx-auto mb-2 text-gray-400 transition-colors" 
-                onMouseEnter={(e) => e.currentTarget.style.color = '#E0004D'} 
+                onMouseEnter={(e) => e.currentTarget.style.color = '#841b60'} 
                 onMouseLeave={(e) => e.currentTarget.style.color = 'rgb(156 163 175)'} 
               />
               <span 
                 className="text-sm text-gray-400 font-medium transition-colors"
-                onMouseEnter={(e) => e.currentTarget.style.color = '#E0004D'}
+                onMouseEnter={(e) => e.currentTarget.style.color = '#841b60'}
                 onMouseLeave={(e) => e.currentTarget.style.color = 'rgb(156 163 175)'}
               >
                 Ajouter une question
@@ -291,10 +291,10 @@ const QuizManagementPanel: React.FC<QuizManagementPanelProps> = ({
                 <div className="p-4 border-b border-gray-200">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">
-                      <div className="w-6 h-6 rounded-full flex items-center justify-center" style={{ backgroundColor: '#E0004D', opacity: 0.2 }}>
-                        <span className="text-xs font-semibold" style={{ color: '#E0004D' }}>{index + 1}</span>
+                      <div className="w-6 h-6 rounded-full flex items-center justify-center" style={{ backgroundColor: '#841b60', opacity: 0.2 }}>
+                        <span className="text-xs font-semibold" style={{ color: '#841b60' }}>{index + 1}</span>
                       </div>
-                      <span className="text-sm font-medium" style={{ color: '#E0004D' }}>
+                      <span className="text-sm font-medium" style={{ color: '#841b60' }}>
                         Question {index + 1}
                       </span>
                     </div>
@@ -306,7 +306,7 @@ const QuizManagementPanel: React.FC<QuizManagementPanelProps> = ({
                         className="p-2 hover:bg-gray-100 rounded-lg transition-all duration-200 group"
                         title="Modifier la question"
                       >
-                        <Edit3 className="w-4 h-4 text-gray-400 transition-colors" onMouseEnter={(e) => e.currentTarget.style.color = '#E0004D'} onMouseLeave={(e) => e.currentTarget.style.color = ''} />
+                        <Edit3 className="w-4 h-4 text-gray-400 transition-colors" onMouseEnter={(e) => e.currentTarget.style.color = '#841b60'} onMouseLeave={(e) => e.currentTarget.style.color = ''} />
                       </button>
                       <button
                         onClick={() => deleteQuestion(question.id)}
@@ -325,7 +325,7 @@ const QuizManagementPanel: React.FC<QuizManagementPanelProps> = ({
                       onChange={(e) => updateQuestion(question.id, { question: e.target.value })}
                       className="w-full mt-3 p-3 bg-white border border-gray-300 rounded-lg text-gray-900 text-sm resize-none transition-all"
                       onFocus={(e) => {
-                        e.currentTarget.style.borderColor = '#E0004D';
+                        e.currentTarget.style.borderColor = '#841b60';
                         e.currentTarget.style.boxShadow = `0 0 0 2px rgba(132, 27, 96, 0.2)`;
                       }}
                       onBlur={(e) => {
@@ -346,7 +346,7 @@ const QuizManagementPanel: React.FC<QuizManagementPanelProps> = ({
                         <span className="text-xs text-gray-400">Image de la question</span>
                       </div>
                       <label className="inline-flex items-center px-3 py-2 text-xs rounded-lg bg-gray-50 border border-gray-300 cursor-pointer hover:bg-gray-100 transition-all duration-200"
-                        onMouseEnter={(e) => e.currentTarget.style.borderColor = '#E0004D'}
+                        onMouseEnter={(e) => e.currentTarget.style.borderColor = '#841b60'}
                         onMouseLeave={(e) => e.currentTarget.style.borderColor = 'rgb(209 213 219)'}>
                         <ImageIcon className="w-3 h-3 mr-1" />
                         Choisir un fichier
@@ -382,7 +382,7 @@ const QuizManagementPanel: React.FC<QuizManagementPanelProps> = ({
                           checked={answer.isCorrect}
                           onChange={() => setCorrectAnswer(question.id, answer.id)}
                           className="w-4 h-4 focus:ring-2 transition-colors flex-shrink-0"
-                          style={{ accentColor: '#E0004D' }}
+                          style={{ accentColor: '#841b60' }}
                           onFocus={(e) => {
                             e.currentTarget.style.boxShadow = `0 0 0 2px rgba(132, 27, 96, 0.2)`;
                           }}
@@ -396,7 +396,7 @@ const QuizManagementPanel: React.FC<QuizManagementPanelProps> = ({
                           onChange={(e) => updateAnswer(question.id, answer.id, e.target.value)}
                           className="flex-1 min-w-0 p-2 bg-white border border-gray-300 rounded-lg text-gray-900 text-sm transition-all"
                           onFocus={(e) => {
-                            e.currentTarget.style.borderColor = '#E0004D';
+                            e.currentTarget.style.borderColor = '#841b60';
                             e.currentTarget.style.boxShadow = `0 0 0 2px rgba(132, 27, 96, 0.2)`;
                           }}
                           onBlur={(e) => {
@@ -417,7 +417,7 @@ const QuizManagementPanel: React.FC<QuizManagementPanelProps> = ({
                       {showAnswerImageUploader && (
                         <div className="mt-3 flex justify-start">
                           <label className="inline-flex items-center px-3 py-2 text-xs rounded-lg bg-white border border-gray-300 cursor-pointer hover:bg-gray-100 transition-all duration-200"
-                            onMouseEnter={(e) => e.currentTarget.style.borderColor = '#E0004D'}
+                            onMouseEnter={(e) => e.currentTarget.style.borderColor = '#841b60'}
                             onMouseLeave={(e) => e.currentTarget.style.borderColor = 'rgb(209 213 219)'}>
                             <ImageIcon className="w-3 h-3 mr-1" />
                             Ajouter image
@@ -448,8 +448,8 @@ const QuizManagementPanel: React.FC<QuizManagementPanelProps> = ({
                       onClick={() => addAnswer(question.id)}
                       className="w-full p-3 border-2 border-dashed border-gray-300 rounded-lg text-sm text-gray-500 transition-all duration-200 font-medium"
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.color = '#E0004D';
-                        e.currentTarget.style.borderColor = '#E0004D';
+                        e.currentTarget.style.color = '#841b60';
+                        e.currentTarget.style.borderColor = '#841b60';
                         e.currentTarget.style.background = 'linear-gradient(to right, rgba(132, 27, 96, 0.05), rgba(109, 22, 79, 0.05))';
                       }}
                       onMouseLeave={(e) => {
@@ -510,7 +510,7 @@ const QuizManagementPanel: React.FC<QuizManagementPanelProps> = ({
                   className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
                 />
                 <div className="px-3 py-2 rounded-lg border" style={{ backgroundColor: 'rgba(132, 27, 96, 0.05)', borderColor: 'rgba(132, 27, 96, 0.2)' }}>
-                  <span className="text-sm font-medium" style={{ color: '#E0004D' }}>
+                  <span className="text-sm font-medium" style={{ color: '#841b60' }}>
                     {quizConfig.globalTimeLimit}s
                   </span>
                 </div>
@@ -524,7 +524,7 @@ const QuizManagementPanel: React.FC<QuizManagementPanelProps> = ({
           {/* Show Correct Answer */}
           <div className="space-y-4">
             <div className="flex items-center space-x-2">
-              <HelpCircle className="w-4 h-4" style={{ color: '#E0004D' }} />
+              <HelpCircle className="w-4 h-4" style={{ color: '#841b60' }} />
               <label className="block text-sm font-semibold text-gray-900">
                 Afficher la bonne réponse
               </label>
@@ -553,7 +553,7 @@ const QuizManagementPanel: React.FC<QuizManagementPanelProps> = ({
                     quizConfig.showCorrectAnswer ? '' : 'bg-gray-600'
                   }`}
                   style={{
-                    backgroundColor: quizConfig.showCorrectAnswer ? '#E0004D' : 'rgb(75 85 99)'
+                    backgroundColor: quizConfig.showCorrectAnswer ? '#841b60' : 'rgb(75 85 99)'
                   }}
                 >
                   <div className={`w-5 h-5 bg-white rounded-full transition-transform absolute top-0.5 ${
@@ -567,7 +567,7 @@ const QuizManagementPanel: React.FC<QuizManagementPanelProps> = ({
           {/* Randomize Questions */}
           <div className="space-y-4">
             <div className="flex items-center space-x-2">
-              <HelpCircle className="w-4 h-4" style={{ color: '#E0004D' }} />
+              <HelpCircle className="w-4 h-4" style={{ color: '#841b60' }} />
               <label className="block text-sm font-semibold text-gray-900">
                 Mélanger les questions
               </label>
@@ -596,7 +596,7 @@ const QuizManagementPanel: React.FC<QuizManagementPanelProps> = ({
                     quizConfig.randomizeQuestions ? '' : 'bg-gray-600'
                   }`}
                   style={{
-                    backgroundColor: quizConfig.randomizeQuestions ? '#E0004D' : 'rgb(75 85 99)'
+                    backgroundColor: quizConfig.randomizeQuestions ? '#841b60' : 'rgb(75 85 99)'
                   }}
                 >
                   <div className={`w-5 h-5 bg-white rounded-full transition-transform absolute top-0.5 ${
@@ -610,7 +610,7 @@ const QuizManagementPanel: React.FC<QuizManagementPanelProps> = ({
           {/* Quiz Stats */}
           <div className="space-y-4">
             <div className="flex items-center space-x-2">
-              <Clock className="w-4 h-4" style={{ color: '#E0004D' }} />
+              <Clock className="w-4 h-4" style={{ color: '#841b60' }} />
               <label className="block text-sm font-semibold text-gray-900">
                 Statistiques du quiz
               </label>
@@ -619,11 +619,11 @@ const QuizManagementPanel: React.FC<QuizManagementPanelProps> = ({
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-gray-50 rounded-lg p-3">
                   <div className="text-xs text-gray-400 mb-1">Questions</div>
-                  <div className="text-lg font-semibold" style={{ color: '#E0004D' }}>{quizConfig.questions.length}</div>
+                  <div className="text-lg font-semibold" style={{ color: '#841b60' }}>{quizConfig.questions.length}</div>
                 </div>
                 <div className="bg-gray-50 rounded-lg p-3">
                   <div className="text-xs text-gray-400 mb-1">Durée estimée</div>
-                  <div className="text-lg font-semibold" style={{ color: '#E0004D' }}>
+                  <div className="text-lg font-semibold" style={{ color: '#841b60' }}>
                     {Math.ceil(quizConfig.questions.length * quizConfig.globalTimeLimit / 60)}min
                   </div>
                 </div>

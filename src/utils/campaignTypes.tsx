@@ -121,7 +121,7 @@ export const getDefaultGameConfig = (type: CampaignType) => {
       maxWinners: 10,
       winnersCount: 0,
       buttonLabel: 'Tourner',
-      buttonColor: '#E0004D',
+      buttonColor: '#841b60',
       segments: [
         {
           id: 1,
@@ -148,7 +148,7 @@ export const getDefaultGameConfig = (type: CampaignType) => {
       },
       symbols: ['🍒', '🍋', '🍊', '🍇', '⭐', '💎', '🔔', '7️⃣'],
       buttonLabel: 'Lancer le Jackpot',
-      buttonColor: '#E0004D',
+      buttonColor: '#841b60',
       containerBackgroundColor: '#1f2937',
       backgroundColor: '#c4b5fd30',
       borderColor: '#8b5cf6',
@@ -170,41 +170,41 @@ export const getDefaultGameConfig = (type: CampaignType) => {
         { id: 1, revealImage: '', revealMessage: 'Félicitations !' }
       ],
       buttonLabel: 'Gratter',
-      buttonColor: '#E0004D'
+      buttonColor: '#841b60'
     },
     memory: {
       pairs: 8,
       difficulty: 'medium',
       timeLimit: 60,
       buttonLabel: 'Commencer',
-      buttonColor: '#E0004D'
+      buttonColor: '#841b60'
     },
     puzzle: {
       pieces: 9,
       timeLimit: 300,
       buttonLabel: 'Commencer',
-      buttonColor: '#E0004D'
+      buttonColor: '#841b60'
     },
     quiz: {
       questions: [],
       timePerQuestion: 30,
       buttonLabel: 'Commencer',
-      buttonColor: '#E0004D'
+      buttonColor: '#841b60'
     },
     dice: {
       diceCount: 2,
       winningConditions: [7, 11],
       buttonLabel: 'Lancer les dés',
-      buttonColor: '#E0004D'
+      buttonColor: '#841b60'
     },
     swiper: {
       direction: 'horizontal',
       buttonLabel: 'Swiper',
-      buttonColor: '#E0004D'
+      buttonColor: '#841b60'
     },
     form: {
       buttonLabel: 'Valider',
-      buttonColor: '#E0004D'
+      buttonColor: '#841b60'
     }
   };
 

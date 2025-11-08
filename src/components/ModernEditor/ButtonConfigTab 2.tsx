@@ -57,7 +57,7 @@ const ButtonConfigTab: React.FC<ButtonConfigTabProps> = ({
           type="text"
           value={buttonConfig.text}
           onChange={(e) => handleChange('text', e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E0004D] focus:border-transparent"
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
           placeholder="Jouer"
         />
       </div>
@@ -79,8 +79,8 @@ const ButtonConfigTab: React.FC<ButtonConfigTabProps> = ({
             type="text"
             value={buttonConfig.color}
             onChange={(e) => handleChange('color', e.target.value)}
-            className="flex-1 min-w-0 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E0004D] focus:border-transparent"
-            placeholder="#E0004D"
+            className="flex-1 min-w-0 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
+            placeholder="#841b60"
           />
         </div>
       </div>
@@ -102,7 +102,7 @@ const ButtonConfigTab: React.FC<ButtonConfigTabProps> = ({
             type="text"
             value={buttonConfig.borderColor}
             onChange={(e) => handleChange('borderColor', e.target.value)}
-            className="flex-1 min-w-0 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E0004D] focus:border-transparent"
+            className="flex-1 min-w-0 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
             placeholder="#000000"
           />
         </div>
@@ -156,8 +156,8 @@ const ButtonConfigTab: React.FC<ButtonConfigTabProps> = ({
               onClick={() => handleChange('size', option.value)}
               className={`p-1.5 text-xs rounded border transition-colors ${
                 buttonConfig.size === option.value
-                  ? 'bg-gradient-to-br from-[#E0004D] to-[#6B2AA0] text-white border-[#E0004D]'
-                  : 'bg-white text-gray-700 border-gray-300 hover:border-[#E0004D]'
+                  ? 'bg-gradient-to-br from-[#841b60] to-[#b41b60] text-white border-[#841b60]'
+                  : 'bg-white text-gray-700 border-gray-300 hover:border-[#841b60]'
               }`}
             >
               {option.label}
@@ -175,7 +175,7 @@ const ButtonConfigTab: React.FC<ButtonConfigTabProps> = ({
           type="url"
           value={buttonConfig.link}
           onChange={(e) => handleChange('link', e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E0004D] focus:border-transparent"
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
           placeholder="https://example.com"
         />
       </div>
@@ -190,7 +190,7 @@ const ButtonConfigTab: React.FC<ButtonConfigTabProps> = ({
           <button
             onClick={() => handleChange('visible', !buttonConfig.visible)}
             className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-              buttonConfig.visible ? 'bg-gradient-to-br from-[#E0004D] to-[#6B2AA0]' : 'bg-gray-200'
+              buttonConfig.visible ? 'bg-gradient-to-br from-[#841b60] to-[#b41b60]' : 'bg-gray-200'
             }`}
           >
             <span

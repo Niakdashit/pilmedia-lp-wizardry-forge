@@ -4,5 +4,5 @@
   <!-- Pointillés blancs -->
   <circle cx="50" cy="50" r="44" fill="none" stroke="#fff" stroke-dasharray="4 4" stroke-width="2"/>
   <!-- Pointillés violets -->
-<circle cx="50" cy="50" r="40" fill="none" stroke="#E0004D" stroke-dasharray="2 8" stroke-width="2"/>
+  <circle cx="50" cy="50" r="40" fill="none" stroke="#841b60" stroke-dasharray="2 8" stroke-width="2"/>
 </svg>

@@ -60,7 +60,7 @@ const GameManagementPanel: React.FC<GameManagementPanelProps> = ({
     if (existingSegments.length > 0) {
       const updatedSegments = existingSegments.map((segment: WheelSegment, index: number) => {
         // Ne mettre à jour que les segments qui utilisent encore la couleur par défaut
-        if (segment.color === '#E0004D') {
+        if (segment.color === '#841b60') {
           return { ...segment, color: primaryColor };
         }
         return segment;
@@ -78,7 +78,7 @@ const GameManagementPanel: React.FC<GameManagementPanelProps> = ({
   // Segments par défaut pour la roue de la fortune avec alternance couleur/blanc
   // Utiliser les couleurs extraites si disponibles
   const extractedColors = campaign?.design?.extractedColors || [];
-  const primaryColor = extractedColors[0] || '#E0004D';
+  const primaryColor = extractedColors[0] || '#841b60';
   
   const defaultSegments: WheelSegment[] = [
     { id: '1', label: 'Segment 1', color: primaryColor, contentType: 'text' },
@@ -129,7 +129,7 @@ const GameManagementPanel: React.FC<GameManagementPanelProps> = ({
     
     // Utiliser les couleurs extraites si disponibles
     const extractedColors = campaign?.design?.extractedColors || [];
-    const primaryColor = extractedColors[0] || '#E0004D';
+    const primaryColor = extractedColors[0] || '#841b60';
     
     const newSegment: WheelSegment = {
       id: Date.now().toString(),
@@ -258,7 +258,7 @@ const GameManagementPanel: React.FC<GameManagementPanelProps> = ({
             </h3>
             <button
               onClick={addSegment}
-              className="flex items-center px-3 py-2 bg-[#E0004D] text-white text-sm rounded-lg hover:bg-[#6d1650] transition-colors"
+              className="flex items-center px-3 py-2 bg-[#841b60] text-white text-sm rounded-lg hover:bg-[#6d1650] transition-colors"
             >
               <Plus className="w-4 h-4 mr-1" />
               Ajouter
@@ -328,7 +328,7 @@ const GameManagementPanel: React.FC<GameManagementPanelProps> = ({
                             type="text"
                             value={segment.label}
                             onChange={(e) => updateSegment(segment.id, { label: e.target.value })}
-                            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-[#E0004D] focus:border-transparent"
+                            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
                           />
                         </>
                       ) : (
@@ -400,7 +400,7 @@ const GameManagementPanel: React.FC<GameManagementPanelProps> = ({
                           type="text"
                           value={segment.color}
                           onChange={(e) => updateSegment(segment.id, { color: e.target.value })}
-                          className="flex-1 px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-[#E0004D] max-w-20"
+                          className="flex-1 px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-[#841b60] max-w-20"
                         />
                       </div>
                     </div>
@@ -414,7 +414,7 @@ const GameManagementPanel: React.FC<GameManagementPanelProps> = ({
                     <select
                       value={segment.prizeId || ''}
                       onChange={(e) => updateSegment(segment.id, { prizeId: e.target.value || undefined })}
-                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-[#E0004D] focus:border-transparent"
+                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
                     >
                       <option value="">Aucun lot</option>
                       {prizes.map((prize) => (
@@ -440,7 +440,7 @@ const GameManagementPanel: React.FC<GameManagementPanelProps> = ({
             </h3>
             <button
               onClick={addPrize}
-              className="flex items-center px-3 py-2 bg-[#E0004D] text-white text-sm rounded-lg hover:bg-[#6d1650] transition-colors"
+              className="flex items-center px-3 py-2 bg-[#841b60] text-white text-sm rounded-lg hover:bg-[#6d1650] transition-colors"
             >
               <Plus className="w-4 h-4 mr-1" />
               Créer un lot
@@ -480,7 +480,7 @@ const GameManagementPanel: React.FC<GameManagementPanelProps> = ({
                           type="text"
                           value={prize.name}
                           onChange={(e) => updatePrize(prize.id, { name: e.target.value })}
-                          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-[#E0004D] focus:border-transparent"
+                          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
                         />
                       </div>
                       <div>
@@ -492,7 +492,7 @@ const GameManagementPanel: React.FC<GameManagementPanelProps> = ({
                           min="0"
                           value={prize.totalUnits || 1}
                           onChange={(e) => updatePrize(prize.id, { totalUnits: Number(e.target.value) || 1 })}
-                          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-[#E0004D] focus:border-transparent"
+                          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
                         />
                       </div>
                     </div>
@@ -543,7 +543,7 @@ const GameManagementPanel: React.FC<GameManagementPanelProps> = ({
                             max="100"
                             value={prize.probability || 0}
                             onChange={(e) => updatePrize(prize.id, { probability: Number(e.target.value) })}
-                            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-[#E0004D] focus:border-transparent"
+                            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
                           />
                         </div>
                         <div>
@@ -553,7 +553,7 @@ const GameManagementPanel: React.FC<GameManagementPanelProps> = ({
                           <select
                             value={prize.segmentId || ''}
                             onChange={(e) => updatePrize(prize.id, { segmentId: e.target.value })}
-                            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-[#E0004D] focus:border-transparent"
+                            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
                           >
                             <option value="">Aucun segment</option>
                             {segments.map((segment) => (
@@ -577,7 +577,7 @@ const GameManagementPanel: React.FC<GameManagementPanelProps> = ({
                             type="date"
                             value={prize.calendarDate || ''}
                             onChange={(e) => updatePrize(prize.id, { calendarDate: e.target.value })}
-                            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-[#E0004D] focus:border-transparent"
+                            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
                           />
                         </div>
                         <div>
@@ -589,7 +589,7 @@ const GameManagementPanel: React.FC<GameManagementPanelProps> = ({
                             type="time"
                             value={prize.calendarTime || ''}
                             onChange={(e) => updatePrize(prize.id, { calendarTime: e.target.value })}
-                            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-[#E0004D] focus:border-transparent"
+                            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
                           />
                         </div>
                       </div>

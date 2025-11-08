@@ -43,7 +43,7 @@ const DashboardHeader: React.FC = () => {
             {/* Section "Qu'allez-vous créer aujourd'hui ?" */}
             <div className="w-full">
               <div className="text-center mb-8">
-                <h2 className="text-xl font-bold mb-2 text-[#E0004D] drop-shadow-sm">Qu'allez-vous créer aujourd'hui ?</h2>
+                <h2 className="text-xl font-bold mb-2 text-[#841b60] drop-shadow-sm">Qu'allez-vous créer aujourd'hui ?</h2>
               </div>
 
               {/* Container pour desktop avec flex center */}
@@ -79,7 +79,7 @@ const DashboardHeader: React.FC = () => {
                           className="w-[6rem] h-[6rem] rounded-lg"
                         />
                       </div>
-                      <span className="mt-2 text-xs font-medium text-gray-700 group-hover:text-[#E0004D] transition-colors text-center drop-shadow-sm">
+                      <span className="mt-2 text-xs font-medium text-gray-700 group-hover:text-[#841b60] transition-colors text-center drop-shadow-sm">
                         {game.label}
                       </span>
                     </button>;
@@ -123,7 +123,7 @@ const DashboardHeader: React.FC = () => {
                             className="w-[6rem] h-[6rem] rounded-lg"
                           />
                         </div>
-                        <span className="mt-2 text-xs font-medium text-gray-700 group-hover:text-[#E0004D] transition-colors text-center drop-shadow-sm">
+                        <span className="mt-2 text-xs font-medium text-gray-700 group-hover:text-[#841b60] transition-colors text-center drop-shadow-sm">
                           {game.label}
                         </span>
                       </button>
@@ -194,7 +194,7 @@ const DashboardHeader: React.FC = () => {
                 <button
                   key={m.type}
                   onClick={() => { setShowAdvanced(false); window.location.href = m.route; }}
-                  className="flex items-center gap-3 p-3 rounded-xl border border-gray-200 hover:border-[#E0004D]/40 hover:bg-[#E0004D]/5 transition"
+                  className="flex items-center gap-3 p-3 rounded-xl border border-gray-200 hover:border-[#841b60]/40 hover:bg-[#841b60]/5 transition"
                 >
                   <img src={`/gamification/shortcuts/${m.type}.svg`} alt={m.label} className="w-8 h-8" />
                   <span className="text-sm font-medium text-gray-800">{m.label}</span>

@@ -19,7 +19,7 @@ interface WheelConfigSettingsProps {
 }
 
 const COLOR_PALETTE = [
-  '#E0004D', '#4ecdc4', '#45b7d1', '#96ceb4',
+  '#841b60', '#4ecdc4', '#45b7d1', '#96ceb4',
   '#feca57', '#ff9ff3', '#ff6b6b', '#48dbfb',
   '#1dd1a1', '#ff9f43', '#5f27cd', '#54a0ff'
 ];
@@ -331,7 +331,7 @@ const WheelConfigSettings: React.FC<WheelConfigSettingsProps> = ({
               type="text"
               value={wheelBorderColor}
               onChange={(e) => handleBorderColorChange(e.target.value)}
-              placeholder="#E0004D"
+              placeholder="#841b60"
               className="flex-1 px-3 py-2 border border-[hsl(var(--sidebar-border))] rounded-md bg-[hsl(var(--sidebar-bg))] focus:outline-none focus:ring-2 focus:ring-[hsl(var(--sidebar-active))]"
             />
           </div>

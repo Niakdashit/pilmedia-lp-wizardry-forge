@@ -58,7 +58,7 @@ const AdminRecentActivity: React.FC<AdminRecentActivityProps> = ({ activities })
                   {activity.clientName && (
                     <>
                       <span className="hidden sm:inline">•</span>
-                      <span className="mt-1 sm:mt-0 font-medium text-[#E0004D]">{activity.clientName}</span>
+                      <span className="mt-1 sm:mt-0 font-medium text-[#841b60]">{activity.clientName}</span>
                     </>
                   )}
                 </div>

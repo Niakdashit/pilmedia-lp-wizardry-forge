@@ -300,7 +300,7 @@ useEffect(() => {
           </p>
           <button
             onClick={onClose}
-            className="w-full px-4 py-2 bg-[radial-gradient(circle_at_0%_0%,_#E0004D,_#6B2AA0)] text-white rounded-lg hover:opacity-95 transition-opacity"
+            className="w-full px-4 py-2 bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white rounded-lg hover:opacity-95 transition-opacity"
           >
             Fermer
           </button>
@@ -369,7 +369,7 @@ useEffect(() => {
           {isLoadingData ? (
             <div className="flex items-center justify-center h-full">
               <div className="flex flex-col items-center gap-3">
-                <div className="w-10 h-10 border-4 border-[#E0004D]/30 border-t-[#E0004D] rounded-full animate-spin" />
+                <div className="w-10 h-10 border-4 border-[#841b60]/30 border-t-[#841b60] rounded-full animate-spin" />
                 <p className="text-sm text-gray-600">Chargement des paramètres...</p>
               </div>
             </div>
@@ -400,7 +400,7 @@ useEffect(() => {
           <button
             onClick={handleSaveAndClose}
             disabled={loading}
-            className="px-4 py-2 text-sm font-medium text-white rounded-lg transition-opacity bg-[radial-gradient(circle_at_0%_0%,_#6B2AA0,_#E0004D_70%)] hover:opacity-95 disabled:opacity-50"
+            className="px-4 py-2 text-sm font-medium text-white rounded-lg transition-opacity bg-[radial-gradient(circle_at_0%_0%,_#b41b60,_#841b60_70%)] hover:opacity-95 disabled:opacity-50"
           >
             {loading ? 'Enregistrement...' : 'Enregistrer'}
           </button>

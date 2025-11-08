@@ -61,7 +61,7 @@ const UserManagement: React.FC = () => {
     return (
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
         <div className="flex items-center justify-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#E0004D]"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#841b60]"></div>
           <span className="ml-3 text-gray-600">Chargement des utilisateurs...</span>
         </div>
       </div>
@@ -83,7 +83,7 @@ const UserManagement: React.FC = () => {
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
       {/* Header */}
-      <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-[#E0004D] to-[#6B2AA0] text-white">
+      <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-[#841b60] to-[#b41b60] text-white">
         <div className="flex items-center justify-between">
           <div className="flex items-center">
             <Users className="w-6 h-6 mr-3" />
@@ -151,7 +151,7 @@ const UserManagement: React.FC = () => {
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center">
                     <div className="flex-shrink-0 w-10 h-10">
-                      <div className="w-10 h-10 rounded-full bg-[#E0004D] flex items-center justify-center">
+                      <div className="w-10 h-10 rounded-full bg-[#841b60] flex items-center justify-center">
                         <span className="text-white font-medium text-sm">
                           {(user.full_name?.[0] || user.email?.[0] || '?').toUpperCase()}
                         </span>
@@ -207,7 +207,7 @@ const UserManagement: React.FC = () => {
                   ) : (
                     <button
                       onClick={() => setSelectedUser(user.id)}
-                      className="text-[#E0004D] hover:text-[#4D2388] font-medium text-sm"
+                      className="text-[#841b60] hover:text-[#6d164f] font-medium text-sm"
                       disabled={user.id === currentUser.id} // Can't change own role
                     >
                       {user.id === currentUser.id ? 'Votre compte' : 'Modifier'}
@@ -226,7 +226,7 @@ const UserManagement: React.FC = () => {
             Affichage de 10 utilisateurs sur {users.length} total.{' '}
             <button
               onClick={() => window.open('/admin', '_blank')}
-              className="text-[#E0004D] hover:text-[#4D2388] font-medium"
+              className="text-[#841b60] hover:text-[#6d164f] font-medium"
             >
               Voir tous les utilisateurs →
             </button>

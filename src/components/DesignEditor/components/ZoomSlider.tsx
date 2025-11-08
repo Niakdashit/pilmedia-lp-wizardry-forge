@@ -130,7 +130,7 @@ const ZoomSlider: React.FC<ZoomSliderProps> = React.memo(({
             height: 16px;
             width: 16px;
             border-radius: 50%;
-            background: #E0004D;
+            background: #841b60;
             cursor: pointer;
             border: 2px solid #ffffff;
             margin-top: -6px; /* center thumb on 4px track */
@@ -147,7 +147,7 @@ const ZoomSlider: React.FC<ZoomSliderProps> = React.memo(({
             height: 16px;
             width: 16px;
             border-radius: 50%;
-            background: #E0004D;
+            background: #841b60;
             cursor: pointer;
             border: 2px solid #ffffff;
           }

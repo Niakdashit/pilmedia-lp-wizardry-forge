@@ -1881,7 +1881,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                 const fields = (Array.isArray((activeCampaign as any)?.formFields) && (activeCampaign as any)?.formFields.length > 0)
                   ? (activeCampaign as any).formFields
                   : DEFAULT_FIELDS;
-                const buttonColor = campaignDesign.buttonColor || '#E0004D';
+                const buttonColor = campaignDesign.buttonColor || '#841b60';
                 const buttonTextColor = campaignDesign.buttonTextColor || '#ffffff';
                 const borderColor = campaignDesign.borderColor || '#E5E7EB';
                 const focusColor = buttonColor;
@@ -2270,7 +2270,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                   onClick={() => setShowGridLines(!showGridLines)}
                   className={`p-2 rounded-lg shadow-sm text-xs z-40 transition-colors ${
                     showGridLines 
-                      ? 'bg-[hsl(var(--primary))] text-white hover:bg-[radial-gradient(circle_at_0%_0%,_#E0004D,_#6B2AA0)]' 
+                      ? 'bg-[hsl(var(--primary))] text-white hover:bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)]' 
                       : 'bg-white/80 hover:bg-white text-gray-700'
                   }`}
                   title="Afficher/masquer la grille (G)"

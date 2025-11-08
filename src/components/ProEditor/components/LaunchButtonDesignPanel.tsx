@@ -8,7 +8,7 @@ interface LaunchButtonDesignPanelProps {
   onReset?: () => void;
 }
 
-const DEFAULT_BACKGROUND = 'radial-gradient(circle at 0% 0%, #E0004D, #6B2AA0)';
+const DEFAULT_BACKGROUND = 'radial-gradient(circle at 0% 0%, #841b60, #b41b60)';
 const DEFAULT_TEXT_COLOR = '#ffffff';
 const DEFAULT_BOX_SHADOW = '0 12px 30px rgba(132, 27, 96, 0.35)';
 const DEFAULT_PADDING = '14px 28px';
@@ -188,7 +188,7 @@ const LaunchButtonDesignPanel: React.FC<LaunchButtonDesignPanelProps> = ({
               value={textValue}
               onChange={(event) => handleTextChange(event.target.value)}
               placeholder="Participer"
-              className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#E0004D]/40"
+              className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#841b60]/40"
             />
           </label>
 
@@ -200,11 +200,11 @@ const LaunchButtonDesignPanel: React.FC<LaunchButtonDesignPanelProps> = ({
                 value={backgroundInput}
                 onChange={(event) => handleBackgroundChange(event.target.value)}
                 placeholder={DEFAULT_BACKGROUND}
-                className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#E0004D]/40"
+                className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#841b60]/40"
               />
               <input
                 type="color"
-                value={backgroundInput.startsWith('#') ? backgroundInput : '#E0004D'}
+                value={backgroundInput.startsWith('#') ? backgroundInput : '#841b60'}
                 onChange={(event) => handleBackgroundChange(event.target.value)}
                 className="mt-2 h-9 w-full cursor-pointer rounded-lg border border-gray-300 bg-transparent"
                 aria-label="Choisir une couleur de fond"
@@ -218,7 +218,7 @@ const LaunchButtonDesignPanel: React.FC<LaunchButtonDesignPanelProps> = ({
                 value={textColorInput}
                 onChange={(event) => handleTextColorChange(event.target.value)}
                 placeholder={DEFAULT_TEXT_COLOR}
-                className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#E0004D]/40"
+                className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#841b60]/40"
               />
               <input
                 type="color"
@@ -241,7 +241,7 @@ const LaunchButtonDesignPanel: React.FC<LaunchButtonDesignPanelProps> = ({
                 value={verticalPadding}
                 onChange={(event) => handlePaddingChange('vertical', Number(event.target.value))}
                 className="mt-2 w-full"
-                style={{ accentColor: '#E0004D' }}
+                style={{ accentColor: '#841b60' }}
               />
               <span className="mt-1 block text-right text-[0.65rem] text-gray-500">{verticalPadding}px</span>
             </label>
@@ -256,7 +256,7 @@ const LaunchButtonDesignPanel: React.FC<LaunchButtonDesignPanelProps> = ({
                 value={horizontalPadding}
                 onChange={(event) => handlePaddingChange('horizontal', Number(event.target.value))}
                 className="mt-2 w-full"
-                style={{ accentColor: '#E0004D' }}
+                style={{ accentColor: '#841b60' }}
               />
               <span className="mt-1 block text-right text-[0.65rem] text-gray-500">{horizontalPadding}px</span>
             </label>
@@ -272,7 +272,7 @@ const LaunchButtonDesignPanel: React.FC<LaunchButtonDesignPanelProps> = ({
               value={borderRadius}
               onChange={(event) => handleBorderRadiusChange(Number(event.target.value))}
               className="mt-2 w-full"
-              style={{ accentColor: '#E0004D' }}
+              style={{ accentColor: '#841b60' }}
             />
             <span className="mt-1 block text-right text-[0.65rem] text-gray-500">{borderRadius}px</span>
           </label>

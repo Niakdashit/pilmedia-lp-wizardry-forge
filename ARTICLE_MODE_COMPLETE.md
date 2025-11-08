@@ -222,7 +222,7 @@ C'est tout ! Les routes fonctionnent automatiquement:
 ### Couleurs Utilisées
 - **Primary**: `#841b60` (violet de marque)
 - **Secondary**: `#b41b60` (violet clair)
-- **Accent**: `#4D2388` (violet foncé)
+- **Accent**: `#6d164f` (violet foncé)
 - **Texte principal**: `#1f2937` (gris foncé)
 - **Texte secondaire**: `#4b5563` (gris moyen)
 

@@ -37,7 +37,7 @@ const QuizPreview: React.FC<QuizPreviewProps> = ({
 
   // Design par défaut amélioré
   const enhancedDesign = {
-    primaryColor: '#E0004D',
+    primaryColor: '#841b60',
     backgroundColor: '#ffffff',
     titleColor: '#1f2937',
     textColor: '#374151',

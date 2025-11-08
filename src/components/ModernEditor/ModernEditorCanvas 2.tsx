@@ -99,11 +99,11 @@ const ModernEditorCanvas: React.FC<ModernEditorCanvasProps> = ({
       buttonConfig: {
         ...base.buttonConfig,
         text: base.buttonConfig?.text || base.gameConfig?.[base.type]?.buttonLabel || 'Jouer',
-        color: base.design?.buttonColor || base.buttonConfig?.color || base.gameConfig?.[base.type]?.buttonColor || '#E0004D'
+        color: base.design?.buttonColor || base.buttonConfig?.color || base.gameConfig?.[base.type]?.buttonColor || '#841b60'
       },
       design: {
         ...base.design,
-        buttonColor: base.design?.buttonColor || base.buttonConfig?.color || '#E0004D'
+        buttonColor: base.design?.buttonColor || base.buttonConfig?.color || '#841b60'
       }
     };
   }, [campaign, gameSize, gamePosition]);

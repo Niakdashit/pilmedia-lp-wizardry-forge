@@ -139,7 +139,7 @@ export async function generateBrandThemeFromUrl(
     // 3. Fallback final : Palette par défaut
     return {
       customColors: {
-        primary: "#E0004D",
+        primary: "#841b60",
         secondary: "#dc2626",
         accent: "#ffffff",
         text: "#ffffff",
@@ -150,7 +150,7 @@ export async function generateBrandThemeFromUrl(
     // Palette d'urgence
     return {
       customColors: {
-        primary: "#E0004D",
+        primary: "#841b60",
         secondary: "#dc2626",
         accent: "#ffffff",
         text: "#ffffff",
@@ -183,7 +183,7 @@ export async function generateBrandThemeFromFile(
   }
   return {
     customColors: {
-      primary: "#E0004D",
+      primary: "#841b60",
       secondary: "#dc2626",
       accent: "#ffffff",
       text: "#ffffff",
@@ -338,7 +338,7 @@ export function generateAdvancedPaletteFromColors(
     }
     return Math.abs(lumB - 0.5) - Math.abs(lumA - 0.5);
   });
-  const primaryColor = sortedColors[0] || "#E0004D";
+  const primaryColor = sortedColors[0] || "#841b60";
   const secondaryColor =
     findContrastingColor(sortedColors, primaryColor) ||
     sortedColors[1] ||
@@ -391,7 +391,7 @@ export function extractCompletePaletteFromBrandfetch(
   palette: BrandfetchColor[],
 ): BrandPalette {
   const colors = palette.map((c) => c.hex || String(c)).filter(Boolean);
-  const primaryColor = colors[0] || "#E0004D";
+  const primaryColor = colors[0] || "#841b60";
   const secondaryColor = colors[1] || primaryColor;
   const accentColor = colors[2] || "#ffffff";
   const backgroundColor = "#ffffff";

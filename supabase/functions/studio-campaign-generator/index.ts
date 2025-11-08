@@ -70,7 +70,7 @@ serve(async (req) => {
       brandAnalysis,
       content: generatedContent,
       design: {
-        primaryColor: brandAnalysis?.primaryColor || '#E0004D',
+        primaryColor: brandAnalysis?.primaryColor || '#841b60',
         secondaryColor: brandAnalysis?.secondaryColor || '#dc2626',
         accentColor: brandAnalysis?.accentColor || '#ffffff',
         fontFamily: brandAnalysis?.fontFamily || 'Titan One',

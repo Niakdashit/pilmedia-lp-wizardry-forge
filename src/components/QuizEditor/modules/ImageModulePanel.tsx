@@ -34,7 +34,7 @@ const ImageModulePanel: React.FC<ImageModulePanelProps> = ({ module, onUpdate, o
         <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
           <button
             type="button"
-            className="flex items-center gap-2 text-sm text-[#E0004D] hover:underline"
+            className="flex items-center gap-2 text-sm text-[#841b60] hover:underline"
             onClick={onBack}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -67,8 +67,8 @@ const ImageModulePanel: React.FC<ImageModulePanelProps> = ({ module, onUpdate, o
                   onClick={() => onUpdate({ layoutWidth: id })}
                   className={`flex items-center justify-center rounded-lg border px-3 py-2 text-[11px] leading-tight transition ${
                     isActive
-                      ? 'border-[#E0004D] bg-[#E0004D]/10 text-[#E0004D] shadow-sm shadow-[#E0004D]/30'
-                      : 'border-gray-200 text-gray-600 hover:border-[#E0004D]/40 hover:text-[#E0004D]'
+                      ? 'border-[#841b60] bg-[#841b60]/10 text-[#841b60] shadow-sm shadow-[#841b60]/30'
+                      : 'border-gray-200 text-gray-600 hover:border-[#841b60]/40 hover:text-[#841b60]'
                   }`}
                 >
                   <span className="font-semibold">{label}</span>
@@ -92,7 +92,7 @@ const ImageModulePanel: React.FC<ImageModulePanelProps> = ({ module, onUpdate, o
               value={module.alt || ''}
               onChange={(e) => onUpdate({ alt: e.target.value })}
               placeholder="Description de l'image"
-              className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#E0004D] focus:ring-[#E0004D]"
+              className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#841b60] focus:ring-[#841b60]"
             />
           </label>
         </section>
@@ -114,7 +114,7 @@ const ImageModulePanel: React.FC<ImageModulePanelProps> = ({ module, onUpdate, o
             <button
               type="button"
               onClick={() => onUpdate({ borderRadius: 0 })}
-              className="px-3 py-1.5 text-xs rounded-lg border border-gray-200 text-gray-600 hover:border-[#E0004D] hover:text-[#E0004D] transition"
+              className="px-3 py-1.5 text-xs rounded-lg border border-gray-200 text-gray-600 hover:border-[#841b60] hover:text-[#841b60] transition"
             >
               Réinitialiser
             </button>
@@ -133,8 +133,8 @@ const ImageModulePanel: React.FC<ImageModulePanelProps> = ({ module, onUpdate, o
                   onClick={() => onUpdate({ align: id })}
                   className={`flex flex-col items-center rounded-lg border px-3 py-2 text-[11px] leading-tight transition ${
                     isActive
-                      ? 'border-[#E0004D] bg-[#E0004D]/10 text-[#E0004D] shadow-sm shadow-[#E0004D]/30'
-                      : 'border-gray-200 text-gray-600 hover:border-[#E0004D]/40 hover:text-[#E0004D]'
+                      ? 'border-[#841b60] bg-[#841b60]/10 text-[#841b60] shadow-sm shadow-[#841b60]/30'
+                      : 'border-gray-200 text-gray-600 hover:border-[#841b60]/40 hover:text-[#841b60]'
                   }`}
                 >
                   <Icon className="w-4 h-4 mb-1" />
@@ -153,8 +153,8 @@ const ImageModulePanel: React.FC<ImageModulePanelProps> = ({ module, onUpdate, o
               onClick={() => onUpdate({ objectFit: 'cover' })}
               className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-[11px] leading-tight transition ${
                 currentFit === 'cover'
-                  ? 'border-[#E0004D] bg-[#E0004D]/10 text-[#E0004D] shadow-sm shadow-[#E0004D]/30'
-                  : 'border-gray-200 text-gray-600 hover:border-[#E0004D]/40 hover:text-[#E0004D]'
+                  ? 'border-[#841b60] bg-[#841b60]/10 text-[#841b60] shadow-sm shadow-[#841b60]/30'
+                  : 'border-gray-200 text-gray-600 hover:border-[#841b60]/40 hover:text-[#841b60]'
               }`}
             >
               <Square className="w-4 h-4" />
@@ -165,8 +165,8 @@ const ImageModulePanel: React.FC<ImageModulePanelProps> = ({ module, onUpdate, o
               onClick={() => onUpdate({ objectFit: 'contain' })}
               className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-[11px] leading-tight transition ${
                 currentFit === 'contain'
-                  ? 'border-[#E0004D] bg-[#E0004D]/10 text-[#E0004D] shadow-sm shadow-[#E0004D]/30'
-                  : 'border-gray-200 text-gray-600 hover:border-[#E0004D]/40 hover:text-[#E0004D]'
+                  ? 'border-[#841b60] bg-[#841b60]/10 text-[#841b60] shadow-sm shadow-[#841b60]/30'
+                  : 'border-gray-200 text-gray-600 hover:border-[#841b60]/40 hover:text-[#841b60]'
               }`}
             >
               <Square className="w-4 h-4" />

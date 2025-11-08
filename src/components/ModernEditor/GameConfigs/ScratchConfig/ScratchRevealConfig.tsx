@@ -51,7 +51,7 @@ const ScratchRevealConfig: React.FC<ScratchRevealConfigProps> = ({
           type="text"
           value={revealMessage}
           onChange={(e) => onRevealMessageChange(e.target.value)}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E0004D] focus:border-transparent"
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
           placeholder="Message affiché en cas de victoire"
         />
       </div>

@@ -104,11 +104,11 @@ export function usePrizeLogic({ campaign, setCampaign }: UsePrizeLogicProps): Us
         console.log(`🎨 usePrizeLogic: Segment ${segment.id} - originalColor: ${finalColor}, primaryColor: ${primaryColor}, extractedColors:`, extractedColors);
         
         // Remplacer la couleur par défaut violette par la couleur extraite
-        if (finalColor === '#E0004D' && primaryColor) {
+        if (finalColor === '#841b60' && primaryColor) {
           finalColor = primaryColor;
-          console.log(`🎨 usePrizeLogic: ✅ Updated segment ${segment.id} color from #E0004D to ${primaryColor}`);
+          console.log(`🎨 usePrizeLogic: ✅ Updated segment ${segment.id} color from #841b60 to ${primaryColor}`);
         } else if (primaryColor) {
-          console.log(`🎨 usePrizeLogic: ❌ NOT updating segment ${segment.id} - color is ${finalColor}, not #E0004D`);
+          console.log(`🎨 usePrizeLogic: ❌ NOT updating segment ${segment.id} - color is ${finalColor}, not #841b60`);
         }
         
         return {

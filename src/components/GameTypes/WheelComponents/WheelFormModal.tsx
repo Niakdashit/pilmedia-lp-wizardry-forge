@@ -25,7 +25,7 @@ const WheelFormModal: React.FC<WheelFormModalProps> = ({
   // Récupérer les couleurs de design de la campagne
   const design = campaign.design || {};
   const customColors = design.customColors || {};
-  const buttonColor = customColors.primary || design.buttonColor || "#E0004D";
+  const buttonColor = customColors.primary || design.buttonColor || "#841b60";
   const borderColor = customColors.primary || design.borderColor || "#E5E7EB";
   const focusColor = buttonColor;
 

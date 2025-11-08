@@ -585,7 +585,7 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
     panelBg: '#ffffff',
     borderColor: '#e5e7eb',
     textColor: '#000000',
-    buttonColor: '#E0004D',
+    buttonColor: '#841b60',
     buttonTextColor: '#ffffff',
     borderRadius: 12,
     fieldBorderRadius: 2,
@@ -1159,7 +1159,7 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
                           className="w-full font-medium text-base hover:opacity-90 transition-all duration-200"
                           style={{
                             ...globalButtonStyle,
-                            backgroundColor: (formConfig as any)?.buttonColor || (globalButtonStyle as any)?.backgroundColor || '#E0004D',
+                            backgroundColor: (formConfig as any)?.buttonColor || (globalButtonStyle as any)?.backgroundColor || '#841b60',
                             color: (formConfig as any)?.buttonTextColor || (globalButtonStyle as any)?.color || '#ffffff',
                             borderRadius: (typeof (formConfig as any)?.borderRadius === 'number'
                               ? `${(formConfig as any).borderRadius}px`
@@ -1260,7 +1260,7 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
             textStyles={{
               label: { color: '#374151', fontFamily: 'inherit' },
               button: {
-                backgroundColor: globalButtonStyle.backgroundColor || '#E0004D',
+                backgroundColor: globalButtonStyle.backgroundColor || '#841b60',
                 color: globalButtonStyle.color || '#ffffff',
                 borderRadius: globalButtonStyle.borderRadius || '8px',
                 fontFamily: 'inherit',
@@ -1268,7 +1268,7 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
               }
             }}
             inputBorderColor={campaign?.design?.customColors?.primary || campaign?.design?.borderColor || '#E5E7EB'}
-            inputFocusColor={campaign?.design?.customColors?.primary || campaign?.design?.buttonColor || '#E0004D'}
+            inputFocusColor={campaign?.design?.customColors?.primary || campaign?.design?.buttonColor || '#841b60'}
           />
         </Modal>
         );

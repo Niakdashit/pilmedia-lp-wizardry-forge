@@ -7,7 +7,7 @@ export const useBrandTheme = () => {
   
   return {
     // Couleurs de marque
-    primaryColor: context.theme?.customColors.primary || '#E0004D',
+    primaryColor: context.theme?.customColors.primary || '#841b60',
     secondaryColor: context.theme?.customColors.secondary || '#dc2626',
     accentColor: context.theme?.customColors.accent || '#ffffff',
     textColor: context.theme?.customColors.text || '#ffffff',
@@ -28,26 +28,26 @@ export const useBrandTheme = () => {
     // Utilitaires pour les styles inline
     getButtonStyle: (variant: 'primary' | 'secondary' = 'primary') => ({
       backgroundColor: variant === 'primary' 
-        ? context.theme?.customColors.primary || '#E0004D'
+        ? context.theme?.customColors.primary || '#841b60'
         : context.theme?.customColors.secondary || '#dc2626',
       color: context.theme?.customColors.text || '#ffffff',
-      borderColor: context.theme?.customColors.primary || '#E0004D'
+      borderColor: context.theme?.customColors.primary || '#841b60'
     }),
     
     getBorderStyle: () => ({
-      borderColor: context.theme?.customColors.primary || '#E0004D'
+      borderColor: context.theme?.customColors.primary || '#841b60'
     }),
     
     getTextStyle: (variant: 'primary' | 'secondary' = 'primary') => ({
       color: variant === 'primary'
-        ? context.theme?.customColors.primary || '#E0004D'
+        ? context.theme?.customColors.primary || '#841b60'
         : context.theme?.customColors.secondary || '#dc2626'
     }),
     
     // Classes Tailwind dynamiques
-    primaryBg: `bg-[${context.theme?.customColors.primary || '#E0004D'}]`,
-    primaryText: `text-[${context.theme?.customColors.primary || '#E0004D'}]`,
-    primaryBorder: `border-[${context.theme?.customColors.primary || '#E0004D'}]`,
+    primaryBg: `bg-[${context.theme?.customColors.primary || '#841b60'}]`,
+    primaryText: `text-[${context.theme?.customColors.primary || '#841b60'}]`,
+    primaryBorder: `border-[${context.theme?.customColors.primary || '#841b60'}]`,
     secondaryBg: `bg-[${context.theme?.customColors.secondary || '#dc2626'}]`,
     secondaryText: `text-[${context.theme?.customColors.secondary || '#dc2626'}]`
   };

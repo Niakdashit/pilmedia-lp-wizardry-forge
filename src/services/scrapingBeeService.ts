@@ -97,8 +97,8 @@ export class ScrapingBeeService {
     const computedStyles = window.getComputedStyle(doc.body);
     
     // Extract colors from CSS variables and computed styles
-    const primaryColor = this.findColorInStyles() || '#E0004D';
-    const secondaryColor = this.findColorInStyles() || '#4D2388';
+    const primaryColor = this.findColorInStyles() || '#841b60';
+    const secondaryColor = this.findColorInStyles() || '#6d164f';
     
     return {
       primary: primaryColor,

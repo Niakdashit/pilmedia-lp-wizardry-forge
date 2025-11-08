@@ -57,15 +57,15 @@ const ButtonStyle: React.FC<ButtonStyleProps> = ({
             <div className="flex items-center space-x-2">
               <input
                 type="color"
-                value={buttonColor || '#E0004D'}
+                value={buttonColor || '#841b60'}
                 onChange={(e) => onButtonColorChange(e.target.value)}
                 className="w-8 h-8 border border-gray-300 rounded cursor-pointer"
               />
               <input
                 type="text"
-                value={buttonColor || '#E0004D'}
+                value={buttonColor || '#841b60'}
                 onChange={(e) => onButtonColorChange(e.target.value)}
-                className="flex-1 px-3 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-[#E0004D]"
+                className="flex-1 px-3 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-[#841b60]"
               />
             </div>
           </div>
@@ -82,7 +82,7 @@ const ButtonStyle: React.FC<ButtonStyleProps> = ({
                 type="text"
                 value={buttonTextColor || '#ffffff'}
                 onChange={(e) => onButtonTextColorChange(e.target.value)}
-                className="flex-1 px-3 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-[#E0004D]"
+                className="flex-1 px-3 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-[#841b60]"
               />
             </div>
           </div>
@@ -101,7 +101,7 @@ const ButtonStyle: React.FC<ButtonStyleProps> = ({
               onClick={() => onButtonShapeChange(shape.value)}
               className={`p-3 border-2 rounded-lg text-center transition-colors ${
                 buttonShape === shape.value
-                  ? 'border-[#E0004D] bg-[#f9f0f5] text-[#E0004D]'
+                  ? 'border-[#841b60] bg-[#f9f0f5] text-[#841b60]'
                   : 'border-gray-200 hover:border-gray-300'
               }`}
             >
@@ -123,7 +123,7 @@ const ButtonStyle: React.FC<ButtonStyleProps> = ({
               onClick={() => onButtonSizeChange(size.value)}
               className={`p-3 border-2 rounded-lg text-center transition-colors ${
                 buttonSize === size.value
-                  ? 'border-[#E0004D] bg-[#f9f0f5] text-[#E0004D]'
+                  ? 'border-[#841b60] bg-[#f9f0f5] text-[#841b60]'
                   : 'border-gray-200 hover:border-gray-300'
               }`}
             >
@@ -146,7 +146,7 @@ const ButtonStyle: React.FC<ButtonStyleProps> = ({
               onClick={() => onButtonShadowChange(shadow.value)}
               className={`p-3 border-2 rounded-lg text-center transition-colors ${
                 buttonShadow === shadow.value
-                  ? 'border-[#E0004D] bg-[#f9f0f5] text-[#E0004D]'
+                  ? 'border-[#841b60] bg-[#f9f0f5] text-[#841b60]'
                   : 'border-gray-200 hover:border-gray-300'
               }`}
             >

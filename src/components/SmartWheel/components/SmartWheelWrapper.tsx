@@ -93,7 +93,7 @@ const SmartWheelWrapper: React.FC<SmartWheelWrapperProps> = ({
 
   // Déterminer les couleurs de marque
   const resolvedBrandColors = brandColors || {
-    primary: campaign?.design?.customColors?.primary || '#E0004D',
+    primary: campaign?.design?.customColors?.primary || '#841b60',
     secondary: campaign?.design?.customColors?.secondary || '#4ecdc4',
     accent: campaign?.design?.customColors?.accent || '#45b7d1'
   };

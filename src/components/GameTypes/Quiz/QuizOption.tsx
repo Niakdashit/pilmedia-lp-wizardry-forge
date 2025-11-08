@@ -22,10 +22,10 @@ const QuizOption: React.FC<QuizOptionProps> = ({
 }) => {
   const optionStyle = {
     backgroundColor: isSelected 
-      ? `${design.primaryColor || '#E0004D'}08` 
+      ? `${design.primaryColor || '#841b60'}08` 
       : '#ffffff',
     borderColor: isSelected 
-      ? design.primaryColor || '#E0004D' 
+      ? design.primaryColor || '#841b60' 
       : 'transparent',
     color: design.textColor || '#374151',
     borderRadius: '16px',
@@ -33,7 +33,7 @@ const QuizOption: React.FC<QuizOptionProps> = ({
     transition: 'all 0.2s ease'
   };
 
-  const iconColor = isSelected ? design.primaryColor || '#E0004D' : '#9ca3af';
+  const iconColor = isSelected ? design.primaryColor || '#841b60' : '#9ca3af';
 
   return (
     <motion.button
@@ -84,8 +84,8 @@ const QuizOption: React.FC<QuizOptionProps> = ({
         <div 
           className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-colors"
           style={{ 
-            backgroundColor: isSelected ? `${design.primaryColor || '#E0004D'}20` : '#f3f4f6',
-            color: isSelected ? design.primaryColor || '#E0004D' : '#6b7280'
+            backgroundColor: isSelected ? `${design.primaryColor || '#841b60'}20` : '#f3f4f6',
+            color: isSelected ? design.primaryColor || '#841b60' : '#6b7280'
           }}
         >
           {String.fromCharCode(65 + index)}

@@ -2,7 +2,7 @@
 // Helper function to validate and sanitize colors
 export const validateColors = (colors: any) => {
   const defaultColors = {
-    primary: '#E0004D',
+    primary: '#841b60',
     secondary: '#1e40af',
     accent: '#0ea5e9',
     textColor: '#000000'

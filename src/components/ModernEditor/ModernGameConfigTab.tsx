@@ -107,7 +107,7 @@ const ModernGameConfigTab: React.FC<ModernGameConfigTabProps> = ({
             </label>
             <input
               type="color"
-              value={buttonConfig?.color || '#E0004D'}
+              value={buttonConfig?.color || '#841b60'}
               onChange={(e) => onButtonConfigChange({ ...buttonConfig, color: e.target.value })}
               className="w-full h-10 rounded-lg border border-gray-300"
             />

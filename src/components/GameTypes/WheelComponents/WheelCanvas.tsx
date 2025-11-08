@@ -35,7 +35,7 @@ const WheelCanvas: React.FC<WheelCanvasProps> = ({
   centerLogo,
   theme,
   customColors,
-  borderColor = '#E0004D',
+  borderColor = '#841b60',
   borderOutlineColor = '#FFD700',
   canvasSize
 }) => {

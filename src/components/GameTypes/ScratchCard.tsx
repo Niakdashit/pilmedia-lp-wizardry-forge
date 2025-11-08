@@ -119,7 +119,7 @@ const ScratchCard: React.FC<ScratchCardProps> = ({
         <div className="w-full mb-4" style={{ maxWidth: `${width}px` }}>
           <div className="w-full bg-gray-200 rounded-full h-2">
             <div 
-              className="bg-gradient-to-br from-[#E0004D] to-[#6B2AA0] h-2 rounded-full transition-all duration-300" 
+              className="bg-gradient-to-br from-[#841b60] to-[#b41b60] h-2 rounded-full transition-all duration-300" 
               style={{ width: `${Math.min(scratchPercentage, 100)}%` }} 
             />
           </div>
@@ -130,9 +130,9 @@ const ScratchCard: React.FC<ScratchCardProps> = ({
       <div 
         className={`relative rounded-xl overflow-hidden border-2 transition-all duration-200 shadow-lg bg-white ${
           isSelected 
-            ? 'border-[#E0004D] shadow-xl ring-2 ring-[#E0004D]/20' 
+            ? 'border-[#841b60] shadow-xl ring-2 ring-[#841b60]/20' 
             : selectable && !locked
-              ? 'border-gray-200 hover:border-[#E0004D] cursor-pointer hover:shadow-xl' 
+              ? 'border-gray-200 hover:border-[#841b60] cursor-pointer hover:shadow-xl' 
               : 'border-gray-200'
         } ${locked ? 'opacity-50' : ''}`}
         style={{

@@ -14,7 +14,7 @@ const FormConfigPanel: React.FC<FormConfigPanelProps> = ({ campaign, onCampaignC
     panelBg: '#ffffff',
     borderColor: '#e5e7eb',
     textColor: '#000000',
-    buttonColor: '#E0004D',
+    buttonColor: '#841b60',
     buttonTextColor: '#ffffff',
     fontFamily: 'inherit',
     displayMode: 'overlay',
@@ -65,7 +65,7 @@ const FormConfigPanel: React.FC<FormConfigPanelProps> = ({ campaign, onCampaignC
             type="text"
             value={formConfig.title}
             onChange={(e) => updateFormConfig({ title: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#E0004D] focus:border-transparent"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
           />
         </div>
 
@@ -78,7 +78,7 @@ const FormConfigPanel: React.FC<FormConfigPanelProps> = ({ campaign, onCampaignC
             type="text"
             value={formConfig.description}
             onChange={(e) => updateFormConfig({ description: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#E0004D] focus:border-transparent"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
           />
         </div>
 
@@ -91,7 +91,7 @@ const FormConfigPanel: React.FC<FormConfigPanelProps> = ({ campaign, onCampaignC
             type="text"
             value={formConfig.submitLabel}
             onChange={(e) => updateFormConfig({ submitLabel: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#E0004D] focus:border-transparent"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
           />
         </div>
       </div>
@@ -188,7 +188,7 @@ const FormConfigPanel: React.FC<FormConfigPanelProps> = ({ campaign, onCampaignC
             value={formConfig.fontFamily}
             onChange={(e) => updateFormConfig({ fontFamily: e.target.value })}
             placeholder="Ex: Inter, Arial, sans-serif"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#E0004D] focus:border-transparent"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
           />
         </div>
 
@@ -200,7 +200,7 @@ const FormConfigPanel: React.FC<FormConfigPanelProps> = ({ campaign, onCampaignC
           <select
             value={formConfig.displayMode || 'overlay'}
             onChange={(e) => updateFormConfig({ displayMode: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#E0004D] focus:border-transparent"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
           >
             <option value="overlay">Survol (par-dessus l'arrière-plan)</option>
             <option value="integrated">Intégré (dans l'arrière-plan)</option>
@@ -221,7 +221,7 @@ const FormConfigPanel: React.FC<FormConfigPanelProps> = ({ campaign, onCampaignC
             max="50"
             value={formConfig.borderRadius}
             onChange={(e) => updateFormConfig({ borderRadius: Number(e.target.value) })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#E0004D] focus:border-transparent"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
           />
         </div>
 
@@ -233,7 +233,7 @@ const FormConfigPanel: React.FC<FormConfigPanelProps> = ({ campaign, onCampaignC
           <select
             value={formConfig.position}
             onChange={(e) => updateFormConfig({ position: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#E0004D] focus:border-transparent"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
           >
             <option value="left">Gauche</option>
             <option value="right">Droite</option>
@@ -252,7 +252,7 @@ const FormConfigPanel: React.FC<FormConfigPanelProps> = ({ campaign, onCampaignC
             max="20"
             value={formConfig.fieldBorderRadius}
             onChange={(e) => updateFormConfig({ fieldBorderRadius: Number(e.target.value) })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#E0004D] focus:border-transparent"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
           />
         </div>
 

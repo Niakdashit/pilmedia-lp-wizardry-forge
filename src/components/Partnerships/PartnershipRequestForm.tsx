@@ -402,7 +402,7 @@ export const PartnershipRequestForm: React.FC<PartnershipRequestFormProps> = ({
               onChange={(e) => setFormData({ ...formData, objectifs: e.target.value })}
               rows={3}
               placeholder="Décrivez vos objectifs (visibilité, notoriété, acquisition...)..."
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#E0004D] focus:border-transparent resize-none"
+              className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#841b60] focus:border-transparent resize-none"
             />
           </div>
 

@@ -515,7 +515,7 @@ const EditableText: React.FC<EditableTextProps> = ({
                   savedTextSelectionRef.current = { start: ta.selectionStart ?? 0, end: ta.selectionEnd ?? 0 };
                 }}
                 onKeyDown={handleCombinedKeyDown}
-                className={`w-full text-base text-gray-700 leading-relaxed bg-white border-2 border-[#E0004D] rounded-lg p-3 resize-none focus:outline-none focus:ring-2 focus:ring-[#E0004D] focus:ring-opacity-50 text-left ${descriptionClassName}`}
+                className={`w-full text-base text-gray-700 leading-relaxed bg-white border-2 border-[#841b60] rounded-lg p-3 resize-none focus:outline-none focus:ring-2 focus:ring-[#841b60] focus:ring-opacity-50 text-left ${descriptionClassName}`}
                 dir="ltr"
                 rows={10}
                 placeholder="Titre sur la première ligne, puis votre description..."
@@ -534,7 +534,7 @@ const EditableText: React.FC<EditableTextProps> = ({
                   onTitleChange && onTitleChange(titleText);
                   onDescriptionChange && onDescriptionChange(newBody);
                 }}
-                className={`w-full min-h-[220px] text-base text-gray-700 leading-relaxed bg-white border-2 border-[#E0004D] rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-[#E0004D] focus:ring-opacity-50 text-left ${descriptionClassName}`}
+                className={`w-full min-h-[220px] text-base text-gray-700 leading-relaxed bg-white border-2 border-[#841b60] rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-[#841b60] focus:ring-opacity-50 text-left ${descriptionClassName}`}
                 dir="ltr"
               />
             )}

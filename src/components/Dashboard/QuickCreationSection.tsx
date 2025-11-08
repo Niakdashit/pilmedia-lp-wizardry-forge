@@ -50,7 +50,7 @@ const QuickCreationSection: React.FC = () => {
       <div className="relative overflow-hidden rounded-3xl p-8 bg-gradient-to-br from-white/50 via-white/40 to-white/30 backdrop-blur-xl border border-white/40 shadow-1xl shadow-purple-500/10 bg-[#428cec]/25 my-0">
         
         {/* Enhanced Background Effects */}
-        <div className="absolute inset-0 bg-gradient-to-br from-[#E0004D]/8 via-transparent to-[#E0004D]/5 pointer-events-none"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-[#841b60]/8 via-transparent to-[#841b60]/5 pointer-events-none"></div>
         
         {/* Abstract Geometric Patterns */}
         <div className="absolute top-4 right-8 w-20 h-20 bg-gradient-to-br from-purple-400/20 to-blue-400/20 rounded-full blur-xl"></div>
@@ -58,7 +58,7 @@ const QuickCreationSection: React.FC = () => {
         
         <div className="relative z-10">
           <div className="text-center mb-8">
-            <h2 className="text-2xl font-bold mb-2 text-[#E0004D] drop-shadow-sm">Qu'allez-vous créer aujourd'hui ?</h2>
+            <h2 className="text-2xl font-bold mb-2 text-[#841b60] drop-shadow-sm">Qu'allez-vous créer aujourd'hui ?</h2>
           </div>
 
         {showAdvanced && (
@@ -79,7 +79,7 @@ const QuickCreationSection: React.FC = () => {
                   <Link
                     key={m.type}
                     to={m.route}
-                    className="flex items-center gap-3 p-3 rounded-xl border border-gray-200 hover:border-[#E0004D]/40 hover:bg-[#E0004D]/5 transition"
+                    className="flex items-center gap-3 p-3 rounded-xl border border-gray-200 hover:border-[#841b60]/40 hover:bg-[#841b60]/5 transition"
                     onClick={() => setShowAdvanced(false)}
                   >
                     <img src={getShortcutIcon(m.type)} alt={m.label} className="w-8 h-8" />
@@ -101,7 +101,7 @@ const QuickCreationSection: React.FC = () => {
                     <div className="w-16 h-16 bg-white/80 backdrop-blur-sm rounded-full shadow-xl shadow-purple-500/15 flex items-center justify-center group-hover:shadow-2xl group-hover:shadow-purple-500/25 transform group-hover:scale-110 transition-all duration-300 border border-white/50 group-hover:bg-white/90">
                       <img src={iconSrc} alt={game.label} className="w-10 h-10 object-contain drop-shadow-sm" loading="lazy" />
                     </div>
-                    <span className="mt-2 text-sm font-medium text-gray-700 group-hover:text-[#E0004D] transition-colors text-center drop-shadow-sm">{game.label}</span>
+                    <span className="mt-2 text-sm font-medium text-gray-700 group-hover:text-[#841b60] transition-colors text-center drop-shadow-sm">{game.label}</span>
                   </>
                 );
                 return game.type === 'advanced' ? (
@@ -141,7 +141,7 @@ const QuickCreationSection: React.FC = () => {
                       <div className="w-16 h-16 bg-white/80 backdrop-blur-sm rounded-full shadow-xl shadow-purple-500/15 flex items-center justify-center group-hover:shadow-2xl group-hover:shadow-purple-500/25 transform group-hover:scale-110 transition-all duration-300 border border-white/50 group-hover:bg-white/90">
                         <img src={iconSrc} alt={game.label} className="w-10 h-10 object-contain drop-shadow-sm" loading="lazy" />
                       </div>
-                      <span className="mt-2 text-sm font-medium text-gray-700 group-hover:text-[#E0004D] transition-colors text-center drop-shadow-sm">{game.label}</span>
+                      <span className="mt-2 text-sm font-medium text-gray-700 group-hover:text-[#841b60] transition-colors text-center drop-shadow-sm">{game.label}</span>
                     </>
                   );
                   return game.type === 'advanced' ? (

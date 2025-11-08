@@ -209,7 +209,7 @@ const EditableText: React.FC<EditableTextProps> = ({
     minWidth: '50px',
     minHeight: '20px',
     padding: '8px',
-    border: isSelected && !isEditing ? '2px solid #E0004D' : '2px solid transparent',
+    border: isSelected && !isEditing ? '2px solid #841b60' : '2px solid transparent',
     borderRadius: '4px',
     cursor: isEditing ? 'text' : (isResizing ? 'resize' : 'move'),
     display: 'inline-block',

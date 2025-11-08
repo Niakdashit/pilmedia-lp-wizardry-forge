@@ -84,7 +84,7 @@ export class SegmentManager {
    */
   private static extractDesignColors(_campaign: CampaignConfig): { primary: string; secondary: string } {
     // Logique simplifiée pour extraire les couleurs
-    const primary = '#E0004D'; // Couleur par défaut
+    const primary = '#841b60'; // Couleur par défaut
     const secondary = '#ffffff';
 
     return { primary, secondary };

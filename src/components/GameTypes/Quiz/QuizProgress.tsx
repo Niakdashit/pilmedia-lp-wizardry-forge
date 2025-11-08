@@ -11,7 +11,7 @@ interface QuizProgressProps {
 const QuizProgress: React.FC<QuizProgressProps> = ({ 
   current, 
   total, 
-  primaryColor = '#E0004D' 
+  primaryColor = '#841b60' 
 }) => {
   const progressPercentage = (current / total) * 100;
 

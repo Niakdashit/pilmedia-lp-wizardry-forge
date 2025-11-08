@@ -1,46 +1,46 @@
 
-@import url('https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@300;400;500;600;700;800&family=Poppins:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 /* Variables CSS pour les couleurs de marque - Format HSL */
 :root {
-  --brand-primary: 339 100% 43%;     /* #E0004D en HSL */
+  --brand-primary: 309 78% 31%;      /* #841b60 en HSL */
   --brand-secondary: 0 0% 100%;      /* #ffffff en HSL */
-  --brand-accent: 268 100% 97%;      /* Fond lavande clair */
-  --brand-text: 230 16% 18%;         /* Texte neutre foncé */
-
-  /* Premium Sidebar Design System - Thème blanc avec accents framboise et violet */
+  --brand-accent: 202 45% 91%;       /* #ebf4f7 en HSL */
+  --brand-text: 0 0% 100%;           /* #ffffff en HSL */
+  
+  /* Premium Sidebar Design System - Thème blanc avec accents violets */
   --sidebar-bg: 0 0% 100%;           /* Fond blanc pur */
-  --sidebar-surface: 228 29% 97%;    /* Surface légèrement teintée */
-  --sidebar-hover: 339 100% 96%;     /* Hover subtil rosé */
-  --sidebar-active: 339 100% 43%;    /* Framboise principale */
-  --sidebar-active-bg: 339 100% 96%; /* Arrière-plan actif délicat */
-  --sidebar-border: 228 23% 90%;     /* Bordures grises très claires */
-  --sidebar-text: 229 18% 20%;       /* Texte sombre pour contraste */
-  --sidebar-text-primary: 229 20% 16%;
-  --sidebar-text-muted: 229 14% 46%; /* Texte atténué gris violet */
-  --sidebar-icon: 229 12% 40%;       /* Icônes neutres */
-  --sidebar-icon-active: 265 65% 54%; /* Icônes actives violet vibrant */
-  --sidebar-shadow: 0 0% 0% / 0.06;  /* Ombres douces */
-  --sidebar-glow: 339 100% 43% / 0.18; /* Lueur framboise subtile */
-
+  --sidebar-surface: 0 0% 98%;       /* Surface légèrement grisée */
+  --sidebar-hover: 309 78% 97%;      /* Hover très subtil avec teinte violette */
+  --sidebar-active: 309 78% 31%;     /* #841b60 - Couleur principale pour les éléments actifs */
+  --sidebar-active-bg: 309 78% 97%;  /* Background actif très subtil */
+  --sidebar-border: 0 0% 92%;        /* Bordures grises claires */
+  --sidebar-text: 0 0% 15%;          /* Texte sombre pour contraste */
+  --sidebar-text-primary: 0 0% 10%;  /* Texte principal très sombre */
+  --sidebar-text-muted: 0 0% 45%;    /* Texte atténué gris */
+  --sidebar-icon: 0 0% 35%;          /* Icônes grises */
+  --sidebar-icon-active: 309 78% 31%; /* Icônes actives - couleur principale */
+  --sidebar-shadow: 0 0% 0% / 0.08;  /* Ombres douces */
+  --sidebar-glow: 309 78% 31% / 0.15; /* Lueur violette subtile */
+  
   /* Variables complémentaires pour cohérence */
-  --primary: 339 100% 43%;           /* Framboise */
-  --secondary: 0 0% 100%;            /* Blanc */
-  --accent: 265 65% 54%;             /* Violet vibrant */
-  --background: 228 29% 97%;
-  --foreground: 229 20% 16%;
-  --muted: 268 100% 97%;             /* Lavande claire pour les éléments atténués */
-  --muted-foreground: 229 14% 46%;
+  --primary: 309 78% 31%;            /* #841b60 */
+  --secondary: 0 0% 100%;            /* #ffffff */
+  --accent: 202 45% 91%;             /* #ebf4f7 pour les éléments atténués */
+  --background: 0 0% 100%;
+  --foreground: 222.2 84% 4.9%;
+  --muted: 202 45% 91%;              /* #ebf4f7 pour les éléments atténués */
+  --muted-foreground: 215.4 16.3% 46.9%;
   --popover: 0 0% 100%;
-  --popover-foreground: 229 20% 16%;
+  --popover-foreground: 222.2 84% 4.9%;
   --card: 0 0% 100%;
-  --card-foreground: 229 20% 16%;
-  --border: 265 35% 88%;             /* Bordures avec une touche de violet */
-  --input: 265 35% 88%;
-  --ring: 339 100% 43%;              /* Focus ring framboise */
+  --card-foreground: 222.2 84% 4.9%;
+  --border: 202 35% 85%;             /* Bordures plus subtiles avec accent */
+  --input: 202 35% 85%;
+  --ring: 309 78% 31%;               /* Focus ring avec couleur principale */
   --radius: 0.25rem;
 }
 
@@ -66,23 +66,23 @@
 }
 
 .dark {
-  --background: 240 33% 8%;
+  --background: 222.2 84% 4.9%;
   --foreground: 210 40% 98%;
-  --card: 240 33% 10%;
+  --card: 222.2 84% 4.9%;
   --card-foreground: 210 40% 98%;
-  --popover: 240 33% 10%;
+  --popover: 222.2 84% 4.9%;
   --popover-foreground: 210 40% 98%;
-  --primary: 339 100% 43%;
+  --primary: 309 78% 31%;
   --primary-foreground: 210 40% 98%;
-  --secondary: 233 36% 18%;
+  --secondary: 217.2 32.6% 17.5%;
   --secondary-foreground: 210 40% 98%;
-  --muted: 233 36% 18%;
-  --muted-foreground: 214 20% 72%;
-  --accent: 265 44% 32%;
+  --muted: 217.2 32.6% 17.5%;
+  --muted-foreground: 215 20.2% 65.1%;
+  --accent: 217.2 32.6% 17.5%;
   --accent-foreground: 210 40% 98%;
-  --border: 233 32% 24%;
-  --input: 233 32% 24%;
-  --ring: 339 100% 43%;
+  --border: 217.2 32.6% 17.5%;
+  --input: 217.2 32.6% 17.5%;
+  --ring: 309 78% 31%;
 }
 
 /* Animations pour les effets de texte */
@@ -198,7 +198,7 @@ html, body {
 
 @layer base {
   body {
-    @apply bg-[#f6f5fb] text-[#221f2f] font-sans;
+    @apply bg-gray-50 text-gray-900 font-sans;
   }
   
   /* Assurer que tous les contenants respectent la largeur de l'écran */

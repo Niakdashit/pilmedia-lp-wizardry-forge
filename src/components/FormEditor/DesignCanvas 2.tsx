@@ -2642,7 +2642,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                             panelBg: '#ffffff',
                             borderColor: '#e5e7eb',
                             textColor: '#000000',
-                            buttonColor: '#E0004D',
+                            buttonColor: '#841b60',
                             buttonTextColor: '#ffffff',
                             fontFamily: 'inherit',
                             displayMode: 'overlay',
@@ -2817,7 +2817,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                                     bottom: '20px',
                                     left: '50%',
                                     transform: 'translateX(-50%)',
-                                    backgroundColor: formConfig.buttonColor || '#E0004D',
+                                    backgroundColor: formConfig.buttonColor || '#841b60',
                                     color: formConfig.buttonTextColor || '#ffffff',
                                     padding: '16px 32px',
                                     borderRadius: '50px',
@@ -3286,7 +3286,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                   onClick={() => setShowGridLines(!showGridLines)}
                   className={`p-2 rounded-lg shadow-sm text-xs z-40 transition-colors ${
                     showGridLines 
-                      ? 'bg-[hsl(var(--primary))] text-white hover:bg-[radial-gradient(circle_at_0%_0%,_#E0004D,_#6B2AA0)]' 
+                      ? 'bg-[hsl(var(--primary))] text-white hover:bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)]' 
                       : 'bg-white/80 hover:bg-white text-gray-700'
                   }`}
                   title="Afficher/masquer la grille (G)"

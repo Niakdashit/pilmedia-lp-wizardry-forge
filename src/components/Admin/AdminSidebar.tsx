@@ -62,7 +62,7 @@ const AdminSidebar: React.FC = () => {
         )}
         <button
           onClick={toggleSidebar}
-          className="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-[#E0004D] focus:outline-none transition-colors duration-200"
+          className="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-[#841b60] focus:outline-none transition-colors duration-200"
         >
           {sidebarCollapsed ? <ChevronRight className="w-5 h-5" /> : <ChevronLeft className="w-5 h-5" />}
         </button>
@@ -78,7 +78,7 @@ const AdminSidebar: React.FC = () => {
               <Link
                 key={item.path}
                 to={item.path}
-                className={`flex items-center px-3 py-2 rounded-[18px] transition-all duration-200 group ${isActive ? 'bg-gradient-to-br from-[#E0004D] to-[#6B2AA0] text-white' : 'text-gray-600 hover:bg-[#f8f0f5] hover:text-[#E0004D]'}`}
+                className={`flex items-center px-3 py-2 rounded-[18px] transition-all duration-200 group ${isActive ? 'bg-gradient-to-br from-[#841b60] to-[#b41b60] text-white' : 'text-gray-600 hover:bg-[#f8f0f5] hover:text-[#841b60]'}`}
               >
                 <div className={`flex items-center justify-center w-8 h-8 rounded-[18px] ${isActive ? 'bg-white/20' : 'bg-white group-hover:bg-white'}`}>
                   {item.icon}

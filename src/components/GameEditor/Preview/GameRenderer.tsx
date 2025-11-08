@@ -113,7 +113,7 @@ const GameRenderer: React.FC<GameRendererProps> = ({
   const renderGameComponent = () => {
     // Récupérer les couleurs de la marque si disponibles
     const brandColors = config.brandAssets || {};
-    const primaryColor = brandColors.primaryColor || config.participateButtonColor || '#E0004D';
+    const primaryColor = brandColors.primaryColor || config.participateButtonColor || '#841b60';
     const secondaryColor = brandColors.secondaryColor || '#ffffff';
     switch (gameType) {
       case 'wheel':

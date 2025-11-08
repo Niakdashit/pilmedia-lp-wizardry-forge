@@ -31,7 +31,7 @@ const CampaignModeSelectionModal: React.FC<CampaignModeSelectionModalProps> = ({
             className="group relative bg-gradient-to-br from-[hsl(var(--sidebar-surface))] to-white border-2 border-[hsl(var(--sidebar-border))] rounded-xl p-6 hover:border-[hsl(var(--sidebar-glow))] hover:shadow-lg transition-all duration-300"
           >
             <div className="flex flex-col items-center text-center">
-              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#6B2AA0] to-[#E0004D] flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#b41b60] to-[#841b60] flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                 <Monitor className="w-8 h-8 text-white" />
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">
@@ -54,7 +54,7 @@ const CampaignModeSelectionModal: React.FC<CampaignModeSelectionModalProps> = ({
             className="group relative bg-gradient-to-br from-[hsl(var(--sidebar-surface))] to-white border-2 border-[hsl(var(--sidebar-border))] rounded-xl p-6 hover:border-[hsl(var(--sidebar-glow))] hover:shadow-lg transition-all duration-300"
           >
             <div className="flex flex-col items-center text-center">
-              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#6B2AA0] to-[#E0004D] flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#b41b60] to-[#841b60] flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                 <FileText className="w-8 h-8 text-white" />
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">

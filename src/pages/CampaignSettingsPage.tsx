@@ -137,7 +137,7 @@ const CampaignSettingsPage: React.FC = () => {
           <button
             onClick={handleSave}
             disabled={loading}
-            className="px-3 py-1.5 rounded-lg text-white text-sm bg-[radial-gradient(circle_at_0%_0%,_#E0004D,_#6B2AA0)] disabled:opacity-60"
+            className="px-3 py-1.5 rounded-lg text-white text-sm bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] disabled:opacity-60"
           >
             {loading ? 'Enregistrement...' : 'Enregistrer'}
           </button>

@@ -69,7 +69,7 @@ export const useQuickCampaignStore = create<QuickCampaignState>((set, get) => ({
   launchDate: '',
   backgroundImage: null,
   backgroundImageUrl: null,
-  customColors: { primary: '#E0004D', secondary: '#dc2626', accent: '#ffffff', textColor: '#000000', buttonStyle: 'modern' },
+  customColors: { primary: '#841b60', secondary: '#dc2626', accent: '#ffffff', textColor: '#000000', buttonStyle: 'modern' },
   jackpotColors: {
     containerBackgroundColor: '#000000',
     backgroundColor: '#1a1a1a',

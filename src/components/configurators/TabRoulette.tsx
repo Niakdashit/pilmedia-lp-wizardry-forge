@@ -17,7 +17,7 @@ interface TabRouletteProps {
 const getThemeColors = (theme: string): string[] => {
   switch (theme) {
     case 'promo':
-      return ['#FFD700', '#E0004D', '#FF6F61'];
+      return ['#FFD700', '#841b60', '#FF6F61'];
     case 'food':
       return ['#f4d35e', '#ee964b', '#e63946'];
     case 'casino':
@@ -46,8 +46,8 @@ const TabRoulette: React.FC<TabRouletteProps> = ({
   const [rotation] = useState(0);
   const [desiredCount, setDesiredCount] = useState<number>(segments.length);
   const [theme, setTheme] = useState<'default' | 'promo' | 'food' | 'casino' | 'child' | 'gaming' | 'luxury' | 'halloween' | 'noel'>('default');
-  const [borderColor, setBorderColor] = useState<string>('#E0004D');
-  const [pointerColor, setPointerColor] = useState<string>('#E0004D');
+  const [borderColor, setBorderColor] = useState<string>('#841b60');
+  const [pointerColor, setPointerColor] = useState<string>('#841b60');
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const updateCampaign = (newSegments: Segment[], center: File | null) => {
@@ -278,7 +278,7 @@ const TabRoulette: React.FC<TabRouletteProps> = ({
         />
         <button
           onClick={addSegment}
-          className="bg-gradient-to-br from-[#E0004D] to-[#6B2AA0] text-white px-4 py-2 rounded shadow"
+          className="bg-gradient-to-br from-[#841b60] to-[#b41b60] text-white px-4 py-2 rounded shadow"
         >
           + Ajouter un segment
         </button>
@@ -302,7 +302,7 @@ const TabRoulette: React.FC<TabRouletteProps> = ({
           />
           <input
             type="color"
-            value={seg.color || '#E0004D'}
+            value={seg.color || '#841b60'}
             onChange={(e) => handleSegmentChange(index, 'color', e.target.value)}
             className="w-10 h-10 border rounded"
           />

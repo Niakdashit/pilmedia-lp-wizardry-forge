@@ -1215,7 +1215,7 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
               // Reproduire exactement la logique de DesignCanvas pour le formulaire
               const campaignDesign = (liveCampaign as any)?.design || {};
               const formWidth = campaignDesign.formWidth || campaignDesign.formConfig?.widthPx ? `${campaignDesign.formConfig.widthPx}px` : '360px';
-            const buttonColor = campaignDesign.buttonColor || '#E0004D';
+            const buttonColor = campaignDesign.buttonColor || '#841b60';
             const buttonTextColor = campaignDesign.buttonTextColor || '#ffffff';
             const borderColor = campaignDesign.borderColor || '#E5E7EB';
             const focusColor = buttonColor;

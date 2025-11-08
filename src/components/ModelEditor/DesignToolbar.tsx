@@ -234,7 +234,7 @@ const QuizToolbar: React.FC<QuizToolbarProps> = React.memo(({
           onClick={onPreviewToggle}
           className={`flex items-center px-2.5 py-1.5 text-xs sm:text-sm border rounded-lg transition-colors shadow-none focus:shadow-none ring-0 focus:ring-0 drop-shadow-none filter-none backdrop-blur-0 ${
             isPreviewMode 
-              ? 'bg-[radial-gradient(circle_at_0%_0%,_#E0004D,_#6B2AA0)] text-white border-[#E0004D]' 
+              ? 'bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white border-[#841b60]' 
               : 'border-gray-300 hover:bg-gray-50'
           }`}
         >
@@ -263,7 +263,7 @@ const QuizToolbar: React.FC<QuizToolbarProps> = React.memo(({
               disabled={!campaignId}
               className={`flex items-center px-3 py-1.5 text-xs sm:text-sm rounded-lg transition-colors ${
                 campaignId
-                  ? 'bg-[radial-gradient(circle_at_0%_0%,_#E0004D,_#6B2AA0)] text-white hover:opacity-95'
+                  ? 'bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white hover:opacity-95'
                   : 'bg-gray-200 text-gray-400 cursor-not-allowed'
               }`}
               title={campaignId ? saveDesktopLabel : "Veuillez d'abord créer la campagne"}

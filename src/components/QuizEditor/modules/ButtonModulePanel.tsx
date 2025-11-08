@@ -46,7 +46,7 @@ const ButtonModulePanel: React.FC<ButtonModulePanelProps> = ({ module, onUpdate,
         <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
           <button
             type="button"
-            className="flex items-center gap-2 text-sm text-[#E0004D] hover:underline"
+            className="flex items-center gap-2 text-sm text-[#841b60] hover:underline"
             onClick={onBack}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -61,7 +61,7 @@ const ButtonModulePanel: React.FC<ButtonModulePanelProps> = ({ module, onUpdate,
           <h3 className="text-sm font-semibold text-gray-900">Bouton de lancement</h3>
           <button
             type="button"
-            className="text-xs text-[#E0004D] hover:underline"
+            className="text-xs text-[#841b60] hover:underline"
             onClick={() => onUpdate({
               label: 'Participer',
               background: '#ad0071',
@@ -97,8 +97,8 @@ const ButtonModulePanel: React.FC<ButtonModulePanelProps> = ({ module, onUpdate,
                   onClick={() => onUpdate({ layoutWidth: id as BlocBouton['layoutWidth'] })}
                   className={`flex items-center justify-center rounded-lg border px-3 py-2 text-[11px] font-semibold transition ${
                     isActive
-                      ? 'border-[#E0004D] bg-[#E0004D]/10 text-[#E0004D] shadow-sm shadow-[#E0004D]/30'
-                      : 'border-gray-200 text-gray-600 hover:border-[#E0004D]/40 hover:text-[#E0004D]'
+                      ? 'border-[#841b60] bg-[#841b60]/10 text-[#841b60] shadow-sm shadow-[#841b60]/30'
+                      : 'border-gray-200 text-gray-600 hover:border-[#841b60]/40 hover:text-[#841b60]'
                   }`}
                 >
                   {widthLabel}
@@ -112,7 +112,7 @@ const ButtonModulePanel: React.FC<ButtonModulePanelProps> = ({ module, onUpdate,
           <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide">Libellé du bouton</label>
           <input
             type="text"
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#E0004D] focus:ring-[#E0004D]"
+            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#841b60] focus:ring-[#841b60]"
             value={label}
             onChange={(e) => onUpdate({ label: e.target.value })}
           />
@@ -123,7 +123,7 @@ const ButtonModulePanel: React.FC<ButtonModulePanelProps> = ({ module, onUpdate,
             <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide">Lien (URL)</label>
             <input
               type="text"
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#E0004D] focus:ring-[#E0004D]"
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#841b60] focus:ring-[#841b60]"
               value={module.href || ''}
               onChange={(e) => onUpdate({ href: e.target.value })}
               placeholder="https://…"
@@ -144,7 +144,7 @@ const ButtonModulePanel: React.FC<ButtonModulePanelProps> = ({ module, onUpdate,
               />
               <input
                 type="text"
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#E0004D] focus:ring-[#E0004D]"
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#841b60] focus:ring-[#841b60]"
                 value={bg}
                 onChange={(e) => onUpdate({ background: e.target.value })}
                 placeholder="#ad0071"
@@ -162,7 +162,7 @@ const ButtonModulePanel: React.FC<ButtonModulePanelProps> = ({ module, onUpdate,
               />
               <input
                 type="text"
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#E0004D] focus:ring-[#E0004D]"
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#841b60] focus:ring-[#841b60]"
                 value={txt}
                 onChange={(e) => onUpdate({ textColor: e.target.value })}
                 placeholder="#ffffff"
@@ -212,7 +212,7 @@ const ButtonModulePanel: React.FC<ButtonModulePanelProps> = ({ module, onUpdate,
             />
             <input
               type="text"
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#E0004D] focus:ring-[#E0004D]"
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#841b60] focus:ring-[#841b60]"
               value={borderColor}
               onChange={(e) => onUpdate({ borderColor: e.target.value })}
               placeholder="#000000"

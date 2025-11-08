@@ -63,7 +63,7 @@ const ExportPanel: React.FC = () => {
         </div>
       </div>
 
-      <button className="w-full flex items-center justify-center space-x-2 py-3 bg-[radial-gradient(circle_at_0%_0%,_#E0004D,_#6B2AA0)] text-white rounded-lg hover:bg-[radial-gradient(circle_at_0%_0%,_#E0004D,_#6B2AA0)] transition-colors">
+      <button className="w-full flex items-center justify-center space-x-2 py-3 bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white rounded-lg hover:bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] transition-colors">
         <Eye className="w-4 h-4" />
         <span>Aperçu en plein écran</span>
       </button>
@@ -96,12 +96,12 @@ const ExportPanel: React.FC = () => {
 
       {/* Options de partage */}
       <div className="grid grid-cols-2 gap-3">
-        <button className="flex items-center justify-center space-x-2 p-3 border border-gray-200 rounded-lg hover:border-[hsl(var(--primary))] hover:bg-[radial-gradient(circle_at_0%_0%,_#E0004D,_#6B2AA0)] hover:text-white transition-colors group">
+        <button className="flex items-center justify-center space-x-2 p-3 border border-gray-200 rounded-lg hover:border-[hsl(var(--primary))] hover:bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] hover:text-white transition-colors group">
           <Link className="w-4 h-4 text-[hsl(var(--primary))] group-hover:text-white" />
           <span className="text-sm group-hover:text-white">Copier lien</span>
         </button>
         
-        <button className="flex items-center justify-center space-x-2 p-3 border border-gray-200 rounded-lg hover:border-[hsl(var(--primary))] hover:bg-[radial-gradient(circle_at_0%_0%,_#E0004D,_#6B2AA0)] hover:text-white transition-colors group">
+        <button className="flex items-center justify-center space-x-2 p-3 border border-gray-200 rounded-lg hover:border-[hsl(var(--primary))] hover:bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] hover:text-white transition-colors group">
           <Mail className="w-4 h-4 text-[hsl(var(--primary))] group-hover:text-white" />
           <span className="text-sm group-hover:text-white">Par email</span>
         </button>
@@ -141,7 +141,7 @@ const ExportPanel: React.FC = () => {
           {exportFormats.map((format) => (
             <button
               key={format.id}
-              className="w-full flex items-center justify-between p-3 bg-white border border-gray-200 rounded-lg hover:border-[hsl(var(--primary))] hover:bg-[radial-gradient(circle_at_0%_0%,_#E0004D,_#6B2AA0)] hover:text-white transition-colors group"
+              className="w-full flex items-center justify-between p-3 bg-white border border-gray-200 rounded-lg hover:border-[hsl(var(--primary))] hover:bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] hover:text-white transition-colors group"
             >
               <div className="text-left">
                 <div className="font-medium text-gray-800 group-hover:text-white">{format.label}</div>

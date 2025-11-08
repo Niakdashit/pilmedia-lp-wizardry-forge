@@ -68,7 +68,7 @@ function SortableField({
             type="text"
             value={field.label}
             onChange={(e) => updateField(field.id, { label: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E0004D]"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60]"
           />
         </div>
         <div>
@@ -76,7 +76,7 @@ function SortableField({
           <select
             value={field.type}
             onChange={(e) => updateField(field.id, { type: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E0004D]"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60]"
           >
             {fieldTypes.map((type) => (
               <option key={type.value} value={type.value}>
@@ -97,7 +97,7 @@ function SortableField({
                   type="text"
                   value={option}
                   onChange={(e) => updateOption(field.id, optionIndex, e.target.value)}
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E0004D]"
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60]"
                 />
                 <button onClick={() => removeOption(field.id, optionIndex)} className="p-2 text-red-600 hover:bg-red-50 rounded">
                   <Trash2 className="w-4 h-4" />
@@ -106,7 +106,7 @@ function SortableField({
             ))}
             <button
               onClick={() => addOption(field.id)}
-              className="flex items-center space-x-2 px-3 py-2 border border-dashed border-gray-300 rounded-lg hover:border-[#E0004D] transition-colors"
+              className="flex items-center space-x-2 px-3 py-2 border border-dashed border-gray-300 rounded-lg hover:border-[#841b60] transition-colors"
             >
               <Plus className="w-4 h-4" />
               <span>Ajouter une option</span>
@@ -121,7 +121,7 @@ function SortableField({
           id={`required-${field.id}`}
           checked={field.required || false}
           onChange={(e) => updateField(field.id, { required: e.target.checked })}
-          className="mr-2 w-4 h-4 text-[#E0004D] border-gray-300 rounded focus:ring-[#E0004D]"
+          className="mr-2 w-4 h-4 text-[#841b60] border-gray-300 rounded focus:ring-[#841b60]"
         />
         <label htmlFor={`required-${field.id}`} className="text-sm text-gray-700">
           Champ obligatoire
@@ -352,7 +352,7 @@ const ModernFormTab: React.FC<ModernFormTabProps> = ({
         <button
           type="button"
           onClick={() => setIsDropdownOpen((v) => !v)}
-          className="w-full text-left px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg flex items-center justify-between hover:border-[#E0004D]"
+          className="w-full text-left px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg flex items-center justify-between hover:border-[#841b60]"
         >
           <span className="text-gray-700">
             {forms.find((f) => f.id === selectedSavedFormId)?.name || 'Chercher un questionnaire existant'}
@@ -368,7 +368,7 @@ const ModernFormTab: React.FC<ModernFormTabProps> = ({
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder=""
-                  className="w-full px-3 py-2 pr-9 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E0004D]"
+                  className="w-full px-3 py-2 pr-9 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60]"
                 />
                 <Search className="w-4 h-4 text-gray-400 absolute right-3 top-1/2 -translate-y-1/2" />
               </div>
@@ -424,7 +424,7 @@ const ModernFormTab: React.FC<ModernFormTabProps> = ({
       <div className="flex items-center gap-3">
         <button
           onClick={addField}
-          className="px-4 py-2 bg-gradient-to-br from-[#E0004D] to-[#6B2AA0] text-white rounded-lg hover:bg-[#4D2388] transition-colors"
+          className="px-4 py-2 bg-gradient-to-br from-[#841b60] to-[#b41b60] text-white rounded-lg hover:bg-[#6d164f] transition-colors"
         >
           + Champ
         </button>
@@ -447,7 +447,7 @@ const ModernFormTab: React.FC<ModernFormTabProps> = ({
                 value={saveName}
                 onChange={(e) => setSaveName(e.target.value)}
                 placeholder="Ex: Formulaire Prospect"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E0004D]"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60]"
               />
             </div>
             <div className="flex items-center gap-2">
@@ -457,7 +457,7 @@ const ModernFormTab: React.FC<ModernFormTabProps> = ({
                 checked={updateExisting && !!selectedSavedFormId}
                 onChange={(e) => setUpdateExisting(e.target.checked)}
                 disabled={!selectedSavedFormId}
-                className="w-4 h-4 text-[#E0004D] border-gray-300 rounded focus:ring-[#E0004D]"
+                className="w-4 h-4 text-[#841b60] border-gray-300 rounded focus:ring-[#841b60]"
               />
               <label htmlFor="update-existing" className="text-sm text-gray-700">
                 Mettre à jour le formulaire sélectionné
@@ -473,7 +473,7 @@ const ModernFormTab: React.FC<ModernFormTabProps> = ({
               </button>
               <button
                 type="button"
-                className="px-4 py-2 bg-[#E0004D] text-white rounded-lg hover:opacity-90"
+                className="px-4 py-2 bg-[#841b60] text-white rounded-lg hover:opacity-90"
                 onClick={handleSaveForm}
               >
                 Enregistrer

@@ -24,7 +24,7 @@ const FormPreview: React.FC<FormPreviewProps> = ({
   }, [campaign.formFields, campaign._lastUpdate]);
 
   const design = campaign.design || {};
-  const buttonColor = design.buttonColor || "#E0004D";
+  const buttonColor = design.buttonColor || "#841b60";
   const buttonTextColor = design.buttonTextColor || "#fff";
   const borderColor = design.borderColor || "#E5E7EB";
   const focusColor = buttonColor;

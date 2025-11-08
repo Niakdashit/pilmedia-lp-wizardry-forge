@@ -160,7 +160,7 @@ const TextPanel: React.FC<TextPanelProps> = ({
                           disabled={!selectedElement || selectedElement.type !== 'text'}
                           className={`px-2 py-1 text-xs rounded border transition-colors ${
                             selectedElement?.fontFamily === f 
-                              ? 'bg-[#E0004D] text-white border-[#E0004D]' 
+                              ? 'bg-[#841b60] text-white border-[#841b60]' 
                               : 'hover:bg-[hsl(var(--sidebar-hover))]'
                           } ${(!selectedElement || selectedElement.type !== 'text') ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                           style={{ fontFamily: `'${f}', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif` }}

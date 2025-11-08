@@ -164,7 +164,7 @@ const ArticleModePanel: React.FC<ArticleModePanelProps> = ({
     <div className="space-y-6">
       <div>
         <h3 className="font-semibold text-sm text-gray-700 mb-3">IMAGE DE FOND (DESKTOP/TABLET)</h3>
-        <label className="w-full p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-[hsl(var(--primary))] hover:bg-[radial-gradient(circle_at_0%_0%,_#E0004D,_#6B2AA0)] hover:text-white transition-colors flex flex-col items-center group cursor-pointer">
+        <label className="w-full p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-[hsl(var(--primary))] hover:bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] hover:text-white transition-colors flex flex-col items-center group cursor-pointer">
           <Upload className="w-6 h-6 mb-2 text-gray-600 group-hover:text-white" />
           <span className="text-sm text-gray-600 group-hover:text-white">Télécharger pour Desktop/Tablet</span>
           <span className="text-xs text-gray-500 group-hover:text-white">PNG, JPG jusqu'à 10MB</span>
@@ -200,7 +200,7 @@ const ArticleModePanel: React.FC<ArticleModePanelProps> = ({
               type="radio"
               checked={articleConfig.banner?.aspectRatio === '2215/1536'}
               onChange={() => handleBannerAspectRatio('2215/1536')}
-              className="text-[#E0004D] focus:ring-[#E0004D]"
+              className="text-[#841b60] focus:ring-[#841b60]"
             />
             <span className="text-sm text-gray-700">2215×1536px (Standard)</span>
           </label>
@@ -209,7 +209,7 @@ const ArticleModePanel: React.FC<ArticleModePanelProps> = ({
               type="radio"
               checked={articleConfig.banner?.aspectRatio === '1500/744'}
               onChange={() => handleBannerAspectRatio('1500/744')}
-              className="text-[#E0004D] focus:ring-[#E0004D]"
+              className="text-[#841b60] focus:ring-[#841b60]"
             />
             <span className="text-sm text-gray-700">1500×744px (Panoramique)</span>
           </label>
@@ -237,7 +237,7 @@ const ArticleModePanel: React.FC<ArticleModePanelProps> = ({
                 const safeValue = clampFontSize(value);
                 handleTitleStyle({ fontSize: `${safeValue}px` });
               }}
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E0004D]"
+              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60]"
               placeholder="32"
             />
           </div>
@@ -248,7 +248,7 @@ const ArticleModePanel: React.FC<ArticleModePanelProps> = ({
               <select
                 value={articleConfig.content?.titleStyle?.textAlign || 'center'}
                 onChange={(e) => handleTitleStyle({ textAlign: e.target.value })}
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E0004D]"
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60]"
               >
                 <option value="left">Gauche</option>
                 <option value="center">Centré</option>
@@ -260,7 +260,7 @@ const ArticleModePanel: React.FC<ArticleModePanelProps> = ({
               <select
                 value={articleConfig.content?.titleStyle?.fontWeight || 'bold'}
                 onChange={(e) => handleTitleStyle({ fontWeight: e.target.value })}
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E0004D]"
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60]"
               >
                 <option value="normal">Normal</option>
                 <option value="600">Semi-bold</option>
@@ -281,7 +281,7 @@ const ArticleModePanel: React.FC<ArticleModePanelProps> = ({
                   const value = Number.parseFloat(e.target.value || '0');
                   handleTitleStyle({ lineHeight: Number.isFinite(value) ? value.toString() : '1.4' });
                 }}
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E0004D]"
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60]"
               />
             </div>
             <div>
@@ -308,7 +308,7 @@ const ArticleModePanel: React.FC<ArticleModePanelProps> = ({
               type="text"
               value={articleConfig.content?.descriptionStyle?.fontSize || '1rem'}
               onChange={(e) => handleDescriptionStyle({ fontSize: e.target.value })}
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E0004D]"
+              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60]"
               placeholder="1rem"
             />
           </div>
@@ -319,7 +319,7 @@ const ArticleModePanel: React.FC<ArticleModePanelProps> = ({
               <select
                 value={articleConfig.content?.descriptionStyle?.textAlign || 'center'}
                 onChange={(e) => handleDescriptionStyle({ textAlign: e.target.value })}
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E0004D]"
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60]"
               >
                 <option value="left">Gauche</option>
                 <option value="center">Centré</option>
@@ -337,7 +337,7 @@ const ArticleModePanel: React.FC<ArticleModePanelProps> = ({
                   const value = Number.parseFloat(e.target.value || '0');
                   handleDescriptionStyle({ lineHeight: Number.isFinite(value) ? value.toString() : '1.75' });
                 }}
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E0004D]"
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60]"
               />
             </div>
           </div>
@@ -372,7 +372,7 @@ const ArticleModePanel: React.FC<ArticleModePanelProps> = ({
           type="text"
           value={articleConfig.cta?.text || 'PARTICIPER !'}
           onChange={(e) => handleCTAChange({ text: e.target.value })}
-          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E0004D]"
+          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60]"
           placeholder="PARTICIPER !"
         />
       </div>
@@ -382,7 +382,7 @@ const ArticleModePanel: React.FC<ArticleModePanelProps> = ({
         <select
           value={articleConfig.cta?.size || 'large'}
           onChange={(e) => handleCTAChange({ size: e.target.value })}
-          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E0004D]"
+          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60]"
         >
           <option value="small">Petit</option>
           <option value="medium">Moyen</option>
@@ -395,7 +395,7 @@ const ArticleModePanel: React.FC<ArticleModePanelProps> = ({
         <select
           value={articleConfig.cta?.variant || 'primary'}
           onChange={(e) => handleCTAChange({ variant: e.target.value })}
-          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E0004D]"
+          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60]"
         >
           <option value="primary">Principal</option>
           <option value="secondary">Secondaire</option>
@@ -408,7 +408,7 @@ const ArticleModePanel: React.FC<ArticleModePanelProps> = ({
         <select
           value={articleConfig.cta?.icon || 'arrow'}
           onChange={(e) => handleCTAChange({ icon: e.target.value })}
-          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E0004D]"
+          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60]"
         >
           <option value="arrow">Flèche →</option>
           <option value="external">Lien externe ↗</option>
@@ -445,7 +445,7 @@ const ArticleModePanel: React.FC<ArticleModePanelProps> = ({
                   enabled: e.target.checked,
                 },
               })}
-              className="text-[#E0004D] focus:ring-[#E0004D] rounded"
+              className="text-[#841b60] focus:ring-[#841b60] rounded"
             />
           </div>
 
@@ -460,7 +460,7 @@ const ArticleModePanel: React.FC<ArticleModePanelProps> = ({
                   enabled: e.target.checked,
                 },
               })}
-              className="text-[#E0004D] focus:ring-[#E0004D] rounded"
+              className="text-[#841b60] focus:ring-[#841b60] rounded"
             />
           </div>
 
@@ -475,7 +475,7 @@ const ArticleModePanel: React.FC<ArticleModePanelProps> = ({
                   enabled: e.target.checked,
                 },
               })}
-              className="text-[#E0004D] focus:ring-[#E0004D] rounded"
+              className="text-[#841b60] focus:ring-[#841b60] rounded"
             />
           </div>
         </div>
@@ -494,7 +494,7 @@ const ArticleModePanel: React.FC<ArticleModePanelProps> = ({
             },
           })}
           disabled={!articleConfig.funnelFlow?.formStep?.enabled}
-          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E0004D] disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60] disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <option value="before-game">Avant le jeu</option>
           <option value="after-game">Après le jeu</option>
@@ -518,7 +518,7 @@ const ArticleModePanel: React.FC<ArticleModePanelProps> = ({
               onClick={() => setGroupTab(t.id)}
               className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${
                 groupTab === t.id
-                  ? 'text-[#E0004D] border-b-2 border-[#E0004D] bg-white'
+                  ? 'text-[#841b60] border-b-2 border-[#841b60] bg-white'
                   : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
               }`}
             >

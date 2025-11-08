@@ -8,7 +8,7 @@ const makeSegments = (n: number) => Array.from({ length: n }, (_, i) => ({ id: S
 const norm = (c: string) => c.trim().toLowerCase().replace(/^#?/, '#');
 
 test('getCanonicalWheelConfig forces secondary to white and alternation uses primary/white', () => {
-  const primary = '#E0004D';
+  const primary = '#841b60';
   const extracted = ['#123456', '#00ff00', '#abcdef']; // secondary extracted should be ignored
   const campaign: any = {
     id: 'cmp-1',
@@ -121,8 +121,8 @@ test('near-white extracted without borderColor falls back to defaults', () => {
   };
   const cfg = WheelConfigService.getCanonicalWheelConfig(campaign, ['#fefefe'], {}, { device: 'desktop' });
   const prim = norm(cfg.customColors?.primary || cfg.brandColors?.primary || '');
-  // default primary/border color in service is #E0004D
-  assert.equal(prim, norm('#E0004D'));
+  // default primary/border color in service is #841b60
+  assert.equal(prim, norm('#841b60'));
 
   const segs = WheelConfigService.getStandardizedSegments(cfg);
   assert.equal(segs.length, 4);
@@ -175,7 +175,7 @@ test('rgba extracted near-white falls back to default border when none provided'
   };
   const cfg = WheelConfigService.getCanonicalWheelConfig(campaign, ['rgba(250, 250, 250, 0.9)'], {}, { device: 'desktop' });
   const prim = norm(cfg.customColors?.primary || cfg.brandColors?.primary || '');
-  assert.equal(prim, norm('#E0004D'));
+  assert.equal(prim, norm('#841b60'));
 
   const segs = WheelConfigService.getStandardizedSegments(cfg);
   assert.equal(segs.length, 4);

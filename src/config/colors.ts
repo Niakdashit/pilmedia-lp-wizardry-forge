@@ -1,7 +1,7 @@
 // Default color palette for the application
 export const defaultColors = {
   // Primary brand color
-  primary: '#E0004D',
+  primary: '#841b60',
   
   // Secondary brand color
   secondary: '#dc2626',
@@ -38,7 +38,7 @@ export const defaultColors = {
   
   // Wheel segment colors
   wheelSegments: [
-    '#E0004D', // Primary brand color
+    '#841b60', // Primary brand color
     '#4ecdc4', // Teal
     '#45b7d1', // Light blue
     '#96ceb4', // Mint

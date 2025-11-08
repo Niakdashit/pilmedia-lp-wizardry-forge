@@ -118,7 +118,7 @@ const StudioPreview: React.FC<StudioPreviewProps> = ({
             backgroundImage: backgroundUrl ? `url(${backgroundUrl})` : undefined,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
-            backgroundColor: campaignData.design?.primaryColor || '#E0004D'
+            backgroundColor: campaignData.design?.primaryColor || '#841b60'
           }}
         >
           <CardContent className="relative h-full p-0 flex flex-col">
@@ -246,7 +246,7 @@ const StudioPreview: React.FC<StudioPreviewProps> = ({
               <div className="flex items-center gap-2">
                 <div 
                   className="w-4 h-4 rounded"
-                  style={{ backgroundColor: campaignData.design?.primaryColor || '#E0004D' }}
+                  style={{ backgroundColor: campaignData.design?.primaryColor || '#841b60' }}
                 />
                 <span className="text-sm">Primaire</span>
               </div>

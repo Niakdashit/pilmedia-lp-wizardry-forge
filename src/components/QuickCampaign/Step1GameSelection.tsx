@@ -69,7 +69,7 @@ const Step1GameSelection: React.FC = () => {
           }} animate={{
             opacity: 1,
             y: 0
-          }} className="mb-4 text-[#E0004D] text-4xl font-semibold">
+          }} className="mb-4 text-[#841b60] text-4xl font-semibold">
               Créer une campagne
             </motion.h1>
             <motion.p initial={{
@@ -100,16 +100,16 @@ const Step1GameSelection: React.FC = () => {
               delay: index * 0.1
             }} onClick={() => handleGameSelect(game.id)} className={`
                     relative p-8 rounded-xl border-2 cursor-pointer transition-all duration-300
-                    ${isSelected ? 'border-[#E0004D] bg-gradient-to-br from-[#E0004D]/5 to-[#6B2AA0]/5 shadow-xl' : 'border-gray-200 bg-gray-50 hover:border-[#E0004D]/50 hover:shadow-lg'}
+                    ${isSelected ? 'border-[#841b60] bg-gradient-to-br from-[#841b60]/5 to-[#b41b60]/5 shadow-xl' : 'border-gray-200 bg-gray-50 hover:border-[#841b60]/50 hover:shadow-lg'}
                   `}>
-                  {game.popular && <div className="absolute -top-3 -right-3 bg-gradient-to-br from-[#E0004D] to-[#6B2AA0] text-white text-xs px-3 py-1 rounded-full font-medium">
+                  {game.popular && <div className="absolute -top-3 -right-3 bg-gradient-to-br from-[#841b60] to-[#b41b60] text-white text-xs px-3 py-1 rounded-full font-medium">
                       Populaire
                     </div>}
                   
                   <div className="text-center">
                     <div className={`
                       w-16 h-16 mx-auto mb-6 rounded-2xl flex items-center justify-center
-                      ${isSelected ? 'bg-gradient-to-br from-[#E0004D] to-[#6B2AA0]' : 'bg-gray-100'}
+                      ${isSelected ? 'bg-gradient-to-br from-[#841b60] to-[#b41b60]' : 'bg-gray-100'}
                     `}>
                       <IconComponent className={`w-8 h-8 ${isSelected ? 'text-white' : 'text-gray-600'}`} />
                     </div>
@@ -134,7 +134,7 @@ const Step1GameSelection: React.FC = () => {
 
             <button onClick={handleNext} disabled={!selectedGameType} className={`
                 flex items-center space-x-2 px-8 py-4 rounded-2xl font-medium transition-all
-                ${selectedGameType ? 'bg-gradient-to-br from-[#E0004D] to-[#6B2AA0] text-white hover:bg-[#E0004D]/90 shadow-lg' : 'bg-gray-100 text-gray-400 cursor-not-allowed'}
+                ${selectedGameType ? 'bg-gradient-to-br from-[#841b60] to-[#b41b60] text-white hover:bg-[#841b60]/90 shadow-lg' : 'bg-gray-100 text-gray-400 cursor-not-allowed'}
               `}>
               <span>Continuer</span>
               <ArrowRight className="w-5 h-5" />
@@ -144,7 +144,7 @@ const Step1GameSelection: React.FC = () => {
           {/* Progress Indicator */}
           <div className="text-center mt-16">
             <div className="flex items-center justify-center space-x-2 mb-4">
-              <div className="w-8 h-1 bg-gradient-to-br from-[#E0004D] to-[#6B2AA0] rounded-full"></div>
+              <div className="w-8 h-1 bg-gradient-to-br from-[#841b60] to-[#b41b60] rounded-full"></div>
               <div className="w-8 h-1 bg-gray-200 rounded-full"></div>
               <div className="w-8 h-1 bg-gray-200 rounded-full"></div>
             </div>

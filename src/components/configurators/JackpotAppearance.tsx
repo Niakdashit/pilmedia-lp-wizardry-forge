@@ -56,7 +56,7 @@ const JackpotAppearance: React.FC<JackpotAppearanceProps> = ({
                 reader.readAsDataURL(file);
               }
             }}
-            className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-[#E0004D] file:text-white hover:file:bg-[#4D2388]"
+            className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-[#841b60] file:text-white hover:file:bg-[#6d164f]"
           />
           {gameConfig.backgroundImage && (
             <div className="mt-2">
@@ -87,7 +87,7 @@ const JackpotAppearance: React.FC<JackpotAppearanceProps> = ({
                 reader.readAsDataURL(file);
               }
             }}
-            className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-[#E0004D] file:text-white hover:file:bg-[#4D2388]"
+            className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-[#841b60] file:text-white hover:file:bg-[#6d164f]"
           />
           {gameConfig.customTemplate && (
             <div className="mt-2">
@@ -109,7 +109,7 @@ const JackpotAppearance: React.FC<JackpotAppearanceProps> = ({
             type="text"
             value={gameConfig.buttonLabel || 'Lancer le Jackpot'}
             onChange={(e) => handleInputChange('buttonLabel', e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E0004D]"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60]"
             placeholder="Ex: Lancer le Jackpot"
           />
         </div>
@@ -130,7 +130,7 @@ const JackpotAppearance: React.FC<JackpotAppearanceProps> = ({
               type="text"
               value={gameConfig.buttonColor || '#ec4899'}
               onChange={(e) => handleInputChange('buttonColor', e.target.value)}
-              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E0004D]"
+              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60]"
               placeholder="#ec4899"
             />
           </div>

@@ -101,7 +101,7 @@ const Dice: React.FC<DiceProps> = ({
             max="4"
             value={config?.diceCount || 2}
             onChange={(e) => onConfigChange({ ...config, diceCount: parseInt(e.target.value) })}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E0004D]"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60]"
           />
         </div>
 
@@ -116,7 +116,7 @@ const Dice: React.FC<DiceProps> = ({
               ...config,
               winningConditions: e.target.value.split(',').map(n => parseInt(n.trim()))
             })}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E0004D]"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60]"
             placeholder="7, 11"
           />
           <p className="mt-1 text-sm text-gray-500">
@@ -134,7 +134,7 @@ const Dice: React.FC<DiceProps> = ({
         {(diceValues.length ? diceValues : [1, 1]).map((value, index) => (
           <motion.div
             key={index}
-            className="w-24 h-24 bg-white rounded-2xl shadow-xl flex items-center justify-center text-4xl font-bold border-2 border-[#E0004D] text-[#E0004D]"
+            className="w-24 h-24 bg-white rounded-2xl shadow-xl flex items-center justify-center text-4xl font-bold border-2 border-[#841b60] text-[#841b60]"
             animate={{
               rotate: isRolling ? [0, 360] : 0,
               scale: isRolling ? [1, 0.8, 1] : 1
@@ -161,7 +161,7 @@ const Dice: React.FC<DiceProps> = ({
           <button
             onClick={rollDice}
             disabled={isRolling}
-            className="px-8 py-3 bg-gradient-to-br from-[#E0004D] to-[#6B2AA0] text-white font-medium rounded-xl hover:bg-[#4D2388] transition-colors duration-200 disabled:opacity-50"
+            className="px-8 py-3 bg-gradient-to-br from-[#841b60] to-[#b41b60] text-white font-medium rounded-xl hover:bg-[#6d164f] transition-colors duration-200 disabled:opacity-50"
           >
             {isRolling ? 'Lancement...' : 'Lancer les dés'}
           </button>

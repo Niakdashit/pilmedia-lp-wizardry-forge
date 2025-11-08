@@ -159,13 +159,13 @@ const DesignEditorLayout: React.FC = () => {
         customImages: customImages,
         extractedColors: extractedColors,
         customColors: {
-          primary: extractedColors[0] || campaignConfig.buttonColor || '#E0004D',
+          primary: extractedColors[0] || campaignConfig.buttonColor || '#841b60',
           secondary: extractedColors[1] || '#4ecdc4',
           accent: extractedColors[2] || '#45b7d1'
         },
         wheelConfig: {
           borderStyle: wheelModalConfig?.wheelBorderStyle || campaignConfig.wheelConfig?.borderStyle || 'classic',
-          borderColor: wheelModalConfig?.wheelBorderColor || campaignConfig.wheelConfig?.borderColor || '#E0004D',
+          borderColor: wheelModalConfig?.wheelBorderColor || campaignConfig.wheelConfig?.borderColor || '#841b60',
           scale: wheelModalConfig?.wheelScale || campaignConfig.wheelConfig?.scale || 1
         },
         wheelBorderStyle: wheelModalConfig?.wheelBorderStyle || campaignConfig.wheelConfig?.borderStyle || 'classic'
@@ -173,9 +173,9 @@ const DesignEditorLayout: React.FC = () => {
       gameConfig: {
         wheel: {
           segments: [
-            { id: '1', label: 'Prix 1', color: extractedColors[0] || '#E0004D', probability: 0.25, isWinning: true },
+            { id: '1', label: 'Prix 1', color: extractedColors[0] || '#841b60', probability: 0.25, isWinning: true },
             { id: '2', label: 'Prix 2', color: extractedColors[1] || '#4ecdc4', probability: 0.25, isWinning: true },
-            { id: '3', label: 'Prix 3', color: extractedColors[0] || '#E0004D', probability: 0.25, isWinning: true },
+            { id: '3', label: 'Prix 3', color: extractedColors[0] || '#841b60', probability: 0.25, isWinning: true },
             { id: '4', label: 'Dommage', color: extractedColors[1] || '#4ecdc4', probability: 0.25, isWinning: false }
           ],
           winProbability: 0.75,
@@ -185,7 +185,7 @@ const DesignEditorLayout: React.FC = () => {
       },
       buttonConfig: {
         text: buttonElement?.content || 'Faire tourner',
-        color: extractedColors[0] || campaignConfig.buttonColor || '#E0004D',
+        color: extractedColors[0] || campaignConfig.buttonColor || '#841b60',
         textColor: buttonElement?.style?.color || '#ffffff',
         borderRadius: campaignConfig.borderRadius || '8px'
       },
@@ -251,7 +251,7 @@ const DesignEditorLayout: React.FC = () => {
         // 1. Le style est "classic" ET
         // 2. L'utilisateur n'a pas déjà configuré manuellement une couleur personnalisée différente de la couleur par défaut
         const shouldUpdateBorderColor = isClassicBorder && 
-          (!currentWheelConfig?.borderColor || currentWheelConfig.borderColor === '#E0004D');
+          (!currentWheelConfig?.borderColor || currentWheelConfig.borderColor === '#841b60');
         
         return {
           ...prev,
@@ -260,11 +260,11 @@ const DesignEditorLayout: React.FC = () => {
             wheelConfig: {
               ...currentWheelConfig,
               ...(shouldUpdateBorderColor && {
-                borderColor: colors[0] || '#E0004D'
+                borderColor: colors[0] || '#841b60'
               })
             },
             brandColors: {
-              primary: colors[0] || '#E0004D',
+              primary: colors[0] || '#841b60',
               secondary: '#ffffff', // Blanc par défaut pour la seconde couleur
               accent: colors[0] || '#45b7d1'
             }
@@ -426,7 +426,7 @@ const DesignEditorLayout: React.FC = () => {
             {/* Floating Edit Mode Button */}
             <button
               onClick={() => setShowFunnel(false)}
-              className="absolute top-4 right-4 z-50 px-4 py-2 bg-gradient-to-br from-[#E0004D] to-[#6B2AA0] text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-[#6b1549]"
+              className="absolute top-4 right-4 z-50 px-4 py-2 bg-gradient-to-br from-[#841b60] to-[#b41b60] text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-[#6b1549]"
             >
               Mode édition
             </button>

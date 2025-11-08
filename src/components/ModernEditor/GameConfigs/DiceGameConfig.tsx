@@ -77,7 +77,7 @@ const DiceGameConfig: React.FC<DiceGameConfigProps> = ({
               onClick={() => handleDiceChange('count', option.value)}
               className={`p-3 text-sm rounded-lg border-2 transition-all ${
                 campaign.gameConfig?.dice?.count === option.value
-                  ? 'border-[#E0004D] bg-[#E0004D]/10'
+                  ? 'border-[#841b60] bg-[#841b60]/10'
                   : 'border-gray-300 hover:border-gray-400'
               }`}
             >
@@ -96,7 +96,7 @@ const DiceGameConfig: React.FC<DiceGameConfigProps> = ({
         <select
           value={campaign.gameConfig?.dice?.sides || 6}
           onChange={(e) => handleDiceChange('sides', parseInt(e.target.value))}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E0004D] focus:border-transparent"
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
         >
           {sidesOptions.map((option) => (
             <option key={option.value} value={option.value}>
@@ -122,7 +122,7 @@ const DiceGameConfig: React.FC<DiceGameConfigProps> = ({
               onChange={(e) => handleDiceChange('winningSum', parseInt(e.target.value))}
               min={(campaign.gameConfig?.dice?.count || 2)}
               max={(campaign.gameConfig?.dice?.count || 2) * (campaign.gameConfig?.dice?.sides || 6)}
-              className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-[#E0004D] focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-[#841b60] focus:border-transparent"
             />
             <p className="text-xs text-gray-500 mt-1">
               Range: {campaign.gameConfig?.dice?.count || 2} - {(campaign.gameConfig?.dice?.count || 2) * (campaign.gameConfig?.dice?.sides || 6)}
@@ -144,7 +144,7 @@ const DiceGameConfig: React.FC<DiceGameConfigProps> = ({
               handleDiceChange('backgroundImage', url);
             }
           }}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E0004D] focus:border-transparent"
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
         />
         {campaign.gameConfig?.dice?.backgroundImage && (
           <div className="mt-2">

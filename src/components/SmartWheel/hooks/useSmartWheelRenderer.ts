@@ -410,7 +410,7 @@ export const useSmartWheelRenderer = ({
       // Couleur du segment - forcer l'utilisation de brandColors si le segment a la couleur par défaut
       let segmentColor = segment.color;
       
-      if (segment.color === '#E0004D' && brandColors?.primary) {
+      if (segment.color === '#841b60' && brandColors?.primary) {
         segmentColor = brandColors.primary;
       } else if (!segmentColor) {
         segmentColor = index % 2 === 0 ? theme.colors.primary : theme.colors.secondary;
