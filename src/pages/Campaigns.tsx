@@ -9,7 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import ConfirmModal from '@/components/shared/ConfirmModal';
 import { getEditorUrl } from '@/utils/editorRouting';
 import { useEffect } from 'react';
-import CampaignPeriodCell from '@/components/Campaigns/CampaignPeriodCell';
+
 
 interface ActionModalProps {
   isOpen: boolean;
@@ -189,23 +189,34 @@ const Campaigns: React.FC = () => {
     }
   };
 
-  // Calculate actual status based on dates
+  // Calculate actual status based on dates (inclusive end-of-day)
   const getActualStatus = (campaign: any) => {
     const now = new Date();
-    const endDate = campaign.endDate ? new Date(campaign.endDate) : null;
-    const startDate = campaign.startDate ? new Date(campaign.startDate) : null;
 
-    // If end date is passed, campaign is ended
-    if (endDate && endDate < now) {
+    // Respect paused state explicitly
+    if (campaign.status === 'paused') return 'paused';
+
+    const endDateRaw = campaign.endDate ? new Date(campaign.endDate) : null;
+    const startDateRaw = campaign.startDate ? new Date(campaign.startDate) : null;
+
+    // Normalize to day boundaries to avoid timezone-induced early endings
+    const endDate = endDateRaw ? new Date(endDateRaw) : null;
+    if (endDate) endDate.setHours(23, 59, 59, 999);
+
+    const startDate = startDateRaw ? new Date(startDateRaw) : null;
+    if (startDate) startDate.setHours(0, 0, 0, 0);
+
+    // If end date (end of day) is passed, campaign is ended
+    if (endDate && now > endDate) {
       return 'ended';
     }
 
-    // If start date is in the future, campaign is scheduled
-    if (startDate && startDate > now && campaign.status === 'active') {
-      return 'scheduled';
+    // If start date (start of day) is in the future, keep it as draft (DB policy)
+    if (startDate && now < startDate) {
+      return 'draft';
     }
 
-    // Otherwise, return the stored status
+    // Otherwise, return the stored status (active/ended/etc.)
     return campaign.status;
   };
   const handleActionClick = (e: React.MouseEvent, campaign: any) => {
