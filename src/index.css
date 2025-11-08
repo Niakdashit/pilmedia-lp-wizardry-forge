@@ -198,7 +198,9 @@ html, body {
 
 @layer base {
   body {
-    @apply bg-gray-50 text-gray-900 font-sans;
+    @apply text-gray-900 font-sans;
+    background: linear-gradient(180deg, #943c56, #370e4b);
+    background-attachment: fixed;
   }
   
   /* Assurer que tous les contenants respectent la largeur de l'écran */

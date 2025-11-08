@@ -24,17 +24,6 @@ const Layout: React.FC = () => {
 
   return (
     <>
-      <style>{`
-        body {
-          background: linear-gradient(
-            180deg,
-            #943c56,
-            #370e4b
-          );
-          height: 100vh;
-          margin: 0;
-        }
-      `}</style>
       <div
         className="flex min-h-screen w-full relative"
         style={{
@@ -92,7 +81,7 @@ const Layout: React.FC = () => {
           style={{
             borderRadius: '18px',
             margin: '0',
-            top: '1.16cm', /* Augmenté de 15% supplémentaire par rapport à 1.37cm */
+            top: '1.16cm',
             bottom: '9px',
             left: '9px',
             right: '9px',
