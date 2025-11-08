@@ -1,14 +1,88 @@
-
 import { CampaignType } from '../../utils/campaignTypes';
 import { getDefaultCampaign } from '../../components/ModernEditor/utils/defaultCampaign';
 import { validateQuickCampaignData, validateColors } from './validationUtils';
 
+// Cache optimisé pour chargement instantané
+const campaignCache = new Map<string, { data: any; timestamp: number }>();
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+// Précharge une image avec retry
+const preloadImage = (url: string, retries = 2): Promise<void> => {
+  return new Promise((resolve) => {
+    const attempt = (retriesLeft: number) => {
+      const img = new Image();
+      img.onload = () => resolve();
+      img.onerror = () => {
+        if (retriesLeft > 0) {
+          setTimeout(() => attempt(retriesLeft - 1), 500);
+        } else {
+          resolve(); // Continue même en cas d'erreur
+        }
+      };
+      img.src = url;
+    };
+    attempt(retries);
+  });
+};
+
+// Extrait et précharge toutes les images de la campagne
+const preloadCampaignImages = async (campaign: any): Promise<void> => {
+  const urls: string[] = [];
+  
+  try {
+    // Images de fond
+    if (campaign.design?.backgroundImage) urls.push(campaign.design.backgroundImage);
+    if (campaign.design?.mobileBackgroundImage) urls.push(campaign.design.mobileBackgroundImage);
+    
+    // Backgrounds par écran
+    if (campaign.backgrounds || campaign.screenBackgrounds) {
+      const backgrounds = campaign.backgrounds || campaign.screenBackgrounds;
+      Object.values(backgrounds).forEach((screenBg: any) => {
+        if (screenBg) {
+          ['desktop', 'tablet', 'mobile'].forEach(device => {
+            const deviceBg = screenBg[device];
+            if (deviceBg?.backgroundImage?.url) urls.push(deviceBg.backgroundImage.url);
+          });
+        }
+      });
+    }
+    
+    // Images des modules
+    if (campaign.modularPage?.screens) {
+      Object.values(campaign.modularPage.screens).forEach((modules: any) => {
+        modules?.forEach((module: any) => {
+          if (module.type === 'image' && module.src) urls.push(module.src);
+          if (module.image?.url) urls.push(module.image.url);
+          if (module.backgroundImage?.url) urls.push(module.backgroundImage.url);
+        });
+      });
+    }
+    
+    // Logo et assets
+    if (campaign.design?.centerLogo) urls.push(campaign.design.centerLogo);
+    if (campaign.articleConfig?.bannerImage) urls.push(campaign.articleConfig.bannerImage);
+    if (campaign.articleConfig?.logoImage) urls.push(campaign.articleConfig.logoImage);
+    
+    // Précharge en parallèle (batch de 8)
+    const uniqueUrls = [...new Set(urls.filter(Boolean))];
+    const batchSize = 8;
+    for (let i = 0; i < uniqueUrls.length; i += batchSize) {
+      const batch = uniqueUrls.slice(i, i + batchSize);
+      await Promise.allSettled(batch.map(url => preloadImage(url)));
+    }
+  } catch (error) {
+    console.warn('⚠️ Error preloading images:', error);
+  }
+};
+
+// Fonction de chargement avec cache et retry
 export const loadCampaign = async (
   campaignId: string,
   campaignType: CampaignType,
-  getCampaign: (id: string) => Promise<any>
-) => {
-  console.log('Loading campaign with ID:', campaignId);
+  getCampaign: (id: string) => Promise<any>,
+  retries = 2
+): Promise<any> => {
+  console.log('🔄 Loading campaign with ID:', campaignId);
   
   try {
     if (campaignId === 'quick-preview') {
@@ -79,8 +153,40 @@ export const loadCampaign = async (
       }
     }
 
-      console.log('Loading standard campaign from API');
-    const existingCampaign = await getCampaign(campaignId);
+    // 1. Vérifier le cache d'abord (chargement instantané)
+    const cached = campaignCache.get(campaignId);
+    const now = Date.now();
+    
+    if (cached && (now - cached.timestamp) < CACHE_DURATION) {
+      console.log('⚡ Loading from cache (instant)');
+      // Précharger les images en arrière-plan
+      preloadCampaignImages(cached.data).catch(console.warn);
+      return cached.data;
+    }
+    
+    console.log('🌐 Loading campaign from API');
+    
+    // 2. Charger depuis Supabase avec retry
+    let existingCampaign: any = null;
+    let lastError: Error | null = null;
+    
+    for (let attempt = 0; attempt <= retries; attempt++) {
+      try {
+        existingCampaign = await getCampaign(campaignId);
+        break; // Succès, sortir de la boucle
+      } catch (error) {
+        lastError = error as Error;
+        if (attempt < retries) {
+          console.warn(`⚠️ Retry ${attempt + 1}/${retries} after error:`, error);
+          await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
+        }
+      }
+    }
+    
+    if (!existingCampaign) {
+      if (lastError) throw lastError;
+      return null;
+    }
     
     if (existingCampaign) {
       console.log('✅ [campaignLoader] Loaded campaign from DB:', {
@@ -191,13 +297,47 @@ export const loadCampaign = async (
         extractedColorsCount: mergedCampaign.extractedColors?.length || 0
       });
       
+      // Mettre en cache pour les prochains chargements
+      campaignCache.set(campaignId, {
+        data: mergedCampaign,
+        timestamp: Date.now()
+      });
+      
+      // Précharger les images en arrière-plan
+      preloadCampaignImages(mergedCampaign).catch(console.warn);
+      
       return mergedCampaign;
     } else {
       console.log('No campaign found, using default');
       return null;
     }
   } catch (error) {
-    console.error('Error loading campaign:', error);
+    console.error('❌ Error loading campaign:', error);
+    
+    // Essayer de retourner une version cachée expirée plutôt que rien
+    const cached = campaignCache.get(campaignId);
+    if (cached) {
+      console.warn('⚠️ Using expired cache as fallback');
+      return cached.data;
+    }
+    
     throw error;
   }
+};
+
+// Fonction pour invalider le cache (utile après une sauvegarde)
+export const invalidateCampaignCache = (campaignId?: string) => {
+  if (campaignId) {
+    campaignCache.delete(campaignId);
+  } else {
+    campaignCache.clear();
+  }
+};
+
+// Fonction pour mettre à jour le cache manuellement
+export const updateCampaignCache = (campaignId: string, data: any) => {
+  campaignCache.set(campaignId, {
+    data,
+    timestamp: Date.now()
+  });
 };

@@ -1,4 +1,5 @@
 import { extractAllCampaignImages } from '@/utils/extractImagesFromModules';
+import { updateCampaignCache } from './campaignLoader';
 
 // Global save lock to prevent concurrent saves creating duplicates
 const activeSaves = new Set<string>();
@@ -342,6 +343,11 @@ export const saveCampaignToDB = async (
       name: saved?.name,
       type: saved?.type
     });
+    
+    // Mettre à jour le cache avec les données fraîches
+    if (saved?.id) {
+      updateCampaignCache(saved.id, saved);
+    }
     
     return saved;
   } finally {
