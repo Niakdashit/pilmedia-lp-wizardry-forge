@@ -132,9 +132,12 @@ const Campaigns: React.FC = () => {
     };
     window.addEventListener('campaign:name:update', handler as EventListener);
     window.addEventListener('campaign:updated', handler as EventListener);
+    // Also refresh after settings save (dates, etc.)
+    window.addEventListener('campaign:settings:saved', handler as EventListener);
     return () => {
       window.removeEventListener('campaign:name:update', handler as EventListener);
       window.removeEventListener('campaign:updated', handler as EventListener);
+      window.removeEventListener('campaign:settings:saved', handler as EventListener);
     };
   }, [refetch]);
 
