@@ -175,7 +175,7 @@ export const useCampaignsList = () => {
         if (!startDate && campaign.start_date) startDate = campaign.start_date;
         if (!endDate && campaign.end_date) endDate = campaign.end_date;
         
-        // Priority 3 (legacy): config.startDate/endDate
+        // Priority 3 (legacy): config.startDate/endDate (or normalized top-level dates from editor)
         if (!startDate || !endDate) {
           if (campaign.config) {
             try {
@@ -185,6 +185,26 @@ export const useCampaignsList = () => {
             } catch (e) {
               // Ignore parsing errors
             }
+          }
+        }
+        
+        // Priority 4: Extract dates and times from config if stored in those fields
+        // This handles dates stored as separate date/time strings in ModernGeneralTab
+        if (campaign.config) {
+          try {
+            const config = typeof campaign.config === 'string' ? JSON.parse(campaign.config) : campaign.config;
+            
+            // If we have separate date/time fields, combine them
+            if (config.startDate && !startDate) {
+              const time = config.startTime || '00:00';
+              startDate = new Date(`${config.startDate}T${time}`).toISOString();
+            }
+            if (config.endDate && !endDate) {
+              const time = config.endTime || '23:59';
+              endDate = new Date(`${config.endDate}T${time}`).toISOString();
+            }
+          } catch (e) {
+            // Ignore parsing errors
           }
         }
 

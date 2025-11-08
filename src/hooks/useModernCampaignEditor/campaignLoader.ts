@@ -245,6 +245,13 @@ export const loadCampaign = async (
         modularPage,
         extractedColors,
         
+        // Restore date/time fields from config or DB columns
+        startDate: existingCampaign.config?.startDate || existingCampaign.start_date || existingCampaign.startDate,
+        endDate: existingCampaign.config?.endDate || existingCampaign.end_date || existingCampaign.endDate,
+        startTime: existingCampaign.config?.startTime || existingCampaign.startTime || '09:00',
+        endTime: existingCampaign.config?.endTime || existingCampaign.endTime || '18:00',
+        isActive: existingCampaign.config?.isActive !== false, // Default to true
+        
         // Restore button and screen configs
         buttonConfig: {
           ...defaultCampaign.buttonConfig,

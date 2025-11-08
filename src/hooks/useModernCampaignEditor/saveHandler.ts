@@ -197,7 +197,14 @@ export const saveCampaignToDB = async (
     buttonConfig: campaign?.buttonConfig || campaign?.config?.buttonConfig || {},
     
     // Screen configuration
-    screens: campaign?.screens || campaign?.config?.screens || {}
+    screens: campaign?.screens || campaign?.config?.screens || {},
+    
+    // Date/time fields (from ModernGeneralTab) - saved in config for loader access
+    startDate: campaign?.startDate,
+    endDate: campaign?.endDate,
+    startTime: campaign?.startTime,
+    endTime: campaign?.endTime,
+    isActive: campaign?.isActive !== false // Default to true if undefined
   };
 
   // Build comprehensive design object
