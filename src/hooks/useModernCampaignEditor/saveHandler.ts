@@ -69,11 +69,10 @@ export const saveCampaignToDB = async (
   // 🔒 CRITICAL: Prevent concurrent saves creating duplicates
   if (!acquireSaveLock(campaignIdentifier)) {
     console.warn('⚠️ [saveCampaignToDB] Duplicate save prevented for:', campaignIdentifier);
-    return campaign; // Return existing campaign without saving
+    return campaign;
   }
   
   try {
-    // Skip saving for brand-new unnamed campaigns unless explicitly allowed later
     const idStr: string | undefined = campaign?.id;
     const isTempId = typeof idStr === 'string' && idStr.startsWith('temp-');
     const rawName = (campaign?.name ?? '').toString().trim();
@@ -86,37 +85,49 @@ export const saveCampaignToDB = async (
       || (campaign as any)?.design?.backgroundImage
       || (campaign as any)?.design?.mobileBackgroundImage);
     const hasAnyContent = hasModules || hasElements || hasBg;
+    const hasGameConfig = campaign?.game_config && Object.keys(campaign.game_config).length > 0;
 
-    // HARD GUARD A: never insert a new campaign when it's a fresh, unnamed draft with no content
-    // Remove dependency on isNewCampaignGlobal because it may be cleared before unmount
-    if (!isUuid(idStr) && (isTempId || !idStr) && isUnnamed && !hasAnyContent) {
-      console.warn('⛔ [saveCampaignToDB] Skipping save for untouched, unnamed new campaign (no modules/elements/background)');
+    console.log('🔍 [saveCampaignToDB] Save validation:', {
+      id: idStr,
+      isUuid: isUuid(idStr),
+      isTempId,
+      name: rawName,
+      isUnnamed,
+      hasModules,
+      hasElements,
+      hasBg,
+      hasAnyContent,
+      hasGameConfig,
+      allowFirstInsert: (campaign as any)?._allowFirstInsert
+    });
+
+    // Hard guard: never persist preview-only campaigns
+    if (typeof campaign?.id === 'string' && campaign.id.includes('preview')) {
+      console.warn('⛔ [saveCampaignToDB] Skipping save for preview-only campaign');
       return { ...campaign };
     }
 
-    // HARD GUARD B: require a non-default name for any first insert
-    // If the campaign is not yet persisted (no UUID), do not INSERT when the name is empty/default
-    if (!isUuid(idStr) && (isTempId || !idStr) && isUnnamed) {
-      console.warn('⛔ [saveCampaignToDB] Skipping INSERT for unnamed campaign (name is empty or default)');
-      return { ...campaign };
+    // Pour les campagnes EXISTANTES (avec UUID), TOUJOURS sauvegarder
+    if (isUuid(idStr)) {
+      console.log('✅ [saveCampaignToDB] Saving existing campaign (UUID detected)');
+      // Continue vers la sauvegarde
     }
+    // Pour les NOUVELLES campagnes (pas d'UUID)
+    else {
+      // GUARD 1: Ne jamais créer une campagne vide sans nom ni contenu
+      if (isUnnamed && !hasAnyContent && !hasGameConfig) {
+        console.warn('⛔ [saveCampaignToDB] Skipping INSERT: empty unnamed campaign with no content');
+        return { ...campaign };
+      }
 
-    // HARD GUARD C: explicit opt-in for first INSERTs to prevent any auto-insert
-    // Only allow INSERT when an explicit user action sets _allowFirstInsert = true
-    if (!isUuid(idStr) && (isTempId || !idStr)) {
+      // GUARD 2: Exiger _allowFirstInsert pour la toute première insertion
       const allow = (campaign as any)?._allowFirstInsert === true;
-      if (!allow) {
-        console.warn('⛔ [saveCampaignToDB] Skipping first INSERT (explicit opt-in missing: _allowFirstInsert=true)');
+      if (!allow && !hasAnyContent) {
+        console.warn('⛔ [saveCampaignToDB] Skipping first INSERT: explicit opt-in required');
         return { ...campaign };
       }
-    }
 
-    // Hard guard: never persist preview-only campaign objects
-    if (typeof campaign?.id === 'string' && !isUuid(campaign.id)) {
-      if (campaign.id.includes('preview')) {
-        console.warn('⛔ [saveCampaignToDB] Skipping save for preview-only campaign id:', campaign.id);
-        return { ...campaign };
-      }
+      console.log('✅ [saveCampaignToDB] Creating new campaign (validation passed)');
     }
     console.log('💾 [saveCampaignToDB] Saving campaign with complete state:', {
     id: campaign?.id,
@@ -336,13 +347,40 @@ export const saveCampaignToDB = async (
       formFieldsCount: payload.form_fields?.length || 0
     });
 
+    console.log('📤 [saveCampaignToDB] Sending to database...', {
+      hasId: !!payload.id,
+      payloadName: payload.name,
+      configKeys: Object.keys(payload.config || {}).length,
+      designKeys: Object.keys(payload.design || {}).length
+    });
+
     const saved = await saveCampaignFn(payload);
+    
+    if (!saved) {
+      throw new Error('La sauvegarde n\'a retourné aucune donnée');
+    }
     
     console.log('✅ [saveCampaignToDB] Campaign saved successfully:', {
       id: saved?.id,
       name: saved?.name,
-      type: saved?.type
+      type: saved?.type,
+      revision: saved?.revision
     });
+    
+    // Vérification post-sauvegarde : les données sont-elles bien présentes ?
+    const verification = {
+      hasConfig: !!saved.config,
+      hasDesign: !!saved.design,
+      hasGameConfig: !!saved.game_config,
+      configModularPage: !!saved.config?.modularPage,
+      designModules: !!saved.design?.quizModules || !!saved.design?.designModules
+    };
+    
+    console.log('🔍 [saveCampaignToDB] Post-save verification:', verification);
+    
+    if (!verification.hasConfig && !verification.hasDesign) {
+      console.error('❌ [saveCampaignToDB] WARNING: Saved campaign missing critical data!', saved);
+    }
     
     // Mettre à jour le cache avec les données fraîches
     if (saved?.id) {

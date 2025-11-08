@@ -158,13 +158,13 @@ export const loadCampaign = async (
     const now = Date.now();
     
     if (cached && (now - cached.timestamp) < CACHE_DURATION) {
-      console.log('⚡ Loading from cache (instant)');
+      console.log('⚡ [campaignLoader] Loading from cache (instant)');
       // Précharger les images en arrière-plan
       preloadCampaignImages(cached.data).catch(console.warn);
       return cached.data;
     }
     
-    console.log('🌐 Loading campaign from API');
+    console.log('🌐 [campaignLoader] Loading campaign from API:', campaignId);
     
     // 2. Charger depuis Supabase avec retry
     let existingCampaign: any = null;
@@ -173,17 +173,31 @@ export const loadCampaign = async (
     for (let attempt = 0; attempt <= retries; attempt++) {
       try {
         existingCampaign = await getCampaign(campaignId);
+        
+        if (existingCampaign) {
+          console.log('📥 [campaignLoader] Campaign loaded from DB:', {
+            id: existingCampaign.id,
+            name: existingCampaign.name,
+            revision: existingCampaign.revision,
+            hasConfig: !!existingCampaign.config,
+            hasDesign: !!existingCampaign.design,
+            hasGameConfig: !!existingCampaign.game_config
+          });
+        }
+        
         break; // Succès, sortir de la boucle
       } catch (error) {
         lastError = error as Error;
+        console.error(`❌ [campaignLoader] Attempt ${attempt + 1}/${retries + 1} failed:`, error);
         if (attempt < retries) {
-          console.warn(`⚠️ Retry ${attempt + 1}/${retries} after error:`, error);
+          console.warn(`⏳ [campaignLoader] Retrying in ${(attempt + 1) * 1000}ms...`);
           await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
         }
       }
     }
     
     if (!existingCampaign) {
+      console.error('❌ [campaignLoader] Failed to load campaign after all retries');
       if (lastError) throw lastError;
       return null;
     }

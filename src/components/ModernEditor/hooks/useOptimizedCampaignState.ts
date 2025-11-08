@@ -21,17 +21,26 @@ export const useOptimizedCampaignState = (
   // Debounced auto-save
   const debouncedSave = useCallback(
     debounce(async (campaignToSave: any) => {
-      if (!onSave) return;
+      if (!onSave) {
+        console.log('⏭️ [useOptimizedCampaignState] No onSave callback, skipping autosave');
+        return;
+      }
       
       const currentHash = JSON.stringify(campaignToSave);
-      if (currentHash === lastSavedRef.current) return;
+      if (currentHash === lastSavedRef.current) {
+        console.log('⏭️ [useOptimizedCampaignState] No changes detected, skipping autosave');
+        return;
+      }
       
+      console.log('💾 [useOptimizedCampaignState] Starting autosave...');
       setIsSaving(true);
       try {
         await onSave(campaignToSave);
         lastSavedRef.current = currentHash;
         setIsModified(false);
+        console.log('✅ [useOptimizedCampaignState] Autosave completed successfully');
       } catch (error) {
+        console.error('❌ [useOptimizedCampaignState] Autosave failed:', error);
         onError?.(error as Error);
       } finally {
         setIsSaving(false);
@@ -54,11 +63,20 @@ export const useOptimizedCampaignState = (
       };
       
       setIsModified(true);
+      
+      // Log pour debug
+      console.log('📝 [useOptimizedCampaignState] Campaign updated:', {
+        updateId,
+        version: optimizedCampaign._version,
+        hasId: !!optimizedCampaign.id,
+        willAutosave: !!onSave
+      });
+      
       debouncedSave(optimizedCampaign);
       
       return optimizedCampaign;
     });
-  }, [debouncedSave]);
+  }, [debouncedSave, onSave]);
 
   // Memoized preview key for optimal re-rendering
   const previewKey = useMemo(() => {
