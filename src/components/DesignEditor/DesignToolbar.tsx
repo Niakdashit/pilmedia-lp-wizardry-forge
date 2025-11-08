@@ -119,8 +119,8 @@ const DesignToolbar: React.FC<DesignToolbarProps> = React.memo(({
       await onSave();
     }
     
-    // Rediriger vers le dashboard
-    navigate('/dashboard');
+    // Rediriger vers la liste des campagnes
+    navigate('/campaigns');
   };
   
   // Récupérer les erreurs de validation pour la modale

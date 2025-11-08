@@ -144,7 +144,7 @@ const ScratchToolbar: React.FC<ScratchToolbarProps> = React.memo(({
       await onSave();
     }
     
-    navigate('/dashboard');
+    navigate('/campaigns');
   };
   
   const validation = validateCampaign();

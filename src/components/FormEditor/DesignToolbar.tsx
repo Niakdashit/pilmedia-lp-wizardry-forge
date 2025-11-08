@@ -109,7 +109,7 @@ const QuizToolbar: React.FC<QuizToolbarProps> = React.memo(({
     if (onSave) {
       await onSave();
     }
-    navigate('/dashboard');
+    navigate('/campaigns');
   };
   
   const validation = validateCampaign();

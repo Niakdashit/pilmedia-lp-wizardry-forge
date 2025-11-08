@@ -3466,7 +3466,7 @@ useEffect(() => {
       {!showFunnel && (
         <div className="fixed bottom-6 right-6 flex items-center gap-3 z-30">
           <button
-            onClick={() => navigate('/dashboard')}
+            onClick={() => navigate('/campaigns')}
             className="inline-flex items-center px-3 py-1.5 text-sm rounded-xl bg-white text-gray-700 border border-gray-200 hover:bg-gray-50 transition-colors shadow-sm"
             title="Fermer"
           >

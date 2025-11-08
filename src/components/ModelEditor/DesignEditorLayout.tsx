@@ -2139,7 +2139,7 @@ onShowPositionPanel={() => {
       {!showFunnel && (
         <div className="fixed bottom-6 right-6 flex items-center gap-3 z-30">
           <button
-            onClick={() => navigate('/dashboard')}
+            onClick={() => navigate('/campaigns')}
             className="flex items-center px-3 py-2 text-xs sm:text-sm border border-gray-300 bg-white/90 backdrop-blur rounded-lg hover:bg-white transition-colors shadow-sm"
             title="Fermer"
           >
