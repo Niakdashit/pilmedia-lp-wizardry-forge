@@ -131,7 +131,9 @@ export const useCampaignsList = () => {
           campaign_settings (
             publication,
             start_date,
-            end_date
+            end_date,
+            start_time,
+            end_time
           )
         `)
         .order('created_at', { ascending: false });
@@ -163,12 +165,30 @@ export const useCampaignsList = () => {
           }
         } catch {}
         
-        // Priority 1: campaign_settings table
-        if (campaign.campaign_settings?.[0]?.start_date) {
-          startDate = campaign.campaign_settings[0].start_date;
-        }
-        if (campaign.campaign_settings?.[0]?.end_date) {
-          endDate = campaign.campaign_settings[0].end_date;
+        // Priority 1: campaign_settings table (handle 1-1 object or array)
+        {
+          const cs: any = campaign.campaign_settings;
+          const csRow = Array.isArray(cs) ? cs[0] : cs;
+          if (csRow) {
+            // Dedicated columns
+            if (csRow.start_date) {
+              const d = String(csRow.start_date);
+              const t = typeof csRow.start_time === 'string' ? csRow.start_time : undefined;
+              startDate = d.includes('T') ? d : new Date(`${d}T${t || '00:00'}`).toISOString();
+            }
+            if (csRow.end_date) {
+              const d = String(csRow.end_date);
+              const t = typeof csRow.end_time === 'string' ? csRow.end_time : undefined;
+              endDate = d.includes('T') ? d : new Date(`${d}T${t || '23:59'}`).toISOString();
+            }
+            // Publication ISO (fallback)
+            if (!startDate && csRow.publication?.start) {
+              try { startDate = new Date(csRow.publication.start).toISOString(); } catch {}
+            }
+            if (!endDate && csRow.publication?.end) {
+              try { endDate = new Date(csRow.publication.end).toISOString(); } catch {}
+            }
+          }
         }
         
         // Priority 2: Extract dates and times from config if stored in those fields (ModernGeneralTab)
@@ -219,9 +239,10 @@ export const useCampaignsList = () => {
           created_by: campaign.created_by,
           banner_url: campaign.banner_url,
           participants,
-          // Fallback to created_at if dates are missing (ensures all campaigns have displayable dates)
-          startDate: startDate || campaign.created_at,
-          endDate: endDate || new Date(new Date(campaign.created_at).getTime() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+          // Keep empty when not configured (no misleading defaults)
+          startDate: startDate,
+          endDate: endDate,
+
         };
       });
 
@@ -285,6 +306,11 @@ export const useCampaignsList = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile?.id]);
 
+  const invalidateCache = () => {
+    try { campaignListCache.delete(CAMPAIGN_LIST_CACHE_KEY); } catch {}
+    try { if (typeof window !== 'undefined') localStorage.removeItem(CAMPAIGN_LIST_CACHE_KEY); } catch {}
+  };
+
   return {
     campaigns,
     loading,
@@ -292,5 +318,6 @@ export const useCampaignsList = () => {
     refetch: fetchCampaigns,
     updateCampaignStatus,
     deleteCampaign,
+    invalidateCache,
   };
 };

@@ -182,13 +182,14 @@ const Campaigns: React.FC = () => {
   };
 
   const handleStatusToggle = async (campaignId: string, currentStatus: string) => {
-    // Toggle isActive flag in database to enable/disable campaign regardless of dates
-    const isCurrentlyActive = currentStatus === 'active' || currentStatus === 'paused';
+    // Emergency toggle: can be switched regardless of dates
+    const wasActiveOrPaused = currentStatus === 'active' || currentStatus === 'paused';
+    const newIsActive = !wasActiveOrPaused;
     try {
-      // Fetch current config
+      // Fetch current timing + config
       const { data: campaign, error: fetchError } = await supabase
         .from('campaigns')
-        .select('config')
+        .select('config, start_date, end_date')
         .eq('id', campaignId)
         .single();
 
@@ -199,12 +200,29 @@ const Campaigns: React.FC = () => {
         : {};
       const updatedConfig = {
         ...(currentConfig as Record<string, any>),
-        isActive: !isCurrentlyActive
+        isActive: newIsActive
       };
+
+      // Compute new status synced with dates
+      const now = new Date();
+      const s = campaign?.start_date ? new Date(campaign.start_date as any) : undefined;
+      const e = campaign?.end_date ? new Date(campaign.end_date as any) : undefined;
+      let newStatus: 'draft' | 'active' | 'ended' | 'paused' = 'draft';
+      if (!newIsActive) {
+        newStatus = 'paused';
+      } else if (!s || !e) {
+        newStatus = 'draft';
+      } else if (now < s) {
+        newStatus = 'draft';
+      } else if (now >= s && now <= e) {
+        newStatus = 'active';
+      } else {
+        newStatus = 'ended';
+      }
 
       const { error } = await supabase
         .from('campaigns')
-        .update({ config: updatedConfig })
+        .update({ config: updatedConfig, status: newStatus })
         .eq('id', campaignId);
 
       if (error) throw error;
