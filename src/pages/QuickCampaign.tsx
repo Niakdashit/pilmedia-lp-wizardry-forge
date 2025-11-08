@@ -121,7 +121,7 @@ const QuickCampaign: React.FC = () => {
 
   if (selectedTemplate) {
     return (
-      <div className="min-h-screen bg-transparent">
+      <div className="min-h-screen bg-gray-50">
         <PageContainer className="bg-transparent">
           <div className="max-w-2xl mx-auto">
             <button
@@ -203,7 +203,7 @@ const QuickCampaign: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-transparent">
+    <div className="min-h-screen bg-gray-50">
       <PageContainer className="bg-transparent">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">

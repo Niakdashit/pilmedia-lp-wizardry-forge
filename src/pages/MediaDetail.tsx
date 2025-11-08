@@ -113,7 +113,7 @@ const MediaDetail: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-transparent">
+    <div className="min-h-screen bg-gray-50">
       {/* Header avec image de couverture */}
       <div className="relative h-80 bg-gray-100">
         {media.cover_url && (
