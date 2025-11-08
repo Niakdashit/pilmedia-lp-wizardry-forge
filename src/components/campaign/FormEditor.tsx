@@ -84,7 +84,7 @@ const FormEditor: React.FC<FormEditorProps> = ({
   return (
     <div className="h-[calc(150vh-3rem)] flex flex-col my-[24px] mx-[21px]">
       <div className="bg-[#f9f0f5] border border-[#e9d0e5] rounded-lg p-4 mb-6">
-        <p className="text-[#841b60] text-sm">
+        <p className="text-[#E0004D] text-sm">
           Créez et personnalisez les champs de votre formulaire. Les utilisateurs rempliront ce formulaire avant d'accéder au jeu.
         </p>
       </div>
@@ -93,7 +93,7 @@ const FormEditor: React.FC<FormEditorProps> = ({
         <div className="space-y-6">
           <div className="flex justify-between items-center">
             <h3 className="text-lg font-semibold">Configuration des champs</h3>
-            <button onClick={addField} className="flex items-center gap-2 bg-gradient-to-br from-[#841b60] to-[#b41b60] text-white px-4 py-2 rounded-lg hover:bg-[#6d1550] transition-colors">
+            <button onClick={addField} className="flex items-center gap-2 bg-gradient-to-br from-[#E0004D] to-[#6B2AA0] text-white px-4 py-2 rounded-lg hover:bg-[#6d1550] transition-colors">
               <Plus className="w-4 h-4" />
               Ajouter un champ
             </button>
@@ -142,7 +142,7 @@ const FormEditor: React.FC<FormEditorProps> = ({
                       type="text"
                       value={field.label}
                       onChange={e => updateField(index, { label: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#841b60]"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#E0004D]"
                       placeholder="Ex: Votre prénom"
                     />
                   </div>
@@ -155,7 +155,7 @@ const FormEditor: React.FC<FormEditorProps> = ({
                         type: e.target.value as FormField['type'],
                         options: e.target.value === 'select' ? ['Option 1', 'Option 2'] : undefined
                       })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#841b60]"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#E0004D]"
                     >
                       {FIELD_TYPES.map(type => (
                         <option key={type.value} value={type.value}>{type.label}</option>
@@ -169,7 +169,7 @@ const FormEditor: React.FC<FormEditorProps> = ({
                       type="text"
                       value={field.placeholder || ''}
                       onChange={e => updateField(index, { placeholder: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#841b60]"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#E0004D]"
                       placeholder="Texte d'aide (optionnel)"
                     />
                   </div>
@@ -196,7 +196,7 @@ const FormEditor: React.FC<FormEditorProps> = ({
                       onChange={e => updateField(index, {
                         options: e.target.value.split('\n').filter(opt => opt.trim())
                       })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#841b60]"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#E0004D]"
                       rows={3}
                       placeholder="Option 1&#10;Option 2&#10;Option 3"
                     />

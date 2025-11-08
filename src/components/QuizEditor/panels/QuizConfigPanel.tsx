@@ -211,7 +211,7 @@ const QuizConfigPanel: React.FC<QuizConfigPanelProps> = ({
                 aria-label="Transparence (%)"
                 onDoubleClick={(e) => handleRangeDblClick(e, { kind: 'percent' })}
                 style={{
-                  background: `linear-gradient(to right, #841b60 0%, #841b60 ${localOpacity}%, #e5e7eb ${localOpacity}%, #e5e7eb 100%)`
+                  background: `linear-gradient(to right, #E0004D 0%, #E0004D ${localOpacity}%, #e5e7eb ${localOpacity}%, #e5e7eb 100%)`
                 }}
               />
               {isEditingOpacity ? (
@@ -221,7 +221,7 @@ const QuizConfigPanel: React.FC<QuizConfigPanelProps> = ({
                   defaultValue={backgroundOpacity}
                   min={0}
                   max={100}
-                  className="w-[72px] bg-white border border-[#841b60] px-2 py-1 rounded text-sm text-gray-900 text-center outline-none"
+                  className="w-[72px] bg-white border border-[#E0004D] px-2 py-1 rounded text-sm text-gray-900 text-center outline-none"
                   onBlur={(e) => {
                     const val = Number(e.target.value);
                     if (!Number.isNaN(val)) {
@@ -276,7 +276,7 @@ const QuizConfigPanel: React.FC<QuizConfigPanelProps> = ({
                 value={backgroundColor || ''}
                 onChange={(e) => onBackgroundColorChange?.(e.target.value)}
                 placeholder="#ffffff"
-                className="flex-1 p-2 bg-white border border-gray-300 rounded text-gray-900 text-sm focus:border-[#841b60] focus:ring-2 focus:ring-[#841b60]/20 transition-all"
+                className="flex-1 p-2 bg-white border border-gray-300 rounded text-gray-900 text-sm focus:border-[#E0004D] focus:ring-2 focus:ring-[#E0004D]/20 transition-all"
               />
             </div>
           </div>
@@ -306,7 +306,7 @@ const QuizConfigPanel: React.FC<QuizConfigPanelProps> = ({
                 value={textColor || ''}
                 onChange={(e) => onTextColorChange?.(e.target.value)}
                 placeholder="#111111"
-                className="flex-1 p-2 bg-white border border-gray-300 rounded text-gray-900 text-sm focus:border-[#841b60] focus:ring-2 focus:ring-[#841b60]/20 transition-all"
+                className="flex-1 p-2 bg-white border border-gray-300 rounded text-gray-900 text-sm focus:border-[#E0004D] focus:ring-2 focus:ring-[#E0004D]/20 transition-all"
               />
             </div>
           </div>
@@ -336,8 +336,8 @@ const QuizConfigPanel: React.FC<QuizConfigPanelProps> = ({
                 type="text"
                 value={buttonBackgroundColor || ''}
                 onChange={(e) => onButtonBackgroundColorChange?.(e.target.value)}
-                placeholder="#841b60"
-                className="flex-1 p-2 bg-white border border-gray-300 rounded text-gray-900 text-sm focus:border-[#841b60] focus:ring-2 focus:ring-[#841b60]/20 transition-all"
+                placeholder="#E0004D"
+                className="flex-1 p-2 bg-white border border-gray-300 rounded text-gray-900 text-sm focus:border-[#E0004D] focus:ring-2 focus:ring-[#E0004D]/20 transition-all"
               />
             </div>
           </div>
@@ -368,7 +368,7 @@ const QuizConfigPanel: React.FC<QuizConfigPanelProps> = ({
                 value={buttonTextColor || ''}
                 onChange={(e) => onButtonTextColorChange?.(e.target.value)}
                 placeholder="#ffffff"
-                className="flex-1 p-2 bg-white border border-gray-300 rounded text-gray-900 text-sm focus:border-[#841b60] focus:ring-2 focus:ring-[#841b60]/20 transition-all"
+                className="flex-1 p-2 bg-white border border-gray-300 rounded text-gray-900 text-sm focus:border-[#E0004D] focus:ring-2 focus:ring-[#E0004D]/20 transition-all"
               />
             </div>
           </div>
@@ -391,7 +391,7 @@ const QuizConfigPanel: React.FC<QuizConfigPanelProps> = ({
                 value={buttonHoverBackgroundColor || ''}
                 onChange={(e) => onButtonHoverBackgroundColorChange?.(e.target.value)}
                 placeholder="#6b1548"
-                className="flex-1 p-2 bg-white border border-gray-300 rounded text-gray-900 text-sm focus:border-[#841b60] focus:ring-2 focus:ring-[#841b60]/20 transition-all"
+                className="flex-1 p-2 bg-white border border-gray-300 rounded text-gray-900 text-sm focus:border-[#E0004D] focus:ring-2 focus:ring-[#E0004D]/20 transition-all"
               />
             </div>
           </div>
@@ -414,7 +414,7 @@ const QuizConfigPanel: React.FC<QuizConfigPanelProps> = ({
                 value={buttonActiveBackgroundColor || ''}
                 onChange={(e) => onButtonActiveBackgroundColorChange?.(e.target.value)}
                 placeholder="#5a1239"
-                className="flex-1 p-2 bg-white border border-gray-300 rounded text-gray-900 text-sm focus:border-[#841b60] focus:ring-2 focus:ring-[#841b60]/20 transition-all"
+                className="flex-1 p-2 bg-white border border-gray-300 rounded text-gray-900 text-sm focus:border-[#E0004D] focus:ring-2 focus:ring-[#E0004D]/20 transition-all"
               />
             </div>
           </div>
@@ -439,7 +439,7 @@ const QuizConfigPanel: React.FC<QuizConfigPanelProps> = ({
                 aria-label="Arrondi (px)"
                 onDoubleClick={(e) => handleRangeDblClick(e, { kind: 'px' })}
                 style={{
-                  background: `linear-gradient(to right, #841b60 0%, #841b60 ${(quizBorderRadius / 50) * 100}%, #e5e7eb ${(quizBorderRadius / 50) * 100}%, #e5e7eb 100%)`
+                  background: `linear-gradient(to right, #E0004D 0%, #E0004D ${(quizBorderRadius / 50) * 100}%, #e5e7eb ${(quizBorderRadius / 50) * 100}%, #e5e7eb 100%)`
                 }}
               />
               {isEditingRadius ? (
@@ -449,7 +449,7 @@ const QuizConfigPanel: React.FC<QuizConfigPanelProps> = ({
                   defaultValue={quizBorderRadius}
                   min={0}
                   max={50}
-                  className="w-[72px] bg-white border border-[#841b60] px-2 py-1 rounded text-sm text-gray-900 text-center outline-none"
+                  className="w-[72px] bg-white border border-[#E0004D] px-2 py-1 rounded text-sm text-gray-900 text-center outline-none"
                   onBlur={(e) => {
                     const val = Number(e.target.value);
                     if (!Number.isNaN(val)) {
@@ -515,7 +515,7 @@ const QuizConfigPanel: React.FC<QuizConfigPanelProps> = ({
                   aria-label="Zoom (%)"
                   onDoubleClick={(e) => handleRangeDblClick(e, { kind: 'scale' })}
                   style={{
-                    background: `linear-gradient(to right, #841b60 0%, #841b60 ${(() => {
+                    background: `linear-gradient(to right, #E0004D 0%, #E0004D ${(() => {
                       const scale = (() => {
                         if (quizWidth === '100%' || quizWidth === 'auto') return 1;
                         const numValue = parseInt(quizWidth.replace(/px|%/, ''));
@@ -544,7 +544,7 @@ const QuizConfigPanel: React.FC<QuizConfigPanelProps> = ({
                     })()}
                     min={50}
                     max={200}
-                    className="w-[90px] bg-white border border-[#841b60] px-2 py-1 rounded text-sm text-gray-900 text-center outline-none"
+                    className="w-[90px] bg-white border border-[#E0004D] px-2 py-1 rounded text-sm text-gray-900 text-center outline-none"
                     onBlur={(e) => {
                       const val = Number(e.target.value);
                       if (!Number.isNaN(val)) {
@@ -613,7 +613,7 @@ const QuizConfigPanel: React.FC<QuizConfigPanelProps> = ({
                     <div 
                       className="h-full rounded-lg"
                       style={{
-                        background: 'linear-gradient(135deg, #841b60 0%, #a21d6b 100%)',
+                        background: 'linear-gradient(135deg, #E0004D 0%, #8C2FB1 100%)',
                         width: `${(() => {
                           console.log('🎨 Track fill calculation - quizMobileWidth:', quizMobileWidth);
                           if (quizMobileWidth === '100%' || quizMobileWidth === 'auto') return ((1 - 0.3) / (1.5 - 0.3)) * 100; // 1.0 scale midpoint
@@ -629,7 +629,7 @@ const QuizConfigPanel: React.FC<QuizConfigPanelProps> = ({
                     <div 
                       className="absolute top-1/2 w-4 h-4 rounded-full border-2 border-white shadow-lg cursor-grab active:cursor-grabbing transform -translate-y-1/2"
                       style={{
-                        background: '#841b60',
+                        background: '#E0004D',
                         left: `${(() => {
                           console.log('🎯 Thumb position calculation - quizMobileWidth:', quizMobileWidth);
                           if (quizMobileWidth === '100%' || quizMobileWidth === 'auto') return ((1 - 0.3) / (1.5 - 0.3)) * 100; // 1.0 scale midpoint
@@ -667,7 +667,7 @@ const QuizConfigPanel: React.FC<QuizConfigPanelProps> = ({
                     />
                   </div>
                 </div>
-                <div className="px-3 py-1 rounded text-sm text-white min-w-[80px] text-center" style={{ background: '#841b60' }}>
+                <div className="px-3 py-1 rounded text-sm text-white min-w-[80px] text-center" style={{ background: '#E0004D' }}>
                   {(() => {
                     if (quizMobileWidth === '100%' || quizMobileWidth === 'auto') return '100%';
                     const numValue = parseInt(quizMobileWidth.replace(/px|%/, ''));

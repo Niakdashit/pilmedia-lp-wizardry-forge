@@ -52,7 +52,7 @@ const BrandThemeProvider: React.FC<BrandThemeProviderProps> = ({
       // Thème de fallback
       const fallbackTheme = {
         customColors: {
-          primary: '#841b60',
+          primary: '#E0004D',
           secondary: '#dc2626',
           accent: '#ffffff',
           text: '#ffffff'

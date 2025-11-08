@@ -16,7 +16,7 @@ const EditorDeviceSelector: React.FC<EditorDeviceSelectorProps> = ({
       <button
         onClick={() => onDeviceChange('desktop')}
         className={`p-2 rounded-lg transition-colors ${
-          previewDevice === 'desktop' ? 'bg-white shadow-sm text-[#841b60]' : 'hover:bg-gray-200'
+          previewDevice === 'desktop' ? 'bg-white shadow-sm text-[#E0004D]' : 'hover:bg-gray-200'
         }`}
       >
         <Monitor className="w-4 h-4" />
@@ -24,7 +24,7 @@ const EditorDeviceSelector: React.FC<EditorDeviceSelectorProps> = ({
       <button
         onClick={() => onDeviceChange('mobile')}
         className={`p-2 rounded-lg transition-colors ${
-          previewDevice === 'mobile' ? 'bg-white shadow-sm text-[#841b60]' : 'hover:bg-gray-200'
+          previewDevice === 'mobile' ? 'bg-white shadow-sm text-[#E0004D]' : 'hover:bg-gray-200'
         }`}
       >
         <Smartphone className="w-4 h-4" />

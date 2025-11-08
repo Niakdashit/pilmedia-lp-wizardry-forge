@@ -167,7 +167,7 @@ const MobileWheelPreview: React.FC<MobileWheelPreviewProps> = ({
             transform: 'translate(-50%, -50%)',
             zIndex: 20,
             pointerEvents: 'auto',
-            backgroundColor: '#841b60',
+            backgroundColor: '#E0004D',
             color: 'white',
             border: 'none',
             borderRadius: '50%',

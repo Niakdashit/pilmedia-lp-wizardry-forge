@@ -42,7 +42,7 @@ const AdvancedMechanicsModal: React.FC<AdvancedMechanicsModalProps> = ({ isOpen,
             <button
               key={item.type}
               onClick={() => onSelect(item.type)}
-              className="group flex flex-col items-center justify-center gap-3 p-4 rounded-xl border border-gray-200 hover:border-[#841b60]/50 hover:shadow transition-all"
+              className="group flex flex-col items-center justify-center gap-3 p-4 rounded-xl border border-gray-200 hover:border-[#E0004D]/50 hover:shadow transition-all"
             >
               <div className="w-20 h-20 rounded-lg bg-gray-50 border border-gray-200 flex items-center justify-center">
                 <img
@@ -52,7 +52,7 @@ const AdvancedMechanicsModal: React.FC<AdvancedMechanicsModalProps> = ({ isOpen,
                   loading="lazy"
                 />
               </div>
-              <span className="text-sm font-medium text-gray-800 group-hover:text-[#841b60]">{item.label}</span>
+              <span className="text-sm font-medium text-gray-800 group-hover:text-[#E0004D]">{item.label}</span>
             </button>
           ))}
         </div>

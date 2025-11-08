@@ -218,16 +218,16 @@ function extractAdvancedColors(html: string): EnhancedBrandData['colors'] {
   
   if (colorMatches.length >= 2) {
     return {
-      primary: colorMatches[0] || '#841b60',
-      secondary: colorMatches[1] || '#6d164f',
+      primary: colorMatches[0] || '#E0004D',
+      secondary: colorMatches[1] || '#4D2388',
       accent: colorMatches[2] || '#ffffff',
       background: '#f8fafc'
     };
   }
 
   return {
-    primary: '#841b60',
-    secondary: '#6d164f',
+    primary: '#E0004D',
+    secondary: '#4D2388',
     accent: '#ffffff',
     background: '#f8fafc'
   };
@@ -241,8 +241,8 @@ function createEnhancedFallbackData(url: string): EnhancedBrandData {
     title: `Campagne Premium ${domain}`,
     description: 'Campagne générée avec analyse avancée de la marque',
     colors: {
-      primary: '#841b60',
-      secondary: '#6d164f',
+      primary: '#E0004D',
+      secondary: '#4D2388',
       accent: '#ffffff',
       background: '#f8fafc'
     },

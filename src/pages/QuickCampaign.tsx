@@ -21,11 +21,11 @@ const campaignTemplates: CampaignTemplate[] = [
     name: 'Roue de la Fortune',
     description: 'Campagne classique avec roue interactive',
     type: 'wheel',
-    icon: <PlayCircle className="w-8 h-8 text-[#841b60]" />,
+    icon: <PlayCircle className="w-8 h-8 text-[#E0004D]" />,
     editorRoute: '/design-editor',
     defaultConfig: {
       segments: [
-        { label: 'Gagné!', color: '#841b60', probability: 20 },
+        { label: 'Gagné!', color: '#E0004D', probability: 20 },
         { label: 'Perdu', color: '#e5e7eb', probability: 80 }
       ]
     }
@@ -35,7 +35,7 @@ const campaignTemplates: CampaignTemplate[] = [
     name: 'Quiz Interactif',
     description: 'Évaluez les connaissances de vos visiteurs',
     type: 'quiz',
-    icon: <Target className="w-8 h-8 text-[#841b60]" />,
+    icon: <Target className="w-8 h-8 text-[#E0004D]" />,
     editorRoute: '/quiz-editor',
     defaultConfig: {
       questions: [
@@ -52,7 +52,7 @@ const campaignTemplates: CampaignTemplate[] = [
     name: 'Carte à Gratter',
     description: 'Découvrez instantanément vos gains',
     type: 'scratch',
-    icon: <Zap className="w-8 h-8 text-[#841b60]" />,
+    icon: <Zap className="w-8 h-8 text-[#E0004D]" />,
     editorRoute: '/scratch-editor',
     defaultConfig: {
       prize: '10% de réduction'
@@ -63,7 +63,7 @@ const campaignTemplates: CampaignTemplate[] = [
     name: 'Jackpot',
     description: 'Tentez de gagner le jackpot ultime',
     type: 'jackpot',
-    icon: <Trophy className="w-8 h-8 text-[#841b60]" />,
+    icon: <Trophy className="w-8 h-8 text-[#E0004D]" />,
     editorRoute: '/jackpot-editor',
     defaultConfig: {
       jackpotAmount: 1000,
@@ -75,7 +75,7 @@ const campaignTemplates: CampaignTemplate[] = [
     name: 'Formulaire de Contact',
     description: 'Collectez des informations clients',
     type: 'survey',
-    icon: <FileText className="w-8 h-8 text-[#841b60]" />,
+    icon: <FileText className="w-8 h-8 text-[#E0004D]" />,
     editorRoute: '/form-editor',
     defaultConfig: {
       fields: [
@@ -151,7 +151,7 @@ const QuickCampaign: React.FC = () => {
                     value={campaignName}
                     onChange={(e) => setCampaignName(e.target.value)}
                     placeholder="Ex: Promotion Été 2025"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E0004D] focus:border-transparent"
                   />
                 </div>
 
@@ -164,7 +164,7 @@ const QuickCampaign: React.FC = () => {
                     onChange={(e) => setCampaignDescription(e.target.value)}
                     placeholder="Décrivez brièvement votre campagne..."
                     rows={3}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60] focus:border-transparent resize-none"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E0004D] focus:border-transparent resize-none"
                   />
                 </div>
 
@@ -172,7 +172,7 @@ const QuickCampaign: React.FC = () => {
                   <button
                     onClick={handleCreateCampaign}
                     disabled={!campaignName.trim() || loading}
-                    className="flex-1 bg-[#841b60] text-white px-6 py-3 rounded-lg font-medium hover:bg-[#6d154d] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    className="flex-1 bg-[#E0004D] text-white px-6 py-3 rounded-lg font-medium hover:bg-[#6d154d] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
                     {loading ? (
                       <>
@@ -220,14 +220,14 @@ const QuickCampaign: React.FC = () => {
               <div
                 key={template.id}
                 onClick={() => setSelectedTemplate(template)}
-                className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md hover:border-[#841b60] transition-all duration-200 cursor-pointer group"
+                className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md hover:border-[#E0004D] transition-all duration-200 cursor-pointer group"
               >
                 <div className="flex items-center gap-4 mb-4">
-                  <div className="p-3 bg-[#841b60]/10 rounded-lg group-hover:bg-[#841b60]/20 transition-colors">
+                  <div className="p-3 bg-[#E0004D]/10 rounded-lg group-hover:bg-[#E0004D]/20 transition-colors">
                     {template.icon}
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-900 group-hover:text-[#841b60] transition-colors">
+                    <h3 className="font-semibold text-gray-900 group-hover:text-[#E0004D] transition-colors">
                       {template.name}
                     </h3>
                     <p className="text-sm text-gray-600">{template.description}</p>
@@ -235,7 +235,7 @@ const QuickCampaign: React.FC = () => {
                 </div>
 
                 <div className="text-center">
-                  <button className="w-full bg-gray-100 text-gray-700 px-4 py-2 rounded-lg font-medium hover:bg-[#841b60] hover:text-white transition-colors">
+                  <button className="w-full bg-gray-100 text-gray-700 px-4 py-2 rounded-lg font-medium hover:bg-[#E0004D] hover:text-white transition-colors">
                     Sélectionner
                   </button>
                 </div>

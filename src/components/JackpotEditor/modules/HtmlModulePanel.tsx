@@ -24,7 +24,7 @@ const HtmlModulePanel: React.FC<HtmlModulePanelProps> = ({ module, onUpdate, onB
         <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
           <button
             type="button"
-            className="flex items-center gap-2 text-sm text-[#841b60] hover:underline"
+            className="flex items-center gap-2 text-sm text-[#E0004D] hover:underline"
             onClick={onBack}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -49,14 +49,14 @@ const HtmlModulePanel: React.FC<HtmlModulePanelProps> = ({ module, onUpdate, onB
             value={localHtml}
             onChange={(event) => setLocalHtml(event.target.value)}
             onBlur={handleSave}
-            className="h-72 w-full resize-none rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 font-mono text-sm text-slate-800 shadow-inner focus:border-[#841b60] focus:outline-none focus:ring-2 focus:ring-[#841b60]/30"
+            className="h-72 w-full resize-none rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 font-mono text-sm text-slate-800 shadow-inner focus:border-[#E0004D] focus:outline-none focus:ring-2 focus:ring-[#E0004D]/30"
             spellCheck={false}
           />
           <div className="flex items-center justify-between text-[11px] text-gray-500">
             <span>Le contenu est enregistré automatiquement.</span>
             <button
               type="button"
-              className="text-[#841b60] hover:underline"
+              className="text-[#E0004D] hover:underline"
               onClick={handleSave}
             >
               Sauvegarder maintenant
@@ -69,7 +69,7 @@ const HtmlModulePanel: React.FC<HtmlModulePanelProps> = ({ module, onUpdate, onB
           <select
             value={module.language || 'html'}
             onChange={(event) => onUpdate({ language: event.target.value })}
-            className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm focus:border-[#841b60] focus:ring-[#841b60]"
+            className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm focus:border-[#E0004D] focus:ring-[#E0004D]"
           >
             <option value="html">HTML</option>
             <option value="liquid">Liquid</option>

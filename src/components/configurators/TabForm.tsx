@@ -13,7 +13,7 @@ const LabeledRow: React.FC<{ label: string; children: React.ReactNode }> = ({ la
 );
 
 const Input: React.FC<React.InputHTMLAttributes<HTMLInputElement>> = (props) => (
-  <input {...props} className={`w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#841b60] ${props.className || ''}`} />
+  <input {...props} className={`w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#E0004D] ${props.className || ''}`} />
 );
 
 const ColorInput: React.FC<{ value?: string; onChange: (v: string) => void }> = ({ value, onChange }) => (
@@ -21,11 +21,11 @@ const ColorInput: React.FC<{ value?: string; onChange: (v: string) => void }> = 
 );
 
 const NumberInput: React.FC<{ value?: number; onChange: (v: number) => void; min?: number; max?: number; step?: number }> = ({ value, onChange, min = 0, max = 100, step = 1 }) => (
-  <input type="number" value={value ?? 0} min={min} max={max} step={step} onChange={(e) => onChange(Number(e.target.value))} className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#841b60]" />
+  <input type="number" value={value ?? 0} min={min} max={max} step={step} onChange={(e) => onChange(Number(e.target.value))} className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#E0004D]" />
 );
 
 const Select: React.FC<React.SelectHTMLAttributes<HTMLSelectElement>> = (props) => (
-  <select {...props} className={`w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#841b60] ${props.className || ''}`}></select>
+  <select {...props} className={`w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#E0004D] ${props.className || ''}`}></select>
 );
 
 const TabForm: React.FC<TabFormProps> = ({ campaign, setCampaign }) => {
@@ -205,7 +205,7 @@ const TabForm: React.FC<TabFormProps> = ({ campaign, setCampaign }) => {
                     _lastUpdate: Date.now()
                   });
                 }}
-                className="w-20 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[#841b60]"
+                className="w-20 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[#E0004D]"
               />
               <span className="text-sm text-gray-600">px</span>
             </div>
@@ -239,7 +239,7 @@ const TabForm: React.FC<TabFormProps> = ({ campaign, setCampaign }) => {
                     formHeight: `${heightPx}px`
                   });
                 }}
-                className="w-20 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[#841b60]"
+                className="w-20 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[#E0004D]"
               />
               <span className="text-sm text-gray-600">px</span>
             </div>

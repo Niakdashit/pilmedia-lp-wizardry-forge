@@ -19,7 +19,7 @@ const FooterModulePanel: React.FC<FooterModulePanelProps> = ({ module, onUpdate,
   const footerText = module.footerText ?? '';
   const footerLinks = module.footerLinks ?? [];
   const textColor = module.textColor ?? '#000000';
-  const linkColor = module.linkColor ?? '#841b60';
+  const linkColor = module.linkColor ?? '#E0004D';
   const fontSize = module.fontSize ?? 14;
   const separator = module.separator ?? '|';
   const socialLinks = module.socialLinks ?? [];
@@ -87,7 +87,7 @@ const FooterModulePanel: React.FC<FooterModulePanelProps> = ({ module, onUpdate,
           onClick={() => setActiveTab('text')}
           className={`px-3 py-2 text-sm font-medium transition-colors ${
             activeTab === 'text'
-              ? 'border-b-2 border-[#841b60] text-[#841b60]'
+              ? 'border-b-2 border-[#E0004D] text-[#E0004D]'
               : 'text-gray-600 hover:text-gray-900'
           }`}
         >
@@ -97,7 +97,7 @@ const FooterModulePanel: React.FC<FooterModulePanelProps> = ({ module, onUpdate,
           onClick={() => setActiveTab('links')}
           className={`px-3 py-2 text-sm font-medium transition-colors ${
             activeTab === 'links'
-              ? 'border-b-2 border-[#841b60] text-[#841b60]'
+              ? 'border-b-2 border-[#E0004D] text-[#E0004D]'
               : 'text-gray-600 hover:text-gray-900'
           }`}
         >
@@ -107,7 +107,7 @@ const FooterModulePanel: React.FC<FooterModulePanelProps> = ({ module, onUpdate,
           onClick={() => setActiveTab('social')}
           className={`px-3 py-2 text-sm font-medium transition-colors ${
             activeTab === 'social'
-              ? 'border-b-2 border-[#841b60] text-[#841b60]'
+              ? 'border-b-2 border-[#E0004D] text-[#E0004D]'
               : 'text-gray-600 hover:text-gray-900'
           }`}
         >
@@ -125,7 +125,7 @@ const FooterModulePanel: React.FC<FooterModulePanelProps> = ({ module, onUpdate,
                 value={footerText}
                 onChange={(e) => onUpdate({ footerText: e.target.value })}
                 placeholder="Ex: © 2024 Mon entreprise. Tous droits réservés."
-                className="mt-1 w-full min-h-[80px] px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#841b60] text-sm"
+                className="mt-1 w-full min-h-[80px] px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#E0004D] text-sm"
               />
             </div>
 
@@ -221,7 +221,7 @@ const FooterModulePanel: React.FC<FooterModulePanelProps> = ({ module, onUpdate,
                         id={`new-tab-${link.id}`}
                         checked={link.openInNewTab ?? true}
                         onChange={(e) => handleUpdateLink(link.id, { openInNewTab: e.target.checked })}
-                        className="w-4 h-4 text-[#841b60] border-gray-300 rounded focus:ring-[#841b60]"
+                        className="w-4 h-4 text-[#E0004D] border-gray-300 rounded focus:ring-[#E0004D]"
                       />
                       <label htmlFor={`new-tab-${link.id}`} className="text-xs text-gray-700 flex items-center gap-1">
                         <ExternalLink className="w-3 h-3" />

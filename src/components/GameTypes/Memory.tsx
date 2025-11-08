@@ -70,7 +70,7 @@ const Memory: React.FC<MemoryProps> = ({ config = {}, onConfigChange, isPreview,
             max="12"
             value={config?.pairs || 8}
             onChange={(e) => onConfigChange({ ...config, pairs: parseInt(e.target.value) })}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60]"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E0004D]"
           />
         </div>
 
@@ -84,7 +84,7 @@ const Memory: React.FC<MemoryProps> = ({ config = {}, onConfigChange, isPreview,
             max="300"
             value={config?.timeLimit || 120}
             onChange={(e) => onConfigChange({ ...config, timeLimit: parseInt(e.target.value) })}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60]"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E0004D]"
           />
         </div>
 
@@ -95,7 +95,7 @@ const Memory: React.FC<MemoryProps> = ({ config = {}, onConfigChange, isPreview,
           <select
             value={config?.theme || 'numbers'}
             onChange={(e) => onConfigChange({ ...config, theme: e.target.value })}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60]"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E0004D]"
           >
             <option value="numbers">Chiffres</option>
             <option value="emojis">Emojis</option>
@@ -115,14 +115,14 @@ const Memory: React.FC<MemoryProps> = ({ config = {}, onConfigChange, isPreview,
             className={`aspect-square rounded-lg cursor-pointer ${
               flipped.includes(index) || matched.includes(index)
                 ? 'bg-white'
-                : 'bg-gradient-to-br from-[#841b60] to-[#b41b60]'
+                : 'bg-gradient-to-br from-[#E0004D] to-[#6B2AA0]'
             }`}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => handleCardClick(index)}
           >
             {(flipped.includes(index) || matched.includes(index)) && (
-              <div className="w-full h-full flex items-center justify-center text-2xl font-bold text-[#841b60]">
+              <div className="w-full h-full flex items-center justify-center text-2xl font-bold text-[#E0004D]">
                 {card}
               </div>
             )}

@@ -208,9 +208,9 @@ export const DEFAULT_ARTICLE_CONFIG: ArticleConfig = {
     },
   },
   theme: {
-    primaryColor: '#841b60',
-    secondaryColor: '#b41b60',
-    accentColor: '#6d164f',
+    primaryColor: '#E0004D',
+    secondaryColor: '#6B2AA0',
+    accentColor: '#4D2388',
     fontFamily: 'Inter, system-ui, sans-serif',
     containerPadding: '1.5rem',
     sectionSpacing: '2rem',

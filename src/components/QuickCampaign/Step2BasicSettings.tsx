@@ -60,7 +60,7 @@ const Step2BasicSettings: React.FC = () => {
         <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-8 md:p-12">
           {/* Header */}
           <div className="text-center mb-16">
-            <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-4xl mb-4 text-[#841b60] font-semibold">
+            <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-4xl mb-4 text-[#E0004D] font-semibold">
               Paramètres essentiels
             </motion.h1>
             <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="text-xl font-light text-[#991c6e]/[0.78]">
@@ -77,7 +77,7 @@ const Step2BasicSettings: React.FC = () => {
                 value={campaignName}
                 onChange={e => setCampaignName(e.target.value)}
                 placeholder="Ex: Jeu concours été 2024"
-                className="w-full px-6 py-4 border-2 border-gray-200 rounded-2xl focus:border-[#841b60] focus:outline-none transition-all text-lg bg-gray-50"
+                className="w-full px-6 py-4 border-2 border-gray-200 rounded-2xl focus:border-[#E0004D] focus:outline-none transition-all text-lg bg-gray-50"
               />
             </motion.div>
 
@@ -91,7 +91,7 @@ const Step2BasicSettings: React.FC = () => {
                 type="date"
                 value={launchDate}
                 onChange={e => setLaunchDate(e.target.value)}
-                className="w-full px-6 py-4 border-2 border-gray-200 rounded-2xl focus:border-[#841b60] focus:outline-none transition-all text-lg bg-gray-50"
+                className="w-full px-6 py-4 border-2 border-gray-200 rounded-2xl focus:border-[#E0004D] focus:outline-none transition-all text-lg bg-gray-50"
               />
             </motion.div>
 
@@ -147,7 +147,7 @@ const Step2BasicSettings: React.FC = () => {
                     ) : (
                       <>
                         <p className="text-gray-600 mb-2 text-sm">
-                          <span className="text-[#841b60] font-medium">Téléchargez une image</span>
+                          <span className="text-[#E0004D] font-medium">Téléchargez une image</span>
                         </p>
                         <p className="text-gray-400 text-xs">PNG, JPG jusqu'à 10MB</p>
                       </>
@@ -203,7 +203,7 @@ const Step2BasicSettings: React.FC = () => {
                     ) : (
                       <>
                         <p className="text-gray-600 mb-2 text-sm">
-                          <span className="text-[#841b60] font-medium">Téléchargez une image</span>
+                          <span className="text-[#E0004D] font-medium">Téléchargez une image</span>
                         </p>
                         <p className="text-gray-400 text-xs">PNG, JPG jusqu'à 10MB</p>
                       </>
@@ -232,7 +232,7 @@ const Step2BasicSettings: React.FC = () => {
               disabled={!canProceed}
               className={`
                 flex items-center space-x-2 px-8 py-4 rounded-2xl font-medium transition-all
-                ${canProceed ? 'bg-gradient-to-br from-[#841b60] to-[#b41b60] text-white hover:bg-[#841b60]/90 shadow-lg' : 'bg-gray-100 text-gray-400 cursor-not-allowed'}
+                ${canProceed ? 'bg-gradient-to-br from-[#E0004D] to-[#6B2AA0] text-white hover:bg-[#E0004D]/90 shadow-lg' : 'bg-gray-100 text-gray-400 cursor-not-allowed'}
               `}
             >
               <span>Continuer</span>
@@ -243,8 +243,8 @@ const Step2BasicSettings: React.FC = () => {
           {/* Progress Indicator */}
           <div className="text-center mt-16">
             <div className="flex items-center justify-center space-x-2 mb-4">
-              <div className="w-8 h-1 bg-gradient-to-br from-[#841b60] to-[#b41b60] rounded-full"></div>
-              <div className="w-8 h-1 bg-gradient-to-br from-[#841b60] to-[#b41b60] rounded-full"></div>
+              <div className="w-8 h-1 bg-gradient-to-br from-[#E0004D] to-[#6B2AA0] rounded-full"></div>
+              <div className="w-8 h-1 bg-gradient-to-br from-[#E0004D] to-[#6B2AA0] rounded-full"></div>
               <div className="w-8 h-1 bg-gray-200 rounded-full"></div>
             </div>
             <p className="text-gray-500 font-light">Étape 2 sur 3</p>

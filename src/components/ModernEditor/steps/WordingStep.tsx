@@ -43,7 +43,7 @@ const WordingStep: React.FC<WordingStepProps> = ({
       <div className="space-y-8">
         <div>
           <h2 className="text-2xl font-bold text-gray-900 mb-2 flex items-center">
-            <Type className="w-6 h-6 mr-2 text-[#841b60]" />
+            <Type className="w-6 h-6 mr-2 text-[#E0004D]" />
             Textes et messages
           </h2>
           <p className="text-gray-600">Personnalisez les textes de votre campagne pour chaque étape</p>
@@ -59,7 +59,7 @@ const WordingStep: React.FC<WordingStepProps> = ({
                 onClick={() => setActiveScreen(key as any)}
                 className={`flex-1 flex items-center justify-center space-x-2 px-4 py-3 rounded-lg transition-all ${
                   activeScreen === key
-                    ? 'bg-white shadow-sm text-[#841b60] font-medium'
+                    ? 'bg-white shadow-sm text-[#E0004D] font-medium'
                     : 'text-gray-600 hover:text-gray-900'
                 }`}
               >
@@ -80,7 +80,7 @@ const WordingStep: React.FC<WordingStepProps> = ({
                   type="text"
                   value={currentScreen.title || ''}
                   onChange={(e) => updateScreen(screens[activeScreen].id, 'title', e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#E0004D] focus:border-transparent"
                   placeholder="Entrez le titre..."
                 />
               </div>
@@ -91,7 +91,7 @@ const WordingStep: React.FC<WordingStepProps> = ({
                   value={currentScreen.description || ''}
                   onChange={(e) => updateScreen(screens[activeScreen].id, 'description', e.target.value)}
                   rows={4}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#841b60] focus:border-transparent resize-none"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#E0004D] focus:border-transparent resize-none"
                   placeholder="Entrez la description..."
                 />
               </div>
@@ -103,7 +103,7 @@ const WordingStep: React.FC<WordingStepProps> = ({
                     type="text"
                     value={currentScreen.buttonText || ''}
                     onChange={(e) => updateScreen(screens[activeScreen].id, 'buttonText', e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#E0004D] focus:border-transparent"
                     placeholder="Texte du bouton..."
                   />
                 </div>
@@ -125,7 +125,7 @@ const WordingStep: React.FC<WordingStepProps> = ({
                   </p>
                 )}
                 {activeScreen !== 'game' && (
-                  <button className="px-6 py-2 bg-gradient-to-br from-[#841b60] to-[#b41b60] text-white rounded-lg font-medium">
+                  <button className="px-6 py-2 bg-gradient-to-br from-[#E0004D] to-[#6B2AA0] text-white rounded-lg font-medium">
                     {currentScreen.buttonText || 'Bouton'}
                   </button>
                 )}
@@ -142,7 +142,7 @@ const WordingStep: React.FC<WordingStepProps> = ({
                   type="checkbox"
                   checked={currentScreen.showTitle !== false}
                   onChange={(e) => updateScreen(screens[activeScreen].id, 'showTitle', e.target.checked)}
-                  className="rounded border-gray-300 text-[#841b60] focus:ring-[#841b60]"
+                  className="rounded border-gray-300 text-[#E0004D] focus:ring-[#E0004D]"
                 />
                 <span className="text-sm text-gray-700">Afficher le titre</span>
               </label>
@@ -151,7 +151,7 @@ const WordingStep: React.FC<WordingStepProps> = ({
                   type="checkbox"
                   checked={currentScreen.showDescription !== false}
                   onChange={(e) => updateScreen(screens[activeScreen].id, 'showDescription', e.target.checked)}
-                  className="rounded border-gray-300 text-[#841b60] focus:ring-[#841b60]"
+                  className="rounded border-gray-300 text-[#E0004D] focus:ring-[#E0004D]"
                 />
                 <span className="text-sm text-gray-700">Afficher la description</span>
               </label>
@@ -169,7 +169,7 @@ const WordingStep: React.FC<WordingStepProps> = ({
           </button>
           <button
             onClick={onNext}
-            className="px-8 py-3 bg-gradient-to-r from-[#841b60] to-[#6d164f] text-white rounded-xl hover:shadow-lg transition-all duration-300 font-medium"
+            className="px-8 py-3 bg-gradient-to-r from-[#E0004D] to-[#4D2388] text-white rounded-xl hover:shadow-lg transition-all duration-300 font-medium"
           >
             Continuer
           </button>

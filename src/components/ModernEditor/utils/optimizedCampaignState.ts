@@ -42,7 +42,7 @@ export const mergeGameConfig = (defaultConfig: any, newConfig: any) => {
 export const normalizeColors = (colors: any) => {
   if (!colors || typeof colors !== 'object') {
     return {
-      primary: '#841b60',
+      primary: '#E0004D',
       secondary: '#dc2626',
       accent: '#ffffff',
       text: '#ffffff'
@@ -50,7 +50,7 @@ export const normalizeColors = (colors: any) => {
   }
   
   return {
-    primary: colors.primary || '#841b60',
+    primary: colors.primary || '#E0004D',
     secondary: colors.secondary || '#dc2626',
     accent: colors.accent || '#ffffff',
     text: colors.text || '#ffffff'
