@@ -11,6 +11,8 @@ const DesignToolbar = lazy(() => import('./DesignToolbar'));
 const FunnelUnlockedGame = lazy(() => import('@/components/funnels/FunnelUnlockedGame'));
 const FunnelQuizParticipate = lazy(() => import('../funnels/FunnelQuizParticipate'));
 const FullScreenPreviewModal = lazy(() => import('@/components/shared/modals/FullScreenPreviewModal'));
+import GameCanvasPreview from '@/components/ModernEditor/components/GameCanvasPreview';
+import GameCanvasPreview from '@/components/ModernEditor/components/GameCanvasPreview';
 // Scratch editor uses FunnelUnlockedGame for preview
 import type { ModularPage, ScreenId, BlocBouton, Module } from '@/types/modularEditor';
 import { createEmptyModularPage } from '@/types/modularEditor';
@@ -4409,11 +4411,10 @@ useEffect(() => {
         onDeviceChange={setFullScreenPreviewDevice}
       >
         <div className="w-full h-full overflow-hidden bg-white">
-          <FunnelUnlockedGame
+          <GameCanvasPreview
             campaign={campaignData}
-            previewMode={fullScreenPreviewDevice}
-            wheelModalConfig={wheelModalConfig}
-            launchButtonStyles={{}}
+            previewDevice={fullScreenPreviewDevice}
+            key={`canvas-preview-${fullScreenPreviewDevice}-${(campaignData as any)?.type}`}
           />
         </div>
       </FullScreenPreviewModal>

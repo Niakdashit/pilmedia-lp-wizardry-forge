@@ -1,14 +1,11 @@
 
 import React from 'react';
-import FunnelUnlockedGame from '../../funnels/FunnelUnlockedGame';
-import FunnelStandard from '../../funnels/FunnelStandard';
+import GameCanvasPreview from '../../ModernEditor/components/GameCanvasPreview';
 import DeviceFrame from './DeviceFrame';
 import CampaignPreviewFrame from './CampaignPreviewFrame';
 import { useQuickCampaignStore } from '../../../stores/quickCampaignStore';
 import ConstrainedContainer from './components/ConstrainedContainer';
 import { DEVICE_CONSTRAINTS } from './utils/previewConstraints';
-import { shouldUseUnlockedFunnel, shouldUseStandardFunnel } from '../../../utils/funnelMatcher';
-import CustomElementsRenderer from '../../ModernEditor/components/CustomElementsRenderer';
 
 interface PreviewContentProps {
   selectedDevice: 'desktop' | 'tablet' | 'mobile';
@@ -42,22 +39,6 @@ const PreviewContent: React.FC<PreviewContentProps> = ({
   const { backgroundImageUrl, gamePosition } = useQuickCampaignStore();
   const constraints = DEVICE_CONSTRAINTS[selectedDevice];
 
-  // Size mapping for text elements
-  const sizeMap: Record<string, string> = {
-    xs: '10px',
-    sm: '12px',
-    base: '14px',
-    lg: '16px',
-    xl: '18px',
-    '2xl': '20px',
-    '3xl': '24px',
-    '4xl': '28px',
-    '5xl': '32px',
-    '6xl': '36px',
-    '7xl': '48px',
-    '8xl': '60px',
-    '9xl': '72px'
-  };
 
   // Configuration cohérente des couleurs
   const enhancedCampaign = React.useMemo(() => {
@@ -115,73 +96,14 @@ const PreviewContent: React.FC<PreviewContentProps> = ({
     };
   }, [mockCampaign, selectedGameType, customColors, jackpotColors, backgroundImageUrl, gamePosition]);
 
-  // Extract custom elements
-  const customTexts = enhancedCampaign.design?.customTexts || [];
-  const customImages = enhancedCampaign.design?.customImages || [];
 
-  const getFunnelComponent = () => {
-    console.log('Selecting funnel for game type:', selectedGameType);
-    
-    // Utiliser le système funnelMatcher pour déterminer le bon funnel
-    const useUnlockedFunnel = shouldUseUnlockedFunnel(selectedGameType);
-    const useStandardFunnel = shouldUseStandardFunnel(selectedGameType);
-    
-    console.log('Should use unlocked funnel:', useUnlockedFunnel);
-    console.log('Should use standard funnel:', useStandardFunnel);
-    
-    if (useUnlockedFunnel) {
-      return (
-        <div style={{ position: 'relative', width: '100%', height: '100%' }}>
-          <FunnelUnlockedGame
-            campaign={enhancedCampaign}
-            previewMode={selectedDevice === 'desktop' ? 'desktop' : selectedDevice}
-            key={`unlocked-${JSON.stringify(customColors)}-${gamePosition}-${selectedDevice}`}
-          />
-          
-          {/* Render custom elements on top */}
-          <CustomElementsRenderer
-            customTexts={customTexts}
-            customImages={customImages}
-            previewDevice={selectedDevice}
-            sizeMap={sizeMap}
-          />
-        </div>
-      );
-    }
-    
-    if (useStandardFunnel) {
-      return (
-        <div style={{ position: 'relative', width: '100%', height: '100%' }}>
-          <FunnelStandard
-            campaign={enhancedCampaign}
-            key={`standard-${JSON.stringify(customColors)}-${gamePosition}-${selectedDevice}`}
-          />
-          
-          {/* Render custom elements on top */}
-          <CustomElementsRenderer
-            customTexts={customTexts}
-            customImages={customImages}
-            previewDevice={selectedDevice}
-            sizeMap={sizeMap}
-          />
-        </div>
-      );
-    }
-
-    // Fallback pour types non reconnus
-    console.warn(`Type de jeu "${selectedGameType}" non reconnu par le système de funnels`);
-    return (
-      <div className="flex items-center justify-center w-full h-full">
-        <div className="text-center text-red-500 bg-red-50 p-6 rounded-lg border border-red-200">
-          <h3 className="font-semibold mb-2">Type de jeu non supporté</h3>
-          <p className="text-sm">Le type "{selectedGameType}" n'est pas configuré pour utiliser un funnel.</p>
-          <p className="text-xs mt-2 text-gray-600">
-            Types supportés: wheel, scratch, jackpot, dice (unlocked) | form, quiz, memory, puzzle (standard)
-          </p>
-        </div>
-      </div>
-    );
-  };
+  const getFunnelComponent = () => (
+    <GameCanvasPreview
+      campaign={enhancedCampaign}
+      previewDevice={selectedDevice}
+      key={`quick-preview-${selectedDevice}-${selectedGameType}`}
+    />
+  );
 
   const previewContent = (
     <CampaignPreviewFrame selectedDevice={selectedDevice}>

@@ -9,8 +9,7 @@ import { Save, X } from 'lucide-react';
 
 const HybridSidebar = lazy(() => import('./HybridSidebar'));
 const DesignToolbar = lazy(() => import('./DesignToolbar'));
-const FullScreenPreviewModal = lazy(() => import('@/components/shared/modals/FullScreenPreviewModal'));
-const FunnelUnlockedGame = lazy(() => import('@/components/funnels/FunnelUnlockedGame'));
+import GameCanvasPreview from '@/components/ModernEditor/components/GameCanvasPreview';
 import PreviewRenderer from '@/components/preview/PreviewRenderer';
 import ArticleFunnelView from '@/components/ArticleEditor/ArticleFunnelView';
 import { getArticleConfigWithDefaults } from '@/utils/articleConfigHelpers';
@@ -4580,11 +4579,10 @@ const handleSaveCampaignName = useCallback(async () => {
         onDeviceChange={setFullScreenPreviewDevice}
       >
         <div className="w-full h-full overflow-hidden bg-white">
-          <FunnelUnlockedGame
+          <GameCanvasPreview
             campaign={campaignData}
-            previewMode={fullScreenPreviewDevice}
-            wheelModalConfig={quizModalConfig}
-            launchButtonStyles={{}}
+            previewDevice={fullScreenPreviewDevice}
+            key={`canvas-preview-${fullScreenPreviewDevice}-${(campaignData as any)?.type}`}
           />
         </div>
       </FullScreenPreviewModal>
