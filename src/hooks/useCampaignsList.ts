@@ -171,26 +171,8 @@ export const useCampaignsList = () => {
           endDate = campaign.campaign_settings[0].end_date;
         }
         
-        // Priority 2: campaign.start_date / end_date columns
-        if (!startDate && campaign.start_date) startDate = campaign.start_date;
-        if (!endDate && campaign.end_date) endDate = campaign.end_date;
-        
-        // Priority 3 (legacy): config.startDate/endDate (or normalized top-level dates from editor)
-        if (!startDate || !endDate) {
-          if (campaign.config) {
-            try {
-              const config = typeof campaign.config === 'string' ? JSON.parse(campaign.config) : campaign.config;
-              if (!startDate && config.startDate) startDate = config.startDate;
-              if (!endDate && config.endDate) endDate = config.endDate;
-            } catch (e) {
-              // Ignore parsing errors
-            }
-          }
-        }
-        
-        // Priority 4: Extract dates and times from config if stored in those fields
-        // This handles dates stored as separate date/time strings in ModernGeneralTab
-        if (campaign.config) {
+        // Priority 2: Extract dates and times from config if stored in those fields (ModernGeneralTab)
+        if ((!startDate || !endDate) && campaign.config) {
           try {
             const config = typeof campaign.config === 'string' ? JSON.parse(campaign.config) : campaign.config;
             
@@ -207,6 +189,21 @@ export const useCampaignsList = () => {
             // Ignore parsing errors
           }
         }
+        
+        // Priority 3 (legacy single ISO in config): config.startDate/endDate
+        if ((!startDate || !endDate) && campaign.config) {
+          try {
+            const config = typeof campaign.config === 'string' ? JSON.parse(campaign.config) : campaign.config;
+            if (!startDate && config.startDate) startDate = config.startDate;
+            if (!endDate && config.endDate) endDate = config.endDate;
+          } catch (e) {
+            // Ignore parsing errors
+          }
+        }
+        
+        // Priority 4: campaign.start_date / end_date columns (DB top-level)
+        if (!startDate && campaign.start_date) startDate = campaign.start_date;
+        if (!endDate && campaign.end_date) endDate = campaign.end_date;
 
         // Get participants count
         const participants = campaign.campaign_stats?.[0]?.participations || 0;

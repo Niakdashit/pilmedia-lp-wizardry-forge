@@ -355,14 +355,14 @@ export const saveCampaignToDB = async (
     // Form fields
     form_fields: normalizedFormFields,
     
-    // Campaign timing - prefer normalized editor values when present
-    start_date: startIso || new Date().toISOString(),
-    end_date: endIso || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-    
     // Media assets
     thumbnail_url: campaign?.thumbnail_url,
     banner_url: campaign?.banner_url,
   };
+
+  // Conditionally set timing fields to avoid overwriting dates configured in Settings
+  if (startIso) payload.start_date = startIso;
+  if (endIso) payload.end_date = endIso;
 
   if (computedName !== undefined) {
     payload.name = computedName;

@@ -231,6 +231,24 @@ export const useCampaignSettings = () => {
         updated_at: new Date().toISOString(),
       };
 
+      // Derive dedicated date/time columns from publication.start/end when provided
+      try {
+        const pub: any = values.publication || {};
+        const split = (iso?: string) => {
+          if (!iso || typeof iso !== 'string') return { date: null as string | null, time: null as string | null };
+          const [d, tWithZone] = iso.split('T');
+          const t = (tWithZone || '').replace('Z', '').slice(0, 5) || null;
+          return { date: d || null, time: t };
+        };
+        const s = split(pub.start);
+        const e = split(pub.end);
+        if (s.date) (payload as any).start_date = s.date;
+        if (s.time) (payload as any).start_time = s.time;
+        if (e.date) (payload as any).end_date = e.date;
+        if (e.time) (payload as any).end_time = e.time;
+      } catch {}
+
+
       // Ensure the campaign row exists and is owned by current user to satisfy RLS on campaign_settings
       try {
         const checkResp: any = await (supabase as any)
