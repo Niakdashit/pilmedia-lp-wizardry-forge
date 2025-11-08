@@ -272,9 +272,18 @@ export const saveCampaignToDB = async (
   } : undefined;
 
   // Build final payload with ALL campaign data
+  const isExisting = isUuid(campaign?.id);
+  const safeRawName = (campaign?.name ?? '').toString().trim();
+  const isDefaultName = !safeRawName || /^(nouvelle campagne|ma campagne|new campaign|untitled)/i.test(safeRawName);
+
+  // For existing campaigns, never overwrite the DB name with a placeholder/default on auto/unmount saves
+  const computedName = isExisting
+    ? (isDefaultName ? undefined : campaign?.name)
+    : (campaign?.name || 'Nouvelle campagne');
+
   const payload: any = {
-    id: isUuid(campaign?.id) ? campaign?.id : undefined,
-    name: campaign?.name || 'Nouvelle campagne',
+    id: isExisting ? campaign?.id : undefined,
+    // name is added conditionally below to avoid accidental rename
     description: campaign?.description,
     slug: campaign?.slug,
     type: campaign?.type, // do not force a default here
@@ -306,6 +315,10 @@ export const saveCampaignToDB = async (
     thumbnail_url: campaign?.thumbnail_url,
     banner_url: campaign?.banner_url,
   };
+
+  if (computedName !== undefined) {
+    payload.name = computedName;
+  }
 
     console.log('💾 [saveCampaignToDB] Complete payload structure:', {
       id: payload.id,

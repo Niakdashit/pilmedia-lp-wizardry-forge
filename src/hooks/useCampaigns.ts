@@ -125,7 +125,12 @@ export const useCampaigns = () => {
         // Update existing campaign with only provided fields (no destructive defaults)
         const updateData: any = { updated_at: new Date().toISOString() };
         const maybeSet = (key: string, val: any) => { if (val !== undefined) updateData[key] = val; };
-        maybeSet('name', campaign.name);
+        // Prevent accidental rename to placeholders when leaving without saving
+        const rawName = (campaign.name ?? '').toString().trim();
+        const isDefaultName = !rawName || /^(nouvelle campagne|ma campagne|new campaign|untitled)/i.test(rawName);
+        if (!isDefaultName) {
+          updateData.name = campaign.name;
+        }
         maybeSet('description', campaign.description);
         if (slug !== undefined) updateData.slug = slug; // slug may be generated above
         maybeSet('type', campaign.type);
