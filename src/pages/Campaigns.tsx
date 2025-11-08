@@ -189,7 +189,7 @@ const Campaigns: React.FC = () => {
     }
   };
 
-  // Calculate actual status based on dates (inclusive end-of-day)
+  // Calculate display status strictly from dates (inclusive), except when paused
   const getActualStatus = (campaign: any) => {
     const now = new Date();
 
@@ -206,18 +206,16 @@ const Campaigns: React.FC = () => {
     const startDate = startDateRaw ? new Date(startDateRaw) : null;
     if (startDate) startDate.setHours(0, 0, 0, 0);
 
-    // If end date (end of day) is passed, campaign is ended
-    if (endDate && now > endDate) {
-      return 'ended';
+    // If dates are missing, fallback to stored status
+    if (!startDate || !endDate) {
+      return campaign.status;
     }
 
-    // If start date (start of day) is in the future, keep it as draft (DB policy)
-    if (startDate && now < startDate) {
-      return 'draft';
-    }
+    if (now > endDate) return 'ended';
+    if (now < startDate) return 'draft';
 
-    // Otherwise, return the stored status (active/ended/etc.)
-    return campaign.status;
+    // Between start and end -> active (override any stale stored status)
+    return 'active';
   };
   const handleActionClick = (e: React.MouseEvent, campaign: any) => {
     e.preventDefault();
