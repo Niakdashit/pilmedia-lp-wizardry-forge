@@ -83,7 +83,7 @@ const ArticleSidebar: React.FC<ArticleSidebarProps> = ({
               onChange={() => onArticleConfigChange({
                 banner: { ...articleConfig.banner, aspectRatio: '2215/1536' }
               })}
-              className="text-[#841b60] focus:ring-[#841b60]"
+              className="text-[#E0004D] focus:ring-[#E0004D]"
             />
             <span className="text-sm text-gray-700">2215×1536px (Standard)</span>
           </label>
@@ -95,7 +95,7 @@ const ArticleSidebar: React.FC<ArticleSidebarProps> = ({
               onChange={() => onArticleConfigChange({
                 banner: { ...articleConfig.banner, aspectRatio: '1500/744' }
               })}
-              className="text-[#841b60] focus:ring-[#841b60]"
+              className="text-[#E0004D] focus:ring-[#E0004D]"
             />
             <span className="text-sm text-gray-700">1500×744px (Panoramique)</span>
           </label>
@@ -133,7 +133,7 @@ const ArticleSidebar: React.FC<ArticleSidebarProps> = ({
                   },
                 },
               })}
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60]"
+              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E0004D]"
               placeholder="2rem"
             />
           </div>
@@ -169,7 +169,7 @@ const ArticleSidebar: React.FC<ArticleSidebarProps> = ({
                   },
                 },
               })}
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60]"
+              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E0004D]"
             >
               <option value="left">Gauche</option>
               <option value="center">Centré</option>
@@ -199,7 +199,7 @@ const ArticleSidebar: React.FC<ArticleSidebarProps> = ({
                   },
                 },
               })}
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60]"
+              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E0004D]"
               placeholder="1rem"
             />
           </div>
@@ -244,7 +244,7 @@ const ArticleSidebar: React.FC<ArticleSidebarProps> = ({
           onChange={(e) => onArticleConfigChange({
             cta: { ...articleConfig.cta, text: e.target.value },
           })}
-          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60]"
+          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E0004D]"
           placeholder="PARTICIPER !"
         />
       </div>
@@ -261,7 +261,7 @@ const ArticleSidebar: React.FC<ArticleSidebarProps> = ({
             <div className="flex items-center gap-2">
               <input
                 type="color"
-                value={articleConfig.cta?.backgroundColor || '#841b60'}
+                value={articleConfig.cta?.backgroundColor || '#E0004D'}
                 onChange={(e) => onArticleConfigChange({
                   cta: { ...articleConfig.cta, backgroundColor: e.target.value },
                 })}
@@ -269,12 +269,12 @@ const ArticleSidebar: React.FC<ArticleSidebarProps> = ({
               />
               <input
                 type="text"
-                value={articleConfig.cta?.backgroundColor || '#841b60'}
+                value={articleConfig.cta?.backgroundColor || '#E0004D'}
                 onChange={(e) => onArticleConfigChange({
                   cta: { ...articleConfig.cta, backgroundColor: e.target.value },
                 })}
-                className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60]"
-                placeholder="#841b60"
+                className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E0004D]"
+                placeholder="#E0004D"
               />
             </div>
           </div>
@@ -296,7 +296,7 @@ const ArticleSidebar: React.FC<ArticleSidebarProps> = ({
                 onChange={(e) => onArticleConfigChange({
                   cta: { ...articleConfig.cta, textColor: e.target.value },
                 })}
-                className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60]"
+                className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E0004D]"
                 placeholder="#ffffff"
               />
             </div>
@@ -337,7 +337,7 @@ const ArticleSidebar: React.FC<ArticleSidebarProps> = ({
               onChange={(e) => onArticleConfigChange({
                 cta: { ...articleConfig.cta, size: e.target.value as 'small' | 'medium' | 'large' },
               })}
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60]"
+              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E0004D]"
             >
               <option value="small">Petit</option>
               <option value="medium">Moyen</option>
@@ -378,7 +378,7 @@ const ArticleSidebar: React.FC<ArticleSidebarProps> = ({
             <div className="flex items-center gap-2">
               <input
                 type="color"
-                value={articleConfig.cta?.borderColor || '#841b60'}
+                value={articleConfig.cta?.borderColor || '#E0004D'}
                 onChange={(e) => onArticleConfigChange({
                   cta: { ...articleConfig.cta, borderColor: e.target.value },
                 })}
@@ -387,12 +387,12 @@ const ArticleSidebar: React.FC<ArticleSidebarProps> = ({
               />
               <input
                 type="text"
-                value={articleConfig.cta?.borderColor || '#841b60'}
+                value={articleConfig.cta?.borderColor || '#E0004D'}
                 onChange={(e) => onArticleConfigChange({
                   cta: { ...articleConfig.cta, borderColor: e.target.value },
                 })}
-                className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60] disabled:opacity-50 disabled:cursor-not-allowed"
-                placeholder="#841b60"
+                className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E0004D] disabled:opacity-50 disabled:cursor-not-allowed"
+                placeholder="#E0004D"
                 disabled={!articleConfig.cta?.borderWidth}
               />
             </div>
@@ -410,7 +410,7 @@ const ArticleSidebar: React.FC<ArticleSidebarProps> = ({
           onChange={(e) => onArticleConfigChange({
             cta: { ...articleConfig.cta, icon: e.target.value as 'arrow' | 'external' | 'play' | 'none' },
           })}
-          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60]"
+          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E0004D]"
         >
           <option value="arrow">Flèche →</option>
           <option value="external">Lien externe ↗</option>
@@ -450,7 +450,7 @@ const ArticleSidebar: React.FC<ArticleSidebarProps> = ({
                   },
                 },
               })}
-              className="text-[#841b60] focus:ring-[#841b60] rounded"
+              className="text-[#E0004D] focus:ring-[#E0004D] rounded"
             />
           </div>
 
@@ -468,7 +468,7 @@ const ArticleSidebar: React.FC<ArticleSidebarProps> = ({
                   },
                 },
               })}
-              className="text-[#841b60] focus:ring-[#841b60] rounded"
+              className="text-[#E0004D] focus:ring-[#E0004D] rounded"
             />
           </div>
 
@@ -486,7 +486,7 @@ const ArticleSidebar: React.FC<ArticleSidebarProps> = ({
                   },
                 },
               })}
-              className="text-[#841b60] focus:ring-[#841b60] rounded"
+              className="text-[#E0004D] focus:ring-[#E0004D] rounded"
             />
           </div>
         </div>
@@ -508,7 +508,7 @@ const ArticleSidebar: React.FC<ArticleSidebarProps> = ({
             },
           })}
           disabled={!articleConfig.funnelFlow?.formStep?.enabled}
-          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60] disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E0004D] disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <option value="before-game">Avant le jeu</option>
           <option value="after-game">Après le jeu</option>
@@ -533,7 +533,7 @@ const ArticleSidebar: React.FC<ArticleSidebarProps> = ({
             onClick={() => setActiveTab(tab.id)}
             className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${
               activeTab === tab.id
-                ? 'text-[#841b60] border-b-2 border-[#841b60] bg-white'
+                ? 'text-[#E0004D] border-b-2 border-[#E0004D] bg-white'
                 : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
             }`}
           >

@@ -6,22 +6,22 @@ const StatsGrid: React.FC = () => {
     name: 'Campagnes actives',
     value: '5',
     change: '+2 cette semaine',
-    icon: <Target className="w-6 h-6 text-[#841b60]" />
+    icon: <Target className="w-6 h-6 text-[#E0004D]" />
   }, {
     name: 'Participations',
     value: '1254',
     change: '+18% ce mois',
-    icon: <Users className="w-6 h-6 text-[#841b60]" />
+    icon: <Users className="w-6 h-6 text-[#E0004D]" />
   }, {
     name: 'Taux de conversion',
     value: '42%',
     change: '+5% ce mois',
-    icon: <BarChart className="w-6 h-6 text-[#841b60]" />
+    icon: <BarChart className="w-6 h-6 text-[#E0004D]" />
   }, {
     name: 'Prochaine campagne',
     value: '2j',
     change: '10 avril',
-    icon: <Calendar className="w-6 h-6 text-[#841b60]" />
+    icon: <Calendar className="w-6 h-6 text-[#E0004D]" />
   }];
 
   return (

@@ -137,7 +137,7 @@ export const loadCampaign = async (
             ...defaultCampaign.buttonConfig,
             ...validatedData.buttonConfig,
             color: validatedData.customColors?.accent || validatedData.buttonConfig?.color || defaultCampaign.buttonConfig?.color,
-            backgroundColor: validatedData.customColors?.accent || validatedData.buttonConfig?.backgroundColor || defaultCampaign.buttonConfig?.color || '#841b60'
+            backgroundColor: validatedData.customColors?.accent || validatedData.buttonConfig?.backgroundColor || defaultCampaign.buttonConfig?.color || '#E0004D'
           },
           screens: {
             ...defaultCampaign.screens,

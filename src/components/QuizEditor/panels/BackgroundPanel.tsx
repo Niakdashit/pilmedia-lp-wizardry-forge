@@ -648,7 +648,7 @@ const BackgroundPanel: React.FC<BackgroundPanelProps> = ({
           <h3 className="font-semibold text-sm text-gray-700 mb-3">IMAGE DE FOND</h3>
           <button
             onClick={triggerFileUpload}
-            className="w-full p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-[hsl(var(--primary))] hover:bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] hover:text-white transition-colors flex flex-col items-center group"
+            className="w-full p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-[hsl(var(--primary))] hover:bg-[radial-gradient(circle_at_0%_0%,_#E0004D,_#6B2AA0)] hover:text-white transition-colors flex flex-col items-center group"
           >
             <Upload className="w-6 h-6 mb-2 text-gray-600 group-hover:text-white" />
             <span className="text-sm text-gray-600 group-hover:text-white">Télécharger une image</span>
@@ -663,7 +663,7 @@ const BackgroundPanel: React.FC<BackgroundPanelProps> = ({
                 id="apply-to-all-screens"
                 checked={applyToAllScreens}
                 onChange={(e) => handleApplyToAllScreensChange(e.target.checked)}
-                className="w-4 h-4 text-[#841b60] border-gray-300 rounded focus:ring-[#841b60]"
+                className="w-4 h-4 text-[#E0004D] border-gray-300 rounded focus:ring-[#E0004D]"
               />
               <label htmlFor="apply-to-all-screens" className="text-xs text-gray-600 cursor-pointer">
                 Appliquer à tous les écrans ({selectedDevice || 'desktop'})
@@ -760,7 +760,7 @@ const BackgroundPanel: React.FC<BackgroundPanelProps> = ({
                 onClick={() => setSelectedFontCategory(category)}
                 className={`p-2 text-xs rounded transition-all duration-200 ${
                   selectedFontCategory.name === category.name
-                    ? 'bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white'
+                    ? 'bg-[radial-gradient(circle_at_0%_0%,_#E0004D,_#6B2AA0)] text-white'
                     : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
                 }`}
               >
@@ -781,8 +781,8 @@ const BackgroundPanel: React.FC<BackgroundPanelProps> = ({
                     onClick={() => onElementUpdate?.({ fontFamily: font })}
                     className={`p-3 border rounded text-left transition-colors group ${
                       isActiveFont
-                        ? 'border-[hsl(var(--primary))] bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white'
-                        : 'border-gray-200 hover:border-[hsl(var(--primary))] hover:bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] hover:text-white'
+                        ? 'border-[hsl(var(--primary))] bg-[radial-gradient(circle_at_0%_0%,_#E0004D,_#6B2AA0)] text-white'
+                        : 'border-gray-200 hover:border-[hsl(var(--primary))] hover:bg-[radial-gradient(circle_at_0%_0%,_#E0004D,_#6B2AA0)] hover:text-white'
                     }`}
                   >
                     <span style={{ fontFamily: font }} className="text-lg font-medium group-hover:text-white">
@@ -816,7 +816,7 @@ const BackgroundPanel: React.FC<BackgroundPanelProps> = ({
                     }}
                     className={`w-full p-3 border rounded-lg text-left transition-all duration-200 ${
                       isActive
-                        ? 'border-[hsl(var(--primary))] bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white shadow-lg'
+                        ? 'border-[hsl(var(--primary))] bg-[radial-gradient(circle_at_0%_0%,_#E0004D,_#6B2AA0)] text-white shadow-lg'
                         : 'border-gray-200 bg-white hover:border-[hsl(var(--primary))] hover:bg-gray-50 text-gray-900'
                     }`}
                   >

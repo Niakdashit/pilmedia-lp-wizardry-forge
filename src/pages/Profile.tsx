@@ -16,7 +16,7 @@ const Profile: React.FC = () => {
   if (!user) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-[#841b60]"></div>
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-[#E0004D]"></div>
       </div>
     );
   }
@@ -33,7 +33,7 @@ const Profile: React.FC = () => {
     <div className="max-w-4xl mx-auto p-6">
       <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
         {/* Header */}
-        <div className="bg-gradient-to-r from-[#841b60] to-[#b41b60] px-8 py-12 text-white">
+        <div className="bg-gradient-to-r from-[#E0004D] to-[#6B2AA0] px-8 py-12 text-white">
           <div className="flex items-center space-x-6">
             <div className="w-24 h-24 bg-white/20 rounded-full flex items-center justify-center">
               <User className="w-12 h-12" />
@@ -89,11 +89,11 @@ const Profile: React.FC = () => {
               <h2 className="text-xl font-semibold text-gray-900 mb-6">Activité</h2>
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-gray-50 rounded-lg p-4 text-center">
-                  <div className="text-2xl font-bold text-[#841b60]">0</div>
+                  <div className="text-2xl font-bold text-[#E0004D]">0</div>
                   <div className="text-sm text-gray-600">Campagnes</div>
                 </div>
                 <div className="bg-gray-50 rounded-lg p-4 text-center">
-                  <div className="text-2xl font-bold text-[#841b60]">0</div>
+                  <div className="text-2xl font-bold text-[#E0004D]">0</div>
                   <div className="text-sm text-gray-600">Participants</div>
                 </div>
               </div>
@@ -102,7 +102,7 @@ const Profile: React.FC = () => {
                 <h3 className="text-lg font-medium text-gray-900 mb-4">Actions récentes</h3>
                 <div className="space-y-3">
                   <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-                    <div className="w-2 h-2 bg-[#841b60] rounded-full"></div>
+                    <div className="w-2 h-2 bg-[#E0004D] rounded-full"></div>
                     <div className="flex-1">
                       <p className="text-sm text-gray-900">Connexion à la plateforme</p>
                       <p className="text-xs text-gray-500">À l'instant</p>

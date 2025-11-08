@@ -49,7 +49,7 @@ const ParticipationsViewer: React.FC<ParticipationsViewerProps> = ({
           <button
             onClick={handleExport}
             disabled={participations.length === 0}
-            className="flex items-center gap-2 bg-gradient-to-br from-[#841b60] to-[#b41b60] text-white px-4 py-2 rounded-lg hover:bg-[#6d1550] disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center gap-2 bg-gradient-to-br from-[#E0004D] to-[#6B2AA0] text-white px-4 py-2 rounded-lg hover:bg-[#6d1550] disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Download className="w-4 h-4" />
             Exporter CSV
@@ -124,7 +124,7 @@ const ParticipationsViewer: React.FC<ParticipationsViewerProps> = ({
                   </div>
                   <button
                     onClick={() => viewParticipation(participation)}
-                    className="flex items-center gap-1 text-[#841b60] hover:bg-gradient-to-br hover:from-[#841b60] hover:to-[#b41b60] hover:text-white px-3 py-1 rounded transition-colors"
+                    className="flex items-center gap-1 text-[#E0004D] hover:bg-gradient-to-br hover:from-[#E0004D] hover:to-[#6B2AA0] hover:text-white px-3 py-1 rounded transition-colors"
                   >
                     <Eye className="w-4 h-4" />
                     Voir

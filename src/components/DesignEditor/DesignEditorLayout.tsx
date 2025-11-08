@@ -2035,7 +2035,7 @@ useEffect(() => {
 
     const currentWheelConfig = {
       borderStyle: wheelModalConfig?.wheelBorderStyle || campaignConfig?.wheelConfig?.borderStyle || campaignConfig?.design?.wheelBorderStyle || 'classic',
-      borderColor: wheelModalConfig?.wheelBorderColor || campaignConfig?.wheelConfig?.borderColor || campaignConfig?.design?.wheelConfig?.borderColor || '#841b60',
+      borderColor: wheelModalConfig?.wheelBorderColor || campaignConfig?.wheelConfig?.borderColor || campaignConfig?.design?.wheelConfig?.borderColor || '#E0004D',
       scale: wheelModalConfig?.wheelScale !== undefined ? wheelModalConfig.wheelScale : (campaignConfig?.wheelConfig?.scale !== undefined ? campaignConfig.wheelConfig.scale : (campaignConfig?.design?.wheelConfig?.scale || 2.4))
     };
 
@@ -2453,10 +2453,10 @@ useEffect(() => {
       const currentWheelConfig = currentConfig?.design?.wheelConfig || {};
       const isClassicBorder = (currentWheelConfig?.borderStyle || 'classic') === 'classic';
       const shouldUpdateBorderColor = isClassicBorder && 
-        (!currentWheelConfig?.borderColor || currentWheelConfig.borderColor === '#841b60');
+        (!currentWheelConfig?.borderColor || currentWheelConfig.borderColor === '#E0004D');
       
       // Couleurs principales à utiliser
-      const primaryColor = colors[0] || currentConfig?.design?.brandColors?.primary || '#841b60';
+      const primaryColor = colors[0] || currentConfig?.design?.brandColors?.primary || '#E0004D';
       const secondaryColor = '#ffffff'; // Toujours blanc pour les segments secondaires
       const accentColor = colors[2] || currentConfig?.design?.brandColors?.accent || '#45b7d1';
       
@@ -2781,7 +2781,7 @@ useEffect(() => {
             {/* Floating Edit Mode Button */}
             <button
               onClick={() => setShowFunnel(false)}
-              className={`absolute top-4 ${previewButtonSide === 'left' ? 'left-4' : 'right-4'} z-[9999] px-4 py-2 bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] shadow-none focus:shadow-none ring-0 focus:ring-0 drop-shadow-none filter-none backdrop-blur-0 pointer-events-auto`}
+              className={`absolute top-4 ${previewButtonSide === 'left' ? 'left-4' : 'right-4'} z-[9999] px-4 py-2 bg-[radial-gradient(circle_at_0%_0%,_#E0004D,_#6B2AA0)] text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-[radial-gradient(circle_at_0%_0%,_#E0004D,_#6B2AA0)] shadow-none focus:shadow-none ring-0 focus:ring-0 drop-shadow-none filter-none backdrop-blur-0 pointer-events-auto`}
             >
               Mode édition
             </button>
@@ -3475,7 +3475,7 @@ useEffect(() => {
           </button>
           <button
             onClick={handleSaveAndQuit}
-            className="inline-flex items-center px-4 py-2 text-sm rounded-xl bg-gradient-to-br from-[#841b60] to-[#b41b60] backdrop-blur-sm text-white font-medium border border-white/20 shadow-lg shadow-[#841b60]/20 hover:from-[#841b60] hover:to-[#6d164f] hover:shadow-xl hover:shadow-[#841b60]/30 transition-all duration-300 transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-[#841b60]/20"
+            className="inline-flex items-center px-4 py-2 text-sm rounded-xl bg-gradient-to-br from-[#E0004D] to-[#6B2AA0] backdrop-blur-sm text-white font-medium border border-white/20 shadow-lg shadow-[#E0004D]/20 hover:from-[#E0004D] hover:to-[#4D2388] hover:shadow-xl hover:shadow-[#E0004D]/30 transition-all duration-300 transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-[#E0004D]/20"
             title="Sauvegarder et quitter"
           >
             <Save className="w-4 h-4 mr-1" />
@@ -3508,7 +3508,7 @@ useEffect(() => {
                 value={newCampaignName}
                 onChange={(e) => setNewCampaignName(e.target.value)}
                 placeholder="Ex: Promo Rentrée Septembre"
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#841b60]"
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#E0004D]"
                 autoFocus
               />
             </div>
@@ -3522,7 +3522,7 @@ useEffect(() => {
               <button
                 onClick={handleSaveCampaignName}
                 disabled={!newCampaignName.trim()}
-                className="inline-flex items-center px-4 py-2 text-sm rounded-xl bg-gradient-to-br from-[#841b60] to-[#b41b60] backdrop-blur-sm text-white font-medium border border-white/20 shadow-lg shadow-[#841b60]/20 hover:from-[#841b60] hover:to-[#6d164f] hover:shadow-xl hover:shadow-[#841b60]/30 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="inline-flex items-center px-4 py-2 text-sm rounded-xl bg-gradient-to-br from-[#E0004D] to-[#6B2AA0] backdrop-blur-sm text-white font-medium border border-white/20 shadow-lg shadow-[#E0004D]/20 hover:from-[#E0004D] hover:to-[#4D2388] hover:shadow-xl hover:shadow-[#E0004D]/30 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Enregistrer
               </button>

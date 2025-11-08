@@ -32,7 +32,7 @@ const ButtonAction: React.FC<ButtonActionProps> = ({
             onClick={() => onActionTypeChange(action.value)}
             className={`p-3 border-2 rounded-lg flex items-center justify-center space-x-2 transition-colors ${
               actionType === action.value
-                ? 'border-[#841b60] bg-[#f9f0f5] text-[#841b60]'
+                ? 'border-[#E0004D] bg-[#f9f0f5] text-[#E0004D]'
                 : 'border-gray-200 hover:border-gray-300'
             }`}
           >
@@ -47,7 +47,7 @@ const ButtonAction: React.FC<ButtonActionProps> = ({
           placeholder="https://votre-lien.com"
           value={actionLink || ''}
           onChange={(e) => onActionLinkChange(e.target.value)}
-          className="mt-2 w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#841b60]"
+          className="mt-2 w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#E0004D]"
         />
       )}
     </div>

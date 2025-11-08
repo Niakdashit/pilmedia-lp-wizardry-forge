@@ -60,7 +60,7 @@ const ModernGeneralTab: React.FC<ModernGeneralTabProps> = ({
           type="text"
           value={campaign.name || ''}
           onChange={e => handleInputChange('name', e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E0004D] focus:border-transparent"
           placeholder="Ma nouvelle campagne"
         />
       </div>
@@ -71,7 +71,7 @@ const ModernGeneralTab: React.FC<ModernGeneralTabProps> = ({
         <textarea
           value={campaign.description || ''}
           onChange={e => handleInputChange('description', e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E0004D] focus:border-transparent"
           rows={3}
           placeholder="Description de la campagne..."
         />
@@ -87,7 +87,7 @@ const ModernGeneralTab: React.FC<ModernGeneralTabProps> = ({
           type="url"
           value={campaign.url || ''}
           onChange={e => handleInputChange('url', e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E0004D] focus:border-transparent"
           placeholder="https://example.com/campagne"
         />
       </div>
@@ -103,7 +103,7 @@ const ModernGeneralTab: React.FC<ModernGeneralTabProps> = ({
             type="date"
             value={campaign.startDate || ''}
             onChange={e => handleInputChange('startDate', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E0004D] focus:border-transparent"
           />
         </div>
         <div className="space-y-2">
@@ -115,7 +115,7 @@ const ModernGeneralTab: React.FC<ModernGeneralTabProps> = ({
             type="date"
             value={campaign.endDate || ''}
             onChange={e => handleInputChange('endDate', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E0004D] focus:border-transparent"
           />
         </div>
       </div>
@@ -131,7 +131,7 @@ const ModernGeneralTab: React.FC<ModernGeneralTabProps> = ({
             type="time"
             value={campaign.startTime || '09:00'}
             onChange={e => handleInputChange('startTime', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E0004D] focus:border-transparent"
           />
         </div>
         <div className="space-y-2">
@@ -143,7 +143,7 @@ const ModernGeneralTab: React.FC<ModernGeneralTabProps> = ({
             type="time"
             value={campaign.endTime || '18:00'}
             onChange={e => handleInputChange('endTime', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E0004D] focus:border-transparent"
           />
         </div>
       </div>

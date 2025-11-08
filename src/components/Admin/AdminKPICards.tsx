@@ -30,7 +30,7 @@ const AdminKPICards: React.FC<AdminKPICardsProps> = ({ stats }) => {
       value: stats.totalClients,
       icon: Users,
       bgColor: 'bg-[#fdf2f8]',
-      iconColor: 'text-[#841b60]',
+      iconColor: 'text-[#E0004D]',
       iconBg: 'bg-[#fce7f3]'
     },
     {

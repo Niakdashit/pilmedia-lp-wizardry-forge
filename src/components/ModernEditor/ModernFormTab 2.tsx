@@ -65,7 +65,7 @@ function SortableField({
             type="text"
             value={field.label}
             onChange={(e) => updateField(field.id, { label: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60]"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E0004D]"
           />
         </div>
         <div>
@@ -73,7 +73,7 @@ function SortableField({
           <select
             value={field.type}
             onChange={(e) => updateField(field.id, { type: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60]"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E0004D]"
           >
             {fieldTypes.map((type) => (
               <option key={type.value} value={type.value}>
@@ -90,7 +90,7 @@ function SortableField({
           type="text"
           value={field.placeholder || ''}
           onChange={(e) => updateField(field.id, { placeholder: e.target.value })}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60]"
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E0004D]"
         />
       </div>
 
@@ -104,7 +104,7 @@ function SortableField({
                   type="text"
                   value={option}
                   onChange={(e) => updateOption(field.id, optionIndex, e.target.value)}
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60]"
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E0004D]"
                 />
                 <button onClick={() => removeOption(field.id, optionIndex)} className="p-2 text-red-600 hover:bg-red-50 rounded">
                   <Trash2 className="w-4 h-4" />
@@ -113,7 +113,7 @@ function SortableField({
             ))}
             <button
               onClick={() => addOption(field.id)}
-              className="flex items-center space-x-2 px-3 py-2 border border-dashed border-gray-300 rounded-lg hover:border-[#841b60] transition-colors"
+              className="flex items-center space-x-2 px-3 py-2 border border-dashed border-gray-300 rounded-lg hover:border-[#E0004D] transition-colors"
             >
               <Plus className="w-4 h-4" />
               <span>Ajouter une option</span>
@@ -128,7 +128,7 @@ function SortableField({
           id={`required-${field.id}`}
           checked={field.required || false}
           onChange={(e) => updateField(field.id, { required: e.target.checked })}
-          className="mr-2 w-4 h-4 text-[#841b60] border-gray-300 rounded focus:ring-[#841b60]"
+          className="mr-2 w-4 h-4 text-[#E0004D] border-gray-300 rounded focus:ring-[#E0004D]"
         />
         <label htmlFor={`required-${field.id}`} className="text-sm text-gray-700">
           Champ obligatoire
@@ -232,7 +232,7 @@ const ModernFormTab: React.FC<ModernFormTabProps> = ({
 
       <button
         onClick={addField}
-        className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-br from-[#841b60] to-[#b41b60] text-white rounded-lg hover:bg-[#6d164f] transition-colors"
+        className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-br from-[#E0004D] to-[#6B2AA0] text-white rounded-lg hover:bg-[#4D2388] transition-colors"
       >
         <Plus className="w-4 h-4" />
         <span>Ajouter un champ</span>

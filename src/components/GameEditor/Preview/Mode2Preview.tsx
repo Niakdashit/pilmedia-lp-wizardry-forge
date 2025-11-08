@@ -36,7 +36,7 @@ const Mode2Preview: React.FC<Mode2PreviewProps> = ({
 
   // Extraction automatique des couleurs de l'image de fond
   const customColors = useMemo(() => ({
-    primary: config.participateButtonColor || '#841b60',
+    primary: config.participateButtonColor || '#E0004D',
     secondary: config.outlineColor || '#dc2626', 
     accent: config.backgroundColor || '#10b981'
   }), [config.participateButtonColor, config.outlineColor, config.backgroundColor]);
