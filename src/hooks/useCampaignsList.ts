@@ -150,47 +150,53 @@ export const useCampaignsList = () => {
 
       // Transform data to match our interface
       const transformedCampaigns: CampaignListItem[] = (data || []).map((campaign: any) => {
-        // Extract dates with STRICT priority: DB columns first (synchronized by trigger)
+        // Compute dates preferring campaign_settings (source of truth)
         let startDate = '';
         let endDate = '';
         
         // Prefer publication.name from campaign_settings for display name
         const publicationName = campaign.campaign_settings?.[0]?.publication?.name;
         
-        // PRIORITY 1: campaigns table columns (now always up-to-date via trigger)
+        // Read from campaigns table (may be stale if trigger didn't sync)
         if (campaign.start_date) {
-          try { startDate = new Date(campaign.start_date).toISOString(); } catch { startDate = campaign.start_date; }
+          try { startDate = new Date(campaign.start_date).toISOString(); } catch { startDate = String(campaign.start_date); }
         }
         if (campaign.end_date) {
-          try { endDate = new Date(campaign.end_date).toISOString(); } catch { endDate = campaign.end_date; }
+          try { endDate = new Date(campaign.end_date).toISOString(); } catch { endDate = String(campaign.end_date); }
         }
         
-        // PRIORITY 2: campaign_settings (fallback if DB columns empty - shouldn't happen after trigger)
-        if (!startDate || !endDate) {
-          const cs: any = campaign.campaign_settings;
-          const csRow = Array.isArray(cs) ? cs[0] : cs;
-          if (csRow) {
-            if (!startDate && csRow.start_date) {
-              const d = String(csRow.start_date);
-              const t = typeof csRow.start_time === 'string' ? csRow.start_time : undefined;
-              startDate = d.includes('T') ? d : new Date(`${d}T${t || '00:00'}`).toISOString();
-            }
-            if (!endDate && csRow.end_date) {
-              const d = String(csRow.end_date);
-              const t = typeof csRow.end_time === 'string' ? csRow.end_time : undefined;
-              endDate = d.includes('T') ? d : new Date(`${d}T${t || '23:59'}`).toISOString();
-            }
-            // Publication ISO (last resort)
-            if (!startDate && csRow.publication?.start) {
-              try { startDate = new Date(csRow.publication.start).toISOString(); } catch {}
-            }
-            if (!endDate && csRow.publication?.end) {
-              try { endDate = new Date(csRow.publication.end).toISOString(); } catch {}
-            }
+        // Always compute dates from campaign_settings and override when available
+        const cs: any = campaign.campaign_settings;
+        const csRow = Array.isArray(cs) ? cs[0] : cs;
+        if (csRow) {
+          // start from start_date + optional start_time
+          let csStart = '';
+          if (csRow.start_date) {
+            const d = String(csRow.start_date);
+            const t = typeof csRow.start_time === 'string' ? csRow.start_time : '00:00';
+            csStart = d.includes('T') ? d : `${d}T${t}`;
+          } else if (csRow.publication?.start) {
+            csStart = String(csRow.publication.start);
+          }
+          if (csStart) {
+            try { startDate = new Date(csStart).toISOString(); } catch { startDate = csStart; }
+          }
+          
+          // end from end_date + optional end_time
+          let csEnd = '';
+          if (csRow.end_date) {
+            const d = String(csRow.end_date);
+            const t = typeof csRow.end_time === 'string' ? csRow.end_time : '23:59';
+            csEnd = d.includes('T') ? d : `${d}T${t}`;
+          } else if (csRow.publication?.end) {
+            csEnd = String(csRow.publication.end);
+          }
+          if (csEnd) {
+            try { endDate = new Date(csEnd).toISOString(); } catch { endDate = csEnd; }
           }
         }
         
-        // PRIORITY 3: config (legacy - should rarely be used now)
+        // Legacy fallback from config
         if ((!startDate || !endDate) && campaign.config) {
           try {
             const config = typeof campaign.config === 'string' ? JSON.parse(campaign.config) : campaign.config;
@@ -202,12 +208,11 @@ export const useCampaignsList = () => {
               const time = config.endTime || '23:59';
               endDate = new Date(`${config.endDate}T${time}`).toISOString();
             }
-            // Legacy single ISO
             if (!startDate && config.startDate) startDate = config.startDate;
             if (!endDate && config.endDate) endDate = config.endDate;
           } catch {}
         }
-
+        
         // Fallback: keep empty when not configured
         let draftName: string | undefined;
         try {
@@ -217,24 +222,24 @@ export const useCampaignsList = () => {
             draftName = draft?.publication?.name || undefined;
           }
         } catch {}
-
+        
         // Debug log for jackpot fs
         if (campaign.name === 'jackpot fs') {
-          const cs: any = campaign.campaign_settings;
-          const csRow = Array.isArray(cs) ? cs[0] : cs;
+          const csDbg: any = campaign.campaign_settings;
+          const csDbgRow = Array.isArray(csDbg) ? csDbg[0] : csDbg;
           console.log('🔍 [useCampaignsList] Loading jackpot fs dates:', {
             name: campaign.name,
             'campaign.start_date': campaign.start_date,
             'campaign.end_date': campaign.end_date,
-            'csRow?.start_date': csRow?.start_date,
-            'csRow?.end_date': csRow?.end_date,
-            'csRow?.publication?.start': csRow?.publication?.start,
-            'csRow?.publication?.end': csRow?.publication?.end,
+            'csRow?.start_date': csDbgRow?.start_date,
+            'csRow?.end_date': csDbgRow?.end_date,
+            'csRow?.publication?.start': csDbgRow?.publication?.start,
+            'csRow?.publication?.end': csDbgRow?.publication?.end,
             'final startDate': startDate,
             'final endDate': endDate,
           });
         }
-
+        
         return {
           id: campaign.id,
           name: publicationName || draftName || campaign.name,
