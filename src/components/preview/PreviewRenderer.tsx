@@ -659,7 +659,7 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
         <div className="absolute inset-0 z-0" style={backgroundStyle} />
 
         {/* Content avec safe zone */}
-        <div className={`relative z-30 h-full w-full ${currentScreen === 'screen2' ? 'overflow-visible' : 'overflow-y-auto overflow-x-visible'}`}>
+        <div className={`relative z-30 h-full w-full ${currentScreen === 'screen2' ? 'overflow-visible' : 'overflow-visible'}`}>
           {/* SCREEN 1: Page d'accueil */}
           {currentScreen === 'screen1' && (
             <div className={`flex flex-col ${isPhoneFrame ? 'min-h-full' : 'min-h-screen min-h-[100svh] min-h-[100dvh]'} relative`}>

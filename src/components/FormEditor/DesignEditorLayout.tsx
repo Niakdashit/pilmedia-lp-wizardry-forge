@@ -3418,7 +3418,7 @@ useEffect(() => {
             </button>
             
             {/* Contenu de l'écran - Rendu direct du canvas screen1 sans frame */}
-            <div className="w-full h-full overflow-auto">
+            <div className="w-full h-full overflow-visible">
               <DesignCanvas
                 editorMode={editorMode}
                 screenId="screen1"
@@ -3458,7 +3458,7 @@ useEffect(() => {
         ) : showFunnel ? (
           /* Full Screen Preview Mode - Clone strict de l'écran 1 (DESKTOP) */
           <div 
-            className="group fixed inset-0 z-40 w-full h-[100dvh] min-h-[100dvh] overflow-auto"
+            className="group fixed inset-0 z-40 w-full h-[100dvh] min-h-[100dvh] overflow-visible"
             style={{ backgroundColor: '#ffffff' }}
           >
             {/* Floating Edit Mode Button */}

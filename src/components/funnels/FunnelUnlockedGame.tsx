@@ -698,7 +698,7 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
                 borderRadius: 0
               }}
             >
-              <div className="flex flex-col h-full overflow-y-auto">
+              <div className="flex flex-col h-full overflow-visible">
                 {/* Modules Logo (collés en haut sans padding) */}
                 {logoModules1.length > 0 && (
                   <div
@@ -818,7 +818,7 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
             >
             {/* ÉCRAN 1 : Avant le jeu */}
             {currentScreen === 'screen1' && (
-              <div className="flex flex-col h-full overflow-y-auto">
+              <div className="flex flex-col h-full overflow-visible">
                 {/* Modules Logo (collés en haut sans padding) */}
                 {logoModules1.length > 0 && (
                   <div
