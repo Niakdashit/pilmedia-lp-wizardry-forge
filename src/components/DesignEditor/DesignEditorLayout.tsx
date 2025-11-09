@@ -2760,10 +2760,6 @@ useEffect(() => {
               onSave={handleSaveAndQuit}
               showSaveCloseButtons={false}
               campaignId={(campaignState as any)?.id || new URLSearchParams(location.search).get('campaign') || undefined}
-              onFullScreenPreview={() => {
-                setFullScreenPreviewDevice(selectedDevice === 'mobile' ? 'mobile' : 'desktop');
-                setShowFullScreenPreview(true);
-              }}
             />
 
             {/* Bouton d'aide des raccourcis clavier */}

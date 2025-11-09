@@ -3389,10 +3389,6 @@ useEffect(() => {
             onNavigateToSettings={handleNavigateToSettings}
             onBeforeOpenSettings={handleBeforeOpenSettings}
             campaignId={(campaignState as any)?.id || new URLSearchParams(location.search).get('campaign') || undefined}
-            onFullScreenPreview={() => {
-              setFullScreenPreviewDevice(selectedDevice === 'mobile' ? 'mobile' : 'desktop');
-              setShowFullScreenPreview(true);
-            }}
           />
 
           {/* Bouton d'aide des raccourcis clavier */}

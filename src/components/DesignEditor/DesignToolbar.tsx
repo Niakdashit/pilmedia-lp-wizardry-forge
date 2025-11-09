@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from '@/lib/router-adapter';
-import { Monitor, Smartphone, Save, Eye, X, Undo, Redo, Layers, RefreshCw, Settings, Maximize2 } from 'lucide-react';
+import { Monitor, Smartphone, Save, Eye, X, Undo, Redo, Layers, RefreshCw, Settings } from 'lucide-react';
 import CampaignSettingsModal from './modals/CampaignSettingsModal';
 import CampaignValidationModal from '@/components/shared/CampaignValidationModal';
 import { useCampaignValidation } from '@/hooks/useCampaignValidation';
@@ -33,8 +33,6 @@ interface DesignToolbarProps {
   onRecalculateMobileScaling?: () => void;
   // Campaign ID for settings modal
   campaignId?: string;
-  // Full screen preview
-  onFullScreenPreview?: () => void;
 }
 
 const DesignToolbar: React.FC<DesignToolbarProps> = React.memo(({
@@ -52,8 +50,7 @@ const DesignToolbar: React.FC<DesignToolbarProps> = React.memo(({
   onSave,
   showSaveCloseButtons = true,
   onRecalculateMobileScaling,
-  campaignId,
-  onFullScreenPreview
+  campaignId
 }) => {
   const navigate = useNavigate();
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
@@ -288,16 +285,6 @@ const DesignToolbar: React.FC<DesignToolbarProps> = React.memo(({
           <Eye className="w-4 h-4 mr-1" />
           {isPreviewMode ? 'Mode Édition' : 'Aperçu'}
         </button>
-        {onFullScreenPreview && (
-          <button
-            onClick={onFullScreenPreview}
-            className="flex items-center px-2.5 py-1.5 text-xs sm:text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-            title="Prévisualisation en grand écran"
-          >
-            <Maximize2 className="w-4 h-4 mr-1" />
-            <span className="hidden sm:inline">Grand écran</span>
-          </button>
-        )}
         <button
           onClick={handleOpenSettings}
           className={`flex items-center px-2.5 py-1.5 text-xs sm:text-sm border rounded-lg transition-colors border-gray-300 hover:bg-gray-50`}

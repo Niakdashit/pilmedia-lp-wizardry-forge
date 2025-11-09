@@ -3395,10 +3395,6 @@ useEffect(() => {
             onSave={handleSaveAndQuit}
             showSaveCloseButtons={false}
             campaignId={(campaignState as any)?.id || new URLSearchParams(location.search).get('campaign') || undefined}
-            onFullScreenPreview={() => {
-              setFullScreenPreviewDevice(selectedDevice === 'mobile' ? 'mobile' : 'desktop');
-              setShowFullScreenPreview(true);
-            }}
           />
 
           {/* Bouton d'aide des raccourcis clavier */}
@@ -3411,82 +3407,238 @@ useEffect(() => {
       {/* Main Content */}
       <div className="flex-1 flex overflow-hidden relative">
         {showFunnel ? (
-          /* Funnel Preview Mode */
+          /* Full Screen Preview Mode - Clone strict de l'écran 1 */
           <div 
-            className="group fixed inset-0 z-40 w-full h-[100dvh] min-h-[100dvh] overflow-hidden flex items-center justify-center"
-            style={{ backgroundColor: editorMode === 'article' ? '#2c2c35' : 'transparent' }}
+            className="group fixed inset-0 z-40 w-full h-[100dvh] min-h-[100dvh] overflow-auto"
+            style={{ backgroundColor: '#ffffff' }}
           >
             {/* Floating Edit Mode Button */}
             <button
               onClick={() => setShowFunnel(false)}
-              className={`absolute top-4 ${previewButtonSide === 'left' ? 'left-4' : 'right-4'} z-50 px-4 py-2 bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] shadow-none focus:shadow-none ring-0 focus:ring-0 drop-shadow-none filter-none backdrop-blur-0`}
+              className={`absolute top-4 ${previewButtonSide === 'left' ? 'left-4' : 'right-4'} px-4 py-2 bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] shadow-none focus:shadow-none ring-0 focus:ring-0 drop-shadow-none filter-none backdrop-blur-0`}
+              style={{ zIndex: 9999999 }}
             >
               Mode édition
             </button>
-            {editorMode === 'article' ? (
-              currentStep === 'article' ? (
-                selectedDevice === 'mobile' ? (
-                  <div className="flex items-center justify-center w-full h-full">
-                    <div 
-                      className="relative overflow-hidden rounded-[32px] shadow-2xl"
-                      style={{
-                        width: '430px',
-                        height: '932px',
-                        maxHeight: '90vh'
-                      }}
-                    >
-                      <ArticleFunnelView
-                        articleConfig={getArticleConfigWithDefaults(campaignState, campaignData)}
-                        campaignType={(campaignState as any)?.type || 'form'}
-                        campaign={campaignData}
-                        wheelModalConfig={wheelModalConfig}
-                        gameModalConfig={wheelModalConfig}
-                        currentStep={currentStep}
-                        editable={false}
-                        formFields={(campaignState as any)?.formFields}
-                        onCTAClick={handleCTAClick}
-                        onFormSubmit={handleFormSubmit}
-                        onGameComplete={handleGameComplete}
-                        onStepChange={setCurrentStep}
-                        containerClassName="p-0"
-                        containerStyle={{ backgroundColor: 'transparent' }}
-                      />
-                    </div>
-                  </div>
-                ) : (
-                  <ArticleFunnelView
-                    articleConfig={getArticleConfigWithDefaults(campaignState, campaignData)}
-                    campaignType={(campaignState as any)?.type || 'form'}
-                    campaign={campaignData}
-                    wheelModalConfig={wheelModalConfig}
-                    gameModalConfig={wheelModalConfig}
-                    currentStep={currentStep}
-                    editable={false}
-                    formFields={(campaignState as any)?.formFields}
-                    onCTAClick={handleCTAClick}
-                    onFormSubmit={handleFormSubmit}
-                    onGameComplete={handleGameComplete}
-                    onStepChange={setCurrentStep}
-                    containerClassName="py-8"
-                    containerStyle={{ backgroundColor: '#2c2c35' }}
-                  />
-                )
-              ) : (
-                <PreviewRenderer
-                  campaign={campaignData}
-                  previewMode={actualDevice === 'desktop' && selectedDevice === 'mobile' ? 'mobile' : selectedDevice}
-                  wheelModalConfig={wheelModalConfig}
-                  constrainedHeight={true}
+            
+            {/* Clone strict du canvas preview 1 en plein écran - SANS MARGES */}
+            <div className="w-full h-full" style={{ borderRadius: 0 }}>
+              <style>{`
+                /* Force suppression de tous les border-radius en mode preview */
+                .design-canvas-container,
+                [data-canvas-root],
+                .canvas-viewport {
+                  border-radius: 0 !important;
+                }
+                
+                /* Force le conteneur principal à remplir tout l'écran */
+                .design-canvas-container {
+                  width: 100vw !important;
+                  height: 100vh !important;
+                  max-width: 100vw !important;
+                  max-height: 100vh !important;
+                  margin: 0 !important;
+                  padding: 0 !important;
+                  position: fixed !important;
+                  top: 0 !important;
+                  left: 0 !important;
+                  right: 0 !important;
+                  bottom: 0 !important;
+                  display: flex !important;
+                  align-items: flex-start !important;
+                  justify-content: flex-start !important;
+                }
+                
+                /* Force le canvas root à remplir l'écran */
+                [data-canvas-root] {
+                  width: 100vw !important;
+                  height: 100vh !important;
+                  max-width: 100vw !important;
+                  margin: 0 !important;
+                  padding: 0 !important;
+                }
+                
+                /* Force le viewport à remplir l'écran */
+                .canvas-viewport {
+                  width: 100vw !important;
+                  height: 100vh !important;
+                  max-width: 100vw !important;
+                  margin: 0 !important;
+                  padding: 0 !important;
+                }
+                
+                /* Masquer tous les éléments d'édition en mode preview */
+                .safe-zone,
+                [class*="safe-zone"],
+                [class*="SafeZone"],
+                [data-safe-zone],
+                .grid-overlay,
+                [class*="grid-overlay"],
+                [class*="GridOverlay"],
+                .canvas-toolbar,
+                [class*="canvas-toolbar"],
+                [class*="CanvasToolbar"],
+                .quiz-settings-button,
+                [class*="quiz-settings"],
+                [class*="QuizSettings"],
+                button[title*="grille"],
+                button[title*="Grille"],
+                button[aria-label*="grille"],
+                button[aria-label*="Grille"],
+                [data-grid-button],
+                [data-template-settings],
+                /* Masquer les bordures pointillées - SAUF les modules de contenu */
+                *[style*="border"][style*="dashed"]:not([class*="module"]):not([data-module]):not([class*="text"]):not([class*="bloc"]),
+                *[style*="border-style: dashed"]:not([class*="module"]):not([data-module]):not([class*="text"]):not([class*="bloc"]),
+                *[style*="border: 2px dashed"]:not([class*="module"]):not([data-module]):not([class*="text"]):not([class*="bloc"]),
+                *[style*="border: 1px dashed"]:not([class*="module"]):not([data-module]):not([class*="text"]):not([class*="bloc"]),
+                *[class*="border-dashed"]:not([class*="module"]):not([data-module]):not([class*="text"]):not([class*="bloc"]),
+                /* Masquer le bouton violet en bas à droite */
+                .fixed.bottom-6.right-6,
+                .fixed.bottom-4.right-4,
+                button[style*="radial-gradient"],
+                button[class*="bg-purple"],
+                button[class*="bg-violet"] {
+                  display: none !important;
+                  visibility: hidden !important;
+                  opacity: 0 !important;
+                }
+                
+                /* Masquer uniquement les boutons d'action d'édition */
+                .design-canvas-container button[class*="delete"],
+                .design-canvas-container button[class*="duplicate"],
+                .design-canvas-container button[class*="move"],
+                .design-canvas-container button[class*="edit"],
+                .design-canvas-container button[class*="resize"],
+                .design-canvas-container button[class*="drag"],
+                .design-canvas-container button[title*="Supprimer"],
+                .design-canvas-container button[title*="Dupliquer"],
+                .design-canvas-container button[title*="Déplacer"],
+                .design-canvas-container button[aria-label*="Supprimer"],
+                .design-canvas-container button[aria-label*="Dupliquer"],
+                .design-canvas-container button[aria-label*="Déplacer"],
+                .design-canvas-container [class*="module-actions"],
+                .design-canvas-container [class*="element-actions"],
+                .design-canvas-container [class*="resize-handle"],
+                .design-canvas-container [class*="drag-handle"],
+                .design-canvas-container [data-resize-handle],
+                .design-canvas-container [data-drag-handle],
+                .design-canvas-container .resize-handle,
+                .design-canvas-container .drag-handle,
+                /* Masquer l'icône de drag (6 points) au survol */
+                .design-canvas-container button[style*="position: absolute"][style*="top"],
+                .design-canvas-container button[style*="position: absolute"][style*="left"],
+                .design-canvas-container div:hover > button[style*="position: absolute"],
+                .design-canvas-container [class*="module"]:hover > button,
+                .design-canvas-container [data-module]:hover > button,
+                /* Masquer les poignées de redimensionnement par position */
+                .design-canvas-container > div > button[style*="position: absolute"],
+                .design-canvas-container [style*="cursor: nwse-resize"],
+                .design-canvas-container [style*="cursor: nesw-resize"],
+                .design-canvas-container [style*="cursor: ns-resize"],
+                .design-canvas-container [style*="cursor: ew-resize"],
+                /* Masquer les icônes de drag (6 points) - ULTRA AGRESSIF */
+                .design-canvas-container button[style*="position: absolute"]:not(form button),
+                .design-canvas-container button[style*="left"],
+                .design-canvas-container button[style*="top"],
+                .design-canvas-container > * > button,
+                .design-canvas-container div > button:first-child,
+                .design-canvas-container [class*="module"] > button,
+                .design-canvas-container [data-module] > button,
+                .design-canvas-container button[style*="width"][style*="height"][style*="position"],
+                .design-canvas-container button:not(form button):not([type="submit"]):not([class*="Envoyer"]) {
+                  display: none !important;
+                  visibility: hidden !important;
+                  opacity: 0 !important;
+                  pointer-events: none !important;
+                  z-index: -9999 !important;
+                }
+                
+                /* Désactiver uniquement les effets visuels de survol */
+                .design-canvas-container *:hover {
+                  outline: none !important;
+                  box-shadow: none !important;
+                }
+                
+                /* Bloquer les interactions uniquement sur les modules texte */
+                .design-canvas-container [class*="module"],
+                .design-canvas-container [data-module],
+                .design-canvas-container [class*="bloc"] {
+                  pointer-events: none !important;
+                  user-select: none !important;
+                  -webkit-user-select: none !important;
+                  -moz-user-select: none !important;
+                  -ms-user-select: none !important;
+                }
+                
+                /* Réactiver les interactions sur le formulaire */
+                .design-canvas-container form,
+                .design-canvas-container form *,
+                .design-canvas-container input,
+                .design-canvas-container textarea,
+                .design-canvas-container button[type="submit"] {
+                  pointer-events: auto !important;
+                  user-select: auto !important;
+                  -webkit-user-select: auto !important;
+                  -moz-user-select: auto !important;
+                  -ms-user-select: auto !important;
+                }
+              `}</style>
+              {editorMode === 'article' && (
+                <ArticleFunnelView
+                  articleConfig={getArticleConfigWithDefaults(campaignState, memoCampaignData)}
+                  campaignType={(campaignState as any)?.type || 'form'}
+                  campaign={memoCampaignData}
+                  wheelModalConfig={undefined}
+                  gameModalConfig={undefined}
+                  currentStep={currentStep}
+                  editable={false}
+                  formFields={(campaignState as any)?.formFields}
+                  onBannerChange={() => {}}
+                  onBannerRemove={() => {}}
+                  onTitleChange={() => {}}
+                  onDescriptionChange={() => {}}
+                  onCTAClick={handleCTAClick}
+                  onFormSubmit={handleFormSubmit}
+                  onGameComplete={handleGameComplete}
+                  onStepChange={setCurrentStep}
                 />
-              )
-            ) : (
-              <PreviewRenderer
-                campaign={campaignData}
-                previewMode={actualDevice === 'desktop' && selectedDevice === 'mobile' ? 'mobile' : selectedDevice}
-                wheelModalConfig={wheelModalConfig}
-                constrainedHeight={true}
+              )}
+              <DesignCanvas
+                editorMode={editorMode}
+                screenId="screen1"
+                selectedDevice={selectedDevice}
+                elements={canvasElements}
+                onElementsChange={() => {}}
+                background={screen1Background}
+                campaign={memoCampaignData}
+                onCampaignChange={() => {}}
+                zoom={1}
+                enableInternalAutoFit={false}
+                onZoomChange={() => {}}
+                selectedElement={null}
+                onSelectedElementChange={() => {}}
+                selectedElements={[]}
+                onSelectedElementsChange={() => {}}
+                onElementUpdate={() => {}}
+                extractedColors={extractedColors}
+                quizModalConfig={undefined}
+                containerClassName="!p-0 !m-0 bg-white !items-start !justify-start !pt-0 !rounded-none"
+                elementFilter={(element: any) => {
+                  return element?.screenId === 'screen1' || !element?.screenId;
+                }}
+                onShowAnimationsPanel={() => {}}
+                onShowPositionPanel={() => {}}
+                onShowDesignPanel={() => {}}
+                onShowEffectsPanel={() => {}}
+                isPreviewMode={true}
+                modularModules={screen1Modules}
+                onModuleUpdate={() => {}}
+                onModuleDelete={() => {}}
+                onModuleMove={() => {}}
+                onModuleDuplicate={() => {}}
               />
-            )}
+            </div>
           </div>
         ) : (
           /* Design Editor Mode */
