@@ -179,7 +179,8 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   onModuleUpdate,
   onModuleDelete,
   onModuleMove,
-  onModuleDuplicate
+  onModuleDuplicate,
+  onFormSubmit
 }, ref) => {
 
   // MODE ARTICLE
