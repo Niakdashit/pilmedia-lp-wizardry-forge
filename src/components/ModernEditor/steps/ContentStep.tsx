@@ -21,7 +21,7 @@ const ContentStep: React.FC<ContentStepProps> = ({
       <div className="space-y-8">
         <div>
           <h2 className="text-2xl font-bold text-gray-900 mb-2 flex items-center">
-            <Palette className="w-6 h-6 mr-2 text-[#841b60]" />
+            <Palette className="w-6 h-6 mr-2 text-[#44444d]" />
             Design et contenu
           </h2>
           <p className="text-gray-600">Personnalisez l'apparence et le contenu de votre campagne</p>
@@ -45,7 +45,7 @@ const ContentStep: React.FC<ContentStepProps> = ({
           </button>
           <button
             onClick={onNext}
-            className="px-8 py-3 bg-gradient-to-r from-[#841b60] to-[#6d164f] text-white rounded-xl hover:shadow-lg transition-all duration-300 font-medium"
+            className="px-8 py-3 bg-gradient-to-r from-[#44444d] to-[#6d164f] text-white rounded-xl hover:shadow-lg transition-all duration-300 font-medium"
           >
             Continuer
           </button>

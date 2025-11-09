@@ -203,7 +203,7 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
               theme="modern"
               size={wheelSize}
               brandColors={{
-                primary: wheelConfig.brandColors?.primary || '#841b60',
+                primary: wheelConfig.brandColors?.primary || '#44444d',
                 secondary: wheelConfig.brandColors?.secondary || '#ffffff',
                 accent: wheelConfig.brandColors?.accent || '#45b7d1'
               }}

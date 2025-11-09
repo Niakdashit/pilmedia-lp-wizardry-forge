@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Download, RefreshCw, Calendar, Mail, Users } from 'lucide-react';
 import { useParticipations, Participation } from '../../hooks/useParticipations';
+import Spinner from '../shared/Spinner';
 
 interface ParticipationsManagerProps {
   campaignId: string;
@@ -53,8 +54,7 @@ const ParticipationsManager: React.FC<ParticipationsManagerProps> = ({
   if (loading && participations.length === 0) {
     return (
       <div className="flex items-center justify-center p-8">
-        <RefreshCw className="w-6 h-6 animate-spin mr-2" />
-        <span>Chargement des participations...</span>
+        <Spinner size="md" text="Chargement des participations..." />
       </div>
     );
   }
@@ -103,13 +103,13 @@ const ParticipationsManager: React.FC<ParticipationsManagerProps> = ({
             disabled={loading}
             className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors disabled:opacity-50"
           >
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            {loading ? <Spinner size="sm" /> : <RefreshCw className="w-4 h-4" />}
             Actualiser
           </button>
           <button
             onClick={handleExport}
             disabled={participations.length === 0}
-            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-br from-[#841b60] to-[#b41b60] text-white rounded-lg hover:bg-[#6d1550] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-br from-[#44444d] to-[#44444d] text-white rounded-lg hover:bg-[#6d1550] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Download className="w-4 h-4" />
             Exporter CSV

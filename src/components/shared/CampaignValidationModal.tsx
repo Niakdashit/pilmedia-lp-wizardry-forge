@@ -98,7 +98,7 @@ const CampaignValidationModal: React.FC<CampaignValidationModalProps> = ({
                 onClose();
                 onOpenSettings();
               }}
-              className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2 text-sm rounded-lg bg-gradient-to-br from-[#841b60] to-[#b41b60] text-white font-medium hover:from-[#841b60] hover:to-[#6d164f] transition-all"
+              className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2 text-sm rounded-lg bg-gradient-to-br from-[#44444d] to-[#44444d] text-white font-medium hover:from-[#44444d] hover:to-[#6d164f] transition-all"
             >
               <Settings className="w-4 h-4" />
               Ouvrir les paramètres

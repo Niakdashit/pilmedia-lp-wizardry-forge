@@ -88,7 +88,7 @@ const CustomQuizGame: React.FC<CustomQuizGameProps> = ({
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="bg-white/90 rounded-3xl shadow-xl max-w-md w-full mx-4 px-8 py-8 text-center">
-          <p className="text-lg text-[#815194]">
+          <p className="text-lg text-[#5a5a63]">
             Aucune question configurée
           </p>
         </div>

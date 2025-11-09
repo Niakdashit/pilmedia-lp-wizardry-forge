@@ -53,11 +53,11 @@ const FacilotabQuizLayout: React.FC<FacilotabQuizLayoutProps> = ({
         )}
         
         <div className="w-full text-left">
-          <div className="text-sm text-[#815194] font-semibold mb-2">
+          <div className="text-sm text-[#5a5a63] font-semibold mb-2">
             Question {questionNumber} sur {totalQuestions}
           </div>
           
-          <h2 className="text-2xl font-bold text-[#815194] mb-6 leading-snug">
+          <h2 className="text-2xl font-bold text-[#5a5a63] mb-6 leading-snug">
             {question}
           </h2>
           
@@ -70,17 +70,17 @@ const FacilotabQuizLayout: React.FC<FacilotabQuizLayoutProps> = ({
                   onClick={() => onAnswerSelect(option.id)}
                   className={`flex items-center w-full border rounded-xl px-5 py-3 font-medium text-lg transition group ${
                     isSelected 
-                      ? 'bg-[#ece2f7] border-[#815194] text-[#815194]' 
-                      : 'bg-[#f5eafd] border-[#e6d6f7] text-[#543269] hover:bg-[#ece2f7]'
+                      ? 'bg-[#ebebed] border-[#5a5a63] text-[#5a5a63]' 
+                      : 'bg-[#f5f5f7] border-[#d0d0d5] text-[#44444d] hover:bg-[#ebebed]'
                   }`}
                   type="button"
                 >
                   <span className={`rounded-full border-2 bg-white w-6 h-6 flex items-center justify-center mr-4 transition ${
                     isSelected 
-                      ? 'border-[#815194]' 
-                      : 'border-[#ae8ac3] group-hover:border-[#815194]'
+                      ? 'border-[#5a5a63]' 
+                      : 'border-[#5a5a63] group-hover:border-[#5a5a63]'
                   }`}>
-                    <span className="text-xs font-bold text-[#815194]">
+                    <span className="text-xs font-bold text-[#5a5a63]">
                       {String.fromCharCode(65 + idx)}
                     </span>
                   </span>

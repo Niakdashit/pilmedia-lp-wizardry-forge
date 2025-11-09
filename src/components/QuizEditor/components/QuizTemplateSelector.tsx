@@ -39,7 +39,7 @@ const QuizTemplateSelector: React.FC<QuizTemplateSelectorProps> = ({
             key={template.id}
             className={`relative p-4 rounded-lg border-2 cursor-pointer transition-all duration-200 ${
               selectedTemplate === template.id
-                ? 'border-[#841b60] bg-white shadow-lg'
+                ? 'border-[#44444d] bg-white shadow-lg'
                 : hoveredTemplate === template.id
                 ? 'border-gray-300 bg-gray-50'
                 : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-md'
@@ -50,7 +50,7 @@ const QuizTemplateSelector: React.FC<QuizTemplateSelectorProps> = ({
           >
             {/* Selection indicator */}
             {selectedTemplate === template.id && (
-              <div className="absolute top-2 right-2 w-6 h-6 rounded-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #841b60 0%, #a21d6b 100%)' }}>
+              <div className="absolute top-2 right-2 w-6 h-6 rounded-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #44444d 0%, #a21d6b 100%)' }}>
                 <Check className="w-4 h-4 text-white" />
               </div>
             )}
@@ -62,7 +62,7 @@ const QuizTemplateSelector: React.FC<QuizTemplateSelectorProps> = ({
                   ? 'text-white'
                   : 'bg-gray-100 text-gray-600'
               }`} style={selectedTemplate === template.id ? {
-                background: 'linear-gradient(135deg, #841b60 0%, #a21d6b 100%)'
+                background: 'linear-gradient(135deg, #44444d 0%, #a21d6b 100%)'
               } : {}}>
                 {getTemplateIcon(template)}
               </div>
@@ -75,8 +75,8 @@ const QuizTemplateSelector: React.FC<QuizTemplateSelectorProps> = ({
                   </h5>
                   {template.hasImage && (
                     <span className="inline-flex items-center px-2 py-1 rounded-full text-xs text-white border" style={{
-                      background: 'linear-gradient(135deg, #841b60 0%, #a21d6b 100%)',
-                      borderColor: '#841b60'
+                      background: 'linear-gradient(135deg, #44444d 0%, #a21d6b 100%)',
+                      borderColor: '#44444d'
                     }}>
                       <Image className="w-3 h-3 mr-1" />
                       Image

@@ -32,7 +32,7 @@ const BrandPanel: React.FC<BrandPanelProps> = ({ onAddElement }) => {
   return (
     <div className="p-4 space-y-6">
       <div>
-        <button className="w-full p-4 bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white rounded-lg hover:bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] transition-colors flex items-center justify-center">
+        <button className="w-full p-4 bg-[#44444d] text-white rounded-lg hover:bg-[#44444d] transition-colors flex items-center justify-center">
           <Plus className="w-5 h-5 mr-2" />
           Créer un kit de marque
         </button>
@@ -51,7 +51,7 @@ const BrandPanel: React.FC<BrandPanelProps> = ({ onAddElement }) => {
             />
           ))}
         </div>
-        <button className="mt-2 text-sm text-[hsl(var(--primary))] hover:text-[#6b1549]">
+        <button className="mt-2 text-sm text-[hsl(var(--primary))] hover:text-[#5a5a63]">
           + Ajouter une couleur
         </button>
       </div>
@@ -68,7 +68,7 @@ const BrandPanel: React.FC<BrandPanelProps> = ({ onAddElement }) => {
             </div>
           ))}
         </div>
-        <button className="mt-2 text-sm text-[hsl(var(--primary))] hover:text-[#6b1549]">
+        <button className="mt-2 text-sm text-[hsl(var(--primary))] hover:text-[#5a5a63]">
           + Ajouter une police
         </button>
       </div>
@@ -90,7 +90,7 @@ const BrandPanel: React.FC<BrandPanelProps> = ({ onAddElement }) => {
           <div className="aspect-square bg-gray-100 rounded-lg border border-gray-200"></div>
           <div className="aspect-square bg-gray-100 rounded-lg border border-gray-200"></div>
         </div>
-        <button className="mt-2 text-sm text-[hsl(var(--primary))] hover:text-[#6b1549]">
+        <button className="mt-2 text-sm text-[hsl(var(--primary))] hover:text-[#5a5a63]">
           + Ajouter des assets
         </button>
       </div>

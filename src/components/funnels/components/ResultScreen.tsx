@@ -192,7 +192,7 @@ const ResultScreen: React.FC<ResultScreenProps> = ({
             className="inline-flex items-center justify-center px-6 py-2 font-medium transition-colors"
             style={{
               ...launchButtonStyles,
-              backgroundColor: campaign?.design?.formConfig?.buttonColor || launchButtonStyles?.backgroundColor || primaryColor || campaign?.design?.primaryColor || '#841b60',
+              backgroundColor: campaign?.design?.formConfig?.buttonColor || launchButtonStyles?.backgroundColor || primaryColor || campaign?.design?.primaryColor || '#44444d',
               color: campaign?.design?.formConfig?.buttonTextColor || launchButtonStyles?.color || accentColor || campaign?.design?.accentColor || '#ffffff',
               borderRadius: typeof campaign?.design?.formConfig?.borderRadius === 'number'
                 ? `${campaign?.design?.formConfig?.borderRadius}px`

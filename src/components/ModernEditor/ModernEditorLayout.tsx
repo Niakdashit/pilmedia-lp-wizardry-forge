@@ -11,6 +11,7 @@ import { useEditorStore } from '@/stores/editorStore';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { useHistoryManager } from './hooks/useHistoryManager';
 import KeyboardShortcutsHelp from '../shared/KeyboardShortcutsHelp';
+import Spinner from '../shared/Spinner';
 
 interface ModernEditorLayoutProps {
   campaign: any;
@@ -175,12 +176,7 @@ const ModernEditorLayout: React.FC<ModernEditorLayoutProps> = memo(({
               <div className="relative w-full h-full flex items-center justify-center design-canvas-wrapper">
                 {(isGenerating || isPreviewLoading) && (
                   <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-50 flex items-center justify-center rounded-xl">
-                    <div className="flex items-center gap-3">
-                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-brand-primary"></div>
-                      <span className="text-sm text-gray-600">
-                        {isPreviewLoading ? 'Optimisation...' : 'Mise à jour...'}
-                      </span>
-                    </div>
+                    <Spinner size="sm" text={isPreviewLoading ? 'Optimisation...' : 'Mise à jour...'} />
                   </div>
                 )}
                 <div className="w-full h-full flex items-center justify-center overflow-hidden">

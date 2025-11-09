@@ -56,7 +56,7 @@ const DEFAULT_INLINE_FORM_CONFIG = {
   panelBg: '#ffffff',
   borderColor: '#e5e7eb',
   textColor: '#000000',
-  buttonColor: '#841b60',
+  buttonColor: '#44444d',
   buttonTextColor: '#ffffff',
   fontFamily: 'inherit',
   displayMode: 'overlay',
@@ -262,7 +262,7 @@ const InlineFormPreview: React.FC<InlineFormPreviewProps> = ({
               top: `${resolvedFormConfig.buttonVerticalPosition ?? 85}%`,
               left: '50%',
               transform: 'translate(-50%, -50%)',
-              backgroundColor: resolvedFormConfig.buttonColor || '#841b60',
+              backgroundColor: resolvedFormConfig.buttonColor || '#44444d',
               color: resolvedFormConfig.buttonTextColor || '#ffffff',
               padding: '16px 32px',
               borderRadius:
@@ -3274,7 +3274,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                   onClick={() => setShowGridLines(!showGridLines)}
                   className={`p-2 rounded-lg shadow-sm text-xs z-40 transition-colors ${
                     showGridLines 
-                      ? 'bg-[hsl(var(--primary))] text-white hover:bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)]' 
+                      ? 'bg-[hsl(var(--primary))] text-white hover:bg-[#44444d]' 
                       : 'bg-white/80 hover:bg-white text-gray-700'
                   }`}
                   title="Afficher/masquer la grille (G)"

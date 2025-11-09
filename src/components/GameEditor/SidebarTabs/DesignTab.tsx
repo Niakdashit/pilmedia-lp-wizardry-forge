@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Palette, Image, Upload, Trash2, Sparkles, Globe } from 'lucide-react';
 import type { EditorConfig } from '../GameEditorLayout';
 import { supabase } from '@/integrations/supabase/client';
+import Spinner from '../shared/Spinner';
 
 interface DesignTabProps {
   config: EditorConfig;
@@ -365,8 +366,8 @@ Réponds UNIQUEMENT avec un JSON valide suivant cette structure exacte (en fran�
           >
             {isGenerating ? (
               <>
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                Génération en cours...
+                <Spinner size="sm" />
+                <span className="ml-2">Génération en cours...</span>
               </>
             ) : (
               <>
@@ -596,11 +597,11 @@ Réponds UNIQUEMENT avec un JSON valide suivant cette structure exacte (en fran�
                 onChange={e => onConfigUpdate({
                   buttonVerticalPosition: Number(e.target.value)
                 })}
-                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#841b60]"
+                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#44444d]"
               />
               <div className="flex justify-between items-center text-sm">
                 <span className="text-sidebar-text-muted">Haut</span>
-                <span className="font-medium text-[#841b60]">
+                <span className="font-medium text-[#44444d]">
                   {config.buttonVerticalPosition ?? 85}%
                 </span>
                 <span className="text-sidebar-text-muted">Bas</span>

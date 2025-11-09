@@ -2567,7 +2567,7 @@ useEffect(() => {
           return toHex(accentRgb);
         }
       }
-      return '#841b60';
+      return '#44444d';
     })();
     const secondaryColor = '#ffffff';
 
@@ -2698,7 +2698,7 @@ useEffect(() => {
           panelBg: '#ffffff',
           borderColor: '#e5e7eb',
           textColor: '#000000',
-          buttonColor: '#841b60',
+          buttonColor: '#44444d',
           buttonTextColor: '#ffffff',
           fontFamily: 'inherit',
           displayMode: 'overlay',
@@ -3100,10 +3100,10 @@ useEffect(() => {
       const currentWheelConfig = currentConfig?.design?.wheelConfig || {};
       const isClassicBorder = (currentWheelConfig?.borderStyle || 'classic') === 'classic';
       const shouldUpdateBorderColor = isClassicBorder && 
-        (!currentWheelConfig?.borderColor || currentWheelConfig.borderColor === '#841b60');
+        (!currentWheelConfig?.borderColor || currentWheelConfig.borderColor === '#44444d');
       
       // Couleurs principales à utiliser
-      const primaryColor = colors[0] || currentConfig?.design?.brandColors?.primary || '#841b60';
+      const primaryColor = colors[0] || currentConfig?.design?.brandColors?.primary || '#44444d';
       const secondaryColor = '#ffffff'; // Toujours blanc pour les segments secondaires
       const accentColor = colors[2] || currentConfig?.design?.brandColors?.accent || '#45b7d1';
       
@@ -3154,7 +3154,7 @@ useEffect(() => {
       const darken = (rgb: { r: number; g: number; b: number }, pct: number) => ({ r: rgb.r * (1 - pct), g: rgb.g * (1 - pct), b: rgb.b * (1 - pct) });
       const getTextOn = (rgb: { r: number; g: number; b: number }) => (luminance(rgb) > 0.55 ? '#111111' : '#ffffff');
 
-      const primaryRgb = toRgb(primaryColor) || { r: 132, g: 27, b: 96 }; // fallback #841b60
+      const primaryRgb = toRgb(primaryColor) || { r: 132, g: 27, b: 96 }; // fallback #44444d
       const buttonText = getTextOn(primaryRgb);
       const hoverHex = toHex(darken(primaryRgb, 0.12));
       const activeHex = toHex(darken(primaryRgb, 0.24));
@@ -3505,7 +3505,7 @@ useEffect(() => {
             {/* Floating Edit Mode Button */}
             <button
               onClick={() => setShowFunnel(false)}
-              className={`absolute top-4 ${previewButtonSide === 'left' ? 'left-4' : 'right-4'} px-4 py-2 bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] shadow-none focus:shadow-none ring-0 focus:ring-0 drop-shadow-none filter-none backdrop-blur-0`}
+              className={`absolute top-4 ${previewButtonSide === 'left' ? 'left-4' : 'right-4'} px-4 py-2 bg-[#44444d] text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-[#44444d] shadow-none focus:shadow-none ring-0 focus:ring-0 drop-shadow-none filter-none backdrop-blur-0`}
               style={{ zIndex: 9999999 }}
             >
               Mode édition
@@ -4327,7 +4327,7 @@ useEffect(() => {
           </button>
           <button
             onClick={handleSaveAndQuit}
-            className="flex items-center px-3 py-2 text-xs sm:text-sm rounded-lg text-white bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] hover:opacity-95 transition-colors shadow-sm"
+            className="flex items-center px-3 py-2 text-xs sm:text-sm rounded-lg text-white bg-[#44444d] hover:opacity-95 transition-colors shadow-sm"
             title="Sauvegarder et quitter"
           >
             <Save className="w-4 h-4 mr-1" />
@@ -4360,7 +4360,7 @@ useEffect(() => {
                 value={newCampaignName}
                 onChange={(e) => setNewCampaignName(e.target.value)}
                 placeholder="Ex: Collecte Leads Novembre"
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#841b60]"
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#44444d]"
                 autoFocus
               />
             </div>
@@ -4374,7 +4374,7 @@ useEffect(() => {
               <button
                 onClick={handleSaveCampaignName}
                 disabled={!newCampaignName.trim()}
-                className="inline-flex items-center px-4 py-2 text-sm rounded-xl bg-gradient-to-br from-[#841b60] to-[#b41b60] backdrop-blur-sm text-white font-medium border border-white/20 shadow-lg shadow-[#841b60]/20 hover:from-[#841b60] hover:to-[#6d164f] hover:shadow-xl hover:shadow-[#841b60]/30 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="inline-flex items-center px-4 py-2 text-sm rounded-xl bg-gradient-to-br from-[#44444d] to-[#44444d] backdrop-blur-sm text-white font-medium border border-white/20 shadow-lg shadow-[#44444d]/20 hover:from-[#44444d] hover:to-[#6d164f] hover:shadow-xl hover:shadow-[#44444d]/30 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Enregistrer
               </button>

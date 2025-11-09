@@ -33,10 +33,10 @@ export const createEnhancedQuizDesign = (config: { design?: any }) => {
   
   return {
     backgroundColor: design.background || '#f8fafc',
-    primaryColor: design.primaryColor || '#841b60',
+    primaryColor: design.primaryColor || '#44444d',
     secondaryColor: design.secondaryColor || '#ffffff',
     textColor: design.titleColor || '#000000',
-    buttonColor: design.buttonColor || '#841b60',
+    buttonColor: design.buttonColor || '#44444d',
     buttonTextColor: design.buttonTextColor || '#ffffff',
     borderRadius: design.borderRadius || '0.5rem',
     fontFamily: design.fontFamily || 'Inter',

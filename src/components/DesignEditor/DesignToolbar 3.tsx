@@ -121,7 +121,7 @@ const DesignToolbar: React.FC<DesignToolbarProps> = React.memo(({
           onClick={onPreviewToggle}
           className={`flex items-center px-2.5 py-1.5 text-xs sm:text-sm border rounded-lg transition-colors ${
             isPreviewMode 
-              ? 'bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white border-[#841b60]' 
+              ? 'bg-[#44444d] text-white border-[#44444d]' 
               : 'border-gray-300 hover:bg-gray-50'
           }`}
         >
@@ -135,7 +135,7 @@ const DesignToolbar: React.FC<DesignToolbarProps> = React.memo(({
           <X className="w-4 h-4 mr-1" />
           Fermer
         </button>
-        <button className="flex items-center px-3 py-1.5 text-xs sm:text-sm bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white rounded-lg hover:bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] transition-colors">
+        <button className="flex items-center px-3 py-1.5 text-xs sm:text-sm bg-[#44444d] text-white rounded-lg hover:bg-[#44444d] transition-colors">
           <Save className="w-4 h-4 mr-1" />
           <span className="hidden sm:inline">Sauvegarder et continuer</span>
           <span className="sm:hidden">Sauvegarder</span>

@@ -55,8 +55,8 @@ const ArticleEditorLayout: React.FC<ArticleEditorLayoutProps> = ({
         articleConfig: DEFAULT_ARTICLE_CONFIG,
         articleLayout: DEFAULT_ARTICLE_LAYOUT,
         design: {
-          primaryColor: '#841b60',
-          secondaryColor: '#b41b60',
+          primaryColor: '#44444d',
+          secondaryColor: '#44444d',
         },
         gameConfig: {},
         buttonConfig: {},
@@ -280,7 +280,7 @@ const ArticleEditorLayout: React.FC<ArticleEditorLayoutProps> = ({
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-100">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#841b60] mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#44444d] mx-auto mb-4"></div>
           <p className="text-gray-600">Chargement de l'éditeur Article...</p>
         </div>
       </div>
@@ -334,7 +334,7 @@ const ArticleEditorLayout: React.FC<ArticleEditorLayoutProps> = ({
               onClick={() => setIsPreviewMode(!isPreviewMode)}
               className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
                 isPreviewMode
-                  ? 'bg-[#841b60] text-white hover:bg-[#6d164f]'
+                  ? 'bg-[#44444d] text-white hover:bg-[#5a5a63]'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
@@ -354,7 +354,7 @@ const ArticleEditorLayout: React.FC<ArticleEditorLayoutProps> = ({
             <button
               onClick={handleSave}
               disabled={isSaving}
-              className="inline-flex items-center px-4 py-2 text-sm rounded-lg bg-gradient-to-br from-[#841b60] to-[#b41b60] text-white font-medium hover:from-[#841b60] hover:to-[#6d164f] transition-all disabled:opacity-50"
+              className="inline-flex items-center px-4 py-2 text-sm rounded-lg bg-gradient-to-br from-[#44444d] to-[#44444d] text-white font-medium hover:from-[#44444d] hover:to-[#6d164f] transition-all disabled:opacity-50"
             >
               <Save className="w-4 h-4 mr-2" />
               {isSaving ? 'Enregistrement...' : 'Enregistrer'}

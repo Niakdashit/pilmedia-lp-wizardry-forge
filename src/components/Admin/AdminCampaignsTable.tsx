@@ -29,7 +29,7 @@ const AdminCampaignsTable: React.FC<AdminCampaignsTableProps> = ({ campaigns }) 
           <h3 className="text-lg font-semibold text-gray-900">Campagnes Récentes</h3>
           <Link
             to="/admin/campaigns"
-            className="inline-flex items-center px-4 py-2 bg-gradient-to-br from-[#841b60] to-[#b41b60] text-white text-sm font-medium rounded-lg hover:bg-[#6d164f] transition-colors"
+            className="inline-flex items-center px-4 py-2 bg-gradient-to-br from-[#44444d] to-[#44444d] text-white text-sm font-medium rounded-lg hover:bg-[#5a5a63] transition-colors"
           >
             Voir tout
           </Link>
@@ -59,7 +59,7 @@ const AdminCampaignsTable: React.FC<AdminCampaignsTableProps> = ({ campaigns }) 
                   </div>
                 </td>
                 <td className="px-6 py-4">
-                  <Link to={`/admin/clients/${campaign.clientId}`} className="text-sm text-[#841b60] hover:underline">
+                  <Link to={`/admin/clients/${campaign.clientId}`} className="text-sm text-[#44444d] hover:underline">
                     {campaign.clientName}
                   </Link>
                 </td>
@@ -120,7 +120,7 @@ const AdminCampaignsTable: React.FC<AdminCampaignsTableProps> = ({ campaigns }) 
             </div>
             
             <div className="flex items-center justify-between text-xs text-gray-500 mb-3">
-              <Link to={`/admin/clients/${campaign.clientId}`} className="text-[#841b60] hover:underline">
+              <Link to={`/admin/clients/${campaign.clientId}`} className="text-[#44444d] hover:underline">
                 {campaign.clientName}
               </Link>
               <span>{new Date(campaign.startDate).toLocaleDateString('fr-FR')}</span>

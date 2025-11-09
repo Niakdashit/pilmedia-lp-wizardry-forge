@@ -89,7 +89,7 @@ const GameStyleSettings: React.FC<GameStyleSettingsProps> = ({
         </label>
         <input
           type="color"
-          value={design.buttonColor || design.primaryColor || '#841b60'}
+          value={design.buttonColor || design.primaryColor || '#44444d'}
           onChange={(e) =>
             setCampaign({
               ...campaign,

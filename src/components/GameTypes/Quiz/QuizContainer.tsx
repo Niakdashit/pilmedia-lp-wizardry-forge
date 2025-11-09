@@ -77,13 +77,13 @@ const QuizContainer: React.FC<QuizContainerProps> = ({
 
   const getContainerStyle = () => ({
     backgroundColor: design.backgroundColor || '#ffffff',
-    borderColor: design.primaryColor || '#841b60',
+    borderColor: design.primaryColor || '#44444d',
     borderRadius: '24px',
     fontFamily: design.fontFamily || 'Inter, sans-serif'
   });
 
   const getButtonStyle = () => ({
-    backgroundColor: design.primaryColor || '#841b60',
+    backgroundColor: design.primaryColor || '#44444d',
     color: '#ffffff',
     fontWeight: '600',
     borderRadius: '16px',
@@ -109,7 +109,7 @@ const QuizContainer: React.FC<QuizContainerProps> = ({
               Quiz terminé !
             </h3>
             <p className="text-lg text-gray-600 mb-6">
-              Votre score : <span className="font-bold text-2xl" style={{ color: design.primaryColor || '#841b60' }}>
+              Votre score : <span className="font-bold text-2xl" style={{ color: design.primaryColor || '#44444d' }}>
                 {score}/{questions.length}
               </span>
             </p>
@@ -142,7 +142,7 @@ const QuizContainer: React.FC<QuizContainerProps> = ({
           <QuizProgress 
             current={currentQuestionIndex + 1} 
             total={questions.length}
-            primaryColor={design.primaryColor || '#841b60'}
+            primaryColor={design.primaryColor || '#44444d'}
           />
         </div>
 

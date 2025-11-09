@@ -49,7 +49,7 @@ const PublishStep: React.FC<PublishStepProps> = ({
         <div className="bg-white rounded-xl border border-gray-200 p-8 shadow-sm text-center mb-8">
           {isPublishing ? (
             <div className="space-y-6">
-              <div className="w-16 h-16 bg-[#951b6d]/10 rounded-full flex items-center justify-center mx-auto">
+              <div className="w-16 h-16 bg-[#5a5a63]/10 rounded-full flex items-center justify-center mx-auto">
                 <Rocket className="w-8 h-8 text-[#951b6d]" />
               </div>
               <div>
@@ -57,7 +57,7 @@ const PublishStep: React.FC<PublishStepProps> = ({
                 <p className="text-gray-600">Votre campagne est en cours de déploiement</p>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2">
-                <div className="bg-[#951b6d] h-2 rounded-full" style={{ width: '75%' }}></div>
+                <div className="bg-[#5a5a63] h-2 rounded-full" style={{ width: '75%' }}></div>
               </div>
             </div>
           ) : isPublished ? (
@@ -72,7 +72,7 @@ const PublishStep: React.FC<PublishStepProps> = ({
             </div>
           ) : (
             <div className="space-y-6">
-              <div className="w-16 h-16 bg-[#951b6d]/10 rounded-full flex items-center justify-center mx-auto">
+              <div className="w-16 h-16 bg-[#5a5a63]/10 rounded-full flex items-center justify-center mx-auto">
                 <Rocket className="w-8 h-8 text-[#951b6d]" />
               </div>
               <div>
@@ -81,7 +81,7 @@ const PublishStep: React.FC<PublishStepProps> = ({
               </div>
               <button
                 onClick={handlePublish}
-                className="px-8 py-3 bg-[#951b6d] text-white font-semibold rounded-xl hover:bg-[#7d1659] transition-colors shadow-sm hover:shadow-md text-lg"
+                className="px-8 py-3 bg-[#5a5a63] text-white font-semibold rounded-xl hover:bg-[#7d1659] transition-colors shadow-sm hover:shadow-md text-lg"
               >
                 Publier maintenant
               </button>
@@ -127,17 +127,17 @@ const PublishStep: React.FC<PublishStepProps> = ({
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <button
                 onClick={() => navigate('/campaigns')}
-                className="p-4 text-left border border-gray-200 rounded-lg hover:border-[#951b6d]/30 hover:bg-[#951b6d]/5 transition-colors"
+                className="p-4 text-left border border-gray-200 rounded-lg hover:border-[#5a5a63]/30 hover:bg-[#5a5a63]/5 transition-colors"
               >
-                <div className="w-8 h-8 bg-[#951b6d]/10 rounded-lg flex items-center justify-center mb-3">
+                <div className="w-8 h-8 bg-[#5a5a63]/10 rounded-lg flex items-center justify-center mb-3">
                   <Share className="w-4 h-4 text-[#951b6d]" />
                 </div>
                 <h4 className="font-medium text-[#141e29] mb-1">Gérer la campagne</h4>
                 <p className="text-sm text-gray-600">Voir les statistiques et modifier les paramètres</p>
               </button>
 
-              <button className="p-4 text-left border border-gray-200 rounded-lg hover:border-[#951b6d]/30 hover:bg-[#951b6d]/5 transition-colors">
-                <div className="w-8 h-8 bg-[#951b6d]/10 rounded-lg flex items-center justify-center mb-3">
+              <button className="p-4 text-left border border-gray-200 rounded-lg hover:border-[#5a5a63]/30 hover:bg-[#5a5a63]/5 transition-colors">
+                <div className="w-8 h-8 bg-[#5a5a63]/10 rounded-lg flex items-center justify-center mb-3">
                   <Share className="w-4 h-4 text-[#951b6d]" />
                 </div>
                 <h4 className="font-medium text-[#141e29] mb-1">Partager</h4>
@@ -146,9 +146,9 @@ const PublishStep: React.FC<PublishStepProps> = ({
 
               <button
                 onClick={() => navigate('/quick-campaign')}
-                className="p-4 text-left border border-gray-200 rounded-lg hover:border-[#951b6d]/30 hover:bg-[#951b6d]/5 transition-colors"
+                className="p-4 text-left border border-gray-200 rounded-lg hover:border-[#5a5a63]/30 hover:bg-[#5a5a63]/5 transition-colors"
               >
-                <div className="w-8 h-8 bg-[#951b6d]/10 rounded-lg flex items-center justify-center mb-3">
+                <div className="w-8 h-8 bg-[#5a5a63]/10 rounded-lg flex items-center justify-center mb-3">
                   <Rocket className="w-4 h-4 text-[#951b6d]" />
                 </div>
                 <h4 className="font-medium text-[#141e29] mb-1">Nouvelle campagne</h4>
@@ -163,7 +163,7 @@ const PublishStep: React.FC<PublishStepProps> = ({
           {!isPublished && (
             <button
               onClick={prevStep}
-              className="px-6 py-3 bg-gray-100 text-gray-700 font-semibold rounded-xl hover:bg-[#841b60] hover:text-white transition-colors"
+              className="px-6 py-3 bg-gray-100 text-gray-700 font-semibold rounded-xl hover:bg-[#44444d] hover:text-white transition-colors"
             >
               Retour
             </button>
@@ -171,7 +171,7 @@ const PublishStep: React.FC<PublishStepProps> = ({
           {isPublished && (
             <button
               onClick={() => navigate('/campaigns')}
-              className="px-8 py-3 bg-[#951b6d] text-white font-semibold rounded-xl hover:bg-[#7d1659] transition-colors shadow-sm hover:shadow-md ml-auto"
+              className="px-8 py-3 bg-[#5a5a63] text-white font-semibold rounded-xl hover:bg-[#7d1659] transition-colors shadow-sm hover:shadow-md ml-auto"
             >
               Voir mes campagnes
             </button>

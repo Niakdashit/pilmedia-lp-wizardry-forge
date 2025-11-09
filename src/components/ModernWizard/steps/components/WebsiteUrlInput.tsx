@@ -11,7 +11,7 @@ const WebsiteUrlInput: React.FC<WebsiteUrlInputProps> = ({ value, onChange }) =>
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm mb-6">
       <div className="flex items-center space-x-3 mb-4">
-        <div className="w-8 h-8 bg-[#951b6d]/10 rounded-xl flex items-center justify-center">
+        <div className="w-8 h-8 bg-[#5a5a63]/10 rounded-xl flex items-center justify-center">
           <Globe className="w-4 h-4 text-[#951b6d]" />
         </div>
         <h3 className="font-semibold text-[#141e29]">URL de votre site internet</h3>

@@ -35,7 +35,7 @@ const AdvancedStep: React.FC<AdvancedStepProps> = ({
           {/* Visual Customization */}
           <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
             <div className="flex items-center space-x-3 mb-6">
-              <div className="w-8 h-8 bg-[#951b6d]/10 rounded-lg flex items-center justify-center">
+              <div className="w-8 h-8 bg-[#5a5a63]/10 rounded-lg flex items-center justify-center">
                 <Palette className="w-4 h-4 text-[#951b6d]" />
               </div>
               <h3 className="font-semibold text-[#141e29]">Style visuel</h3>
@@ -58,9 +58,9 @@ const AdvancedStep: React.FC<AdvancedStepProps> = ({
               <div>
                 <label className="block text-[#141e29] text-sm font-medium mb-3">Style des bordures</label>
                 <div className="flex space-x-3">
-                  <button className="px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-gray-700 text-sm hover:bg-[#841b60] hover:text-white">Arrondies</button>
-                  <button className="px-4 py-2 bg-gray-50 border border-gray-200 rounded text-gray-700 text-sm hover:bg-[#841b60] hover:text-white">Droites</button>
-                  <button className="px-4 py-2 bg-gray-50 border border-gray-200 text-gray-700 text-sm hover:bg-[#841b60] hover:text-white">Très arrondies</button>
+                  <button className="px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-gray-700 text-sm hover:bg-[#44444d] hover:text-white">Arrondies</button>
+                  <button className="px-4 py-2 bg-gray-50 border border-gray-200 rounded text-gray-700 text-sm hover:bg-[#44444d] hover:text-white">Droites</button>
+                  <button className="px-4 py-2 bg-gray-50 border border-gray-200 text-gray-700 text-sm hover:bg-[#44444d] hover:text-white">Très arrondies</button>
                 </div>
               </div>
             </div>
@@ -69,7 +69,7 @@ const AdvancedStep: React.FC<AdvancedStepProps> = ({
           {/* Content Customization */}
           <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
             <div className="flex items-center space-x-3 mb-6">
-              <div className="w-8 h-8 bg-[#951b6d]/10 rounded-lg flex items-center justify-center">
+              <div className="w-8 h-8 bg-[#5a5a63]/10 rounded-lg flex items-center justify-center">
                 <Type className="w-4 h-4 text-[#951b6d]" />
               </div>
               <h3 className="font-semibold text-[#141e29]">Contenu</h3>
@@ -125,7 +125,7 @@ const AdvancedStep: React.FC<AdvancedStepProps> = ({
           {/* Campaign Settings */}
           <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
             <div className="flex items-center space-x-3 mb-6">
-              <div className="w-8 h-8 bg-[#951b6d]/10 rounded-lg flex items-center justify-center">
+              <div className="w-8 h-8 bg-[#5a5a63]/10 rounded-lg flex items-center justify-center">
                 <Calendar className="w-4 h-4 text-[#951b6d]" />
               </div>
               <h3 className="font-semibold text-[#141e29]">Planification</h3>
@@ -154,7 +154,7 @@ const AdvancedStep: React.FC<AdvancedStepProps> = ({
           {/* Game Configuration */}
           <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
             <div className="flex items-center space-x-3 mb-6">
-              <div className="w-8 h-8 bg-[#951b6d]/10 rounded-lg flex items-center justify-center">
+              <div className="w-8 h-8 bg-[#5a5a63]/10 rounded-lg flex items-center justify-center">
                 <Target className="w-4 h-4 text-[#951b6d]" />
               </div>
               <h3 className="font-semibold text-[#141e29]">Configuration du jeu</h3>
@@ -167,7 +167,7 @@ const AdvancedStep: React.FC<AdvancedStepProps> = ({
                   {['100', '500', '1000', '∞'].map((limit) => (
                     <button
                       key={limit}
-                      className="px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-gray-700 text-sm hover:bg-[#951b6d] hover:text-white transition-colors"
+                      className="px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-gray-700 text-sm hover:bg-[#5a5a63] hover:text-white transition-colors"
                     >
                       {limit}
                     </button>
@@ -197,13 +197,13 @@ const AdvancedStep: React.FC<AdvancedStepProps> = ({
         <div className="flex justify-between">
           <button
             onClick={prevStep}
-            className="px-6 py-3 bg-gray-100 text-gray-700 font-semibold rounded-xl hover:bg-[#841b60] hover:text-white transition-colors"
+            className="px-6 py-3 bg-gray-100 text-gray-700 font-semibold rounded-xl hover:bg-[#44444d] hover:text-white transition-colors"
           >
             Retour
           </button>
           <button
             onClick={nextStep}
-            className="px-8 py-3 bg-[#951b6d] text-white font-semibold rounded-xl hover:bg-[#7d1659] transition-colors shadow-sm hover:shadow-md"
+            className="px-8 py-3 bg-[#5a5a63] text-white font-semibold rounded-xl hover:bg-[#7d1659] transition-colors shadow-sm hover:shadow-md"
           >
             Publier ma campagne
           </button>

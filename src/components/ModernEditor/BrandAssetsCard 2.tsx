@@ -14,7 +14,7 @@ const BrandAssetsCard: React.FC<BrandAssetsCardProps> = ({ campaign, setCampaign
   
   // Ensure brandAssets exists with default values
   const brandAssets = campaign.brandAssets || {
-    primaryColor: '#841b60',
+    primaryColor: '#44444d',
     secondaryColor: '#ffffff'
   };
 
@@ -69,19 +69,19 @@ const BrandAssetsCard: React.FC<BrandAssetsCardProps> = ({ campaign, setCampaign
   };
 
   return (
-    <div className="bg-gradient-to-br from-[#841b60]/5 to-[#6d164f]/5 rounded-xl p-6 border border-[#841b60]/10">
+    <div className="bg-gradient-to-br from-[#44444d]/5 to-[#6d164f]/5 rounded-xl p-6 border border-[#44444d]/10">
       <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-        <Palette className="w-5 h-5 mr-2 text-[#841b60]" />
+        <Palette className="w-5 h-5 mr-2 text-[#44444d]" />
         Identité de marque
       </h3>
       
       <div className="space-y-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Logo {isExtracting && <span className="text-[#841b60]">(Extraction en cours...)</span>}
+            Logo {isExtracting && <span className="text-[#44444d]">(Extraction en cours...)</span>}
           </label>
           <div 
-            className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-[#841b60] transition-colors cursor-pointer relative overflow-hidden"
+            className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-[#44444d] transition-colors cursor-pointer relative overflow-hidden"
             onDrop={handleDrop}
             onDragOver={handleDragOver}
             onClick={() => document.getElementById('logo-input')?.click()}
@@ -142,7 +142,7 @@ const BrandAssetsCard: React.FC<BrandAssetsCardProps> = ({ campaign, setCampaign
                     primaryColor: e.target.value 
                   }
                 }))}
-                className="flex-1 px-3 py-2 bg-white/50 border-0 rounded-lg focus:ring-2 focus:ring-[#841b60]"
+                className="flex-1 px-3 py-2 bg-white/50 border-0 rounded-lg focus:ring-2 focus:ring-[#44444d]"
               />
             </div>
           </div>
@@ -172,7 +172,7 @@ const BrandAssetsCard: React.FC<BrandAssetsCardProps> = ({ campaign, setCampaign
                     secondaryColor: e.target.value 
                   }
                 }))}
-                className="flex-1 px-3 py-2 bg-white/50 border-0 rounded-lg focus:ring-2 focus:ring-[#841b60]"
+                className="flex-1 px-3 py-2 bg-white/50 border-0 rounded-lg focus:ring-2 focus:ring-[#44444d]"
               />
             </div>
           </div>

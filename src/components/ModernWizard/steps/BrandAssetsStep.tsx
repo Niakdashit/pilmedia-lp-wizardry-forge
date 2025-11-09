@@ -74,7 +74,7 @@ const BrandAssetsStep: React.FC<BrandAssetsStepProps> = ({
         </div>
         {/* Infos extraction */}
         {extractingTheme && (
-          <div className="mb-3 flex items-center gap-3 text-[#815194]">
+          <div className="mb-3 flex items-center gap-3 text-[#5a5a63]">
             <svg width="22" height="22" fill="none" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="#ae8ac3" strokeWidth="4" />
               <path className="opacity-75" fill="#ae8ac3" d="M4 12a8 8 0 018-8v8z" />
@@ -147,13 +147,13 @@ const BrandAssetsStep: React.FC<BrandAssetsStepProps> = ({
         <div className="flex justify-between">
           <button
             onClick={prevStep}
-            className="px-6 py-3 bg-gray-100 text-gray-700 font-semibold rounded-xl hover:bg-[#841b60] hover:text-white transition-colors"
+            className="px-6 py-3 bg-gray-100 text-gray-700 font-semibold rounded-xl hover:bg-[#44444d] hover:text-white transition-colors"
           >
             Retour
           </button>
           <button
             onClick={nextStep}
-            className="px-8 py-3 bg-[#951b6d] text-white font-semibold rounded-xl hover:bg-[#7d1659] transition-colors shadow-sm hover:shadow-md"
+            className="px-8 py-3 bg-[#5a5a63] text-white font-semibold rounded-xl hover:bg-[#7d1659] transition-colors shadow-sm hover:shadow-md"
           >
             Continuer
           </button>

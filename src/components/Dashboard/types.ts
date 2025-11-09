@@ -14,6 +14,7 @@ export interface RecentCampaign {
   status: string;
   createdAt: string;
   image?: string;
+  backgroundColor?: string;
 }
 
 export interface GameType {

@@ -265,7 +265,7 @@ const JackpotFullPanel: React.FC<JackpotFullPanelProps> = ({
             type="text"
             value={buttonText}
             onChange={(e) => updateButtonText(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#44444d] focus:border-transparent"
             placeholder="SPIN"
           />
         </div>
@@ -286,7 +286,7 @@ const JackpotFullPanel: React.FC<JackpotFullPanelProps> = ({
               type="text"
               value={buttonBorderColor}
               onChange={(e) => updateButtonBorderColor(e.target.value)}
-              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
+              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#44444d] focus:border-transparent"
             />
           </div>
         </div>
@@ -307,7 +307,7 @@ const JackpotFullPanel: React.FC<JackpotFullPanelProps> = ({
               type="text"
               value={buttonBackgroundColor}
               onChange={(e) => updateButtonBackgroundColor(e.target.value)}
-              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
+              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#44444d] focus:border-transparent"
             />
           </div>
         </div>
@@ -328,7 +328,7 @@ const JackpotFullPanel: React.FC<JackpotFullPanelProps> = ({
               type="text"
               value={buttonTextColor}
               onChange={(e) => updateButtonTextColor(e.target.value)}
-              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
+              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#44444d] focus:border-transparent"
             />
           </div>
         </div>

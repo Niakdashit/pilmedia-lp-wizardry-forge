@@ -12,7 +12,7 @@ const GradientBand: React.FC<GradientBandProps> = ({ children, className = '', h
     <div 
       className={`fixed top-0 left-0 right-0 ${heightClass} ${className}`}
       style={{
-        background: 'radial-gradient(circle at 0% 0%, #b41b60, #841b60 70%)',
+        background: '#44444d',
         overflow: 'hidden',
         padding: '2px 32px 24px',
         zIndex,

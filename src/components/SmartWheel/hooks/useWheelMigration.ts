@@ -52,14 +52,14 @@ export const useWheelMigration = ({
     return segments.map((segment: LegacySegment, index: number) => ({
       id: segment.id || index.toString(),
       label: segment.label,
-      color: segment.color || brandColors?.primary || '#841b60',
+      color: segment.color || brandColors?.primary || '#44444d',
       textColor: segment.textColor || '#ffffff',
       probability: segment.probability || 1
     }));
   }, [config, campaign, brandColors]);
 
   const migratedBrandColors = useMemo(() => ({
-    primary: brandColors?.primary || campaign?.design?.customColors?.primary || '#841b60',
+    primary: brandColors?.primary || campaign?.design?.customColors?.primary || '#44444d',
     secondary: brandColors?.secondary || campaign?.design?.customColors?.secondary || '#4ecdc4',
     accent: brandColors?.accent || campaign?.design?.customColors?.accent || '#45b7d1'
   }), [brandColors, campaign]);

@@ -31,13 +31,13 @@ const ImageUploadCard: React.FC<ImageUploadCardProps> = ({
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
       <div className="flex items-center space-x-3 mb-3">
-        <div className="w-7 h-7 bg-[#951b6d]/10 rounded-xl flex items-center justify-center">
+        <div className="w-7 h-7 bg-[#5a5a63]/10 rounded-xl flex items-center justify-center">
           <Icon className="w-4 h-4 text-[#951b6d]" />
         </div>
         <h3 className="font-semibold text-[#141e29] text-sm">{title}</h3>
       </div>
       
-      <div className="border-2 border-dashed border-gray-300 rounded-xl p-3 text-center hover:border-[#951b6d]/50 transition-colors">
+      <div className="border-2 border-dashed border-gray-300 rounded-xl p-3 text-center hover:border-[#5a5a63]/50 transition-colors">
         {value ? (
           <div className="relative">
             <img src={value} alt={title} className="max-h-12 mx-auto rounded-lg" />

@@ -84,7 +84,7 @@ const CampaignSettingsLayout: React.FC = () => {
           <button
             type="button"
             onClick={handleSaveAndClose}
-            className="h-8 inline-flex items-center gap-2 rounded-md px-3.5 text-white shadow-md hover:opacity-95 transition-opacity bg-[radial-gradient(circle_at_0%_0%,_#b41b60,_#841b60_70%)]"
+            className="h-8 inline-flex items-center gap-2 rounded-md px-3.5 text-white shadow-md hover:opacity-95 transition-opacity bg-[#44444d]"
           >
             Enregistrer
           </button>

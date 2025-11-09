@@ -60,7 +60,7 @@ const PreviewCanvas: React.FC<PreviewCanvasProps> = ({
           ) : (
             <div className="w-full max-w-lg">
               <div className="bg-gradient-to-br from-purple-100 to-pink-100 rounded-xl p-8 text-center">
-                <div className="w-16 h-16 bg-gradient-to-r from-[#841b60] to-[#6d164f] rounded-full mx-auto mb-4 flex items-center justify-center">
+                <div className="w-16 h-16 bg-gradient-to-r from-[#44444d] to-[#6d164f] rounded-full mx-auto mb-4 flex items-center justify-center">
                   <Eye className="w-8 h-8 text-white" />
                 </div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">

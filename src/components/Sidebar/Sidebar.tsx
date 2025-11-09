@@ -83,7 +83,7 @@ const Sidebar: React.FC = () => {
                 to={item.path}
                 onMouseEnter={() => prefetchRoute(item.path)}
                 onTouchStart={() => prefetchRoute(item.path)}
-                className={`flex flex-col items-center px-2 py-3 rounded-xl transition-all duration-200 group ${isActive ? 'bg-gradient-to-br from-[#841b60] to-[#b41b60] text-white' : 'text-gray-300 hover:bg-gray-700/50 hover:text-white'}`}
+                className={`flex flex-col items-center px-2 py-3 rounded-xl transition-all duration-200 group ${isActive ? 'bg-gradient-to-br from-[#44444d] to-[#44444d] text-white' : 'text-gray-300 hover:bg-gray-700/50 hover:text-white'}`}
               >
                 <div className={`flex items-center justify-center w-8 h-8 rounded-lg ${isActive ? 'bg-white/20 text-white' : 'bg-gray-600/30 text-gray-300 group-hover:bg-gray-600/50 group-hover:text-white'}`}>{item.icon}</div>
                 <span className="mt-1 text-[10px] font-medium text-center truncate w-full">{item.name}</span>

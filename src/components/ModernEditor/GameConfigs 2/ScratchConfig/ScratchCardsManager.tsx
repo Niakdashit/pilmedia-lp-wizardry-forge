@@ -28,7 +28,7 @@ const ScratchCardsManager: React.FC<ScratchCardsManagerProps> = ({
           <button
             type="button"
             onClick={onAddCard}
-            className="text-sm text-[#841b60] hover:text-[#6d164f] flex items-center"
+            className="text-sm text-[#44444d] hover:text-[#5a5a63] flex items-center"
           >
             <Plus className="w-4 h-4 mr-1" /> Ajouter une carte
           </button>
@@ -55,7 +55,7 @@ const ScratchCardsManager: React.FC<ScratchCardsManagerProps> = ({
               type="text"
               value={card.revealMessage || ''}
               onChange={(e) => onUpdateCard(index, 'revealMessage', e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#841b60]"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#44444d]"
               placeholder="Laisser vide pour utiliser le message par défaut"
             />
           </div>

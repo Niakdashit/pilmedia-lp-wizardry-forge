@@ -7,6 +7,7 @@ import {
   getShortUrlMapping,
   type ShortUrlMapping 
 } from '@/utils/shortUrl';
+import Spinner from './shared/Spinner';
 
 interface ShortUrlGeneratorProps {
   longUrl: string;
@@ -169,7 +170,7 @@ export const ShortUrlGenerator: React.FC<ShortUrlGeneratorProps> = ({
             >
               {loading ? (
                 <>
-                  <RefreshCw className="w-4 h-4 animate-spin" />
+                  <Spinner size="sm" />
                   Génération...
                 </>
               ) : (

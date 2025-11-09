@@ -74,7 +74,7 @@ export const useBrandColorExtraction = (
         } else {
           // Palette d'urgence
           setFinalColors({
-            primary: '#841b60',
+            primary: '#44444d',
             secondary: '#dc2626',
             accent: '#10b981'
           });
@@ -106,6 +106,6 @@ export const useBrandColorExtraction = (
 
 // Helper pour détecter les couleurs génériques
 const isGenericColor = (color: string): boolean => {
-  const genericColors = ['#841b60', '#3B82F6', '#8b5cf6', '#6b7280', '#374151'];
+  const genericColors = ['#44444d', '#3B82F6', '#8b5cf6', '#6b7280', '#374151'];
   return genericColors.includes(color);
 };

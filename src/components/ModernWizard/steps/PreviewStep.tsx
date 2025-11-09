@@ -109,7 +109,7 @@ const PreviewStep: React.FC<PreviewStepProps> = ({
                   onClick={() => setSelectedDevice(device.id as any)}
                   className={`flex items-center space-x-2 px-4 py-2 rounded-xl transition-colors ${
                     selectedDevice === device.id
-                      ? 'bg-[#951b6d] text-white'
+                      ? 'bg-[#5a5a63] text-white'
                       : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
                   }`}
                   type="button"
@@ -125,7 +125,7 @@ const PreviewStep: React.FC<PreviewStepProps> = ({
         {/* Preview Area */}
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm mb-8 overflow-hidden">
           <div className="flex items-center space-x-3 p-6 border-b border-gray-200">
-            <div className="w-8 h-8 bg-[#951b6d]/10 rounded-lg flex items-center justify-center">
+            <div className="w-8 h-8 bg-[#5a5a63]/10 rounded-lg flex items-center justify-center">
               <Eye className="w-4 h-4 text-[#951b6d]" />
             </div>
             <h3 className="font-semibold text-[#141e29]">Aperçu {selectedDevice}</h3>
@@ -160,7 +160,7 @@ const PreviewStep: React.FC<PreviewStepProps> = ({
                   </p>
                   <button
                     onClick={prevStep}
-                    className="px-4 py-2 bg-[#951b6d] text-white rounded-lg hover:bg-[#7d1659] transition-colors"
+                    className="px-4 py-2 bg-[#5a5a63] text-white rounded-lg hover:bg-[#7d1659] transition-colors"
                   >
                     Retour à la génération
                   </button>
@@ -174,7 +174,7 @@ const PreviewStep: React.FC<PreviewStepProps> = ({
         <div className="flex justify-between">
           <button
             onClick={prevStep}
-            className="px-6 py-3 bg-gray-100 text-gray-700 font-semibold rounded-xl hover:bg-[#841b60] hover:text-white transition-colors"
+            className="px-6 py-3 bg-gray-100 text-gray-700 font-semibold rounded-xl hover:bg-[#44444d] hover:text-white transition-colors"
             type="button"
           >
             Retour
@@ -184,7 +184,7 @@ const PreviewStep: React.FC<PreviewStepProps> = ({
             disabled={!hasQuizData}
             className={`px-8 py-3 font-semibold rounded-xl transition-colors shadow-sm hover:shadow-md ${
               hasQuizData
-                ? 'bg-[#951b6d] text-white hover:bg-[#7d1659]'
+                ? 'bg-[#5a5a63] text-white hover:bg-[#7d1659]'
                 : 'bg-gray-300 text-gray-500 cursor-not-allowed'
             }`}
             type="button"

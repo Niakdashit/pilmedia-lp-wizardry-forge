@@ -12,4 +12,4 @@ export const TEMPLATE_TILE_HEIGHT_CLASS = 'h-[224px]';
 export const TEMPLATE_TILE_RADIUS_CLASS = 'rounded-[16px]';
 
 // Placeholder background (will be replaced by real preview later)
-export const TEMPLATE_TILE_BG_CLASS = 'bg-[#841b60]';
+export const TEMPLATE_TILE_BG_CLASS = 'bg-[#44444d]';

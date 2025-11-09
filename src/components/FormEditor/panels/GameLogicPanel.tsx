@@ -112,7 +112,7 @@ const GameLogicPanel: React.FC = () => {
   };
 
   // Palette de couleurs par défaut
-  const colorPalette = ['#841b60', '#4ecdc4', '#45b7d1', '#96ceb4', '#feca57', '#ff9ff3'];
+  const colorPalette = ['#44444d', '#4ecdc4', '#45b7d1', '#96ceb4', '#feca57', '#ff9ff3'];
 
   const setSegmentCount = (targetCount: number) => {
     let count = Math.max(2, Math.floor(targetCount));

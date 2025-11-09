@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useUsers } from '../hooks/useUsers';
 import { useProfile } from '../hooks/useProfile';
 import { User, Mail, Calendar, Shield, ShieldCheck, UserCheck } from 'lucide-react';
+import Spinner from '@/components/shared/Spinner';
 
 const Admin: React.FC = () => {
   const { users, loading, error, updateUserRole } = useUsers();
@@ -25,7 +26,7 @@ const Admin: React.FC = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-[#841b60]"></div>
+        <Spinner size="xl" />
       </div>
     );
   }
@@ -120,7 +121,7 @@ const Admin: React.FC = () => {
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                       <div className="flex-shrink-0 w-10 h-10">
-                        <div className="w-10 h-10 rounded-full bg-[#841b60] flex items-center justify-center">
+                        <div className="w-10 h-10 rounded-full bg-[#44444d] flex items-center justify-center">
                           <span className="text-white font-medium text-sm">
                             {(user.full_name?.[0] || user.email?.[0] || '?').toUpperCase()}
                           </span>
@@ -173,7 +174,7 @@ const Admin: React.FC = () => {
                     ) : (
                       <button
                         onClick={() => setSelectedUser(user.id)}
-                        className="text-[#841b60] hover:text-[#6d164f] font-medium"
+                        className="text-[#44444d] hover:text-[#5a5a63] font-medium"
                         disabled={user.id === currentUser.id} // Can't change own role
                       >
                         {user.id === currentUser.id ? 'Votre compte' : 'Modifier'}

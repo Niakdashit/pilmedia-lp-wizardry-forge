@@ -114,7 +114,7 @@ const EditorModeModal: React.FC<EditorModeModalProps> = ({
               {/* Mode Full Screen */}
               <button
                 onClick={() => handleModeSelect('fullscreen')}
-                className="group flex items-center gap-4 rounded-xl border border-gray-200/80 bg-white hover:border-[#841b60] hover:shadow-lg transition-all text-left p-3"
+                className="group flex items-center gap-4 rounded-xl border border-gray-200/80 bg-white hover:border-[#44444d] hover:shadow-lg transition-all text-left p-3"
               >
                 <div className="relative flex-shrink-0 h-16 w-24 rounded-lg overflow-hidden bg-gradient-to-br from-[#fdf6ff] via-[#f6f7ff] to-[#ffeef5] flex items-center justify-center">
                   {/* Icon image (optional). If missing, the gradient box remains as fallback */}
@@ -132,11 +132,11 @@ const EditorModeModal: React.FC<EditorModeModalProps> = ({
                       }
                     }}
                   />
-                  <div className="pointer-events-none absolute inset-[6px] rounded-md border border-[#cdb7e6]/40" />
+                  <div className="pointer-events-none absolute inset-[6px] rounded-md border border-[#9a9a9f]/40" />
                 </div>
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
-                    <h3 className="text-base font-semibold text-gray-900 group-hover:text-[#841b60] transition-colors">
+                    <h3 className="text-base font-semibold text-gray-900 group-hover:text-[#44444d] transition-colors">
                       Full Screen
                     </h3>
                     <span className="px-2 py-0.5 text-[10px] font-medium rounded-full bg-gray-900/10 text-gray-700">
@@ -152,7 +152,7 @@ const EditorModeModal: React.FC<EditorModeModalProps> = ({
               {/* Mode Article */}
               <button
                 onClick={() => handleModeSelect('article')}
-                className="group flex items-center gap-4 rounded-xl border border-purple-200/80 bg-white hover:border-[#841b60] hover:shadow-lg transition-all text-left p-3"
+                className="group flex items-center gap-4 rounded-xl border border-purple-200/80 bg-white hover:border-[#44444d] hover:shadow-lg transition-all text-left p-3"
               >
                 <div className="relative flex-shrink-0 h-16 w-24 rounded-lg overflow-hidden bg-gradient-to-br from-[#fdf6ff] via-[#f6f7ff] to-[#ffeef5] flex items-center justify-center">
                   {/* Icon image (optional). If missing, the gradient box remains as fallback */}
@@ -169,14 +169,14 @@ const EditorModeModal: React.FC<EditorModeModalProps> = ({
                       }
                     }}
                   />
-                  <div className="pointer-events-none absolute inset-[6px] rounded-md border border-[#cdb7e6]/40" />
+                  <div className="pointer-events-none absolute inset-[6px] rounded-md border border-[#9a9a9f]/40" />
                 </div>
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
-                    <h3 className="text-base font-semibold text-gray-900 group-hover:text-[#841b60] transition-colors">
+                    <h3 className="text-base font-semibold text-gray-900 group-hover:text-[#44444d] transition-colors">
                       Article
                     </h3>
-                    <span className="px-2 py-0.5 text-[10px] font-medium rounded-full bg-[#841b60]/10 text-[#841b60]">
+                    <span className="px-2 py-0.5 text-[10px] font-medium rounded-full bg-[#44444d]/10 text-[#44444d]">
                       Guidé
                     </span>
                   </div>

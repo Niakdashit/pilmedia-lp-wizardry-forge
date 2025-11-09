@@ -26,8 +26,8 @@ const GamePositionSelector: React.FC<GamePositionSelectorProps> = ({
           onClick={() => onPositionChange('top')}
           className={`p-2 text-xs rounded border transition-colors ${
             selectedPosition === 'top'
-              ? 'bg-gradient-to-br from-[#841b60] to-[#b41b60] text-white border-[#841b60]'
-              : 'bg-white text-gray-700 border-gray-300 hover:border-[#841b60]'
+              ? 'bg-gradient-to-br from-[#44444d] to-[#44444d] text-white border-[#44444d]'
+              : 'bg-white text-gray-700 border-gray-300 hover:border-[#44444d]'
           }`}
         >
           Haut
@@ -39,8 +39,8 @@ const GamePositionSelector: React.FC<GamePositionSelectorProps> = ({
           onClick={() => onPositionChange('left')}
           className={`p-2 text-xs rounded border transition-colors ${
             selectedPosition === 'left'
-              ? 'bg-gradient-to-br from-[#841b60] to-[#b41b60] text-white border-[#841b60]'
-              : 'bg-white text-gray-700 border-gray-300 hover:border-[#841b60]'
+              ? 'bg-gradient-to-br from-[#44444d] to-[#44444d] text-white border-[#44444d]'
+              : 'bg-white text-gray-700 border-gray-300 hover:border-[#44444d]'
           }`}
         >
           Gauche
@@ -49,8 +49,8 @@ const GamePositionSelector: React.FC<GamePositionSelectorProps> = ({
           onClick={() => onPositionChange('center')}
           className={`p-2 text-xs rounded border transition-colors ${
             selectedPosition === 'center'
-              ? 'bg-gradient-to-br from-[#841b60] to-[#b41b60] text-white border-[#841b60]'
-              : 'bg-white text-gray-700 border-gray-300 hover:border-[#841b60]'
+              ? 'bg-gradient-to-br from-[#44444d] to-[#44444d] text-white border-[#44444d]'
+              : 'bg-white text-gray-700 border-gray-300 hover:border-[#44444d]'
           }`}
         >
           Centre
@@ -59,8 +59,8 @@ const GamePositionSelector: React.FC<GamePositionSelectorProps> = ({
           onClick={() => onPositionChange('right')}
           className={`p-2 text-xs rounded border transition-colors ${
             selectedPosition === 'right'
-              ? 'bg-gradient-to-br from-[#841b60] to-[#b41b60] text-white border-[#841b60]'
-              : 'bg-white text-gray-700 border-gray-300 hover:border-[#841b60]'
+              ? 'bg-gradient-to-br from-[#44444d] to-[#44444d] text-white border-[#44444d]'
+              : 'bg-white text-gray-700 border-gray-300 hover:border-[#44444d]'
           }`}
         >
           Droite
@@ -72,8 +72,8 @@ const GamePositionSelector: React.FC<GamePositionSelectorProps> = ({
           onClick={() => onPositionChange('bottom')}
           className={`p-2 text-xs rounded border transition-colors ${
             selectedPosition === 'bottom'
-              ? 'bg-gradient-to-br from-[#841b60] to-[#b41b60] text-white border-[#841b60]'
-              : 'bg-white text-gray-700 border-gray-300 hover:border-[#841b60]'
+              ? 'bg-gradient-to-br from-[#44444d] to-[#44444d] text-white border-[#44444d]'
+              : 'bg-white text-gray-700 border-gray-300 hover:border-[#44444d]'
           }`}
         >
           Bas

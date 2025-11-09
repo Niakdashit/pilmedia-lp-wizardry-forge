@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { AuthModal } from '../components/Auth/AuthModal';
 import { useAuthContext } from '../contexts/AuthContext';
+import Spinner from '../components/shared/Spinner';
 
 const Auth: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(true);
@@ -38,10 +39,7 @@ const Auth: React.FC = () => {
           }
         `}</style>
         <div className="min-h-screen flex items-center justify-center p-4" style={{ margin: 0 }}>
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
-            <p className="text-white">Vérification de la connexion...</p>
-          </div>
+          <Spinner size="lg" text="Vérification de la connexion..." className="text-white" />
         </div>
       </>
     );
@@ -67,10 +65,7 @@ const Auth: React.FC = () => {
           }
         `}</style>
         <div className="min-h-screen flex items-center justify-center p-4" style={{ margin: 0 }}>
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
-            <p className="text-white">Redirection en cours...</p>
-          </div>
+          <Spinner size="lg" text="Redirection en cours..." className="text-white" />
         </div>
       </>
     );

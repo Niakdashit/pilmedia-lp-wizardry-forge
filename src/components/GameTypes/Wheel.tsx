@@ -386,7 +386,7 @@ const Wheel: React.FC<WheelProps> = ({
         size={gameDimensions.width}
         theme="modern"
         brandColors={{
-          primary: (campaign as any)?.design?.customColors?.primary || '#841b60',
+          primary: (campaign as any)?.design?.customColors?.primary || '#44444d',
           secondary: (campaign as any)?.design?.customColors?.secondary || '#4ecdc4'
         }}
         disabled={disabled}

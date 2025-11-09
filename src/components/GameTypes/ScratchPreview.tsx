@@ -24,7 +24,7 @@ const ScratchPreview: React.FC<ScratchPreviewProps> = ({
   onStart,
   disabled = false,
   buttonLabel = 'Gratter',
-  buttonColor = '#841b60',
+  buttonColor = '#44444d',
   gameSize = 'medium',
   autoStart = false,
   isModal = false

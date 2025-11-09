@@ -102,7 +102,7 @@ const Toolbar: React.FC<{
                 onMouseDown={(e) => { e.stopPropagation(); e.preventDefault(); }}
                 onPointerDown={(e) => { e.stopPropagation(); e.preventDefault(); }}
                 className={`${isMobile ? 'px-1.5 py-0.5 text-[10px]' : 'px-2 py-1 text-[11px]'} font-semibold uppercase tracking-wide rounded-md transition-colors
-                  ${isActive ? 'bg-[#841b60] text-white shadow-sm shadow-[#841b60]/40' : 'bg-white/70 text-gray-600 hover:bg-white/90 hover:text-gray-900'}`}
+                  ${isActive ? 'bg-[#44444d] text-white shadow-sm shadow-[#44444d]/40' : 'bg-white/70 text-gray-600 hover:bg-white/90 hover:text-gray-900'}`}
                 aria-label={`Largeur ${option.label}`}
               >
                 {option.label}
@@ -117,7 +117,7 @@ const Toolbar: React.FC<{
             onClick={onToggleAbsolute}
             onMouseDown={(e) => { e.stopPropagation(); }}
             onPointerDown={(e) => { e.stopPropagation(); }}
-            className={`${isMobile ? 'px-2 py-0.5 text-[10px]' : 'px-2 py-1 text-[11px]'} font-semibold uppercase tracking-wide rounded-md transition-colors ${isAbsolute ? 'bg-[#841b60] text-white shadow-sm shadow-[#841b60]/40' : 'bg-white/70 text-gray-600 hover:bg-white/90 hover:text-gray-900'}`}
+            className={`${isMobile ? 'px-2 py-0.5 text-[10px]' : 'px-2 py-1 text-[11px]'} font-semibold uppercase tracking-wide rounded-md transition-colors ${isAbsolute ? 'bg-[#44444d] text-white shadow-sm shadow-[#44444d]/40' : 'bg-white/70 text-gray-600 hover:bg-white/90 hover:text-gray-900'}`}
             aria-label="Basculer position libre"
           >
             Libre

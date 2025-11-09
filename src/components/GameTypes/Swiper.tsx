@@ -118,7 +118,7 @@ const Swiper: React.FC<SwiperProps> = ({ config, onConfigChange, isPreview }) =>
               type="text"
               value={config?.rightSwipeIcon || '❤️'}
               onChange={(e) => updateConfig('rightSwipeIcon', e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60]"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#44444d]"
               placeholder="Emoji ou texte"
             />
           </div>
@@ -136,7 +136,7 @@ const Swiper: React.FC<SwiperProps> = ({ config, onConfigChange, isPreview }) =>
               type="text"
               value={config?.leftSwipeIcon || '❌'}
               onChange={(e) => updateConfig('leftSwipeIcon', e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60]"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#44444d]"
               placeholder="Emoji ou texte"
             />
           </div>
@@ -152,7 +152,7 @@ const Swiper: React.FC<SwiperProps> = ({ config, onConfigChange, isPreview }) =>
             type="text"
             value={config?.rightSwipeText || 'J\'aime !'}
             onChange={(e) => updateConfig('rightSwipeText', e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60]"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#44444d]"
             placeholder="Message pour le swipe droite"
           />
         </div>
@@ -165,7 +165,7 @@ const Swiper: React.FC<SwiperProps> = ({ config, onConfigChange, isPreview }) =>
             type="text"
             value={config?.leftSwipeText || 'Suivant'}
             onChange={(e) => updateConfig('leftSwipeText', e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60]"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#44444d]"
             placeholder="Message pour le swipe gauche"
           />
         </div>
@@ -178,7 +178,7 @@ const Swiper: React.FC<SwiperProps> = ({ config, onConfigChange, isPreview }) =>
           </label>
           <button
             onClick={addCard}
-            className="text-sm text-[#841b60] hover:text-[#6d164f] font-medium flex items-center"
+            className="text-sm text-[#44444d] hover:text-[#5a5a63] font-medium flex items-center"
           >
             <Plus className="w-4 h-4 mr-1" />
             Ajouter une carte
@@ -211,7 +211,7 @@ const Swiper: React.FC<SwiperProps> = ({ config, onConfigChange, isPreview }) =>
                       type="text"
                       value={card.image}
                       onChange={(e) => updateCard(index, 'image', e.target.value)}
-                      className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60]"
+                      className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#44444d]"
                       placeholder="URL de l'image"
                     />
                   </div>
@@ -229,7 +229,7 @@ const Swiper: React.FC<SwiperProps> = ({ config, onConfigChange, isPreview }) =>
                       type="text"
                       value={card.title}
                       onChange={(e) => updateCard(index, 'title', e.target.value)}
-                      className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60]"
+                      className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#44444d]"
                       placeholder="Titre de la carte"
                     />
                   </div>
@@ -242,7 +242,7 @@ const Swiper: React.FC<SwiperProps> = ({ config, onConfigChange, isPreview }) =>
                   <textarea
                     value={card.description}
                     onChange={(e) => updateCard(index, 'description', e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60]"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#44444d]"
                     placeholder="Description de la carte"
                     rows={3}
                   />
@@ -256,7 +256,7 @@ const Swiper: React.FC<SwiperProps> = ({ config, onConfigChange, isPreview }) =>
                     type="text"
                     value={card.category}
                     onChange={(e) => updateCard(index, 'category', e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60]"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#44444d]"
                     placeholder="Catégorie de la carte"
                   />
                 </div>

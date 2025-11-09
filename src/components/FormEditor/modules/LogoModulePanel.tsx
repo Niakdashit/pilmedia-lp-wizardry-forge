@@ -29,7 +29,7 @@ const LogoModulePanel: React.FC<LogoModulePanelProps> = ({ module, onUpdate, onB
         <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
           <button
             type="button"
-            className="flex items-center gap-2 text-sm text-[#841b60] hover:underline"
+            className="flex items-center gap-2 text-sm text-[#44444d] hover:underline"
             onClick={onBack}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -103,7 +103,7 @@ const LogoModulePanel: React.FC<LogoModulePanelProps> = ({ module, onUpdate, onB
               value={bandColor}
               onChange={(e) => onUpdate({ bandColor: e.target.value })}
               placeholder="#ffffff"
-              className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#841b60] focus:ring-[#841b60]"
+              className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#44444d] focus:ring-[#44444d]"
             />
           </div>
         </section>
@@ -150,8 +150,8 @@ const LogoModulePanel: React.FC<LogoModulePanelProps> = ({ module, onUpdate, onB
                   onClick={() => onUpdate({ align: id })}
                   className={`flex flex-col items-center rounded-lg border px-3 py-2 text-[11px] leading-tight transition ${
                     isActive
-                      ? 'border-[#841b60] bg-[#841b60]/10 text-[#841b60] shadow-sm shadow-[#841b60]/30'
-                      : 'border-gray-200 text-gray-600 hover:border-[#841b60]/40 hover:text-[#841b60]'
+                      ? 'border-[#44444d] bg-[#44444d]/10 text-[#44444d] shadow-sm shadow-[#44444d]/30'
+                      : 'border-gray-200 text-gray-600 hover:border-[#44444d]/40 hover:text-[#44444d]'
                   }`}
                 >
                   <Icon className="w-4 h-4 mb-1" />

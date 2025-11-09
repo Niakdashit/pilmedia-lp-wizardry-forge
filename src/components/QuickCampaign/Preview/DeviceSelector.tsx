@@ -17,7 +17,7 @@ const DeviceSelector: React.FC<DeviceSelectorProps> = ({
         onClick={() => onDeviceChange('desktop')}
         className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
           selectedDevice === 'desktop'
-            ? 'bg-white text-[#841b60] shadow-sm'
+            ? 'bg-white text-[#44444d] shadow-sm'
             : 'text-gray-600 hover:text-gray-900'
         }`}
       >
@@ -28,7 +28,7 @@ const DeviceSelector: React.FC<DeviceSelectorProps> = ({
         onClick={() => onDeviceChange('mobile')}
         className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
           selectedDevice === 'mobile'
-            ? 'bg-white text-[#841b60] shadow-sm'
+            ? 'bg-white text-[#44444d] shadow-sm'
             : 'text-gray-600 hover:text-gray-900'
         }`}
       >

@@ -850,7 +850,7 @@ const EditableText: React.FC<EditableTextProps> = ({
                       exec('foreColor', customColor);
                       setShowCustomColorPicker(false);
                     }}
-                    className="px-3 py-1.5 bg-[#841b60] hover:bg-[#a0246e] text-white rounded text-sm font-medium"
+                    className="px-3 py-1.5 bg-[#44444d] hover:bg-[#5a5a63] text-white rounded text-sm font-medium"
                   >
                     OK
                   </button>
@@ -1099,7 +1099,7 @@ const EditableText: React.FC<EditableTextProps> = ({
               type="text"
               value={linkUrl}
               onChange={e => setLinkUrl(e.target.value)}
-              className="w-full px-3 py-2 bg-white border border-[#841b60] rounded text-gray-900 text-sm focus:outline-none focus:border-[#a0246e]"
+              className="w-full px-3 py-2 bg-white border border-[#44444d] rounded text-gray-900 text-sm focus:outline-none focus:border-[#5a5a63]"
               placeholder="https://..."
               autoFocus
             />
@@ -1111,7 +1111,7 @@ const EditableText: React.FC<EditableTextProps> = ({
                   name="linkDisplay"
                   checked={linkDisplayMode === 'url'}
                   onChange={() => setLinkDisplayMode('url')}
-                  className="w-4 h-4 text-[#841b60] focus:ring-[#841b60]"
+                  className="w-4 h-4 text-[#44444d] focus:ring-[#44444d]"
                 />
                 <span className="text-gray-900 text-sm">Afficher l'URL directement</span>
               </label>
@@ -1122,7 +1122,7 @@ const EditableText: React.FC<EditableTextProps> = ({
                   name="linkDisplay"
                   checked={linkDisplayMode === 'custom'}
                   onChange={() => setLinkDisplayMode('custom')}
-                  className="w-4 h-4 text-[#841b60] focus:ring-[#841b60]"
+                  className="w-4 h-4 text-[#44444d] focus:ring-[#44444d]"
                 />
                 <span className="text-gray-900 text-sm">Personnaliser le texte du lien</span>
               </label>
@@ -1135,7 +1135,7 @@ const EditableText: React.FC<EditableTextProps> = ({
                   type="text"
                   value={linkText}
                   onChange={e => setLinkText(e.target.value)}
-                  className="w-full px-3 py-2 bg-white border border-[#841b60] rounded text-gray-900 text-sm focus:outline-none focus:border-[#a0246e]"
+                  className="w-full px-3 py-2 bg-white border border-[#44444d] rounded text-gray-900 text-sm focus:outline-none focus:border-[#5a5a63]"
                   placeholder="Cliquez ici"
                 />
               </div>
@@ -1150,7 +1150,7 @@ const EditableText: React.FC<EditableTextProps> = ({
                   savedRangeRef.current = null;
                   setLinkDisplayMode('url');
                 }}
-                className="px-4 py-1.5 text-[#841b60] hover:text-[#a0246e] text-sm font-medium"
+                className="px-4 py-1.5 text-[#44444d] hover:text-[#a0246e] text-sm font-medium"
               >
                 Annuler
               </button>
@@ -1167,7 +1167,7 @@ const EditableText: React.FC<EditableTextProps> = ({
                     setLinkDisplayMode('url');
                   }
                 }}
-                className="px-5 py-1.5 bg-[#841b60] hover:bg-[#a0246e] text-white rounded text-sm font-medium"
+                className="px-5 py-1.5 bg-[#44444d] hover:bg-[#5a5a63] text-white rounded text-sm font-medium"
               >
                 OK
               </button>
@@ -1189,7 +1189,7 @@ const EditableText: React.FC<EditableTextProps> = ({
                   name="imageInputMode"
                   checked={imageInputMode === 'url'}
                   onChange={() => setImageInputMode('url')}
-                  className="w-4 h-4 text-[#841b60] focus:ring-[#841b60]"
+                  className="w-4 h-4 text-[#44444d] focus:ring-[#44444d]"
                 />
                 <span className="text-gray-900 text-sm">Entrer une URL</span>
               </label>
@@ -1200,7 +1200,7 @@ const EditableText: React.FC<EditableTextProps> = ({
                   name="imageInputMode"
                   checked={imageInputMode === 'upload'}
                   onChange={() => setImageInputMode('upload')}
-                  className="w-4 h-4 text-[#841b60] focus:ring-[#841b60]"
+                  className="w-4 h-4 text-[#44444d] focus:ring-[#44444d]"
                 />
                 <span className="text-gray-900 text-sm">Uploader un fichier</span>
               </label>
@@ -1213,7 +1213,7 @@ const EditableText: React.FC<EditableTextProps> = ({
                   type="text"
                   value={imageUrl}
                   onChange={e => setImageUrl(e.target.value)}
-                  className="w-full px-3 py-2 bg-white border border-[#841b60] rounded text-gray-900 text-sm focus:outline-none focus:border-[#a0246e]"
+                  className="w-full px-3 py-2 bg-white border border-[#44444d] rounded text-gray-900 text-sm focus:outline-none focus:border-[#5a5a63]"
                   placeholder="https://..."
                   autoFocus
                   onKeyDown={e => {
@@ -1241,7 +1241,7 @@ const EditableText: React.FC<EditableTextProps> = ({
                       setImageUrl(url);
                     }
                   }}
-                  className="w-full px-3 py-2 bg-white border border-[#841b60] rounded text-gray-900 text-sm focus:outline-none focus:border-[#a0246e] file:mr-3 file:py-1 file:px-3 file:rounded file:border-0 file:text-sm file:font-medium file:bg-[#841b60] file:text-white hover:file:bg-[#a0246e]"
+                  className="w-full px-3 py-2 bg-white border border-[#44444d] rounded text-gray-900 text-sm focus:outline-none focus:border-[#5a5a63] file:mr-3 file:py-1 file:px-3 file:rounded file:border-0 file:text-sm file:font-medium file:bg-[#44444d] file:text-white hover:file:bg-[#5a5a63]"
                 />
                 {imageFile && (
                   <div className="mt-2 text-xs text-gray-600">
@@ -1260,7 +1260,7 @@ const EditableText: React.FC<EditableTextProps> = ({
                   setImageInputMode('url');
                   if (imageFile) URL.revokeObjectURL(imageUrl);
                 }}
-                className="px-4 py-1.5 text-[#841b60] hover:text-[#a0246e] text-sm font-medium"
+                className="px-4 py-1.5 text-[#44444d] hover:text-[#a0246e] text-sm font-medium"
               >
                 Annuler
               </button>
@@ -1274,7 +1274,7 @@ const EditableText: React.FC<EditableTextProps> = ({
                     setImageInputMode('url');
                   }
                 }}
-                className="px-5 py-1.5 bg-[#841b60] hover:bg-[#a0246e] text-white rounded text-sm font-medium"
+                className="px-5 py-1.5 bg-[#44444d] hover:bg-[#5a5a63] text-white rounded text-sm font-medium"
               >
                 OK
               </button>
@@ -1297,7 +1297,7 @@ const EditableText: React.FC<EditableTextProps> = ({
                   type="text"
                   value={imageLinkUrl}
                   onChange={e => setImageLinkUrl(e.target.value)}
-                  className="w-full px-3 py-2 bg-white border border-[#841b60] rounded text-gray-900 text-sm focus:outline-none focus:border-[#a0246e]"
+                  className="w-full px-3 py-2 bg-white border border-[#44444d] rounded text-gray-900 text-sm focus:outline-none focus:border-[#5a5a63]"
                   placeholder="https://..."
                 />
               </div>
@@ -1312,7 +1312,7 @@ const EditableText: React.FC<EditableTextProps> = ({
                     max="20"
                     value={imageBorderWidth.replace('px', '')}
                     onChange={e => setImageBorderWidth(e.target.value + 'px')}
-                    className="w-full px-3 py-2 bg-white border border-[#841b60] rounded text-gray-900 text-sm focus:outline-none focus:border-[#a0246e]"
+                    className="w-full px-3 py-2 bg-white border border-[#44444d] rounded text-gray-900 text-sm focus:outline-none focus:border-[#5a5a63]"
                   />
                 </div>
                 <div>
@@ -1321,7 +1321,7 @@ const EditableText: React.FC<EditableTextProps> = ({
                     type="color"
                     value={imageBorderColor}
                     onChange={e => setImageBorderColor(e.target.value)}
-                    className="w-full h-10 bg-white border border-[#841b60] rounded cursor-pointer"
+                    className="w-full h-10 bg-white border border-[#44444d] rounded cursor-pointer"
                   />
                 </div>
               </div>
@@ -1336,7 +1336,7 @@ const EditableText: React.FC<EditableTextProps> = ({
                     max="1200"
                     value={imageWidth}
                     onChange={e => handleWidthChange(e.target.value)}
-                    className="w-full px-3 py-2 bg-white border border-[#841b60] rounded text-gray-900 text-sm focus:outline-none focus:border-[#a0246e]"
+                    className="w-full px-3 py-2 bg-white border border-[#44444d] rounded text-gray-900 text-sm focus:outline-none focus:border-[#5a5a63]"
                     placeholder="Auto"
                   />
                 </div>
@@ -1348,7 +1348,7 @@ const EditableText: React.FC<EditableTextProps> = ({
                     max="1200"
                     value={imageHeight}
                     onChange={e => handleHeightChange(e.target.value)}
-                    className="w-full px-3 py-2 bg-white border border-[#841b60] rounded text-gray-900 text-sm focus:outline-none focus:border-[#a0246e]"
+                    className="w-full px-3 py-2 bg-white border border-[#44444d] rounded text-gray-900 text-sm focus:outline-none focus:border-[#5a5a63]"
                     placeholder="Auto"
                   />
                 </div>
@@ -1363,7 +1363,7 @@ const EditableText: React.FC<EditableTextProps> = ({
                   max="100"
                   value={imageBorderRadius.replace('px', '')}
                   onChange={e => setImageBorderRadius(e.target.value + 'px')}
-                  className="w-full px-3 py-2 bg-white border border-[#841b60] rounded text-gray-900 text-sm focus:outline-none focus:border-[#a0246e]"
+                  className="w-full px-3 py-2 bg-white border border-[#44444d] rounded text-gray-900 text-sm focus:outline-none focus:border-[#5a5a63]"
                 />
               </div>
             </div>
@@ -1380,7 +1380,7 @@ const EditableText: React.FC<EditableTextProps> = ({
                   setImageWidth('');
                   setImageHeight('');
                 }}
-                className="px-4 py-1.5 text-[#841b60] hover:text-[#a0246e] text-sm font-medium"
+                className="px-4 py-1.5 text-[#44444d] hover:text-[#a0246e] text-sm font-medium"
               >
                 Annuler
               </button>
@@ -1437,7 +1437,7 @@ const EditableText: React.FC<EditableTextProps> = ({
                   setShowImageEditModal(false);
                   setSelectedImageElement(null);
                 }}
-                className="px-5 py-1.5 bg-[#841b60] hover:bg-[#a0246e] text-white rounded text-sm font-medium"
+                className="px-5 py-1.5 bg-[#44444d] hover:bg-[#5a5a63] text-white rounded text-sm font-medium"
               >
                 Appliquer
               </button>

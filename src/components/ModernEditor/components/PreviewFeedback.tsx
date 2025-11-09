@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { AlertCircle, Loader2, Monitor, Tablet, Smartphone } from 'lucide-react';
+import Spinner from '../../shared/Spinner';
 
 interface PreviewFeedbackProps {
   device: 'desktop' | 'tablet' | 'mobile';
@@ -45,7 +46,7 @@ const PreviewFeedback: React.FC<PreviewFeedbackProps> = ({
       {isLoading && (
         <div className="absolute inset-0 flex items-center justify-center z-50 pointer-events-none">
           <div className="flex items-center space-x-2 bg-white/95 rounded-lg shadow-lg px-4 py-2 border backdrop-blur-sm">
-            <Loader2 className="w-5 h-5 animate-spin text-blue-500" />
+            <Spinner size="sm" />
             <span className="text-sm font-medium text-gray-700">
               Chargement de l'aperçu...
             </span>

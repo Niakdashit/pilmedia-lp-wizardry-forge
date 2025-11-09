@@ -70,8 +70,8 @@ const GameSelectionStep: React.FC<GameSelectionStepProps> = ({
                 group p-4 rounded-xl border transition-all duration-200 text-left
                 hover:shadow-md hover:-translate-y-0.5
                 ${wizardData.selectedGame === game.type
-                  ? 'border-[#951b6d] bg-[#951b6d]/5 shadow-md' 
-                  : 'border-gray-200 bg-white hover:bg-gray-50 hover:border-[#951b6d]/30'
+                  ? 'border-[#951b6d] bg-[#5a5a63]/5 shadow-md' 
+                  : 'border-gray-200 bg-white hover:bg-gray-50 hover:border-[#5a5a63]/30'
                 }
               `}
             >
@@ -79,15 +79,15 @@ const GameSelectionStep: React.FC<GameSelectionStepProps> = ({
                 <div className={`
                   w-8 h-8 rounded-lg flex items-center justify-center transition-colors
                   ${wizardData.selectedGame === game.type
-                    ? 'bg-[#951b6d] text-white' 
-                    : 'bg-gray-100 text-gray-600 group-hover:bg-[#951b6d]/10 group-hover:text-[#951b6d]'
+                    ? 'bg-[#5a5a63] text-white' 
+                    : 'bg-gray-100 text-gray-600 group-hover:bg-[#5a5a63]/10 group-hover:text-[#951b6d]'
                   }
                 `}>
                   {iconComponents[game.type]}
                 </div>
                 
                 {wizardData.selectedGame === game.type && (
-                  <div className="w-2 h-2 bg-[#951b6d] rounded-full"></div>
+                  <div className="w-2 h-2 bg-[#5a5a63] rounded-full"></div>
                 )}
               </div>
               
@@ -106,7 +106,7 @@ const GameSelectionStep: React.FC<GameSelectionStepProps> = ({
           <div className="flex justify-end">
             <button
               onClick={nextStep}
-              className="px-8 py-3 bg-[#951b6d] text-white font-semibold rounded-xl hover:bg-[#7d1659] transition-all duration-200 shadow-sm hover:shadow-md"
+              className="px-8 py-3 bg-[#5a5a63] text-white font-semibold rounded-xl hover:bg-[#7d1659] transition-all duration-200 shadow-sm hover:shadow-md"
             >
               Continuer
             </button>

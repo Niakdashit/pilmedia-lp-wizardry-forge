@@ -2,6 +2,7 @@
 import React, { useState, useMemo } from 'react';
 import { Handshake, TrendingUp, Users, Award } from 'lucide-react';
 import { useMediaPartners } from '@/hooks/useMediaPartners';
+import Spinner from '@/components/shared/Spinner';
 
 export default function Partnerships() {
   const { mediaPartners, loading } = useMediaPartners();
@@ -36,7 +37,7 @@ export default function Partnerships() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+        <Spinner size="xl" />
       </div>
     );
   }

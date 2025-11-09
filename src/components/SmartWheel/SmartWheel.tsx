@@ -38,8 +38,8 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
     
     return segments.map((segment, index) => {
       // Si le segment a la couleur par défaut et qu'on a des brandColors, utiliser brandColors.primary
-      if (segment.color === '#841b60' && brandColors?.primary) {
-        console.log(`🔧 SmartWheel: Forcing segment ${segment.id} color from #841b60 to ${brandColors.primary}`);
+      if (segment.color === '#44444d' && brandColors?.primary) {
+        console.log(`🔧 SmartWheel: Forcing segment ${segment.id} color from #44444d to ${brandColors.primary}`);
         return { ...segment, color: brandColors.primary };
       }
       return segment;

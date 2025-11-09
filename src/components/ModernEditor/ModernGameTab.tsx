@@ -58,7 +58,7 @@ const ModernGameTab: React.FC<ModernGameTabProps> = ({
               <select
                 value={campaign.gameSize || 'medium'}
                 onChange={(e) => setCampaign((prev: any) => ({ ...prev, gameSize: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#44444d] focus:border-transparent"
               >
                 <option value="small">Petit</option>
                 <option value="medium">Moyen</option>
@@ -73,7 +73,7 @@ const ModernGameTab: React.FC<ModernGameTabProps> = ({
               <select
                 value={campaign.gamePosition || 'center'}
                 onChange={(e) => setCampaign((prev: any) => ({ ...prev, gamePosition: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#44444d] focus:border-transparent"
               >
                 <option value="left">Gauche</option>
                 <option value="center">Centre</option>
@@ -95,7 +95,7 @@ const ModernGameTab: React.FC<ModernGameTabProps> = ({
                 ...prev,
                 buttonConfig: { ...prev.buttonConfig, text: e.target.value }
               }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#44444d] focus:border-transparent"
               placeholder="Jouer"
             />
           </div>

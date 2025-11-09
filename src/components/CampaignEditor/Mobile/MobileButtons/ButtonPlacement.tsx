@@ -26,7 +26,7 @@ const ButtonPlacement: React.FC<ButtonPlacementProps> = ({ placement, onPlacemen
             onClick={() => onPlacementChange(position.value)}
             className={`p-4 border-2 rounded-lg text-center transition-colors ${
               placement === position.value
-                ? 'border-[#841b60] bg-[#f9f0f5] text-[#841b60]'
+                ? 'border-[#44444d] bg-[#f5f5f7] text-[#44444d]'
                 : 'border-gray-200 hover:border-gray-300'
             }`}
           >

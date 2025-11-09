@@ -64,7 +64,7 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
               <MoreHorizontal className="w-5 h-5" />
             </button>
 
-            <button onClick={onSave} disabled={isLoading} className="flex items-center space-x-2 px-6 py-2 bg-gradient-to-br from-[#841b60] to-[#b41b60] hover:bg-[#6d164f] text-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 disabled:opacity-50">
+            <button onClick={onSave} disabled={isLoading} className="flex items-center space-x-2 px-6 py-2 bg-gradient-to-br from-[#44444d] to-[#44444d] hover:bg-[#5a5a63] text-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 disabled:opacity-50">
               <Save className="w-4 h-4" />
               <span>{isLoading ? 'Sauvegarde...' : 'Sauvegarder'}</span>
             </button>

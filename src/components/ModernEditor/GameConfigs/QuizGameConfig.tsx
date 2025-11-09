@@ -122,7 +122,7 @@ const QuizGameConfig: React.FC<QuizGameConfigProps> = ({
               }
             }))}
             min="0"
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#44444d] focus:border-transparent"
           />
         </div>
 
@@ -141,7 +141,7 @@ const QuizGameConfig: React.FC<QuizGameConfigProps> = ({
                 }
               }
             }))}
-            className="rounded border-gray-300 text-[#841b60] focus:ring-[#841b60]"
+            className="rounded border-gray-300 text-[#44444d] focus:ring-[#44444d]"
           />
           <label htmlFor="showCorrectAnswers" className="text-sm font-medium text-gray-700">
             Afficher les bonnes réponses à la fin
@@ -158,7 +158,7 @@ const QuizGameConfig: React.FC<QuizGameConfigProps> = ({
           </label>
           <button
             onClick={addQuestion}
-            className="flex items-center space-x-1 px-3 py-1 text-sm bg-gradient-to-br from-[#841b60] to-[#b41b60] text-white rounded-lg hover:bg-[#6d164f] transition-colors"
+            className="flex items-center space-x-1 px-3 py-1 text-sm bg-gradient-to-br from-[#44444d] to-[#44444d] text-white rounded-lg hover:bg-[#5a5a63] transition-colors"
           >
             <Plus className="w-4 h-4" />
             <span>Ajouter</span>
@@ -195,7 +195,7 @@ const QuizGameConfig: React.FC<QuizGameConfigProps> = ({
                 value={question.text || ''}
                 onChange={(e) => updateQuestion(questionIndex, 'text', e.target.value)}
                 placeholder="Texte de la question"
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-[#841b60] focus:border-transparent"
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-[#44444d] focus:border-transparent"
               />
 
               <div className="space-y-2">
@@ -203,7 +203,7 @@ const QuizGameConfig: React.FC<QuizGameConfigProps> = ({
                   <span className="text-xs font-medium text-gray-600">Options de réponse</span>
                   <button
                     onClick={() => addOption(questionIndex)}
-                    className="text-xs text-[#841b60] hover:text-[#6d164f]"
+                    className="text-xs text-[#44444d] hover:text-[#5a5a63]"
                   >
                     + Ajouter option
                   </button>
@@ -232,14 +232,14 @@ const QuizGameConfig: React.FC<QuizGameConfigProps> = ({
                           }
                         }));
                       }}
-                      className="text-[#841b60] focus:ring-[#841b60]"
+                      className="text-[#44444d] focus:ring-[#44444d]"
                     />
                     <input
                       type="text"
                       value={option.text || ''}
                       onChange={(e) => updateOption(questionIndex, optionIndex, 'text', e.target.value)}
                       placeholder={`Option ${optionIndex + 1}`}
-                      className="flex-1 px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-[#841b60] focus:border-transparent"
+                      className="flex-1 px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-[#44444d] focus:border-transparent"
                     />
                     {question.options.length > 2 && (
                       <button

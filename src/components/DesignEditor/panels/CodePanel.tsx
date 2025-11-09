@@ -96,7 +96,7 @@ const CodePanel: React.FC<CodePanelProps> = ({ campaign, currentScreen = 'screen
 }
 
 .element-button button {
-  background: ${campaign?.design?.buttonColor || '#841b60'};
+  background: ${campaign?.design?.buttonColor || '#44444d'};
   color: ${campaign?.design?.buttonTextColor || '#ffffff'};
   border: none;
   padding: 12px 24px;
@@ -491,7 +491,7 @@ ${htmlSafe}
                 onClick={() => setActiveCodeType(type.id)}
                 className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
                   activeCodeType === type.id
-                    ? 'bg-[#841b60] text-white'
+                    ? 'bg-[#44444d] text-white'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
@@ -571,7 +571,7 @@ ${htmlSafe}
                 alert(`Erreur JSON: ${error.message}`);
               }
             }}
-            className="px-4 py-2 bg-[#841b60] text-white text-xs font-medium rounded-lg hover:bg-[#6a154a] transition-colors"
+            className="px-4 py-2 bg-[#44444d] text-white text-xs font-medium rounded-lg hover:bg-[#5a5a63] transition-colors"
           >
             Appliquer
           </button>

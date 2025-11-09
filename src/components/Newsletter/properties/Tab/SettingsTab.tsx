@@ -43,7 +43,7 @@ export const SettingsTab: React.FC = () => {
           <h1 style="color:#333;">Newsletter générée</h1>
           <p style="color:#666;">Contenu basé sur le prompt: ${prompt}</p>
           <div style="margin:20px 0;">
-            <a href="#" style="background:#841b60;color:white;padding:10px 20px;text-decoration:none;border-radius:5px;">
+            <a href="#" style="background:#44444d;color:white;padding:10px 20px;text-decoration:none;border-radius:5px;">
               Call to Action
             </a>
           </div>
@@ -82,7 +82,7 @@ export const SettingsTab: React.FC = () => {
   return (
     <div className="space-y-8">
       <div>
-        <h2 className="text-xl font-semibold text-[#841b60] mb-4 flex items-center">
+        <h2 className="text-xl font-semibold text-[#44444d] mb-4 flex items-center">
           <Sparkles className="w-6 h-6 mr-2" /> Générateur de Template avec IA
         </h2>
 
@@ -115,7 +115,7 @@ export const SettingsTab: React.FC = () => {
           <button
             onClick={handleGenerate}
             disabled={!prompt || isGenerating}
-            className="w-full px-4 py-2 bg-gradient-to-br from-[#841b60] to-[#b41b60] text-white rounded-lg"
+            className="w-full px-4 py-2 bg-gradient-to-br from-[#44444d] to-[#44444d] text-white rounded-lg"
           >
             {isGenerating ? 'Génération...' : 'Générer avec l\'IA'}
           </button>
@@ -136,7 +136,7 @@ export const SettingsTab: React.FC = () => {
                 </button>
                 <button
                   onClick={handleSaveTemplate}
-                  className="px-4 py-2 bg-gradient-to-br from-[#841b60] to-[#b41b60] text-white rounded-lg"
+                  className="px-4 py-2 bg-gradient-to-br from-[#44444d] to-[#44444d] text-white rounded-lg"
                 >
                   <Save className="w-4 h-4 mr-2" /> Sauvegarder comme template
                 </button>
@@ -161,7 +161,7 @@ export const SettingsTab: React.FC = () => {
             >
               ✕
             </button>
-            <h3 className="text-lg font-bold mb-4 text-[#841b60]">Aperçu de la newsletter</h3>
+            <h3 className="text-lg font-bold mb-4 text-[#44444d]">Aperçu de la newsletter</h3>
             <div dangerouslySetInnerHTML={{ __html: generatedContent }} className="prose max-w-none" />
           </div>
         </div>

@@ -6,28 +6,28 @@
 
 /* Variables CSS pour les couleurs de marque - Format HSL */
 :root {
-  --brand-primary: 309 78% 31%;      /* #841b60 en HSL */
+  --brand-primary: 240 4% 28%;       /* #44444d en HSL */
   --brand-secondary: 0 0% 100%;      /* #ffffff en HSL */
   --brand-accent: 202 45% 91%;       /* #ebf4f7 en HSL */
   --brand-text: 0 0% 100%;           /* #ffffff en HSL */
   
-  /* Premium Sidebar Design System - Thème blanc avec accents violets */
+  /* Premium Sidebar Design System - Thème blanc avec accents gris */
   --sidebar-bg: 0 0% 100%;           /* Fond blanc pur */
   --sidebar-surface: 0 0% 98%;       /* Surface légèrement grisée */
-  --sidebar-hover: 309 78% 97%;      /* Hover très subtil avec teinte violette */
-  --sidebar-active: 309 78% 31%;     /* #841b60 - Couleur principale pour les éléments actifs */
-  --sidebar-active-bg: 309 78% 97%;  /* Background actif très subtil */
+  --sidebar-hover: 240 4% 97%;       /* Hover très subtil avec teinte grise */
+  --sidebar-active: 240 4% 28%;      /* #44444d - Couleur principale pour les éléments actifs */
+  --sidebar-active-bg: 240 4% 97%;   /* Background actif très subtil */
   --sidebar-border: 0 0% 92%;        /* Bordures grises claires */
   --sidebar-text: 0 0% 15%;          /* Texte sombre pour contraste */
   --sidebar-text-primary: 0 0% 10%;  /* Texte principal très sombre */
   --sidebar-text-muted: 0 0% 45%;    /* Texte atténué gris */
   --sidebar-icon: 0 0% 35%;          /* Icônes grises */
-  --sidebar-icon-active: 309 78% 31%; /* Icônes actives - couleur principale */
+  --sidebar-icon-active: 240 4% 28%; /* Icônes actives - couleur principale */
   --sidebar-shadow: 0 0% 0% / 0.08;  /* Ombres douces */
-  --sidebar-glow: 309 78% 31% / 0.15; /* Lueur violette subtile */
+  --sidebar-glow: 240 4% 28% / 0.15; /* Lueur grise subtile */
   
   /* Variables complémentaires pour cohérence */
-  --primary: 309 78% 31%;            /* #841b60 */
+  --primary: 240 4% 28%;             /* #44444d */
   --secondary: 0 0% 100%;            /* #ffffff */
   --accent: 202 45% 91%;             /* #ebf4f7 pour les éléments atténués */
   --background: 0 0% 100%;
@@ -40,7 +40,7 @@
   --card-foreground: 222.2 84% 4.9%;
   --border: 202 35% 85%;             /* Bordures plus subtiles avec accent */
   --input: 202 35% 85%;
-  --ring: 309 78% 31%;               /* Focus ring avec couleur principale */
+  --ring: 240 4% 28%;                /* Focus ring avec couleur principale */
   --radius: 0.25rem;
 }
 
@@ -72,7 +72,7 @@
   --card-foreground: 210 40% 98%;
   --popover: 222.2 84% 4.9%;
   --popover-foreground: 210 40% 98%;
-  --primary: 309 78% 31%;
+  --primary: 240 4% 28%;
   --primary-foreground: 210 40% 98%;
   --secondary: 217.2 32.6% 17.5%;
   --secondary-foreground: 210 40% 98%;
@@ -82,7 +82,7 @@
   --accent-foreground: 210 40% 98%;
   --border: 217.2 32.6% 17.5%;
   --input: 217.2 32.6% 17.5%;
-  --ring: 309 78% 31%;
+  --ring: 240 4% 28%;
 }
 
 /* Animations pour les effets de texte */

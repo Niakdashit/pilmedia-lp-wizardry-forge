@@ -10,6 +10,7 @@ import ConfirmModal from '@/components/shared/ConfirmModal';
 import { getEditorUrl } from '@/utils/editorRouting';
 import { useEffect } from 'react';
 import CampaignPeriodCell from '../components/Campaigns/CampaignPeriodCell';
+import Spinner from '@/components/shared/Spinner';
 
 
 interface ActionModalProps {
@@ -380,7 +381,7 @@ const Campaigns: React.FC = () => {
           <div className="relative">
             <button
               onClick={() => setShowEditorMenu(!showEditorMenu)}
-              className="flex items-center gap-2 bg-[#841b60] text-white px-6 py-3 rounded-lg font-medium hover:bg-[#6d154d] transition-colors"
+              className="inline-flex items-center gap-2 px-3.5 py-2 bg-[#fafafa] text-[#44444d] font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md transform hover:-translate-y-0.5 border-2 border-[#9a9a9f] text-xs"
             >
               <Plus className="w-4 h-4" />
               Nouvelle campagne
@@ -412,8 +413,7 @@ const Campaigns: React.FC = () => {
       <div className="px-6">
         {loading && (
           <div className="bg-white rounded-xl shadow-sm mt-6 p-8 text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#841b60] mx-auto mb-4"></div>
-            <p className="text-gray-600">Chargement des campagnes...</p>
+            <Spinner size="lg" text="Chargement des campagnes..." />
           </div>
         )}
 
@@ -426,13 +426,13 @@ const Campaigns: React.FC = () => {
         {!loading && !error && (
           <div className="bg-white rounded-xl shadow-sm mt-6">
             {selectedCampaigns.length > 0 && (
-              <div className="p-4 bg-[#841b60] text-white flex items-center justify-between">
+              <div className="p-4 bg-[#44444d] text-white flex items-center justify-between">
                 <span className="font-medium">
                   {selectedCampaigns.length} campagne(s) sélectionnée(s)
                 </span>
                 <button
                   onClick={handleDeleteSelected}
-                  className="flex items-center gap-2 bg-white text-[#841b60] px-4 py-2 rounded-lg font-medium hover:bg-gray-100 transition-colors"
+                  className="flex items-center gap-2 bg-white text-[#44444d] px-4 py-2 rounded-lg font-medium hover:bg-gray-100 transition-colors"
                 >
                   <Trash2 className="w-4 h-4" />
                   Supprimer la sélection
@@ -445,7 +445,7 @@ const Campaigns: React.FC = () => {
                   <input
                     type="text"
                     placeholder="Rechercher une campagne..."
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60]"
+                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#44444d]"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                   />
@@ -455,7 +455,7 @@ const Campaigns: React.FC = () => {
                 <div className="flex items-center gap-2">
                   <Filter className="text-gray-400 w-5 h-5" />
                   <select
-                    className="border border-gray-300 rounded-lg py-2 px-3 focus:outline-none focus:ring-2 focus:ring-[#841b60]"
+                    className="border border-gray-300 rounded-lg py-2 px-3 focus:outline-none focus:ring-2 focus:ring-[#44444d]"
                     value={filterStatus}
                     onChange={(e) => setFilterStatus(e.target.value)}
                   >
@@ -478,7 +478,7 @@ const Campaigns: React.FC = () => {
                         type="checkbox"
                         checked={selectedCampaigns.length === filteredCampaigns.length && filteredCampaigns.length > 0}
                         onChange={handleSelectAll}
-                        className="w-4 h-4 text-[#841b60] border-gray-300 rounded focus:ring-[#841b60]"
+                        className="w-4 h-4 text-[#44444d] border-gray-300 rounded focus:ring-[#44444d]"
                       />
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-8">
@@ -541,7 +541,7 @@ const Campaigns: React.FC = () => {
                             checked={selectedCampaigns.includes(campaign.id)}
                             onChange={() => handleSelectCampaign(campaign.id)}
                             onClick={(e) => e.stopPropagation()}
-                            className="w-4 h-4 text-[#841b60] border-gray-300 rounded focus:ring-[#841b60]"
+                            className="w-4 h-4 text-[#44444d] border-gray-300 rounded focus:ring-[#44444d]"
                           />
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
@@ -574,7 +574,7 @@ const Campaigns: React.FC = () => {
                                 checked={(campaign as any)?.config?.isPublic !== false}
                                 onChange={() => handleVisibilityToggle(campaign.id)}
                               />
-                              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#841b60]/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gradient-to-br peer-checked:from-[#841b60] peer-checked:to-[#b41b60]"></div>
+                              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#44444d]/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gradient-to-br peer-checked:from-[#44444d] peer-checked:to-[#44444d]"></div>
                             </label>
                             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(getActualStatus(campaign))}`}>
                               {getStatusText(getActualStatus(campaign))}
@@ -591,7 +591,7 @@ const Campaigns: React.FC = () => {
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                           <button
                             onClick={(e) => handleActionClick(e, campaign)}
-                            className="p-2 text-gray-500 hover:text-[#841b60] rounded-lg hover:bg-gray-100 transition-colors duration-200 relative"
+                            className="p-2 text-gray-500 hover:text-[#44444d] rounded-lg hover:bg-gray-100 transition-colors duration-200 relative"
                           >
                             <MoreVertical className="w-5 h-5" />
                           </button>

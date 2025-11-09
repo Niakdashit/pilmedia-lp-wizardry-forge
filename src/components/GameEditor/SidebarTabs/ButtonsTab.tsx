@@ -74,11 +74,11 @@ const ButtonsTab: React.FC<ButtonsTabProps> = ({
                 onChange={e => onConfigUpdate({
                   buttonVerticalPosition: Number(e.target.value)
                 })}
-                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#841b60]"
+                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#44444d]"
               />
               <div className="flex justify-between items-center text-sm">
                 <span className="text-sidebar-text-muted">Haut</span>
-                <span className="font-medium text-[#841b60]">
+                <span className="font-medium text-[#44444d]">
                   {config.buttonVerticalPosition ?? 85}%
                 </span>
                 <span className="text-sidebar-text-muted">Bas</span>

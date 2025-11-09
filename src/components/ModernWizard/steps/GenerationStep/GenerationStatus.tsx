@@ -24,7 +24,7 @@ const GenerationStatus: React.FC<GenerationStatusProps> = ({
     if (error && error.includes('Mode démonstration')) return 'bg-blue-500';
     if (error) return 'bg-orange-500';
     if (progress === 100) return 'bg-emerald-500';
-    return 'bg-[#951b6d]';
+    return 'bg-[#5a5a63]';
   };
 
   const getIcon = () => {

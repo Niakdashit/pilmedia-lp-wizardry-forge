@@ -79,7 +79,7 @@ const ElementsPanel: React.FC<ElementsPanelProps> = ({ onAddElement }) => {
         <h3 className="font-semibold text-sm text-gray-700 mb-3">JEU INTERACTIF</h3>
         <button
           onClick={addWheel}
-          className="w-full p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-[hsl(var(--primary))] hover:bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] hover:text-white transition-colors flex flex-col items-center group"
+          className="w-full p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-[hsl(var(--primary))] hover:bg-[#44444d] hover:text-white transition-colors flex flex-col items-center group"
         >
           <div className="w-12 h-12 bg-gradient-to-br from-yellow-400 to-red-500 rounded-full mb-2 flex items-center justify-center">
             <div className="w-8 h-8 border-2 border-white rounded-full"></div>
@@ -97,7 +97,7 @@ const ElementsPanel: React.FC<ElementsPanelProps> = ({ onAddElement }) => {
               <button
                 key={shape.id}
                 onClick={() => addShape(shape)}
-                className="p-3 border border-gray-200 rounded-lg hover:border-[hsl(var(--primary))] hover:bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] hover:text-white transition-colors group"
+                className="p-3 border border-gray-200 rounded-lg hover:border-[hsl(var(--primary))] hover:bg-[#44444d] hover:text-white transition-colors group"
                 title={shape.name}
               >
                 <Icon className="w-6 h-6 mx-auto text-gray-600 group-hover:text-white" />
@@ -114,7 +114,7 @@ const ElementsPanel: React.FC<ElementsPanelProps> = ({ onAddElement }) => {
             <button
               key={line.id}
               onClick={() => addLine(line)}
-              className="w-full p-3 border border-gray-200 rounded-lg hover:border-[hsl(var(--primary))] hover:bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] hover:text-white transition-colors text-left text-sm"
+              className="w-full p-3 border border-gray-200 rounded-lg hover:border-[hsl(var(--primary))] hover:bg-[#44444d] hover:text-white transition-colors text-left text-sm"
             >
               {line.name}
             </button>
@@ -125,7 +125,7 @@ const ElementsPanel: React.FC<ElementsPanelProps> = ({ onAddElement }) => {
       <div>
         <h3 className="font-semibold text-sm text-gray-700 mb-3">GRILLES</h3>
         <div className="grid grid-cols-2 gap-2">
-          <button className="p-4 border border-gray-200 rounded-lg hover:border-[hsl(var(--primary))] hover:bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] hover:text-white transition-colors">
+          <button className="p-4 border border-gray-200 rounded-lg hover:border-[hsl(var(--primary))] hover:bg-[#44444d] hover:text-white transition-colors">
             <div className="grid grid-cols-2 gap-1 w-8 h-8 mx-auto">
               <div className="bg-gray-400 rounded-sm"></div>
               <div className="bg-gray-400 rounded-sm"></div>
@@ -134,7 +134,7 @@ const ElementsPanel: React.FC<ElementsPanelProps> = ({ onAddElement }) => {
             </div>
             <div className="text-xs text-center mt-2">2×2</div>
           </button>
-          <button className="p-4 border border-gray-200 rounded-lg hover:border-[hsl(var(--primary))] hover:bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] hover:text-white transition-colors">
+          <button className="p-4 border border-gray-200 rounded-lg hover:border-[hsl(var(--primary))] hover:bg-[#44444d] hover:text-white transition-colors">
             <div className="grid grid-cols-3 gap-1 w-8 h-8 mx-auto">
               <div className="bg-gray-400 rounded-sm"></div>
               <div className="bg-gray-400 rounded-sm"></div>

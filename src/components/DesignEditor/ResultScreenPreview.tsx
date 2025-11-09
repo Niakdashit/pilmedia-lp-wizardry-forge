@@ -116,7 +116,7 @@ const ResultScreenPreview: React.FC<ResultScreenPreviewProps> = ({
     
     // Fallback sur les couleurs de la campagne
     const fallbackStyles = {
-      background: campaign?.design?.primaryColor || '#841b60',
+      background: campaign?.design?.primaryColor || '#44444d',
       color: campaign?.design?.accentColor || '#ffffff',
       borderRadius: '9999px',
       border: '0px solid #000000',

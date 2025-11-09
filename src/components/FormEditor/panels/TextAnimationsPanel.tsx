@@ -287,16 +287,16 @@ const TextAnimationsPanel: React.FC<TextAnimationsPanelProps> = ({
               <button
                 key={animation.id}
                 onClick={() => showAnimationSettings(animation)}
-                className="group p-2 border border-gray-200 rounded-lg hover:border-[#841b60] hover:shadow-sm transition-all duration-200"
+                className="group p-2 border border-gray-200 rounded-lg hover:border-[#44444d] hover:shadow-sm transition-all duration-200"
               >
                 <div className="bg-gray-800 rounded p-2 mb-1 h-12 flex items-center justify-center">
                   <span 
-                    className="text-sm font-bold text-[#8b5cf6]"
+                    className="text-sm font-bold text-[#5a5a63]"
                   >
                     ABC
                   </span>
                 </div>
-                <span className="text-xs text-gray-300 group-hover:text-[#841b60]">{animation.name}</span>
+                <span className="text-xs text-gray-300 group-hover:text-[#44444d]">{animation.name}</span>
               </button>
             ))}
           </div>
@@ -310,12 +310,12 @@ const TextAnimationsPanel: React.FC<TextAnimationsPanelProps> = ({
               <button
                 key={animation.id}
                 onClick={() => showAnimationSettings(animation)}
-                className="group p-2 border border-gray-200 rounded-lg hover:border-[#841b60] hover:shadow-sm transition-all duration-200"
+                className="group p-2 border border-gray-200 rounded-lg hover:border-[#44444d] hover:shadow-sm transition-all duration-200"
               >
                 <div className="bg-gray-800 rounded p-2 mb-1 h-12 flex items-center justify-center">
-                  <div className="w-6 h-4 bg-[#8b5cf6] rounded opacity-80"></div>
+                  <div className="w-6 h-4 bg-[#5a5a63] rounded opacity-80"></div>
                 </div>
-                <span className="text-xs text-gray-300 group-hover:text-[#841b60]">{animation.name}</span>
+                <span className="text-xs text-gray-300 group-hover:text-[#44444d]">{animation.name}</span>
               </button>
             ))}
           </div>
@@ -329,12 +329,12 @@ const TextAnimationsPanel: React.FC<TextAnimationsPanelProps> = ({
               <button
                 key={animation.id}
                 onClick={() => showAnimationSettings(animation)}
-                className="group p-2 border border-gray-200 rounded-lg hover:border-[#841b60] hover:shadow-sm transition-all duration-200"
+                className="group p-2 border border-gray-200 rounded-lg hover:border-[#44444d] hover:shadow-sm transition-all duration-200"
               >
                 <div className="bg-gray-800 rounded p-2 mb-1 h-12 flex items-center justify-center">
-                  <div className="w-4 h-4 bg-[#8b5cf6] rounded-full"></div>
+                  <div className="w-4 h-4 bg-[#5a5a63] rounded-full"></div>
                 </div>
-                <span className="text-xs text-gray-300 group-hover:text-[#841b60]">{animation.name}</span>
+                <span className="text-xs text-gray-300 group-hover:text-[#44444d]">{animation.name}</span>
               </button>
             ))}
           </div>
@@ -350,7 +350,7 @@ const TextAnimationsPanel: React.FC<TextAnimationsPanelProps> = ({
                 onClick={() => setSelectedSpeed(speed.id)}
                 className={`p-2 border rounded-lg transition-colors ${
                   selectedSpeed === speed.id 
-                    ? 'border-[#841b60] bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white' 
+                    ? 'border-[#44444d] bg-[#44444d] text-white' 
                     : 'border-gray-200 hover:border-gray-300'
                 }`}
               >

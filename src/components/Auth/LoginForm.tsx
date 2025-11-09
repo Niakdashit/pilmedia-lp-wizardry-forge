@@ -57,7 +57,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister, onSwit
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#841b60] focus:border-transparent transition-colors"
+                className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#44444d] focus:border-transparent transition-colors"
                 placeholder="votre@email.com"
                 required
               />
@@ -77,7 +77,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister, onSwit
                 type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#841b60] focus:border-transparent transition-colors"
+                className="block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#44444d] focus:border-transparent transition-colors"
                 placeholder="Votre mot de passe"
                 required
               />
@@ -99,7 +99,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister, onSwit
             <button
               type="button"
               onClick={onSwitchToReset}
-              className="text-sm text-[#841b60] hover:text-[#6d164f] font-medium"
+              className="text-sm text-[#44444d] hover:text-[#5a5a63] font-medium"
             >
               Mot de passe oublié ?
             </button>
@@ -108,7 +108,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister, onSwit
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-gradient-to-r from-[#841b60] to-[#b41b60] text-white py-3 px-4 rounded-xl font-medium hover:from-[#6d164f] hover:to-[#9a1b4f] focus:ring-2 focus:ring-offset-2 focus:ring-[#841b60] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-gradient-to-r from-[#44444d] to-[#44444d] text-white py-3 px-4 rounded-xl font-medium hover:from-[#6d164f] hover:to-[#9a1b4f] focus:ring-2 focus:ring-offset-2 focus:ring-[#44444d] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? 'Connexion...' : 'Se connecter'}
           </button>
@@ -119,7 +119,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister, onSwit
             Pas encore de compte ?{' '}
             <button
               onClick={onSwitchToRegister}
-              className="text-[#841b60] hover:text-[#6d164f] font-medium"
+              className="text-[#44444d] hover:text-[#5a5a63] font-medium"
             >
               S'inscrire
             </button>

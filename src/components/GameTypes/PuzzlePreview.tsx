@@ -95,7 +95,7 @@ const PuzzlePreview: React.FC<PuzzlePreviewProps> = ({ config = {} }) => {
                 ? 'invisible' 
                 : solved
                 ? 'bg-green-500'
-                : 'bg-gradient-to-br from-[#841b60] to-[#b41b60] hover:bg-[#6d1650]'
+                : 'bg-gradient-to-br from-[#44444d] to-[#44444d] hover:bg-[#5a5a63]'
             }`}
             whileHover={piece !== totalPieces - 1 ? { scale: 1.05 } : {}}
             whileTap={piece !== totalPieces - 1 ? { scale: 0.95 } : {}}

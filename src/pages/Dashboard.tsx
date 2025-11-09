@@ -35,7 +35,7 @@ const Dashboard: React.FC = () => {
                   onClick={() => setActiveTab(tab.id as any)}
                   className={`py-2 px-2 border-b-2 font-medium text-sm flex items-center space-x-2 ${
                     activeTab === tab.id
-                      ? 'border-[#841b60] text-[#841b60]'
+                      ? 'border-[#44444d] text-[#44444d]'
                       : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                   }`}
                 >

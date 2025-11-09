@@ -1,50 +1,174 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import PillButton from '../shared/PillButton';
 import { ChevronRight, Calendar, MoreVertical } from 'lucide-react';
 import { getCampaignTypeIcon, getCampaignTypeText, CampaignType } from '../../utils/campaignTypes';
 import { RecentCampaign } from './types';
-const RecentCampaigns: React.FC = () => {
-  const recentCampaigns: RecentCampaign[] = [{
-    id: '1',
-    name: 'Quiz Marketing Digital',
-    type: 'quiz' as CampaignType,
-    participants: 4,
-    status: 'draft',
-    createdAt: '17 mai 2025',
-    image: 'https://images.pexels.com/photos/298864/pexels-photo-298864.jpeg'
-  }, {
-    id: '2',
-    name: 'Roue de la fortune Soldes',
-    type: 'wheel' as CampaignType,
-    participants: 45,
-    status: 'active',
-    createdAt: '16 mai 2025',
-    image: 'https://images.pexels.com/photos/102104/pexels-photo-102104.jpeg'
-  }, {
-    id: '3',
-    name: 'Campagne Instagram Été',
-    type: 'dice' as CampaignType,
-    participants: 128,
-    status: 'active',
-    createdAt: '15 mai 2025',
-    image: 'https://images.pexels.com/photos/190819/pexels-photo-190819.jpeg'
-  }];
+import { supabase } from '../../integrations/supabase/client';
+import { getEditorUrl } from '../../utils/editorRouting';
 
-  // Duplicate campaigns to display 6 cards (two rows of three)
-  // Provide alternate images for the duplicated set to avoid repetition
-  const altImages = [
-    'https://images.pexels.com/photos/298863/pexels-photo-298863.jpeg', // Sneakers product
-    'https://images.pexels.com/photos/845434/pexels-photo-845434.jpeg', // Cosmetics products
-    'https://images.pexels.com/photos/325153/pexels-photo-325153.jpeg', // Tech workspace/products
-  ];
-  const duplicatedCampaigns: RecentCampaign[] = [
-    ...recentCampaigns,
-    ...recentCampaigns.map((c, i) => ({
-      ...c,
-      id: (recentCampaigns.length + i + 1).toString(),
-      image: altImages[i] || c.image,
-    })),
-  ];
+const RecentCampaigns: React.FC = () => {
+  const navigate = useNavigate();
+  const [campaigns, setCampaigns] = useState<RecentCampaign[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fonction pour gérer le clic sur une carte
+  const handleCardClick = (campaign: RecentCampaign) => {
+    // Utiliser getEditorUrl de editorRouting pour obtenir la bonne URL
+    const baseUrl = getEditorUrl(campaign.type, campaign.id);
+    // Ajouter le paramètre openSettings pour ouvrir automatiquement la modale de paramètres
+    const editorUrl = `${baseUrl}${baseUrl.includes('?') ? '&' : '?'}openSettings=true`;
+    navigate(editorUrl);
+  };
+
+  const fetchCampaigns = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('campaigns')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(6);
+
+      if (error) throw error;
+
+        if (data) {
+        const formattedCampaigns: RecentCampaign[] = data.map((campaign: any) => {
+            // Récupérer l'image de fond - vérifier plusieurs sources possibles
+            let backgroundImage = null;
+            
+            // Source 1: canvasConfig.background (priorité haute)
+            if (campaign.canvasConfig?.background?.type === 'image' && campaign.canvasConfig?.background?.value) {
+              backgroundImage = campaign.canvasConfig.background.value;
+            }
+            // Source 2: design.background (objet structuré)
+            else if (campaign.design?.background?.type === 'image' && campaign.design?.background?.value) {
+              backgroundImage = campaign.design.background.value;
+            }
+            // Source 3: design.backgroundImage (propriété directe)
+            else if (campaign.design?.backgroundImage) {
+              backgroundImage = campaign.design.backgroundImage;
+            }
+            // Source 4: design.background.desktop
+            else if (campaign.design?.background?.desktop?.type === 'image' && campaign.design?.background?.desktop?.value) {
+              backgroundImage = campaign.design.background.desktop.value;
+            }
+            // Source 5: Pour les articles - modules avec images de fond
+            else if (campaign.type === 'article' && campaign.modules) {
+              // Chercher une image dans les modules
+              const moduleWithImage = campaign.modules.find((m: any) => 
+                m.type === 'image' || (m.backgroundImage && m.backgroundImage !== '')
+              );
+              if (moduleWithImage?.backgroundImage) {
+                backgroundImage = moduleWithImage.backgroundImage;
+              } else if (moduleWithImage?.src) {
+                backgroundImage = moduleWithImage.src;
+              }
+            }
+
+            // Récupérer la couleur de fond si pas d'image
+            let backgroundColor = null;
+            if (!backgroundImage) {
+              // Source 1: canvasConfig.background
+              if (campaign.canvasConfig?.background?.type === 'color' && campaign.canvasConfig?.background?.value) {
+                backgroundColor = campaign.canvasConfig.background.value;
+              }
+              // Source 2: design.background (objet)
+              else if (campaign.design?.background?.type === 'color' && campaign.design?.background?.value) {
+                backgroundColor = campaign.design.background.value;
+              }
+              // Source 3: design.background (string direct - couleur hex ou gradient)
+              else if (typeof campaign.design?.background === 'string' && 
+                       (campaign.design.background.startsWith('#') || 
+                        campaign.design.background.startsWith('linear-gradient') ||
+                        campaign.design.background.startsWith('radial-gradient') ||
+                        campaign.design.background.startsWith('rgb'))) {
+                backgroundColor = campaign.design.background;
+              }
+              // Source 4: design.background.desktop
+              else if (campaign.design?.background?.desktop?.type === 'color' && campaign.design?.background?.desktop?.value) {
+                backgroundColor = campaign.design.background.desktop.value;
+              }
+              // Source 5: brandColors.primary
+              else if (campaign.design?.brandColors?.primary) {
+                backgroundColor = campaign.design.brandColors.primary;
+              }
+              // Source 6: backgroundColor direct
+              else if (campaign.design?.backgroundColor) {
+                backgroundColor = campaign.design.backgroundColor;
+              }
+              // Source 7: Pour les articles - couleur de fond des modules
+              else if (campaign.type === 'article' && campaign.modules) {
+                const moduleWithBg = campaign.modules.find((m: any) => m.backgroundColor);
+                if (moduleWithBg?.backgroundColor) {
+                  backgroundColor = moduleWithBg.backgroundColor;
+                }
+              }
+            }
+
+            // Log pour debug
+            console.log(`[Campaign ${campaign.name}]`, {
+              backgroundImage,
+              backgroundColor,
+              hasCanvasConfig: !!campaign.canvasConfig,
+              hasDesign: !!campaign.design,
+              designBackground: campaign.design?.background,
+              designBackgroundImage: campaign.design?.backgroundImage
+            });
+
+            return {
+              id: campaign.id,
+              name: campaign.name || 'Sans titre',
+              type: campaign.type as CampaignType,
+              participants: campaign.participations_count || 0,
+              status: campaign.status || 'draft',
+              createdAt: new Date(campaign.created_at).toLocaleDateString('fr-FR', {
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric'
+              }),
+              image: backgroundImage,
+              backgroundColor: backgroundColor
+            };
+          });
+
+          setCampaigns(formattedCampaigns);
+        }
+      } catch (error) {
+        console.error('Error fetching campaigns:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+  // Chargement initial
+  useEffect(() => {
+    fetchCampaigns();
+  }, []);
+
+  // Écouter les changements en temps réel sur la table campaigns
+  useEffect(() => {
+    const channel = supabase
+      .channel('campaigns-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*', // Écouter tous les événements (INSERT, UPDATE, DELETE)
+          schema: 'public',
+          table: 'campaigns'
+        },
+        (payload) => {
+          console.log('🔄 Campaign changed, refreshing gallery...', payload);
+          fetchCampaigns();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  const duplicatedCampaigns = campaigns;
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'active':
@@ -96,57 +220,86 @@ const RecentCampaigns: React.FC = () => {
           </PillButton>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {duplicatedCampaigns.map((campaign, index) => {
+        {loading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <div key={i} className="rounded-[18px] bg-gray-200 animate-pulse h-64"></div>
+            ))}
+          </div>
+        ) : campaigns.length === 0 ? (
+          <div className="text-center py-12">
+            <p className="text-gray-500 text-lg">Aucune campagne pour le moment</p>
+            <PillButton to="/campaigns" className="mt-4">
+              Créer votre première campagne
+            </PillButton>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {duplicatedCampaigns.map((campaign, index) => {
           const IconComponent = getCampaignTypeIcon(campaign.type);
-          return <div key={campaign.id} className="group relative overflow-hidden rounded-[18px] shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 hover:scale-[1.02]">
+          return <div 
+                key={campaign.id} 
+                onClick={() => handleCardClick(campaign)}
+                className="group relative overflow-hidden rounded-[18px] shadow-lg cursor-pointer">
                 {/* Main Campaign Card */}
-                <div className="relative h-64 w-full overflow-hidden bg-gradient-to-br from-gray-900 to-gray-700">
-                  {/* Background Image with Parallax Effect */}
+                <div 
+                  className="relative h-64 w-full overflow-hidden"
+                  style={{
+                    background: campaign.image 
+                      ? 'linear-gradient(to bottom right, rgb(17, 24, 39), rgb(55, 65, 81))'
+                      : campaign.backgroundColor || 'linear-gradient(to bottom right, rgb(17, 24, 39), rgb(55, 65, 81))'
+                  }}
+                >
+                  {/* Background Image */}
                   {campaign.image && <div className="absolute inset-0 overflow-hidden">
                       <img
                         src={campaign.image}
                         alt={campaign.name}
                         loading="lazy"
                         decoding="async"
-                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                        className="w-full h-full object-cover"
                       />
                       {/* Dark Overlay for Better Text Contrast */}
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
                     </div>}
+                  
+                  {/* Overlay for solid color backgrounds to improve text readability */}
+                  {!campaign.image && campaign.backgroundColor && (
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent"></div>
+                  )}
 
-                  {/* Glass Morphism Overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-black/20 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
-
-                  {/* Neon Border Glow Effect */}
-                  <div className="absolute inset-0 rounded-[18px] border border-white/20 group-hover:border-[#841b60]/50 group-hover:shadow-[0_0_30px_rgba(132,27,96,0.3)] transition-all duration-500"></div>
+                  {/* Border */}
+                  <div className="absolute inset-0 rounded-[18px] border border-white/20"></div>
 
                   {/* Campaign Type Badge */}
                   <div className="absolute top-4 left-4 z-20">
-                    <div className="group/badge relative overflow-hidden rounded-full bg-white/95 backdrop-blur-sm text-[#841b60] px-3 py-1.5 text-xs font-bold shadow-lg border border-white/50 hover:bg-white transition-all duration-300">
+                    <div className="relative overflow-hidden rounded-full bg-white/95 backdrop-blur-sm text-[#44444d] px-3 py-1.5 text-xs font-bold shadow-lg border border-white/50">
                       <div className="flex items-center space-x-1.5">
-                        <IconComponent className="w-3.5 h-3.5 transition-transform group-hover/badge:rotate-12 duration-300" />
+                        <IconComponent className="w-3.5 h-3.5" />
                         <span className="relative z-10">{getCampaignTypeText(campaign.type)}</span>
                       </div>
-                      {/* Badge Glow Effect */}
-                      <div className="absolute inset-0 bg-gradient-to-r from-[#841b60]/20 to-transparent opacity-0 group-hover/badge:opacity-100 transition-opacity duration-300 rounded-full"></div>
                     </div>
                   </div>
 
                   {/* Status Badge */}
                   <div className="absolute top-4 right-4 z-20">
-                    <div className={`relative overflow-hidden rounded-full px-2.5 py-1 text-xs font-bold border backdrop-blur-sm shadow-lg transition-all duration-300 group-hover:scale-110 ${getStatusColor(campaign.status)} ${getStatusGlow(campaign.status)} group-hover:shadow-lg`}>
+                    <div className={`relative overflow-hidden rounded-full px-2.5 py-1 text-xs font-bold border backdrop-blur-sm shadow-lg ${getStatusColor(campaign.status)} ${getStatusGlow(campaign.status)}`}>
                       <span className="relative z-10 flex items-center">
                         <span className="mr-1.5 h-1.5 w-1.5 rounded-full bg-current" />
                         {getStatusText(campaign.status)}
                       </span>
-                      {/* Status Badge Glow Animation */}
-                      <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-full"></div>
                     </div>
                   </div>
 
                   {/* Actions Button */}
-                  <button className="absolute bottom-4 right-4 z-20 p-2 rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/30 transition-all duration-300 opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 hover:scale-110" aria-label="Options">
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation(); // Empêcher le clic de se propager à la carte
+                      // TODO: Ouvrir un menu d'options
+                    }}
+                    className="absolute bottom-4 right-4 z-20 p-2 rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/30" 
+                    aria-label="Options"
+                  >
                     <MoreVertical className="w-4 h-4 text-white" />
                   </button>
 
@@ -154,34 +307,27 @@ const RecentCampaigns: React.FC = () => {
                   <div className="absolute bottom-0 left-0 right-0 p-6 z-10">
                     <div className="space-y-3">
                       {/* Campaign Title - Never Truncated */}
-                      <h3 className="text-xl font-bold text-white leading-tight group-hover:text-[#ffeb3b] transition-colors duration-300 drop-shadow-lg">
+                      <h3 className="text-xl font-bold text-white leading-tight drop-shadow-lg">
                         {campaign.name}
                       </h3>
                       
                       {/* Campaign Meta Info */}
                       <div className="flex items-center justify-between text-sm">
-                        <div className="flex items-center text-white/80 group-hover:text-white transition-colors duration-300">
+                        <div className="flex items-center text-white/80">
                           <Calendar className="w-3.5 h-3.5 mr-2" />
                           <span className="font-medium">Créé le {campaign.createdAt}</span>
                         </div>
-                        <div className="px-2.5 py-1 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 text-white font-bold text-xs group-hover:bg-white/30 group-hover:scale-105 transition-all duration-300">
+                        <div className="px-2.5 py-1 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 text-white font-bold text-xs">
                           {campaign.participants} participants
                         </div>
                       </div>
                     </div>
-
-                    {/* Hover Reveal: Action Gradient */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#841b60]/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-b-[18px]"></div>
-                  </div>
-
-                  {/* Animated Light Streak */}
-                  <div className="absolute inset-0 overflow-hidden rounded-[18px]">
-                    <div className="absolute -top-full -left-full w-full h-full bg-gradient-to-br from-transparent via-white/10 to-transparent transform rotate-45 group-hover:top-full group-hover:left-full transition-all duration-1000 ease-out"></div>
                   </div>
                 </div>
               </div>;
         })}
-        </div>
+          </div>
+        )}
       </div>
 
       

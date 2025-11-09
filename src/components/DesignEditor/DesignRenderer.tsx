@@ -705,7 +705,7 @@ export const DesignModuleRenderer: React.FC<DesignModuleRendererProps & { onModu
       const footerText = footerModule.footerText ?? '';
       const footerLinks = footerModule.footerLinks ?? [];
       const textColor = footerModule.textColor ?? '#000000';
-      const linkColor = footerModule.linkColor ?? '#841b60';
+      const linkColor = footerModule.linkColor ?? '#44444d';
       const fontSize = scaleValue(footerModule.fontSize, 14);
       const separator = footerModule.separator ?? '|';
       const socialLinks = footerModule.socialLinks ?? [];

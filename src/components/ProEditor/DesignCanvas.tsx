@@ -2713,7 +2713,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                   onClick={() => setShowGridLines(!showGridLines)}
                   className={`p-2 rounded-lg shadow-sm text-xs z-40 transition-colors ${
                     showGridLines 
-                      ? 'bg-[hsl(var(--primary))] text-white hover:bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)]' 
+                      ? 'bg-[hsl(var(--primary))] text-white hover:bg-[#44444d]' 
                       : 'bg-white/80 hover:bg-white text-gray-700'
                   }`}
                   title="Afficher/masquer la grille (G)"
