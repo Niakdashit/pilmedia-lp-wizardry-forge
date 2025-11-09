@@ -2828,14 +2828,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                                     boxShadow: '0 4px 20px rgba(0, 0, 0, 0.2)',
                                     cursor: 'pointer',
                                     zIndex: 20,
-                                    transition: 'transform 0.2s ease',
                                     whiteSpace: 'nowrap'
-                                  }}
-                                  onMouseEnter={(e) => {
-                                    e.currentTarget.style.transform = 'translateX(-50%) scale(1.05)';
-                                  }}
-                                  onMouseLeave={(e) => {
-                                    e.currentTarget.style.transform = 'translateX(-50%) scale(1)';
                                   }}
                                 >
                                   📝 Remplir le formulaire
