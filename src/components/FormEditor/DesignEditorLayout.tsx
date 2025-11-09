@@ -4069,6 +4069,10 @@ useEffect(() => {
                     selectedElements={selectedElements}
                     onSelectedElementsChange={setSelectedElements}
                     onElementUpdate={handleElementUpdate}
+                    onFormSubmit={() => {
+                      setCurrentScreen('screen2');
+                      scrollToScreen('screen2');
+                    }}
                     // FORMEDITOR: Désactiver le quiz, afficher le formulaire à la place
                     extractedColors={extractedColors}
                     quizModalConfig={undefined}

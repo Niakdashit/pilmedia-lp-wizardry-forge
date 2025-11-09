@@ -77,6 +77,7 @@ export interface DesignCanvasProps {
   selectedElements?: any[];
   onSelectedElementsChange?: (elements: any[]) => void;
   onElementUpdate?: (updates: any) => void;
+  onFormSubmit?: () => void;
   // Report union of DOM-measured element bounds (canvas-space) to parent for auto-fit
   onContentBoundsChange?: (bounds: { x: number; y: number; width: number; height: number } | null) => void;
   // Props pour la gestion des groupes
@@ -2764,7 +2765,9 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                                 <DynamicContactForm
                                   fields={campaignToUse?.formFields || DEFAULT_FIELDS}
                                   submitLabel={formConfig.submitLabel}
-                                  onSubmit={() => {}}
+                                  onSubmit={() => {
+                                    onFormSubmit?.();
+                                  }}
                                   inputBorderColor={formConfig.borderColor}
                                   inputBorderRadius={`${formConfig.fieldBorderRadius}px`}
                                   inputFocusColor={formConfig.buttonColor}
