@@ -180,7 +180,9 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   onModuleDelete,
   onModuleMove,
   onModuleDuplicate,
-  onFormSubmit
+  onFormSubmit,
+  // Preview mode flag to disable editing
+  isPreviewMode = false
 }, ref) => {
 
   // MODE ARTICLE
@@ -2860,7 +2862,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                           bandPadding: 0,
                           spacingTop: 0
                         }))}
-                        previewMode={false}
+                        previewMode={isPreviewMode}
                         device={selectedDevice}
                         onModuleUpdate={(_id, patch) => onModuleUpdate?.(_id, patch)}
                         onModuleClick={(moduleId) => {
@@ -2946,6 +2948,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                         screen={screenId as any}
                         modules={regularModules}
                         device={selectedDevice}
+                        readOnly={isPreviewMode}
                         onUpdate={(id, patch) => onModuleUpdate?.(id, patch)}
                         onDelete={(id) => onModuleDelete?.(id)}
                         onMove={(id, dir) => onModuleMove?.(id, dir)}
@@ -3063,7 +3066,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                   <div className="w-full" style={{ pointerEvents: 'auto' }}>
                     <QuizModuleRenderer
                       modules={footerModules}
-                      previewMode={false}
+                      previewMode={isPreviewMode}
                       device={selectedDevice}
                       onModuleUpdate={(_id, patch) => onModuleUpdate?.(_id, patch)}
                       onModuleClick={(moduleId) => {
@@ -3195,7 +3198,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                   onUpdate={handleElementUpdate} 
                   onDelete={handleElementDelete}
                   containerRef={activeCanvasRef as React.RefObject<HTMLDivElement | null>}
-                  readOnly={readOnly}
+                  readOnly={readOnly || isPreviewMode}
                   onMeasureBounds={handleMeasureBounds}
                   onAddElement={(newElement) => {
                     const elementScreen: CanvasScreenId = (newElement?.screenId as CanvasScreenId) || (screenId === 'all' ? 'screen1' : screenId);
