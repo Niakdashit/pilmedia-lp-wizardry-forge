@@ -2597,29 +2597,6 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                   <ScreenLayoutWrapper layout={quizLayout} className="w-full h-full" style={{ minHeight: '100%' }}>
                     {shouldRenderInlinePreview && (
                       <div
-                        role="button"
-                        tabIndex={0}
-                        onPointerDown={(e) => {
-                          // Empêcher toute interaction de déplacement/redimensionnement depuis la preview
-                          e.stopPropagation();
-                          e.preventDefault();
-                        }}
-                        onMouseDown={(e) => {
-                          e.stopPropagation();
-                          e.preventDefault();
-                        }}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' || e.key === ' ') {
-                            e.preventDefault();
-                            // Quiz panel disabled in FormEditor
-                          }
-                        }}
-                        onClick={(e) => {
-                          if (readOnly) return;
-                          e.stopPropagation();
-                          console.log('ℹ️ Clic sur l’aperçu quiz (panel désactivé dans FormEditor)');
-                        }}
-                        className="cursor-pointer"
                         style={{
                           display: isIntegratedMode || selectedDevice === 'mobile' ? 'flex' : 'block',
                           flexDirection: selectedDevice === 'mobile' ? 'column' : 'row',
