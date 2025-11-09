@@ -798,7 +798,7 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
                         className="absolute cursor-pointer"
                         style={{ 
                           left: '50%', 
-                          top: 0, 
+                          top: `${safeZonePadding}px`, 
                           transform: `translate(-50%, ${y}px)`, 
                           pointerEvents: 'auto' 
                         }}
