@@ -33,7 +33,10 @@ const Layout: React.FC = () => {
             rgba(195, 85, 70, 0.775),
             rgba(156, 26, 96, 0.72)
           );
-          height: 100vh;
+          background-attachment: fixed;
+          background-size: cover;
+          min-height: 100vh;
+          min-height: 100dvh;
           margin: 0;
         }
       `}</style>

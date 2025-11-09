@@ -31,11 +31,13 @@ const Auth: React.FC = () => {
               rgba(195, 85, 70, 0.775),
               rgba(156, 26, 96, 0.72)
             );
-            height: 100vh;
+            background-attachment: fixed;
+            background-size: cover;
+            min-height: 100vh;
             margin: 0;
           }
         `}</style>
-        <div className="min-h-screen flex items-center justify-center p-4" style={{ height: '100vh', margin: 0 }}>
+        <div className="min-h-screen flex items-center justify-center p-4" style={{ margin: 0 }}>
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
             <p className="text-white">Vérification de la connexion...</p>
@@ -58,11 +60,13 @@ const Auth: React.FC = () => {
               rgba(195, 85, 70, 0.775),
               rgba(156, 26, 96, 0.72)
             );
-            height: 100vh;
+            background-attachment: fixed;
+            background-size: cover;
+            min-height: 100vh;
             margin: 0;
           }
         `}</style>
-        <div className="min-h-screen flex items-center justify-center p-4" style={{ height: '100vh', margin: 0 }}>
+        <div className="min-h-screen flex items-center justify-center p-4" style={{ margin: 0 }}>
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
             <p className="text-white">Redirection en cours...</p>
@@ -88,11 +92,13 @@ const Auth: React.FC = () => {
             rgba(195, 85, 70, 0.775),
             rgba(156, 26, 96, 0.72)
           );
-          height: 100vh;
+          background-attachment: fixed;
+          background-size: cover;
+          min-height: 100vh;
           margin: 0;
         }
       `}</style>
-      <div className="min-h-screen flex items-center justify-center p-4" style={{ height: '100vh', margin: 0 }}>
+      <div className="min-h-screen flex items-center justify-center p-4" style={{ margin: 0 }}>
         <div className="max-w-md mx-auto">
           {/* Logo */}
           <div className="text-center mb-8">
