@@ -2913,17 +2913,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                 );
               })()}
 
-              {/* Bouton configuration quiz ABSOLU dans le canvas d'aperçu */}
-              {!readOnly && (
-                <div className="absolute bottom-2 right-2 z-50">
-                  <QuizSettingsButton
-                    onClick={() => {
-                      console.log('🔘 Clic sur QuizSettingsButton détecté');
-                      onQuizPanelChange?.(true);
-                    }}
-                  />
-                </div>
-              )}
+              {/* FormEditor n'utilise pas de bouton de configuration flottant */}
             </div>
 
             {/* Modular stacked content (HubSpot-like) */}
