@@ -285,7 +285,7 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
       case 'tablet':
         return 0.55;
       case 'mobile':
-        return 1.0; // 100% - Identique au mode preview pour une taille uniforme
+        return 1.0; // 100% - Dimensions exactes de l'écran mobile (375x812px)
       default:
         return 0.7;
     }
@@ -3420,7 +3420,7 @@ const handleSaveCampaignName = useCallback(async () => {
       <div className="flex-1 flex overflow-hidden relative rounded-br-[18px]">
         {showFunnel ? (
           /* Funnel Preview Mode */
-          <div className="group fixed inset-0 z-40 w-full h-[100dvh] min-h-[100dvh] overflow-hidden bg-[#2c2c35] flex items-center justify-center">
+          <div className="group fixed inset-0 z-40 w-full h-[100dvh] min-h-[100dvh] overflow-visible bg-[#2c2c35] flex items-center justify-center">
             {/* Floating Edit Mode Button */}
             <button
               onClick={() => setShowFunnel(false)}
@@ -3429,16 +3429,8 @@ const handleSaveCampaignName = useCallback(async () => {
               Mode édition
             </button>
             {(selectedDevice === 'mobile' && actualDevice !== 'mobile') ? (
-              /* Mobile Preview sur Desktop: Canvas centré avec cadre */
-              <div className="flex items-center justify-center w-full h-full">
-                <div 
-                  className="relative overflow-hidden rounded-[32px] shadow-2xl"
-                  style={{
-                    width: '430px',
-                    height: '932px',
-                    maxHeight: '90vh'
-                  }}
-                >
+              /* Mobile Preview sur Desktop: Plein écran sans cadre */
+              <div className="w-full h-full overflow-auto">
                   {editorMode === 'article' ? (
                     <ArticleCanvas
                       articleConfig={(campaignState as any)?.articleConfig || {}}
@@ -3486,16 +3478,16 @@ const handleSaveCampaignName = useCallback(async () => {
                       onStepChange={setCurrentStep}
                     />
                   ) : (
-                    <div className="absolute inset-0 bg-white overflow-hidden">
-                      <FunnelUnlockedGame
-                        campaign={campaignData}
-                        previewMode="mobile"
-                        wheelModalConfig={wheelModalConfig}
-                        launchButtonStyles={{}}
-                      />
-                    </div>
+                    <PreviewRenderer
+                      campaign={campaignData}
+                      previewMode="mobile"
+                      constrainedHeight={true}
+                      wheelModalConfig={wheelModalConfig}
+                      onModuleClick={(moduleId) => {
+                        console.log('Module clicked:', moduleId);
+                      }}
+                    />
                   )}
-                </div>
               </div>
             ) : (
               /* Desktop/Tablet Preview OU Mobile physique */
@@ -3548,7 +3540,7 @@ const handleSaveCampaignName = useCallback(async () => {
                   />
                 </div>
               ) : (
-                <div className="absolute inset-0 bg-white overflow-hidden">
+                <div className="absolute inset-0 bg-white overflow-visible">
                   <FunnelUnlockedGame
                     campaign={campaignData}
                     previewMode={actualDevice === 'desktop' && selectedDevice === 'desktop' ? 'desktop' : selectedDevice}

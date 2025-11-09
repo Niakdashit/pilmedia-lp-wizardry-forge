@@ -2773,7 +2773,7 @@ useEffect(() => {
         <div className="flex-1 flex overflow-hidden relative">
         {showFunnel ? (
           /* Funnel Preview Mode */
-          <div className="group fixed inset-0 z-40 w-full h-[100dvh] min-h-[100dvh] overflow-hidden bg-[#2c2c35] flex items-center justify-center">
+          <div className="group fixed inset-0 z-40 w-full h-[100dvh] min-h-[100dvh] overflow-visible flex items-center justify-center" style={{ backgroundColor: '#3a3a42' }}>
             {/* Floating Edit Mode Button */}
             <button
               onClick={() => setShowFunnel(false)}
@@ -2782,16 +2782,8 @@ useEffect(() => {
               Mode édition
             </button>
             {(selectedDevice === 'mobile' && actualDevice !== 'mobile') ? (
-              /* Mobile Preview sur Desktop: Canvas centré avec cadre */
-              <div className="flex items-center justify-center w-full h-full">
-                <div 
-                  className="relative overflow-hidden rounded-[32px] shadow-2xl"
-                  style={{
-                    width: '430px',
-                    height: '932px',
-                    maxHeight: '90vh'
-                  }}
-                >
+              /* Mobile Preview sur Desktop: Plein écran sans cadre */
+              <div className="w-full h-full overflow-auto">
                   {editorMode === 'article' ? (
                     <ArticleFunnelView
                       articleConfig={(campaignState as any)?.articleConfig || {}}
@@ -2842,7 +2834,6 @@ useEffect(() => {
                       }}
                     />
                   )}
-                </div>
               </div>
             ) : (
               /* Desktop/Tablet Preview OU Mobile physique: Fullscreen */

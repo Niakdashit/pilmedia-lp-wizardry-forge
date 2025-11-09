@@ -272,13 +272,19 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
   const allModules2 = modularPage?.screens?.screen2 || [];
   const allModules3 = modularPage?.screens?.screen3 || [];
   
-  // Séparer les modules Logo et Footer des autres modules
-  // Les logos doivent être collés en haut sans padding
-  // Les footers doivent être collés en bas sans padding
+  // Safe zone padding - doit être déclaré AVANT l'utilisation dans les filters
+  const safeZonePadding = previewMode === 'mobile' ? 28 : previewMode === 'tablet' ? 40 : 56;
+
+  // Separate logo, footer, absolute and regular modules
+  // Only BlocLogo modules are treated as logos (escape safezone with negative margin)
   const logoModules1 = allModules1.filter((m: any) => m?.type === 'BlocLogo');
   const footerModules1 = allModules1.filter((m: any) => m?.type === 'BlocPiedDePage');
   const absoluteModules1 = allModules1.filter((m: any) => m?.absolute === true && m?.type !== 'BlocLogo' && m?.type !== 'BlocPiedDePage');
-  const modules1 = allModules1.filter((m: any) => !m?.absolute && m?.type !== 'BlocLogo' && m?.type !== 'BlocPiedDePage');
+  const modules1 = allModules1.filter((m: any) => 
+    !m?.absolute && 
+    m?.type !== 'BlocLogo' && 
+    m?.type !== 'BlocPiedDePage'
+  );
   
   console.log('📦 [PreviewRenderer] Screen1 modules breakdown:', {
     total: allModules1.length,
@@ -286,8 +292,17 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
     footers: footerModules1.length,
     absolute: absoluteModules1.length,
     regular: modules1.length,
-    modulesDetails: modules1.map((m: any) => ({ id: m.id, type: m.type })),
-    absoluteModulesDetails: absoluteModules1.map((m: any) => ({ id: m.id, type: m.type, x: m.x, y: m.y }))
+    safeZonePadding,
+    allModulesDetails: allModules1.map((m: any) => ({ 
+      id: m.id, 
+      type: m.type, 
+      label: m.label,
+      y: m.y, 
+      absolute: m.absolute,
+      isAboveSafeZone: m.y !== undefined && m.y < safeZonePadding
+    })),
+    logoModulesDetails: logoModules1.map((m: any) => ({ id: m.id, type: m.type, label: m.label, y: m.y })),
+    regularModulesDetails: modules1.map((m: any) => ({ id: m.id, type: m.type, label: m.label, y: m.y }))
   });
   
   // Log juste avant le rendu
@@ -481,9 +496,6 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
     console.log('🔄 [PreviewRenderer] currentScreen changed to:', currentScreen);
   }, [currentScreen]);
 
-  // Safe zone padding
-  const safeZonePadding = previewMode === 'mobile' ? 28 : previewMode === 'tablet' ? 40 : 56;
-
   // Handlers
   const handleParticipate = () => {
     console.log('🎮 [PreviewRenderer] handleParticipate called!');
@@ -647,7 +659,7 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
         <div className="absolute inset-0 z-0" style={backgroundStyle} />
 
         {/* Content avec safe zone */}
-        <div className={`relative z-30 h-full w-full ${currentScreen === 'screen2' ? 'overflow-hidden' : 'overflow-y-auto'} overflow-x-hidden`}>
+        <div className={`relative z-30 h-full w-full ${currentScreen === 'screen2' ? 'overflow-visible' : 'overflow-y-auto overflow-x-visible'}`}>
           {/* SCREEN 1: Page d'accueil */}
           {currentScreen === 'screen1' && (
             <div className={`flex flex-col ${isPhoneFrame ? 'min-h-full' : 'min-h-screen min-h-[100svh] min-h-[100dvh]'} relative`}>

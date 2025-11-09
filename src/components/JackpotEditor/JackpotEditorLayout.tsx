@@ -201,7 +201,7 @@ const JackpotEditorLayout: React.FC<JackpotEditorLayoutProps> = ({ mode = 'campa
       case 'tablet':
         return 0.55;
       case 'mobile':
-        return 1.0; // 100% - Identique au mode preview pour une taille uniforme
+        return 1.0; // 100% - Dimensions exactes de l'écran mobile (375x812px)
       default:
         return 0.7;
     }
@@ -3402,7 +3402,7 @@ useEffect(() => {
       <div className="flex-1 flex overflow-hidden relative rounded-br-[18px]">
         {showFunnel ? (
           /* Funnel Preview Mode */
-          <div className="group fixed inset-0 z-40 w-full h-[100dvh] min-h-[100dvh] overflow-hidden bg-[#2c2c35] flex items-center justify-center">
+          <div className="group fixed inset-0 z-40 w-full h-[100dvh] min-h-[100dvh] overflow-visible flex items-center justify-center" style={{ backgroundColor: '#3a3a42' }}>
             {/* Floating Edit Mode Button */}
             <button
               onClick={() => setShowFunnel(false)}
@@ -3411,17 +3411,9 @@ useEffect(() => {
               Mode édition
             </button>
             {(selectedDevice === 'mobile' && actualDevice !== 'mobile') ? (
-              /* Mobile Preview sur Desktop: Canvas centré avec cadre */
-              <div className="flex items-center justify-center w-full h-full">
-                <div 
-                  className="relative overflow-hidden rounded-[32px] shadow-2xl"
-                  style={{
-                    width: '430px',
-                    height: '932px',
-                    maxHeight: '90vh'
-                  }}
-                >
-                  {editorMode === 'article' ? (
+              /* Mobile Preview sur Desktop: Plein écran sans cadre */
+              <div className="w-full h-full overflow-auto">
+                {editorMode === 'article' ? (
                     <ArticleCanvas
                       articleConfig={(campaignState as any)?.articleConfig || {}}
                       onBannerChange={() => {}}
@@ -3472,19 +3464,21 @@ useEffect(() => {
                       previewMode="mobile"
                     />
                   ) : (
-                    <FunnelUnlockedGame
+                    <PreviewRenderer
                       campaign={campaignData}
                       previewMode="mobile"
+                      constrainedHeight={true}
                       wheelModalConfig={wheelModalConfig}
-                      launchButtonStyles={launchButtonStyles}
+                      onModuleClick={(moduleId) => {
+                        console.log('Module clicked:', moduleId);
+                      }}
                     />
                   )}
-                </div>
               </div>
             ) : (
               /* Desktop/Tablet Preview OU Mobile physique: Fullscreen */
               editorMode === 'article' ? (
-                <div className="w-full h-full flex items-start justify-center bg-gray-100 overflow-y-auto py-8" style={{ backgroundColor: '#2c2c35' }}>
+                <div className="w-full h-full flex items-start justify-center bg-gray-100 overflow-y-auto py-8" style={{ backgroundColor: '#3a3a42' }}>
                   <ArticleCanvas
                     articleConfig={(campaignState as any)?.articleConfig || {}}
                     onBannerChange={() => {}}

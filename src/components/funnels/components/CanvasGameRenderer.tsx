@@ -427,7 +427,7 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
   return (
     <Wrapper>
       <div
-        className="canvas-container relative overflow-hidden w-full"
+        className="canvas-container relative overflow-visible w-full"
         style={containerStyle}
       >
         {/* Canvas Background */}

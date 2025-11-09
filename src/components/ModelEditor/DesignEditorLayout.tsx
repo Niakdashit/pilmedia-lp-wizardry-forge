@@ -1654,7 +1654,7 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
             // Pour le form-editor, afficher le formulaire en plein écran
             if (showFormOverlay) {
               const node = (
-                <div className="group fixed inset-0 z-[9999] w-full h-[100dvh] min-h-[100dvh] overflow-hidden bg-[#2c2c35] flex items-center justify-center">
+                <div className="group fixed inset-0 z-[9999] w-full h-[100dvh] min-h-[100dvh] overflow-hidden flex items-center justify-center" style={{ backgroundColor: '#3a3a42' }}>
                   {/* Floating Edit Mode Button */}
                   <button
                     onClick={() => setShowFunnel(false)}

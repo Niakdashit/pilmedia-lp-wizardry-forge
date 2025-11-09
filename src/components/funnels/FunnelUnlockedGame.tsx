@@ -408,10 +408,19 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
   });
 
   // Séparer les modules Logo, Footer, Absolus et Réguliers pour tous les écrans
+  // Seuls les BlocLogo sont traités comme des logos (sortent de la safezone avec margin négatif)
   const logoModules1 = (modules || []).filter((m: any) => m?.type === 'BlocLogo');
   const footerModules1 = (modules || []).filter((m: any) => m?.type === 'BlocPiedDePage');
-  const absoluteModules1 = (modules || []).filter((m: any) => m?.absolute === true && m?.type !== 'BlocLogo' && m?.type !== 'BlocPiedDePage');
-  const regularModules1 = (modules || []).filter((m: any) => !m?.absolute && m?.type !== 'BlocLogo' && m?.type !== 'BlocPiedDePage');
+  const absoluteModules1 = (modules || []).filter((m: any) => 
+    m?.absolute === true && 
+    m?.type !== 'BlocLogo' && 
+    m?.type !== 'BlocPiedDePage'
+  );
+  const regularModules1 = (modules || []).filter((m: any) =>
+    !m?.absolute &&
+    m?.type !== 'BlocLogo' &&
+    m?.type !== 'BlocPiedDePage'
+  );
   
   console.log('🔍 [FunnelUnlockedGame] Module separation:', {
     total: modules?.length,
@@ -419,18 +428,44 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
     footer: footerModules1.length,
     absolute: absoluteModules1.length,
     regular: regularModules1.length,
-    absoluteModulesDetails: absoluteModules1.map((m: any) => ({ id: m.id, type: m.type, absolute: m.absolute, x: m.x, y: m.y }))
+    safeZonePadding,
+    allModulesDetails: modules?.map((m: any) => ({ 
+      id: m.id, 
+      type: m.type, 
+      label: m.label,
+      y: m.y, 
+      absolute: m.absolute,
+      isAboveSafeZone: m.y !== undefined && m.y < safeZonePadding
+    })),
+    logoModulesDetails: logoModules1.map((m: any) => ({ id: m.id, type: m.type, label: m.label, y: m.y })),
+    regularModulesDetails: regularModules1.map((m: any) => ({ id: m.id, type: m.type, label: m.label, y: m.y }))
   });
   
   const logoModules2 = (modules2 || []).filter((m: any) => m?.type === 'BlocLogo');
   const footerModules2 = (modules2 || []).filter((m: any) => m?.type === 'BlocPiedDePage');
-  const absoluteModules2 = (modules2 || []).filter((m: any) => m?.absolute === true && m?.type !== 'BlocLogo' && m?.type !== 'BlocPiedDePage');
-  const regularModules2 = (modules2 || []).filter((m: any) => !m?.absolute && m?.type !== 'BlocLogo' && m?.type !== 'BlocPiedDePage');
+  const absoluteModules2 = (modules2 || []).filter((m: any) => 
+    m?.absolute === true && 
+    m?.type !== 'BlocLogo' && 
+    m?.type !== 'BlocPiedDePage'
+  );
+  const regularModules2 = (modules2 || []).filter((m: any) => 
+    !m?.absolute && 
+    m?.type !== 'BlocLogo' && 
+    m?.type !== 'BlocPiedDePage'
+  );
   
   const logoModules3 = (modules3 || []).filter((m: any) => m?.type === 'BlocLogo');
   const footerModules3 = (modules3 || []).filter((m: any) => m?.type === 'BlocPiedDePage');
-  const absoluteModules3 = (modules3 || []).filter((m: any) => m?.absolute === true && m?.type !== 'BlocLogo' && m?.type !== 'BlocPiedDePage');
-  const regularModules3 = (modules3 || []).filter((m: any) => !m?.absolute && m?.type !== 'BlocLogo' && m?.type !== 'BlocPiedDePage');
+  const absoluteModules3 = (modules3 || []).filter((m: any) => 
+    m?.absolute === true && 
+    m?.type !== 'BlocLogo' && 
+    m?.type !== 'BlocPiedDePage'
+  );
+  const regularModules3 = (modules3 || []).filter((m: any) => 
+    !m?.absolute && 
+    m?.type !== 'BlocLogo' && 
+    m?.type !== 'BlocPiedDePage'
+  );
 
   useEffect(() => {
     if (liveCampaign?.type !== 'form') {
@@ -577,7 +612,7 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
         : campaign.design?.background?.value || '#ffffff'
     };
     return (
-      <div className="w-full h-[100dvh] min-h-[100dvh]" style={{ borderRadius: 0 }}>
+      <div className="w-full h-full" style={{ borderRadius: 0 }}>
         <div className="relative w-full h-full" style={{ borderRadius: 0, overflow: 'visible' }}>
           {/* Background avec TOUT le contenu à l'intérieur - EXACTEMENT comme DesignCanvas */}
           <div
@@ -644,7 +679,7 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
       }
     }
     return (
-      <div className="w-full h-[100dvh] min-h-[100dvh]" style={{ borderRadius: 0 }}>
+      <div className="w-full h-full" style={{ borderRadius: 0 }}>
         <div className="relative w-full h-full" style={{ borderRadius: 0, overflow: 'visible' }}>
           {/* Background avec TOUT le contenu à l'intérieur - EXACTEMENT comme DesignCanvas */}
           <div className="absolute inset-0" style={{ ...backgroundStyle, borderRadius: 0, overflow: 'visible' }}>
@@ -652,7 +687,7 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
 
             {/* Content À L'INTÉRIEUR du background */}
             <div 
-              className="relative h-full w-full overflow-y-auto"
+              className="relative h-full w-full overflow-visible"
               style={{
                 paddingLeft: `${safeZonePadding}px`,
                 paddingRight: `${safeZonePadding}px`,
@@ -663,7 +698,7 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
                 borderRadius: 0
               }}
             >
-              <div className="flex flex-col h-full">
+              <div className="flex flex-col h-full overflow-y-auto">
                 {/* Modules Logo (collés en haut sans padding) */}
                 {logoModules1.length > 0 && (
                   <div
@@ -722,6 +757,12 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
                   <div className="absolute inset-0" style={{ pointerEvents: 'none' }}>
                     {absoluteModules1.map((m: any) => {
                       const y = (m.y ?? 0) as number;
+                      // Pas de compensation nécessaire - le y est déjà relatif au contenu avec padding
+                      console.log(`📍 [FunnelUnlockedGame] Screen1 Absolute module "${m.label || m.type}":`, {
+                        originalY: y,
+                        safeZonePadding,
+                        moduleId: m.id
+                      });
                       const modulePaddingClass = previewMode === 'mobile' ? 'p-0' : 'p-4';
                       return (
                         <div
@@ -757,7 +798,7 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
 
   if (liveCampaign.type === 'scratch') {
     return (
-      <div className="w-full h-[100dvh] min-h-[100dvh]" style={{ borderRadius: 0 }}>
+      <div className="w-full h-full" style={{ borderRadius: 0 }}>
         <div className="relative w-full h-full" style={{ borderRadius: 0, overflow: 'visible' }}>
           {/* Background avec TOUT le contenu à l'intérieur - EXACTEMENT comme DesignCanvas */}
           <div className="absolute inset-0" style={{ ...backgroundStyle, borderRadius: 0, overflow: 'visible' }}>
@@ -765,7 +806,7 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
 
             {/* Content À L'INTÉRIEUR du background */}
             <div 
-              className="relative h-full w-full overflow-y-auto"
+              className="relative h-full w-full overflow-visible"
               style={{
                 paddingLeft: `${safeZonePadding}px`,
                 paddingRight: `${safeZonePadding}px`,
@@ -777,7 +818,7 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
             >
             {/* ÉCRAN 1 : Avant le jeu */}
             {currentScreen === 'screen1' && (
-              <div className="flex flex-col h-full">
+              <div className="flex flex-col h-full overflow-y-auto">
                 {/* Modules Logo (collés en haut sans padding) */}
                 {logoModules1.length > 0 && (
                   <div
@@ -837,6 +878,8 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
                   <div className="absolute inset-0" style={{ pointerEvents: 'none' }}>
                     {absoluteModules1.map((m: any) => {
                       const y = (m.y ?? 0) as number;
+                      // Compenser le paddingTop du conteneur parent pour un rendu WYSIWYG
+                      const adjustedY = y - safeZonePadding;
                       const modulePaddingClass = previewMode === 'mobile' ? 'p-0' : 'p-4';
                       return (
                         <div
@@ -845,7 +888,7 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
                           style={{ 
                             left: '50%', 
                             top: 0, 
-                            transform: `translate(-50%, ${y}px)`, 
+                            transform: `translate(-50%, ${adjustedY}px)`, 
                             pointerEvents: 'auto' 
                           }}
                         >
@@ -867,7 +910,7 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
 
             {/* ÉCRAN 2 : Cartes visibles (bloquées si formulaire non validé) */}
             {currentScreen === 'screen2' && !showResultScreen && (
-              <div className="flex flex-col h-full">
+              <div className="flex flex-col h-full overflow-y-auto">
               {/* Modules Logo (collés en haut sans padding) */}
               {logoModules2.length > 0 && (
                 <div
@@ -890,7 +933,7 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
               )}
               
                 {/* Contenu principal avec padding - flex-1 pour pousser le footer en bas */}
-                <div className="flex-1 relative overflow-hidden">
+                <div className="flex-1 relative overflow-visible">
                   {/* Modules screen2 réguliers - en arrière-plan */}
                   {regularModules2.length > 0 && (
                     <div style={{ pointerEvents: 'none', position: 'absolute', inset: 0 }}>
@@ -931,7 +974,7 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
                           display: 'flex', 
                           alignItems: 'center', 
                           justifyContent: 'center',
-                          overflow: 'hidden',
+                          overflow: 'visible',
                           position: 'relative'
                         }}>
                           <div style={{
@@ -1002,6 +1045,8 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
                   <div className="absolute inset-0" style={{ pointerEvents: 'none' }}>
                     {absoluteModules2.map((m: any) => {
                       const y = (m.y ?? 0) as number;
+                      // Compenser le paddingTop du conteneur parent pour un rendu WYSIWYG
+                      const adjustedY = y - safeZonePadding;
                       const modulePaddingClass = previewMode === 'mobile' ? 'p-0' : 'p-4';
                       return (
                         <div
@@ -1010,7 +1055,7 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
                           style={{ 
                             left: '50%', 
                             top: 0, 
-                            transform: `translate(-50%, ${y}px)`, 
+                            transform: `translate(-50%, ${adjustedY}px)`, 
                             pointerEvents: 'auto' 
                           }}
                         >
@@ -1090,6 +1135,8 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
                   <div className="absolute inset-0" style={{ pointerEvents: 'none' }}>
                     {absoluteModules3.map((m: any) => {
                       const y = (m.y ?? 0) as number;
+                      // Compenser le paddingTop du conteneur parent pour un rendu WYSIWYG
+                      const adjustedY = y - safeZonePadding;
                       const modulePaddingClass = previewMode === 'mobile' ? 'p-0' : 'p-4';
                       return (
                         <div
@@ -1098,7 +1145,7 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
                           style={{ 
                             left: '50%', 
                             top: 0, 
-                            transform: `translate(-50%, ${y}px)`, 
+                            transform: `translate(-50%, ${adjustedY}px)`, 
                             pointerEvents: 'auto' 
                           }}
                         >
@@ -1156,7 +1203,7 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
     };
 
     return (
-      <div className="relative w-full h-[100dvh] min-h-[100dvh]">
+      <div className="relative w-full h-full">
         <div className="absolute inset-0" style={backgroundStyle} />
         
         {/* Afficher les éléments du canvas en arrière-plan */}

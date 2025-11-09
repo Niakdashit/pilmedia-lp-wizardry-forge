@@ -9,7 +9,6 @@ import { Save, X } from 'lucide-react';
 
 const HybridSidebar = lazy(() => import('./HybridSidebar'));
 const DesignToolbar = lazy(() => import('./DesignToolbar'));
-const FullScreenPreviewModal = lazy(() => import('@/components/shared/modals/FullScreenPreviewModal'));
 import GameCanvasPreview from '@/components/ModernEditor/components/GameCanvasPreview';
 import PreviewRenderer from '@/components/preview/PreviewRenderer';
 import ArticleFunnelView from '@/components/ArticleEditor/ArticleFunnelView';
@@ -1657,8 +1656,6 @@ useEffect(() => {
   const [previewButtonSide, setPreviewButtonSide] = useState<'left' | 'right'>(() =>
     (typeof window !== 'undefined' && localStorage.getItem('previewButtonSide') === 'left') ? 'left' : 'right'
   );
-  const [showFullScreenPreview, setShowFullScreenPreview] = useState(false);
-  const [fullScreenPreviewDevice, setFullScreenPreviewDevice] = useState<'desktop' | 'mobile'>('desktop');
   // Calcul des onglets à masquer selon le mode
   const effectiveHiddenTabs = useMemo(
     () => {
@@ -3406,8 +3403,60 @@ useEffect(() => {
       
       {/* Main Content */}
       <div className="flex-1 flex overflow-hidden relative">
-        {showFunnel ? (
-          /* Full Screen Preview Mode - Clone strict de l'écran 1 */
+        {showFunnel && selectedDevice === 'mobile' ? (
+          /* Mode Preview Mobile - Fond gris foncé */
+          <div 
+            className="fixed inset-0 z-40 w-full h-[100dvh] min-h-[100dvh] flex items-center justify-center"
+            style={{ backgroundColor: '#3a3a42' }}
+          >
+            <button
+              onClick={() => setShowFunnel(false)}
+              className="absolute top-4 right-4 px-4 py-2 bg-white text-black rounded-lg hover:bg-gray-100 transition-colors"
+              style={{ zIndex: 9999999 }}
+            >
+              Mode édition
+            </button>
+            
+            {/* Contenu de l'écran - Rendu direct du canvas screen1 sans frame */}
+            <div className="w-full h-full overflow-auto">
+              <DesignCanvas
+                editorMode={editorMode}
+                screenId="screen1"
+                selectedDevice="mobile"
+                elements={canvasElements}
+                onElementsChange={() => {}}
+                background={screen1Background}
+                campaign={memoCampaignData}
+                onCampaignChange={() => {}}
+                zoom={1}
+                enableInternalAutoFit={false}
+                onZoomChange={() => {}}
+                selectedElement={null}
+                onSelectedElementChange={() => {}}
+                selectedElements={[]}
+                onSelectedElementsChange={() => {}}
+                onElementUpdate={() => {}}
+                extractedColors={extractedColors}
+                quizModalConfig={undefined}
+                containerClassName="!p-0 !m-0 !items-start !justify-start !pt-0 !rounded-none"
+                elementFilter={(element: any) => {
+                  return element?.screenId === 'screen1' || !element?.screenId;
+                }}
+                onShowAnimationsPanel={() => {}}
+                onShowPositionPanel={() => {}}
+                onShowDesignPanel={() => {}}
+                onShowEffectsPanel={() => {}}
+                isPreviewMode={true}
+                modularModules={screen1Modules}
+                onModuleUpdate={() => {}}
+                onModuleDelete={() => {}}
+                onModuleMove={() => {}}
+                onModuleDuplicate={() => {}}
+              />
+            </div>
+          </div>
+        ) : showFunnel ? (
+          /* Full Screen Preview Mode - Clone strict de l'écran 1 (DESKTOP) */
           <div 
             className="group fixed inset-0 z-40 w-full h-[100dvh] min-h-[100dvh] overflow-auto"
             style={{ backgroundColor: '#ffffff' }}
@@ -4299,22 +4348,6 @@ useEffect(() => {
           </div>
         </div>
       )}
-
-      {/* Full Screen Preview Modal */}
-      <FullScreenPreviewModal
-        isOpen={showFullScreenPreview}
-        onClose={() => setShowFullScreenPreview(false)}
-        device={fullScreenPreviewDevice}
-        onDeviceChange={setFullScreenPreviewDevice}
-      >
-        <div className="w-full h-full overflow-hidden bg-white">
-          <GameCanvasPreview
-            campaign={campaignData}
-            previewDevice={fullScreenPreviewDevice}
-            key={`canvas-preview-${fullScreenPreviewDevice}-${(campaignData as any)?.type}`}
-          />
-        </div>
-      </FullScreenPreviewModal>
     </MobileStableEditor>
   </div>
 );

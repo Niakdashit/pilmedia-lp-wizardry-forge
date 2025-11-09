@@ -3671,7 +3671,7 @@ const handleSaveCampaignName = useCallback(async () => {
       <div className="flex-1 flex overflow-hidden relative">
         {showFunnel ? (
           /* Funnel Preview Mode */
-          <div className="group fixed inset-0 z-40 w-full h-[100dvh] min-h-[100dvh] overflow-hidden bg-[#2c2c35] flex items-center justify-center">
+          <div className="group fixed inset-0 z-40 w-full h-[100dvh] min-h-[100dvh] overflow-visible flex items-center justify-center" style={{ backgroundColor: '#3a3a42' }}>
             {/* Floating Edit Mode Button */}
             <button
               onClick={() => setShowFunnel(false)}
@@ -3680,16 +3680,8 @@ const handleSaveCampaignName = useCallback(async () => {
               Mode édition
             </button>
             {(selectedDevice === 'mobile' && actualDevice !== 'mobile') ? (
-              /* Mobile Preview sur Desktop: Canvas centré avec fond #2c2c35 - Dimensions identiques au mode édition */
-              <div className="flex items-center justify-center w-full h-full">
-                <div 
-                  className="relative overflow-y-auto rounded-[32px] shadow-2xl"
-                  style={{
-                    width: '430px',
-                    height: '932px',
-                    maxHeight: '90vh'
-                  }}
-                >
+              /* Mobile Preview sur Desktop: Plein écran sans cadre */
+              <div className="w-full h-full overflow-auto">
                   {editorMode === 'article' ? (
                     <ArticleFunnelView
                       articleConfig={getArticleConfigWithDefaults(campaignState, campaignData)}
@@ -3715,7 +3707,6 @@ const handleSaveCampaignName = useCallback(async () => {
                       constrainedHeight={true}
                     />
                   )}
-                </div>
               </div>
             ) : (
               /* Desktop/Tablet Preview OU Mobile physique: Fullscreen sans cadre */
@@ -3734,7 +3725,7 @@ const handleSaveCampaignName = useCallback(async () => {
                   onGameComplete={handleGameComplete}
                   onStepChange={setCurrentStep}
                   containerClassName="py-8"
-                  containerStyle={{ backgroundColor: '#2c2c35' }}
+                  containerStyle={{ backgroundColor: '#3a3a42' }}
                 />
               ) : (
                 <PreviewRenderer

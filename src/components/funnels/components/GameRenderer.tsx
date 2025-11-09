@@ -183,7 +183,7 @@ const GameRenderer: React.FC<GameRendererProps> = ({
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      overflow: 'hidden'
+      overflow: 'visible'
     }} className="rounded-lg overflow-visible relative">
       <div style={{ 
         ...wrapperStyle, 
