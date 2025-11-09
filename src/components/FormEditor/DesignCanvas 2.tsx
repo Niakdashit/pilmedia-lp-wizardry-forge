@@ -2152,7 +2152,8 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   const handleElementTap = useCallback((element: any) => {
     if (!element || readOnly) return;
     if (element.id === 'quiz-template') {
-      onQuizPanelChange?.(true);
+      // Quiz panel disabled in FormEditor
+      return;
     }
   }, [onQuizPanelChange, readOnly]);
   void handleElementTap; // Reserved for future touch interaction features
@@ -2610,14 +2611,13 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                         onKeyDown={(e) => {
                           if (e.key === 'Enter' || e.key === ' ') {
                             e.preventDefault();
-                            onQuizPanelChange?.(true);
+                            // Quiz panel disabled in FormEditor
                           }
                         }}
                         onClick={(e) => {
                           if (readOnly) return;
                           e.stopPropagation();
-                          console.log('🔘 Clic sur le quiz: ouverture du panneau Configuration (sans déplacement/redimensionnement)');
-                          onQuizPanelChange?.(true);
+                          console.log('ℹ️ Clic sur l’aperçu quiz (panel désactivé dans FormEditor)');
                         }}
                         className="cursor-pointer"
                         style={{
