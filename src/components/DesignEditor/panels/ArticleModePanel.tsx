@@ -416,6 +416,41 @@ const ArticleModePanel: React.FC<ArticleModePanelProps> = ({
           <option value="none">Aucune</option>
         </select>
       </div>
+
+      <div className="h-px bg-gray-200" />
+
+      <div>
+        <label className="block text-sm font-semibold text-gray-700 mb-2">
+          Position verticale (Mobile uniquement)
+        </label>
+        <p className="text-xs text-gray-500 mb-3">
+          Ajustez la position du bouton sur l'écran mobile. 0% = en haut, 100% = en bas.
+        </p>
+        <div className="space-y-2">
+          <input
+            type="range"
+            min="0"
+            max="100"
+            step="5"
+            value={articleConfig.cta?.mobileVerticalPosition ?? 85}
+            onChange={(e) => handleCTAChange({ mobileVerticalPosition: Number(e.target.value) })}
+            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#841b60]"
+          />
+          <div className="flex justify-between items-center">
+            <span className="text-xs text-gray-500">Haut</span>
+            <span className="text-sm font-medium text-[#841b60]">
+              {articleConfig.cta?.mobileVerticalPosition ?? 85}%
+            </span>
+            <span className="text-xs text-gray-500">Bas</span>
+          </div>
+        </div>
+        <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+          <p className="text-xs text-blue-800">
+            📱 Cette option n'affecte que l'affichage sur mobile (écrans &lt; 768px). 
+            Sur desktop, le bouton reste sous le texte.
+          </p>
+        </div>
+      </div>
     </div>
   );
 

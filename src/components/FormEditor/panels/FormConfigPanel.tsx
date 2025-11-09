@@ -307,6 +307,40 @@ const FormConfigPanel: React.FC<FormConfigPanelProps> = ({ campaign, onCampaignC
             <span className="text-sm text-gray-600">px</span>
           </div>
         </div>
+
+        {/* Position verticale du bouton sur mobile */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Position verticale du bouton (Mobile uniquement)
+          </label>
+          <p className="text-xs text-gray-500 mb-3">
+            Ajustez la position du bouton "Participer" sur l'écran mobile. 0% = en haut, 100% = en bas.
+          </p>
+          <div className="space-y-2">
+            <input
+              type="range"
+              min="0"
+              max="100"
+              step="5"
+              value={formConfig.buttonVerticalPosition ?? 85}
+              onChange={(e) => updateFormConfig({ buttonVerticalPosition: Number(e.target.value) })}
+              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#841b60]"
+            />
+            <div className="flex justify-between items-center text-sm">
+              <span className="text-gray-500">Haut</span>
+              <span className="font-medium text-[#841b60]">
+                {formConfig.buttonVerticalPosition ?? 85}%
+              </span>
+              <span className="text-gray-500">Bas</span>
+            </div>
+          </div>
+          <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <p className="text-xs text-blue-800">
+              📱 Cette option n'affecte que l'affichage sur mobile (écrans &lt; 768px). 
+              Sur desktop, le bouton reste à sa position normale.
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );

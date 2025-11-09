@@ -371,6 +371,7 @@ export interface OptimizedCampaign {
       textColor?: string;
       borderRadius?: string;
       borderColor?: string;
+      mobileVerticalPosition?: number; // Position verticale sur mobile (0-100%)
     };
     funnelFlow?: {
       steps?: ('article' | 'form' | 'game' | 'result')[];

@@ -76,7 +76,7 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
     const previousHeight = document.body.style.height;
     const previousMargin = document.body.style.margin;
 
-    document.body.style.background = 'linear-gradient(180deg, #943c56, #370e4b)';
+    document.body.style.background = 'linear-gradient(180deg, rgba(59, 56, 135, 0.855), rgba(156, 26, 96, 0.72), rgba(195, 85, 70, 0.775), rgba(156, 26, 96, 0.72))';
     document.body.style.height = '100vh';
     document.body.style.margin = '0';
 
@@ -2711,7 +2711,7 @@ useEffect(() => {
     <div
       className="min-h-screen w-full"
       style={{
-        background: 'linear-gradient(180deg, #943c56, #370e4b)',
+        background: 'linear-gradient(180deg, rgba(59, 56, 135, 0.855), rgba(156, 26, 96, 0.72), rgba(195, 85, 70, 0.775), rgba(156, 26, 96, 0.72))',
         padding: showFunnel ? '0' : (isWindowMobile ? '9px' : '0 9px 9px 9px'),
         boxSizing: 'border-box'
       }}
@@ -2807,31 +2807,6 @@ useEffect(() => {
                       previewMode="mobile"
                       constrainedHeight={true}
                       wheelModalConfig={wheelModalConfig}
-                      onModuleClick={(moduleId) => {
-                        console.log('🖱️ [DesignEditorLayout] Module clicked in preview:', moduleId);
-                        const allModules = (Object.values(modularPage.screens) as Module[][]).flat();
-                        const module = allModules.find(m => m.id === moduleId);
-                        if (module) {
-                          const moduleTypeToRole: Record<string, string> = {
-                            'BlocTexte': 'module-text',
-                            'BlocBouton': 'module-button',
-                            'BlocImage': 'module-image',
-                            'BlocVideo': 'module-video',
-                            'BlocSocial': 'module-social',
-                            'BlocHTML': 'module-html',
-                            'BlocCarte': 'module-carte',
-                            'BlocLogo': 'module-logo',
-                            'BlocPiedDePage': 'module-footer'
-                          };
-                          setSelectedElement({
-                            id: `module-proxy-${moduleId}`,
-                            type: 'module-proxy',
-                            moduleId: moduleId,
-                            role: moduleTypeToRole[module.type] || 'module-text'
-                          });
-                          setShowFunnel(false);
-                        }
-                      }}
                     />
                   )}
               </div>
@@ -2862,31 +2837,6 @@ useEffect(() => {
                   previewMode={actualDevice === 'desktop' && selectedDevice === 'desktop' ? 'desktop' : selectedDevice}
                   constrainedHeight={selectedDevice === 'mobile'}
                   wheelModalConfig={wheelModalConfig}
-                  onModuleClick={(moduleId) => {
-                    console.log('🖱️ [DesignEditorLayout] Module clicked in preview:', moduleId);
-                    const allModules = (Object.values(modularPage.screens) as Module[][]).flat();
-                    const module = allModules.find(m => m.id === moduleId);
-                    if (module) {
-                      const moduleTypeToRole: Record<string, string> = {
-                        'BlocTexte': 'module-text',
-                        'BlocBouton': 'module-button',
-                        'BlocImage': 'module-image',
-                        'BlocVideo': 'module-video',
-                        'BlocSocial': 'module-social',
-                        'BlocHTML': 'module-html',
-                        'BlocCarte': 'module-carte',
-                        'BlocLogo': 'module-logo',
-                        'BlocPiedDePage': 'module-footer'
-                      };
-                      setSelectedElement({
-                        id: `module-proxy-${moduleId}`,
-                        type: 'module-proxy',
-                        moduleId: moduleId,
-                        role: moduleTypeToRole[module.type] || 'module-text'
-                      });
-                      setShowFunnel(false);
-                    }
-                  }}
                 />
               )
             )}

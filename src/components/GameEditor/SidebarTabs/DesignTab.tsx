@@ -580,6 +580,39 @@ Réponds UNIQUEMENT avec un JSON valide suivant cette structure exacte (en fran�
               </div>
             </div>
           </div>
+
+          <div className="form-group-premium">
+            <label className="block mb-2">Position verticale (Mobile uniquement)</label>
+            <p className="text-xs text-sidebar-text-muted mb-3">
+              Ajustez la position du bouton sur l'écran mobile. 0% = en haut, 100% = en bas.
+            </p>
+            <div className="space-y-2">
+              <input
+                type="range"
+                min="0"
+                max="100"
+                step="5"
+                value={config.buttonVerticalPosition ?? 85}
+                onChange={e => onConfigUpdate({
+                  buttonVerticalPosition: Number(e.target.value)
+                })}
+                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#841b60]"
+              />
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-sidebar-text-muted">Haut</span>
+                <span className="font-medium text-[#841b60]">
+                  {config.buttonVerticalPosition ?? 85}%
+                </span>
+                <span className="text-sidebar-text-muted">Bas</span>
+              </div>
+            </div>
+            <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <p className="text-xs text-blue-800">
+                📱 Cette option n'affecte que l'affichage sur mobile (écrans &lt; 768px). 
+                Sur desktop, le bouton reste à sa position normale.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
 

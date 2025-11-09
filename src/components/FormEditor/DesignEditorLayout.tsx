@@ -132,7 +132,7 @@ const FormEditorLayout: React.FC<FormEditorLayoutProps> = ({ mode = 'campaign', 
     const previousHeight = document.body.style.height;
     const previousMargin = document.body.style.margin;
 
-    document.body.style.background = 'linear-gradient(180deg, #943c56, #370e4b)';
+    document.body.style.background = 'linear-gradient(180deg, rgba(59, 56, 135, 0.855), rgba(156, 26, 96, 0.72), rgba(195, 85, 70, 0.775), rgba(156, 26, 96, 0.72))';
     document.body.style.height = '100vh';
     document.body.style.margin = '0';
 
@@ -1248,8 +1248,14 @@ useEffect(() => {
     return allModules.find((module) => module.id === selectedModuleId) || null;
   }, [selectedModuleId, modularPage.screens]);
   
-  // Détecter la position de scroll pour changer l'écran courant
-  useEffect(() => {
+// Aperçu plein écran / mode article
+const [showFunnel, setShowFunnel] = useState(false);
+const isArticlePreview = editorMode === 'article' && showFunnel;
+
+// Détecter la position de scroll pour changer l'écran courant (désactivé pendant l'aperçu plein écran)
+useEffect(() => {
+    if (showFunnel) return;
+
     const canvasScrollArea = document.querySelector('.canvas-scroll-area') as HTMLElement | null;
     if (!canvasScrollArea) return;
 
@@ -1296,7 +1302,7 @@ useEffect(() => {
       canvasScrollArea.removeEventListener('scroll', handleScroll);
       window.removeEventListener('resize', handleResize);
     };
-  }, []);
+  }, [showFunnel]);
 
   // Helper to persist modularPage into campaignConfig (and mark modified)
   // ✅ FIX: Éviter les re-rendus inutiles avec des guards et optimisations
@@ -1649,8 +1655,37 @@ useEffect(() => {
       setSelectedElement(null);
     }
   }, [canvasElements]);
-  const [showFunnel, setShowFunnel] = useState(false);
-  const isArticlePreview = editorMode === 'article' && showFunnel;
+  const navigateToScreen = useCallback(
+    (screen: 'screen1' | 'screen2') => {
+      setCurrentScreen(screen);
+      if (!showFunnel) {
+        scrollToScreen(screen);
+      }
+    },
+    [scrollToScreen, showFunnel]
+  );
+
+  const getElementFilterForScreen = useCallback(
+    (screen: 'screen1' | 'screen2') => {
+      return (element: any) => {
+        if (screen === 'screen1') {
+          return element?.screenId === 'screen1' || !element?.screenId;
+        }
+        return element?.screenId === 'screen2';
+      };
+    },
+    []
+  );
+
+  const activePreviewBackground =
+    currentScreen === 'screen1'
+      ? (screen1Background || canvasBackground)
+      : (screen2Background || screen1Background || canvasBackground);
+  const activePreviewModules = currentScreen === 'screen1' ? screen1Modules : screen2Modules;
+  const previewElementFilter = useMemo(
+    () => getElementFilterForScreen(currentScreen),
+    [currentScreen, getElementFilterForScreen]
+  );
   // For form campaigns, start directly with the form (no article step)
   const [currentStep, setCurrentStep] = useState<'article' | 'form' | 'game' | 'result'>(editorMode === 'article' ? 'form' : 'article');
   const [previewButtonSide, setPreviewButtonSide] = useState<'left' | 'right'>(() =>
@@ -2967,9 +3002,10 @@ useEffect(() => {
     setCurrentStep('form');
   };
 
-  const handleFormSubmit = (data: Record<string, string>) => {
+  const handleFormSubmit = (data: Record<string, string> = {}) => {
     console.log('📝 [FormEditor] Form submitted:', data);
     setCurrentStep('result'); // Form campaigns skip game
+    navigateToScreen('screen2');
   };
 
   const handleGameComplete = () => {
@@ -3367,7 +3403,7 @@ useEffect(() => {
     <div
       className="min-h-screen w-full"
       style={{
-        background: 'linear-gradient(180deg, #943c56, #370e4b)',
+        background: 'linear-gradient(180deg, rgba(59, 56, 135, 0.855), rgba(156, 26, 96, 0.72), rgba(195, 85, 70, 0.775), rgba(156, 26, 96, 0.72))',
         padding: showFunnel ? '0' : (isWindowMobile ? '9px' : '0 9px 9px 9px'),
         boxSizing: 'border-box'
       }}
@@ -3421,11 +3457,11 @@ useEffect(() => {
             <div className="w-full h-full overflow-visible">
               <DesignCanvas
                 editorMode={editorMode}
-                screenId="screen1"
+                screenId={currentScreen}
                 selectedDevice="mobile"
                 elements={canvasElements}
                 onElementsChange={() => {}}
-                background={screen1Background}
+                background={activePreviewBackground}
                 campaign={memoCampaignData}
                 onCampaignChange={() => {}}
                 zoom={1}
@@ -3439,19 +3475,19 @@ useEffect(() => {
                 extractedColors={extractedColors}
                 quizModalConfig={undefined}
                 containerClassName="!p-0 !m-0 !items-start !justify-start !pt-0 !rounded-none"
-                elementFilter={(element: any) => {
-                  return element?.screenId === 'screen1' || !element?.screenId;
-                }}
+                elementFilter={previewElementFilter}
                 onShowAnimationsPanel={() => {}}
                 onShowPositionPanel={() => {}}
                 onShowDesignPanel={() => {}}
                 onShowEffectsPanel={() => {}}
+                readOnly={true}
                 isPreviewMode={true}
-                modularModules={screen1Modules}
+                modularModules={activePreviewModules}
                 onModuleUpdate={() => {}}
                 onModuleDelete={() => {}}
                 onModuleMove={() => {}}
                 onModuleDuplicate={() => {}}
+                onFormSubmit={() => handleFormSubmit({})}
               />
             </div>
           </div>
@@ -3655,11 +3691,11 @@ useEffect(() => {
               )}
               <DesignCanvas
                 editorMode={editorMode}
-                screenId="screen1"
+                screenId={currentScreen}
                 selectedDevice={selectedDevice}
                 elements={canvasElements}
                 onElementsChange={() => {}}
-                background={screen1Background}
+                background={activePreviewBackground}
                 campaign={memoCampaignData}
                 onCampaignChange={() => {}}
                 zoom={1}
@@ -3673,19 +3709,19 @@ useEffect(() => {
                 extractedColors={extractedColors}
                 quizModalConfig={undefined}
                 containerClassName="!p-0 !m-0 bg-white !items-start !justify-start !pt-0 !rounded-none"
-                elementFilter={(element: any) => {
-                  return element?.screenId === 'screen1' || !element?.screenId;
-                }}
+                elementFilter={previewElementFilter}
                 onShowAnimationsPanel={() => {}}
                 onShowPositionPanel={() => {}}
                 onShowDesignPanel={() => {}}
                 onShowEffectsPanel={() => {}}
+                readOnly={true}
                 isPreviewMode={true}
-                modularModules={screen1Modules}
+                modularModules={activePreviewModules}
                 onModuleUpdate={() => {}}
                 onModuleDelete={() => {}}
                 onModuleMove={() => {}}
                 onModuleDuplicate={() => {}}
+                onFormSubmit={() => handleFormSubmit({})}
               />
             </div>
           </div>
@@ -4118,19 +4154,12 @@ useEffect(() => {
                     selectedElements={selectedElements}
                     onSelectedElementsChange={setSelectedElements}
                     onElementUpdate={handleElementUpdate}
-                    onFormSubmit={() => {
-                      setCurrentScreen('screen2');
-                      scrollToScreen('screen2');
-                    }}
+                    onFormSubmit={() => handleFormSubmit({})}
                     // FORMEDITOR: Désactiver le quiz, afficher le formulaire à la place
                     extractedColors={extractedColors}
                     quizModalConfig={undefined}
                     containerClassName={mode === 'template' ? 'bg-gray-50' : undefined}
-                    elementFilter={(element: any) => {
-                      // Screen 1 should ONLY show elements explicitly assigned to screen1
-                      // This includes game, form, and all non-exit elements
-                      return element?.screenId === 'screen1' || !element?.screenId;
-                    }}
+                    elementFilter={getElementFilterForScreen('screen1')}
                     // Sidebar panel triggers
                     onShowAnimationsPanel={() => {
                       if (!isWindowMobile) {
@@ -4235,7 +4264,7 @@ useEffect(() => {
                         quizModalConfig={undefined}
                         hideInlineQuizPreview
                         containerClassName={mode === 'template' ? 'bg-gray-50' : undefined}
-                        elementFilter={(element: any) => element?.screenId === 'screen2'}
+                        elementFilter={getElementFilterForScreen('screen2')}
                         onShowEffectsPanel={() => {
                           if (!isWindowMobile) {
                             setShowEffectsInSidebar(true);

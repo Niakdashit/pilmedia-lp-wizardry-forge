@@ -120,6 +120,7 @@ const ArticleCanvas: React.FC<ArticleCanvasProps> = ({
               variant={articleConfig.cta?.variant}
               size={articleConfig.cta?.size}
               icon={articleConfig.cta?.icon}
+              mobileVerticalPosition={articleConfig.cta?.mobileVerticalPosition}
               onClick={() => {
                 console.log('🔥 [ArticleCTA] Button clicked!');
                 onCTAClick?.();

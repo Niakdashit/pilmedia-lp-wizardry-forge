@@ -670,7 +670,6 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
                     modules={logoModules1 as any}
                     previewMode={true}
                     device={previewMode}
-                    onModuleClick={onModuleClick}
                     onButtonClick={() => {}}
                   />
                 </div>
@@ -752,7 +751,6 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
                       previewMode={true}
                       device={previewMode}
                       onButtonClick={handleParticipate}
-                      onModuleClick={onModuleClick}
                     />
                   </section>
                 ) : (
@@ -768,7 +766,6 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
                       modules={footerModules1 as any}
                       previewMode
                       device={previewMode}
-                      onModuleClick={onModuleClick}
                     />
                   </div>
                 ) : (
@@ -780,7 +777,6 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
                       modules={footerModules1 as any}
                       previewMode
                       device={previewMode}
-                      onModuleClick={onModuleClick}
                     />
                   </div>
                 )
@@ -795,7 +791,7 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
                     return (
                       <div
                         key={m.id}
-                        className="absolute cursor-pointer"
+                        className="absolute"
                         style={{ 
                           left: '50%', 
                           top: `${safeZonePadding}px`, 
@@ -803,11 +799,8 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
                           pointerEvents: 'auto' 
                         }}
                         onClick={(e) => {
-                          // Si onModuleClick existe, permettre la sélection du module
-                          if (onModuleClick) {
-                            e.stopPropagation();
-                            onModuleClick(m.id);
-                          }
+                          // Mode preview: pas d'interaction avec les modules
+                          e.stopPropagation();
                         }}
                       >
                         <div className={modulePaddingClass}>
@@ -816,7 +809,6 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
                             previewMode={true}
                             device={previewMode}
                             onButtonClick={handleParticipate}
-                            onModuleClick={onModuleClick}
                           />
                         </div>
                       </div>
@@ -837,7 +829,6 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
                     modules={logoModules2 as any}
                     previewMode={true}
                     device={previewMode}
-                    onModuleClick={onModuleClick}
                   />
                 </div>
               )}

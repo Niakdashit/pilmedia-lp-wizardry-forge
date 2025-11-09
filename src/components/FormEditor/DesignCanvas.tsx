@@ -49,6 +49,261 @@ const SAFE_ZONE_RADIUS: Record<DeviceType, number> = {
   mobile: 24
 };
 
+const DEFAULT_INLINE_FORM_CONFIG = {
+  title: 'Vos informations',
+  description: 'Remplissez le formulaire pour participer',
+  submitLabel: 'Participer',
+  panelBg: '#ffffff',
+  borderColor: '#e5e7eb',
+  textColor: '#000000',
+  buttonColor: '#841b60',
+  buttonTextColor: '#ffffff',
+  fontFamily: 'inherit',
+  displayMode: 'overlay',
+  position: 'right',
+  borderRadius: 5,
+  fieldBorderRadius: 2,
+  width: 500,
+  height: 500
+};
+
+interface InlineFormPreviewProps {
+  shouldRender: boolean;
+  screenId: CanvasScreenId;
+  selectedDevice: DeviceType;
+  formFields: any[];
+  formConfig?: any;
+  onFormSubmit?: () => void;
+}
+
+const InlineFormPreview: React.FC<InlineFormPreviewProps> = ({
+  shouldRender,
+  screenId,
+  selectedDevice,
+  formFields,
+  formConfig,
+  onFormSubmit
+}) => {
+  const [isMobileFormExpanded, setIsMobileFormExpanded] = React.useState(false);
+  const mobileFormRef = React.useRef<HTMLDivElement>(null);
+
+  const resolvedFormConfig = {
+    ...DEFAULT_INLINE_FORM_CONFIG,
+    ...(formConfig || {})
+  };
+
+  const isIntegrated = resolvedFormConfig.displayMode === 'integrated';
+
+  const getPositionStyles = (): React.CSSProperties => {
+    if (selectedDevice === 'mobile') {
+      return {
+        position: 'fixed' as const,
+        bottom: isMobileFormExpanded ? 0 : '-100%',
+        left: 0,
+        right: 0,
+        width: '100%',
+        maxWidth: '100%',
+        height: 'auto',
+        minHeight: '350px',
+        maxHeight: '85vh',
+        overflowX: 'hidden',
+        overflowY: 'auto',
+        borderRadius: '24px 24px 0 0',
+        boxShadow: '0 -4px 20px rgba(0, 0, 0, 0.1)',
+        zIndex: 10,
+        margin: 0,
+        padding: '24px 20px 80px',
+        boxSizing: 'border-box',
+        transition: 'bottom 0.5s cubic-bezier(0.4, 0, 0.2, 1)'
+      };
+    }
+
+    if (isIntegrated) {
+      return {
+        width: '37%',
+        minWidth: '340px',
+        maxWidth: '450px',
+        height: '100%',
+        overflow: 'auto',
+        flexShrink: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center'
+      };
+    }
+
+    const baseStyles: React.CSSProperties = {
+      position: 'absolute' as const,
+      width: `${resolvedFormConfig.width}px`,
+      maxWidth: '90%',
+      height: 'auto',
+      minHeight: '200px',
+      maxHeight: '90vh',
+      overflow: 'auto'
+    };
+
+    switch (resolvedFormConfig.position) {
+      case 'left':
+        baseStyles.left = '20px';
+        break;
+      case 'center':
+        baseStyles.left = '50%';
+        baseStyles.transform = 'translateX(-50%)';
+        break;
+      case 'right':
+      default:
+        baseStyles.right = '20px';
+        break;
+    }
+
+    baseStyles.top = '50%';
+    baseStyles.transform = baseStyles.transform
+      ? `${baseStyles.transform} translateY(-50%)`
+      : 'translateY(-50%)';
+    baseStyles.maxHeight = 'calc(100vh - 40px)';
+
+    return baseStyles;
+  };
+
+  if (!shouldRender || screenId !== 'screen1') {
+    return null;
+  }
+
+  const formOrder = resolvedFormConfig.position === 'right' ? 2 : 1;
+
+  return (
+    <div
+      style={{
+        display: isIntegrated || selectedDevice === 'mobile' ? 'flex' : 'block',
+        flexDirection: selectedDevice === 'mobile' ? 'column' : 'row',
+        justifyContent: resolvedFormConfig.position === 'center' ? 'center' : 'flex-start',
+        width: '100%',
+        height: '100%',
+        minHeight: '100%',
+        position: 'relative',
+        gap: 0,
+        margin: 0,
+        padding: 0
+      }}
+    >
+      <>
+        {selectedDevice === 'mobile' && isMobileFormExpanded && (
+          <div
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: 'rgba(0, 0, 0, 0.4)',
+              zIndex: 9,
+              transition: 'opacity 0.3s ease',
+              opacity: isMobileFormExpanded ? 1 : 0,
+              pointerEvents: isMobileFormExpanded ? 'auto' : 'none'
+            }}
+            onClick={() => setIsMobileFormExpanded(false)}
+          />
+        )}
+
+        <div
+          ref={mobileFormRef}
+          className="flex flex-col"
+          style={{
+            ...getPositionStyles(),
+            backgroundColor: resolvedFormConfig.panelBg,
+            color: resolvedFormConfig.textColor,
+            fontFamily: resolvedFormConfig.fontFamily,
+            borderRadius: isIntegrated ? 0 : `${resolvedFormConfig.borderRadius}px`,
+            boxShadow: isIntegrated ? 'none' : '0 4px 20px rgba(0, 0, 0, 0.15)',
+            zIndex: isIntegrated ? 1 : 10,
+            order: isIntegrated ? formOrder : 0,
+            padding: isIntegrated ? '48px 40px' : '24px'
+          }}
+        >
+          <div className="mb-4">
+            <h3 className="text-lg font-semibold mb-2">{resolvedFormConfig.title}</h3>
+            <p className="text-sm opacity-75">{resolvedFormConfig.description}</p>
+          </div>
+
+          <DynamicContactForm
+            fields={formFields}
+            submitLabel="Envoyer"
+            onSubmit={() => {
+              onFormSubmit?.();
+            }}
+            inputBorderColor={resolvedFormConfig.borderColor}
+            inputBorderRadius={`${resolvedFormConfig.fieldBorderRadius}px`}
+            inputFocusColor={resolvedFormConfig.buttonColor}
+            textStyles={{
+              label: {
+                color: resolvedFormConfig.textColor,
+                fontFamily: resolvedFormConfig.fontFamily,
+                fontSize: '14px',
+                fontWeight: '500'
+              },
+              button: {
+                backgroundColor: resolvedFormConfig.buttonColor,
+                color: resolvedFormConfig.buttonTextColor,
+                borderRadius:
+                  typeof resolvedFormConfig.borderRadius === 'number'
+                    ? `${resolvedFormConfig.borderRadius}px`
+                    : resolvedFormConfig.borderRadius || '12px',
+                fontFamily: resolvedFormConfig.fontFamily
+              }
+            }}
+          />
+        </div>
+
+        {selectedDevice === 'mobile' && !isMobileFormExpanded && (
+          <button
+            onClick={() => setIsMobileFormExpanded(true)}
+            style={{
+              position: 'fixed',
+              top: `${resolvedFormConfig.buttonVerticalPosition ?? 85}%`,
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              backgroundColor: resolvedFormConfig.buttonColor || '#841b60',
+              color: resolvedFormConfig.buttonTextColor || '#ffffff',
+              padding: '16px 32px',
+              borderRadius:
+                typeof resolvedFormConfig.borderRadius === 'number'
+                  ? `${resolvedFormConfig.borderRadius}px`
+                  : resolvedFormConfig.borderRadius || '9999px',
+              border: 'none',
+              fontSize: '16px',
+              fontWeight: '600',
+              fontFamily: resolvedFormConfig.fontFamily || 'inherit',
+              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.2)',
+              cursor: 'pointer',
+              zIndex: 20,
+              whiteSpace: 'nowrap'
+            }}
+          >
+            {resolvedFormConfig.submitLabel || 'Participer'}
+          </button>
+        )}
+      </>
+
+      {isIntegrated && (
+        <div
+          style={{
+            flex: 1,
+            minWidth: 0,
+            height: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            overflow: 'hidden',
+            order: resolvedFormConfig.position === 'right' ? 1 : 2
+          }}
+        >
+          {/* Placeholder pour l'arrière-plan */}
+        </div>
+      )}
+    </div>
+  );
+};
+
 export interface DesignCanvasProps {
   editorMode?: 'fullscreen' | 'article'; // Mode Article ou Fullscreen
   screenId?: CanvasScreenId;
@@ -2588,7 +2843,9 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                 
                 console.log('🎯 Campaign object for TemplatedQuiz:', campaignToUse);
                 
-                const shouldRenderInlinePreview = !hideInlineQuizPreview && (!elements.some(el => el.id === 'quiz-template'));
+                const shouldRenderInlinePreview =
+                  !hideInlineQuizPreview &&
+                  !elements.some((el) => el.id === 'quiz-template');
 
                 // Vérifier si le formulaire est en mode intégré
                 const formConfig = campaignToUse?.design?.formConfig || {};
@@ -2596,247 +2853,14 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                 
                 return (
                   <ScreenLayoutWrapper layout={quizLayout} className="w-full h-full" style={{ minHeight: '100%' }}>
-                    {shouldRenderInlinePreview && (
-                      <div
-                        style={{
-                          display: isIntegratedMode || selectedDevice === 'mobile' ? 'flex' : 'block',
-                          flexDirection: selectedDevice === 'mobile' ? 'column' : 'row',
-                          justifyContent: formConfig.position === 'center' ? 'center' : 'flex-start',
-                          width: '100%',
-                          height: '100%',
-                          minHeight: '100%',
-                          position: 'relative',
-                          gap: 0,
-                          margin: 0,
-                          padding: 0
-                        }}
-                      >
-                        {/* FORMEDITOR: Afficher le formulaire au lieu du quiz */}
-                        {(() => {
-                          const formConfig = campaignToUse?.design?.formConfig || {
-                            title: 'Vos informations',
-                            description: 'Remplissez le formulaire pour participer',
-                            submitLabel: 'Participer',
-                            panelBg: '#ffffff',
-                            borderColor: '#e5e7eb',
-                            textColor: '#000000',
-                            buttonColor: '#841b60',
-                            buttonTextColor: '#ffffff',
-                            fontFamily: 'inherit',
-                            displayMode: 'overlay',
-                            position: 'right',
-                            borderRadius: 5,
-                            fieldBorderRadius: 2,
-                            width: 500,
-                            height: 500
-                          };
-                          
-                          // État pour gérer l'expansion du formulaire mobile
-                          const [isMobileFormExpanded, setIsMobileFormExpanded] = React.useState(false);
-                          const mobileFormRef = React.useRef<HTMLDivElement>(null);
-
-                          // Calculer les styles de positionnement
-                          const isIntegrated = formConfig.displayMode === 'integrated';
-                          
-                          const getPositionStyles = () => {
-                            // Mode mobile : formulaire en bas, pleine largeur, position absolue
-                            if (selectedDevice === 'mobile') {
-                              return {
-                                position: 'fixed' as const,
-                                bottom: isMobileFormExpanded ? 0 : '-100%',
-                                left: 0,
-                                right: 0,
-                                width: '100%',
-                                maxWidth: '100%',
-                                height: 'auto',
-                                minHeight: '350px',
-                                maxHeight: '85vh',
-                                overflowX: 'hidden',
-                                overflowY: 'auto',
-                                borderRadius: '24px 24px 0 0',
-                                boxShadow: '0 -4px 20px rgba(0, 0, 0, 0.1)',
-                                zIndex: 10,
-                                margin: 0,
-                                padding: '24px 20px 80px',
-                                boxSizing: 'border-box' as React.CSSProperties['boxSizing'],
-                                transition: 'bottom 0.5s cubic-bezier(0.4, 0, 0.2, 1)'
-                              };
-                            }
-                            
-                            if (isIntegrated) {
-                              // Mode intégré : le formulaire partage l'espace avec l'arrière-plan
-                              const baseStyles: React.CSSProperties = {
-                                width: '37%',
-                                minWidth: '340px',
-                                maxWidth: '450px',
-                                height: '100%',
-                                overflow: 'auto',
-                                flexShrink: 0,
-                                display: 'flex',
-                                flexDirection: 'column',
-                                justifyContent: 'center'
-                              };
-                              
-                              return baseStyles;
-                            } else {
-                              // Mode overlay : formulaire flottant avec hauteur automatique
-                              const baseStyles: React.CSSProperties = {
-                                position: 'absolute' as const,
-                                width: `${formConfig.width}px`,
-                                maxWidth: '90%',
-                                height: 'auto',
-                                minHeight: '200px',
-                                maxHeight: '90vh',
-                                overflow: 'auto'
-                              };
-                              
-                              // Position horizontale
-                              switch (formConfig.position) {
-                                case 'left':
-                                  baseStyles.left = '20px';
-                                  break;
-                                case 'center':
-                                  baseStyles.left = '50%';
-                                  baseStyles.transform = 'translateX(-50%)';
-                                  break;
-                                case 'right':
-                                default:
-                                  baseStyles.right = '20px';
-                                  break;
-                              }
-                              
-                              // Position verticale (centré avec hauteur auto)
-                              baseStyles.top = '50%';
-                              baseStyles.transform = baseStyles.transform 
-                                ? `${baseStyles.transform} translateY(-50%)`
-                                : 'translateY(-50%)';
-                              
-                              // Assurer que le formulaire ne dépasse pas en haut
-                              baseStyles.maxHeight = 'calc(100vh - 40px)';
-                              
-                              return baseStyles;
-                            }
-                          };
-                          
-                          // Déterminer l'ordre du formulaire
-                          const formOrder = formConfig.position === 'right' ? 2 : 1;
-                          
-                          return (
-                            <>
-                              {/* Overlay noir semi-transparent pour mobile */}
-                              {selectedDevice === 'mobile' && isMobileFormExpanded && (
-                                <div
-                                  style={{
-                                    position: 'fixed',
-                                    top: 0,
-                                    left: 0,
-                                    right: 0,
-                                    bottom: 0,
-                                    backgroundColor: 'rgba(0, 0, 0, 0.4)',
-                                    zIndex: 9,
-                                    transition: 'opacity 0.3s ease',
-                                    opacity: isMobileFormExpanded ? 1 : 0,
-                                    pointerEvents: isMobileFormExpanded ? 'auto' : 'none'
-                                  }}
-                                  onClick={() => setIsMobileFormExpanded(false)}
-                                />
-                              )}
-
-                              <div 
-                                ref={mobileFormRef}
-                                className="flex flex-col"
-                                style={{ 
-                                  ...getPositionStyles(),
-                                  backgroundColor: formConfig.panelBg,
-                                  color: formConfig.textColor,
-                                  fontFamily: formConfig.fontFamily,
-                                  borderRadius: isIntegrated ? 0 : `${formConfig.borderRadius}px`,
-                                  boxShadow: isIntegrated ? 'none' : '0 4px 20px rgba(0, 0, 0, 0.15)',
-                                  zIndex: isIntegrated ? 1 : 10,
-                                  order: isIntegrated ? formOrder : 0,
-                                  padding: isIntegrated ? '48px 40px' : '24px'
-                                }}
-                              >
-                                <div className="mb-4">
-                                  <h3 className="text-lg font-semibold mb-2">{formConfig.title}</h3>
-                                  <p className="text-sm opacity-75">{formConfig.description}</p>
-                                </div>
-                                
-                                <DynamicContactForm
-                                  fields={campaignToUse?.formFields || DEFAULT_FIELDS}
-                                  submitLabel="Envoyer"
-                                  onSubmit={() => {
-                                    onFormSubmit?.();
-                                  }}
-                                  inputBorderColor={formConfig.borderColor}
-                                  inputBorderRadius={`${formConfig.fieldBorderRadius}px`}
-                                  inputFocusColor={formConfig.buttonColor}
-                                  textStyles={{
-                                    label: {
-                                      color: formConfig.textColor,
-                                      fontFamily: formConfig.fontFamily,
-                                      fontSize: '14px',
-                                      fontWeight: '500'
-                                    },
-                                    button: {
-                                      backgroundColor: formConfig.buttonColor,
-                                      color: formConfig.buttonTextColor,
-                                      borderRadius: typeof formConfig.borderRadius === 'number' ? `${formConfig.borderRadius}px` : (formConfig.borderRadius || '12px'),
-                                      fontFamily: formConfig.fontFamily
-                                    }
-                                  }}
-                                />
-                              </div>
-
-                              {/* Bouton "Remplir le formulaire" pour mobile */}
-                              {selectedDevice === 'mobile' && !isMobileFormExpanded && (
-                                <button
-                                  onClick={() => setIsMobileFormExpanded(true)}
-                                  style={{
-                                    position: 'fixed',
-                                    bottom: '20px',
-                                    left: '50%',
-                                    transform: 'translateX(-50%)',
-                                    backgroundColor: formConfig.buttonColor || '#841b60',
-                                    color: formConfig.buttonTextColor || '#ffffff',
-                                    padding: '16px 32px',
-                                    borderRadius: typeof formConfig.borderRadius === 'number' ? `${formConfig.borderRadius}px` : (formConfig.borderRadius || '9999px'),
-                                    border: 'none',
-                                    fontSize: '16px',
-                                    fontWeight: '600',
-                                    fontFamily: formConfig.fontFamily || 'inherit',
-                                    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.2)',
-                                    cursor: 'pointer',
-                                    zIndex: 20,
-                                    whiteSpace: 'nowrap'
-                                  }}
-                                >
-                                  {formConfig.submitLabel || 'Participer'}
-                                </button>
-                              )}
-                            </>
-                          );
-                        })()}
-                        
-                        {/* Zone d'arrière-plan en mode intégré (70% de l'espace) */}
-                        {isIntegratedMode && (
-                          <div 
-                            style={{
-                              flex: 1,
-                              minWidth: 0,
-                              height: '100%',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              overflow: 'hidden',
-                              order: formConfig.position === 'right' ? 1 : 2
-                            }}
-                          >
-                            {/* Espace pour l'arrière-plan visible */}
-                          </div>
-                        )}
-                      </div>
-                    )}
+                    <InlineFormPreview
+                      shouldRender={shouldRenderInlinePreview}
+                      screenId={screenId}
+                      selectedDevice={selectedDevice}
+                      formFields={campaignToUse?.formFields || DEFAULT_FIELDS}
+                      formConfig={campaignToUse?.design?.formConfig}
+                      onFormSubmit={onFormSubmit}
+                    />
                   </ScreenLayoutWrapper>
                 );
               })()}
@@ -2946,6 +2970,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                         screen={screenId as any}
                         modules={regularModules}
                         device={selectedDevice}
+                        readOnly={readOnly}
                         onUpdate={(id, patch) => onModuleUpdate?.(id, patch)}
                         onDelete={(id) => onModuleDelete?.(id)}
                         onMove={(id, dir) => onModuleMove?.(id, dir)}

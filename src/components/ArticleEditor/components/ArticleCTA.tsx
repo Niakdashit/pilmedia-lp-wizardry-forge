@@ -13,6 +13,7 @@ interface ArticleCTAProps {
   disabled?: boolean;
   fullWidth?: boolean;
   maxWidth?: number;
+  mobileVerticalPosition?: number; // Position verticale sur mobile (0-100%)
 }
 
 /**
@@ -36,6 +37,7 @@ const ArticleCTA: React.FC<ArticleCTAProps> = ({
   disabled = false,
   fullWidth = false,
   maxWidth = 810,
+  mobileVerticalPosition = 85, // Par défaut en bas (85%)
 }) => {
   // Styles de base selon le variant
   const variantStyles = {
@@ -72,11 +74,32 @@ const ArticleCTA: React.FC<ArticleCTAProps> = ({
     ${className}
   `;
 
+  // Détecter si on est sur mobile
+  const [isMobile, setIsMobile] = React.useState(false);
+  
+  React.useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   const containerClasses = `
     article-cta-container
     flex justify-center items-center
-    py-6
+    ${isMobile ? 'fixed left-0 right-0 z-50' : 'py-6'}
   `;
+  
+  // Style pour le positionnement vertical sur mobile
+  const mobilePositionStyle: React.CSSProperties = isMobile ? {
+    top: `${mobileVerticalPosition}%`,
+    transform: 'translateY(-50%)',
+    padding: '0 1rem',
+  } : {};
 
   const handleClick = (e: React.MouseEvent) => {
     if (disabled) {
@@ -91,7 +114,13 @@ const ArticleCTA: React.FC<ArticleCTAProps> = ({
   // Si href est fourni, rendu en lien
   if (href && !disabled) {
     return (
-      <div className={containerClasses} style={{ maxWidth: `${maxWidth}px` }}>
+      <div 
+        className={containerClasses} 
+        style={{ 
+          maxWidth: isMobile ? '100%' : `${maxWidth}px`,
+          ...mobilePositionStyle 
+        }}
+      >
         <a
           href={href}
           onClick={handleClick}
@@ -109,7 +138,13 @@ const ArticleCTA: React.FC<ArticleCTAProps> = ({
 
   // Sinon, rendu en bouton
   return (
-    <div className={containerClasses} style={{ maxWidth: `${maxWidth}px` }}>
+    <div 
+      className={containerClasses} 
+      style={{ 
+        maxWidth: isMobile ? '100%' : `${maxWidth}px`,
+        ...mobilePositionStyle 
+      }}
+    >
       <button
         onClick={handleClick}
         disabled={disabled}

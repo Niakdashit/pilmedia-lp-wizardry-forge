@@ -29,7 +29,10 @@ const FormPreview: React.FC<FormPreviewProps> = ({
   const borderColor = design.borderColor || "#E5E7EB";
   const focusColor = buttonColor;
   const containerBackground = design.blockColor || "#ffffff";
-  const containerBorderRadius = design.borderRadius || "16px";
+  // Force borderRadius to always be at least 16px if not explicitly set to 0
+  const containerBorderRadius = design.borderRadius !== undefined && design.borderRadius !== null 
+    ? (typeof design.borderRadius === 'number' ? `${design.borderRadius}px` : design.borderRadius)
+    : "16px";
 
   const buttonLabel = campaign.buttonConfig?.text || campaign.gameConfig?.form?.buttonLabel || 'Valider le formulaire';
 
@@ -61,8 +64,18 @@ const FormPreview: React.FC<FormPreviewProps> = ({
     boxShadow: design.enableShadow !== false 
       ? '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)' 
       : 'none',
+    overflow: 'hidden', // Ensure content respects border radius
     ...getSizeStyles()
   };
+
+  // Debug log to verify borderRadius is applied
+  React.useEffect(() => {
+    console.log('🔍 FormPreview borderRadius:', {
+      designBorderRadius: design.borderRadius,
+      containerBorderRadius,
+      containerStyle
+    });
+  }, [design.borderRadius, containerBorderRadius]);
 
   if (isSubmitted) {
     return (

@@ -158,7 +158,12 @@ const Toolbar: React.FC<{
   );
 }
 
-const renderModule = (m: Module, onUpdate: (patch: Partial<Module>) => void, device: DeviceType = 'desktop') => {
+const renderModule = (
+  m: Module,
+  onUpdate: (patch: Partial<Module>) => void,
+  device: DeviceType = 'desktop',
+  previewMode = false
+) => {
   // const isMobileDevice = device === 'mobile';
 
   const commonStyle: React.CSSProperties = {
@@ -194,7 +199,7 @@ const renderModule = (m: Module, onUpdate: (patch: Partial<Module>) => void, dev
         <div style={{ ...commonStyle }}>
           <QuizModuleRenderer
             modules={[m]}
-            previewMode={false}
+            previewMode={previewMode}
             device={device}
             onModuleClick={() => {}}
             onModuleUpdate={(_id, patch) => onUpdate(patch)}
@@ -207,7 +212,7 @@ const renderModule = (m: Module, onUpdate: (patch: Partial<Module>) => void, dev
         <div style={{ ...commonStyle }}>
           <QuizModuleRenderer
             modules={[m]}
-            previewMode={false}
+            previewMode={previewMode}
             device={device}
             onModuleClick={() => {}}
             onModuleUpdate={(_id, patch) => onUpdate(patch)}
@@ -220,7 +225,7 @@ const renderModule = (m: Module, onUpdate: (patch: Partial<Module>) => void, dev
         <div style={{ ...commonStyle }}>
           <QuizModuleRenderer
             modules={[m]}
-            previewMode={false}
+            previewMode={previewMode}
             device={device}
             onModuleClick={() => {}}
             onModuleUpdate={(_id, patch) => onUpdate(patch)}
@@ -429,7 +434,7 @@ const renderModule = (m: Module, onUpdate: (patch: Partial<Module>) => void, dev
         >
           <QuizModuleRenderer
             modules={[m]}
-            previewMode={false}
+            previewMode={previewMode}
             device={device}
             onModuleClick={(moduleId) => {
               // Pas de sélection en mode édition pour les cartes
@@ -448,7 +453,7 @@ const renderModule = (m: Module, onUpdate: (patch: Partial<Module>) => void, dev
       return (
         <QuizModuleRenderer
           modules={[m]}
-          previewMode={false}
+          previewMode={previewMode}
           device={device}
           onModuleClick={() => {}}
           onModuleUpdate={(_id, patch) => onUpdate(patch)}
@@ -458,7 +463,7 @@ const renderModule = (m: Module, onUpdate: (patch: Partial<Module>) => void, dev
       return (
         <QuizModuleRenderer
           modules={[m]}
-          previewMode={false}
+          previewMode={previewMode}
           device={device}
           onModuleClick={() => {}}
           onModuleUpdate={(_id, patch) => onUpdate(patch)}
@@ -603,6 +608,7 @@ const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate
   }, [handleGlobalPointerMove]);
 
   const startModuleDrag = React.useCallback((event: React.PointerEvent<HTMLElement>, module: Module, index: number) => {
+    if (readOnly) return;
     if (event.button !== 0 && event.pointerType !== 'touch' && event.pointerType !== 'pen') {
       return;
     }
@@ -639,7 +645,7 @@ const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate
     document.body.style.touchAction = 'none';
 
     onSelect?.(module);
-  }, [handleGlobalPointerMove, onSelect, stopModuleDrag]);
+  }, [handleGlobalPointerMove, onSelect, stopModuleDrag, readOnly]);
 
   React.useEffect(() => () => {
     stopModuleDrag();
@@ -743,7 +749,11 @@ const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate
   }, [regularModules]);
 
   return (
-    <div className="w-full" data-modular-zone="1">
+    <div
+      className="w-full"
+      data-modular-zone="1"
+      style={readOnly ? { userSelect: 'none' } : undefined}
+    >
       {/* Modules Logo - positionnés en pleine largeur au-dessus */}
       {logoModules.map((m) => (
         <div 
@@ -752,27 +762,30 @@ const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate
           className={`relative group ${selectedModuleId === m.id ? 'ring-2 ring-[#0ea5b7]/30' : ''}`}
           style={{ width: '100vw', marginLeft: 'calc(-50vw + 50%)', marginRight: 'calc(-50vw + 50%)' }}
           onClick={(e) => {
+            if (readOnly) return;
             e.stopPropagation();
             onSelect?.(m);
           }}
         >
           {/* Bouton de suppression toujours visible au survol */}
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onDelete(m.id);
-            }}
-            onMouseDown={(e) => e.stopPropagation()}
-            onPointerDown={(e) => e.stopPropagation()}
-            className="absolute right-4 top-4 z-[1004] inline-flex h-10 w-10 items-center justify-center rounded-lg bg-white text-red-600 shadow-xl opacity-0 group-hover:opacity-100 hover:bg-red-50 hover:scale-110 transition-all duration-200 backdrop-blur-sm border-2 border-red-300"
-            aria-label="Supprimer le logo"
-            title="Supprimer le logo"
-            data-module-no-drag="true"
-          >
-            <Trash2 className="h-5 w-5" />
-          </button>
+          {!readOnly && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete(m.id);
+              }}
+              onMouseDown={(e) => e.stopPropagation()}
+              onPointerDown={(e) => e.stopPropagation()}
+              className="absolute right-4 top-4 z-[1004] inline-flex h-10 w-10 items-center justify-center rounded-lg bg-white text-red-600 shadow-xl opacity-0 group-hover:opacity-100 hover:bg-red-50 hover:scale-110 transition-all duration-200 backdrop-blur-sm border-2 border-red-300"
+              aria-label="Supprimer le logo"
+              title="Supprimer le logo"
+              data-module-no-drag="true"
+            >
+              <Trash2 className="h-5 w-5" />
+            </button>
+          )}
           {/* Ne pas afficher la toolbar pour les modules espace */}
-          {m.type !== 'BlocEspace' && (m as any).type !== 'BlocSeparateur' && (
+          {!readOnly && m.type !== 'BlocEspace' && (m as any).type !== 'BlocSeparateur' && (
             <Toolbar
               visible={selectedModuleId === m.id}
               layoutWidth="full"
@@ -783,7 +796,7 @@ const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate
               isMobile={device === 'mobile'}
             />
           )}
-          {renderModule(m, (patch) => onUpdate(m.id, patch), device)}
+          {renderModule(m, (patch) => onUpdate(m.id, patch), device, readOnly)}
         </div>
       ))}
       
@@ -813,6 +826,7 @@ const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate
                   : modulePaddingClass;
 
                 const handleModulePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
+                  if (readOnly) return;
                   if (event.button !== 0 && event.pointerType !== 'touch' && event.pointerType !== 'pen') {
                     return;
                   }
@@ -839,6 +853,7 @@ const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate
                 };
 
                 const handleDragHandlePointerDown = (event: React.PointerEvent<HTMLElement>) => {
+                  if (readOnly) return;
                   const target = event.target as HTMLElement | null;
                   if (target && target.closest('[data-module-no-drag="true"], input, textarea, select, [contenteditable="true"]')) {
                     return;
@@ -850,6 +865,7 @@ const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate
                 };
 
                 const handleResizePointerDown = (event: React.PointerEvent<HTMLElement>) => {
+                  if (readOnly) return;
                   event.preventDefault();
                   event.stopPropagation();
                   const target = event.currentTarget;
@@ -985,25 +1001,35 @@ const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate
                 return (
                   <div key={m.id}
                     data-module-id={m.id}
-                    className={`relative group bg-transparent rounded-md transition-colors cursor-pointer ${columnSpanClass} ${isSelected ? 'border border-[#0ea5b7] ring-2 ring-[#0ea5b7]/30' : 'border-0 hover:outline hover:outline-1 hover:outline-gray-400'} ${isDragging ? 'ring-2 ring-[#0ea5b7]/30 shadow-xl shadow-black/10' : ''}`}
-                    role="button"
-                    tabIndex={0}
-                    onPointerDown={handleModulePointerDown}
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      onSelect?.(m);
-                    }}
-                    onKeyDown={(event) => {
-                      if (event.key === 'Enter' || event.key === ' ') {
-                        event.preventDefault();
-                        onSelect?.(m);
-                      }
-                    }}
+                    className={`relative group bg-transparent rounded-md transition-colors ${readOnly ? 'cursor-default' : 'cursor-pointer'} ${columnSpanClass} ${
+                      isSelected ? 'border border-[#0ea5b7] ring-2 ring-[#0ea5b7]/30' : (readOnly ? 'border-0' : 'border-0 hover:outline hover:outline-1 hover:outline-gray-400')
+                    } ${isDragging ? 'ring-2 ring-[#0ea5b7]/30 shadow-xl shadow-black/10' : ''}`}
+                    role={readOnly ? undefined : 'button'}
+                    tabIndex={readOnly ? -1 : 0}
+                    onPointerDown={readOnly ? undefined : handleModulePointerDown}
+                    onClick={
+                      readOnly
+                        ? undefined
+                        : (event) => {
+                            event.stopPropagation();
+                            onSelect?.(m);
+                          }
+                    }
+                    onKeyDown={
+                      readOnly
+                        ? undefined
+                        : (event) => {
+                            if (event.key === 'Enter' || event.key === ' ') {
+                              event.preventDefault();
+                              onSelect?.(m);
+                            }
+                          }
+                    }
                     style={isDragging ? { transform: `translateY(${dragOffset}px)`, zIndex: 50 } : undefined}
                     ref={(el) => { moduleRefs.current[m.id] = el; }}
                   >
                     {/* Ne pas afficher la toolbar pour les modules espace */}
-                    {m.type !== 'BlocEspace' && (m as any).type !== 'BlocSeparateur' && (
+                    {!readOnly && m.type !== 'BlocEspace' && (m as any).type !== 'BlocSeparateur' && (
                       <Toolbar
                         visible={isSelected || isDragging}
                         layoutWidth={currentLayoutWidth}
@@ -1019,32 +1045,36 @@ const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate
                         onToggleAbsolute={() => onUpdate(m.id, { absolute: true, x: 0, y: 0 } as any)}
                       />
                     )}
-                    <button
-                      type="button"
-                      data-module-drag-handle="true"
-                      onPointerDown={handleDragHandlePointerDown}
-                      className={`absolute left-2 top-2 inline-flex h-7 w-7 items-center justify-center rounded-md border border-white/40 bg-white/75 text-gray-500 shadow-sm shadow-black/5 transition-all duration-150 active:scale-95 md:hover:text-gray-700 ${isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-90'}`}
-                      aria-label="Réorganiser le module"
-                      style={{ backdropFilter: 'blur(6px)' }}
-                    >
-                      <GripVertical className="h-3.5 w-3.5" />
-                    </button>
+                    {!readOnly && (
+                      <button
+                        type="button"
+                        data-module-drag-handle="true"
+                        onPointerDown={handleDragHandlePointerDown}
+                        className={`absolute left-2 top-2 inline-flex h-7 w-7 items-center justify-center rounded-md border border-white/40 bg-white/75 text-gray-500 shadow-sm shadow-black/5 transition-all duration-150 active:scale-95 md:hover:text-gray-700 ${isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-90'}`}
+                        aria-label="Réorganiser le module"
+                        style={{ backdropFilter: 'blur(6px)' }}
+                      >
+                        <GripVertical className="h-3.5 w-3.5" />
+                      </button>
+                    )}
                     <div className={paddingClass}>
-                      {renderModule(m, (patch) => onUpdate(m.id, patch), device)}
+                    {renderModule(m, (patch) => onUpdate(m.id, patch), device, readOnly)}
                     </div>
-                    <button
-                      type="button"
-                      onPointerDown={handleResizePointerDown}
-                      className={`absolute bottom-2 right-2 flex h-6 w-6 items-center justify-center rounded-full bg-white/75 text-gray-600 shadow-sm shadow-black/10 border border-white/40 transition-all duration-150 active:scale-95 md:hover:text-gray-700 cursor-nwse-resize ${
-                        isSelected
-                          ? 'opacity-100 pointer-events-auto'
-                          : 'opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto'
-                      }`}
-                      style={{ touchAction: 'none', zIndex: 1002 }}
-                      aria-label={`Ajuster la hauteur (actuellement ${getDisplayHeight()} pixels)`}
-                    >
-                      <MoveDiagonal className="h-3 w-3" />
-                    </button>
+                    {!readOnly && (
+                      <button
+                        type="button"
+                        onPointerDown={handleResizePointerDown}
+                        className={`absolute bottom-2 right-2 flex h-6 w-6 items-center justify-center rounded-full bg-white/75 text-gray-600 shadow-sm shadow-black/10 border border-white/40 transition-all duration-150 active:scale-95 md:hover:text-gray-700 cursor-nwse-resize ${
+                          isSelected
+                            ? 'opacity-100 pointer-events-auto'
+                            : 'opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto'
+                        }`}
+                        style={{ touchAction: 'none', zIndex: 1002 }}
+                        aria-label={`Ajuster la hauteur (actuellement ${getDisplayHeight()} pixels)`}
+                      >
+                        <MoveDiagonal className="h-3 w-3" />
+                      </button>
+                    )}
                   </div>
                 );
               })}
@@ -1065,27 +1095,30 @@ const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate
           className={`relative group ${selectedModuleId === m.id ? 'ring-2 ring-[#0ea5b7]/30' : ''}`}
           style={{ width: '100vw', marginLeft: 'calc(-50vw + 50%)', marginRight: 'calc(-50vw + 50%)' }}
           onClick={(e) => {
+            if (readOnly) return;
             e.stopPropagation();
             onSelect?.(m);
           }}
         >
           {/* Bouton de suppression toujours visible au survol */}
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onDelete(m.id);
-            }}
-            onMouseDown={(e) => e.stopPropagation()}
-            onPointerDown={(e) => e.stopPropagation()}
-            className="absolute right-4 top-4 z-[1004] inline-flex h-10 w-10 items-center justify-center rounded-lg bg-white text-red-600 shadow-xl opacity-0 group-hover:opacity-100 hover:bg-red-50 hover:scale-110 transition-all duration-200 backdrop-blur-sm border-2 border-red-300"
-            aria-label="Supprimer le pied de page"
-            title="Supprimer le pied de page"
-            data-module-no-drag="true"
-          >
-            <Trash2 className="h-5 w-5" />
-          </button>
+          {!readOnly && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete(m.id);
+              }}
+              onMouseDown={(e) => e.stopPropagation()}
+              onPointerDown={(e) => e.stopPropagation()}
+              className="absolute right-4 top-4 z-[1004] inline-flex h-10 w-10 items-center justify-center rounded-lg bg-white text-red-600 shadow-xl opacity-0 group-hover:opacity-100 hover:bg-red-50 hover:scale-110 transition-all duration-200 backdrop-blur-sm border-2 border-red-300"
+              aria-label="Supprimer le pied de page"
+              title="Supprimer le pied de page"
+              data-module-no-drag="true"
+            >
+              <Trash2 className="h-5 w-5" />
+            </button>
+          )}
           {/* Ne pas afficher la toolbar pour les modules espace */}
-          {m.type !== 'BlocEspace' && (m as any).type !== 'BlocSeparateur' && (
+          {!readOnly && m.type !== 'BlocEspace' && (m as any).type !== 'BlocSeparateur' && (
             <Toolbar
               visible={selectedModuleId === m.id}
               layoutWidth="full"
@@ -1096,7 +1129,7 @@ const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate
               isMobile={device === 'mobile'}
             />
           )}
-          {renderModule(m, (patch) => onUpdate(m.id, patch), device)}
+          {renderModule(m, (patch) => onUpdate(m.id, patch), device, readOnly)}
         </div>
       ))}
 
@@ -1161,7 +1194,7 @@ const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate
                   </div>
                 )}
                 <div className={modulePaddingClass}>
-                  {renderModule(m, (patch) => onUpdate(m.id, patch), device)}
+                  {renderModule(m, (patch) => onUpdate(m.id, patch), device, readOnly)}
                 </div>
               </div>
             );

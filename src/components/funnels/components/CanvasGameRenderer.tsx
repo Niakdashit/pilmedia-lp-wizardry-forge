@@ -1,5 +1,6 @@
 // @ts-nocheck
 import React, { useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import ContrastBackground from '../../common/ContrastBackground';
 import ValidationMessage from '../../common/ValidationMessage';
 import WheelPreview from '../../GameTypes/WheelPreview';
@@ -260,7 +261,7 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
         return (
           <div className="absolute inset-0 flex" style={{ zIndex: 10 }}>
             {formPosition === 'left' && (
-              <div className="w-[30%] min-w-[280px] max-w-[520px] h-full flex items-center justify-center p-4">
+              <div className="w-[30%] min-w-[280px] max-w-[520px] h-full flex items-center justify-center p-4" style={{ overflow: 'visible' }}>
                 <FormPreview campaign={campaign} gameSize="medium" className="w-full" />
               </div>
             )}
@@ -283,7 +284,7 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
               </div>
             </div>
             {formPosition === 'right' && (
-              <div className="w-[30%] min-w-[280px] max-w-[520px] h-full flex items-center justify-center p-4">
+              <div className="w-[30%] min-w-[280px] max-w-[520px] h-full flex items-center justify-center p-4" style={{ overflow: 'visible' }}>
                 <FormPreview campaign={campaign} gameSize="medium" className="w-full" />
               </div>
             )}
@@ -293,11 +294,13 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
       // Default overlay behavior: keep as before
       return (
         <div className="absolute inset-0 flex items-center justify-end pr-6" style={{ zIndex: 10 }}>
-          <FormPreview
-            campaign={campaign}
-            gameSize="medium"
-            className="pointer-events-auto"
-          />
+          <div style={{ overflow: 'visible' }}>
+            <FormPreview
+              campaign={campaign}
+              gameSize="medium"
+              className="pointer-events-auto"
+            />
+          </div>
         </div>
       );
     }
@@ -427,8 +430,8 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
   return (
     <Wrapper>
       <div
-        className="canvas-container relative overflow-visible w-full"
-        style={containerStyle}
+        className="canvas-container relative w-full"
+        style={{...containerStyle, overflow: 'visible'}}
       >
         {/* Canvas Background */}
         <div 
@@ -436,7 +439,8 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
           style={{
             background: campaign.design?.background?.type === 'image' 
               ? `url(${campaign.design.background.value}) center/cover no-repeat` 
-              : campaign.design?.background?.value || canvasBackground?.value || 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)'
+              : campaign.design?.background?.value || canvasBackground?.value || 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)',
+            overflow: 'visible'
           }}
         >
           {/* Rendu des éléments responsive customisés (textes et images) */}

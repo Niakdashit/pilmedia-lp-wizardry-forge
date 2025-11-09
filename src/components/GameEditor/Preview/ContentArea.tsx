@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { DeviceType, EditorConfig } from '../GameEditorLayout';
 import DynamicContactForm from '../../forms/DynamicContactForm';
 import WheelResult from './WheelResult';
@@ -31,6 +31,19 @@ const ContentArea: React.FC<ContentAreaProps> = ({
   onWheelResult
 }) => {
   const [mode1State, setMode1State] = useState<Mode1State>('initial');
+  const [isMobile, setIsMobile] = useState(false);
+  
+  // Détecter si on est sur mobile
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
   const handleParticipateClick = () => {
     setMode1State('form');
   };
@@ -153,7 +166,13 @@ const ContentArea: React.FC<ContentAreaProps> = ({
           </div>
 
           {/* Participate button */}
-          <div className="text-center pt-6 pb-4">
+          <div 
+            className={`text-center ${isMobile ? 'fixed left-0 right-0 z-50 px-4' : 'pt-6 pb-4'}`}
+            style={isMobile ? {
+              top: `${config.buttonVerticalPosition ?? 85}%`,
+              transform: 'translateY(-50%)'
+            } : {}}
+          >
             <button onClick={handleParticipateClick} className="px-8 py-3 text-white font-bold text-lg rounded uppercase tracking-wide shadow-lg hover:shadow-xl transition-all duration-300" style={{
             backgroundColor: config.participateButtonColor || 'hsl(0, 84%, 55%)'
           }}>
@@ -189,7 +208,13 @@ const ContentArea: React.FC<ContentAreaProps> = ({
         </div>
 
         {/* Participate button */}
-        <div className="text-center pt-4">
+        <div 
+          className={`text-center ${isMobile ? 'fixed left-0 right-0 z-50 px-4' : 'pt-4'}`}
+          style={isMobile ? {
+            top: `${config.buttonVerticalPosition ?? 85}%`,
+            transform: 'translateY(-50%)'
+          } : {}}
+        >
           <button onClick={() => {}} className="px-8 py-3 text-white font-bold text-lg rounded uppercase tracking-wide shadow-lg hover:shadow-xl transition-all duration-300" style={{
           backgroundColor: config.participateButtonColor || 'hsl(0, 84%, 55%)'
         }}>

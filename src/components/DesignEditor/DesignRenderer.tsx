@@ -169,7 +169,8 @@ export const DesignModuleRenderer: React.FC<DesignModuleRendererProps & { onModu
           style={{ 
             ...commonStyle, 
             paddingTop: scaleValue((textModule as any).spacingTop, 0), 
-            paddingBottom: scaleValue((textModule as any).spacingBottom, 0) 
+            paddingBottom: scaleValue((textModule as any).spacingBottom, 0),
+            cursor: previewMode ? 'default' : 'pointer'
           }}
           onClick={() => !previewMode && onModuleClick?.(m.id)}
         >

@@ -105,6 +105,7 @@ export interface EditorConfig {
   participateButtonText?: string;
   participateButtonColor?: string;
   participateButtonTextColor?: string;
+  buttonVerticalPosition?: number; // Position verticale du bouton sur mobile (0-100%)
   wheelButtonPosition?: 'external' | 'center';
   footerText?: string;
   footerColor?: string;

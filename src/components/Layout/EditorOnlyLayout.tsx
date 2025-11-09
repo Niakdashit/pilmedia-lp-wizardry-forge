@@ -27,7 +27,7 @@ const EditorOnlyLayout: React.FC<EditorOnlyLayoutProps> = ({
     const previousHeight = document.body.style.height;
     const previousMargin = document.body.style.margin;
 
-    document.body.style.background = 'linear-gradient(180deg, #943c56, #370e4b)';
+    document.body.style.background = 'linear-gradient(180deg, rgba(59, 56, 135, 0.855), rgba(156, 26, 96, 0.72), rgba(195, 85, 70, 0.775), rgba(156, 26, 96, 0.72))';
     document.body.style.height = '100vh';
     document.body.style.margin = '0';
 
@@ -39,7 +39,7 @@ const EditorOnlyLayout: React.FC<EditorOnlyLayoutProps> = ({
   }, []);
 
   return (
-    <div className="min-h-screen w-full" style={{ background: 'linear-gradient(180deg, #943c56, #370e4b)' }}>
+    <div className="min-h-screen w-full" style={{ background: 'linear-gradient(180deg, rgba(59, 56, 135, 0.855), rgba(156, 26, 96, 0.72), rgba(195, 85, 70, 0.775), rgba(156, 26, 96, 0.72))' }}>
       {/* Header minimal pour navigation */}
       {showBackButton && (
         <header className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">

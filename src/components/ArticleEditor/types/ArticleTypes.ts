@@ -66,6 +66,10 @@ export interface ArticleCTA {
   textColor?: string;
   borderRadius?: string;
   borderColor?: string;
+  
+  // Position verticale sur mobile (en pourcentage de la hauteur de l'écran)
+  // 0 = en haut, 50 = au centre, 100 = en bas
+  mobileVerticalPosition?: number;
 }
 
 export interface ArticleFunnelFlow {
@@ -194,6 +198,7 @@ export const DEFAULT_ARTICLE_CONFIG: ArticleConfig = {
     size: 'large',
     icon: 'arrow',
     action: 'next-step',
+    mobileVerticalPosition: 85, // Par défaut, positionné en bas (85% de la hauteur)
   },
   funnelFlow: {
     steps: ['article', 'form', 'game', 'result'],
