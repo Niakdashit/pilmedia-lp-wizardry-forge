@@ -757,10 +757,12 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
                   <div className="absolute inset-0" style={{ pointerEvents: 'none' }}>
                     {absoluteModules1.map((m: any) => {
                       const y = (m.y ?? 0) as number;
-                      // Pas de compensation nécessaire - le y est déjà relatif au contenu avec padding
+                      // Ancrer sur la safe zone pour que les éléments au-dessus soient visibles
                       console.log(`📍 [FunnelUnlockedGame] Screen1 Absolute module "${m.label || m.type}":`, {
                         originalY: y,
                         safeZonePadding,
+                        anchoredTop: safeZonePadding,
+                        finalPosition: safeZonePadding + y,
                         moduleId: m.id
                       });
                       const modulePaddingClass = previewMode === 'mobile' ? 'p-0' : 'p-4';
@@ -770,7 +772,7 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
                           className="absolute"
                           style={{ 
                             left: '50%', 
-                            top: 0, 
+                            top: `${safeZonePadding}px`, 
                             transform: `translate(-50%, ${y}px)`, 
                             pointerEvents: 'auto' 
                           }}
@@ -878,8 +880,7 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
                   <div className="absolute inset-0" style={{ pointerEvents: 'none' }}>
                     {absoluteModules1.map((m: any) => {
                       const y = (m.y ?? 0) as number;
-                      // Compenser le paddingTop du conteneur parent pour un rendu WYSIWYG
-                      const adjustedY = y - safeZonePadding;
+                      // Ancrer sur la safe zone pour que les éléments au-dessus soient visibles
                       const modulePaddingClass = previewMode === 'mobile' ? 'p-0' : 'p-4';
                       return (
                         <div
@@ -887,8 +888,8 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
                           className="absolute"
                           style={{ 
                             left: '50%', 
-                            top: 0, 
-                            transform: `translate(-50%, ${adjustedY}px)`, 
+                            top: `${safeZonePadding}px`, 
+                            transform: `translate(-50%, ${y}px)`, 
                             pointerEvents: 'auto' 
                           }}
                         >
@@ -1045,8 +1046,7 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
                   <div className="absolute inset-0" style={{ pointerEvents: 'none' }}>
                     {absoluteModules2.map((m: any) => {
                       const y = (m.y ?? 0) as number;
-                      // Compenser le paddingTop du conteneur parent pour un rendu WYSIWYG
-                      const adjustedY = y - safeZonePadding;
+                      // Ancrer sur la safe zone pour que les éléments au-dessus soient visibles
                       const modulePaddingClass = previewMode === 'mobile' ? 'p-0' : 'p-4';
                       return (
                         <div
@@ -1054,8 +1054,8 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
                           className="absolute"
                           style={{ 
                             left: '50%', 
-                            top: 0, 
-                            transform: `translate(-50%, ${adjustedY}px)`, 
+                            top: `${safeZonePadding}px`, 
+                            transform: `translate(-50%, ${y}px)`, 
                             pointerEvents: 'auto' 
                           }}
                         >
@@ -1135,8 +1135,7 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
                   <div className="absolute inset-0" style={{ pointerEvents: 'none' }}>
                     {absoluteModules3.map((m: any) => {
                       const y = (m.y ?? 0) as number;
-                      // Compenser le paddingTop du conteneur parent pour un rendu WYSIWYG
-                      const adjustedY = y - safeZonePadding;
+                      // Ancrer sur la safe zone pour que les éléments au-dessus soient visibles
                       const modulePaddingClass = previewMode === 'mobile' ? 'p-0' : 'p-4';
                       return (
                         <div
@@ -1144,8 +1143,8 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
                           className="absolute"
                           style={{ 
                             left: '50%', 
-                            top: 0, 
-                            transform: `translate(-50%, ${adjustedY}px)`, 
+                            top: `${safeZonePadding}px`, 
+                            transform: `translate(-50%, ${y}px)`, 
                             pointerEvents: 'auto' 
                           }}
                         >
