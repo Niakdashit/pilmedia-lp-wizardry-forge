@@ -22,19 +22,17 @@ const Layout: React.FC = () => {
 
   // Sidebar is permanently collapsed; no body scroll lock is needed
 
-  const gradientBackground = `linear-gradient(
-    180deg,
-    rgba(59, 56, 135, 0.855),
-    rgba(156, 26, 96, 0.72),
-    rgba(195, 85, 70, 0.775),
-    rgba(156, 26, 96, 0.72)
-  )`;
-
   return (
     <>
       <style>{`
         body {
-          background: ${gradientBackground};
+          background: linear-gradient(
+            180deg,
+            rgba(59, 56, 135, 0.855),
+            rgba(156, 26, 96, 0.72),
+            rgba(195, 85, 70, 0.775),
+            rgba(156, 26, 96, 0.72)
+          );
           background-attachment: fixed;
           background-size: cover;
           min-height: 100vh;
@@ -104,8 +102,7 @@ const Layout: React.FC = () => {
             left: '9px',
             right: '9px',
             boxSizing: 'border-box',
-            background: gradientBackground,
-            boxShadow: '0 20px 45px rgba(24, 15, 70, 0.25)',
+            backgroundColor: '#f9fafb',
           }}
         />
 
