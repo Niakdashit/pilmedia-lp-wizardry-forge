@@ -186,6 +186,8 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
       >
         <div className={cropping.containerClass}>
           <div className={cropping.wheelClass}>
+            {/* Email de prévisualisation stable pour la dotation afin d'éviter l'anti-fraud par email */}
+            {(() => { if (!(window as any).__DOTATION_PREVIEW_EMAIL__) { (window as any).__DOTATION_PREVIEW_EMAIL__ = `preview+${Math.random().toString(36).slice(2)}@local.test`; } return null; })()}
             <SmartWheel
               key={(() => {
                 try {
@@ -220,6 +222,10 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
               spinMode={'probability'}
               speed={resolvedSpeed}
               winProbability={resolvedWinProbability}
+              // Activer la dotation en preview: le moteur forcera le segment gagnant (ex: segment 1)
+              useDotationSystem={true}
+              participantEmail={(window as any).__DOTATION_PREVIEW_EMAIL__ as string}
+              campaign={campaign}
               customButton={{
                 text: "GO",
                 color: wheelConfig.borderColor,
