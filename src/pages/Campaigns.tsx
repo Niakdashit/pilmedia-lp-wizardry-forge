@@ -27,6 +27,7 @@ interface ActionModalProps {
 
 const ActionModal: React.FC<ActionModalProps> = ({ isOpen, onClose, campaign, position, onDelete, onArchive, onDuplicate, onViewOnline, onStats }) => {
   if (!isOpen || !campaign) return null;
+  
   const actions = [
     { icon: <Eye className="w-5 h-5" />, label: 'Voir', href: `/campaign/${campaign.id}`, color: 'text-gray-700' },
     { icon: <BarChart2 className="w-5 h-5" />, label: 'Statistiques', onClick: () => onStats(campaign.id), color: 'text-gray-700' },
@@ -35,12 +36,42 @@ const ActionModal: React.FC<ActionModalProps> = ({ isOpen, onClose, campaign, po
     { icon: <Archive className="w-5 h-5" />, label: 'Archiver', onClick: () => onArchive(campaign.id), color: 'text-gray-700' },
     { icon: <Trash2 className="w-5 h-5" />, label: 'Supprimer', onClick: () => onDelete(campaign.id, campaign.name), color: 'text-red-600' },
   ];
+  
+  // Calculer la position optimale pour éviter le débordement
+  const menuHeight = actions.length * 40 + 8; // ~40px par item + padding
+  const menuWidth = 200;
+  const viewportHeight = window.innerHeight;
+  const viewportWidth = window.innerWidth;
+  
+  // Ajuster la position verticale si le menu dépasse en bas
+  let adjustedY = position.y;
+  if (position.y + menuHeight > viewportHeight) {
+    adjustedY = Math.max(10, viewportHeight - menuHeight - 10);
+  }
+  
+  // Ajuster la position horizontale si le menu dépasse à droite
+  let adjustedX = position.x;
+  let transformX = '-90%';
+  if (position.x - menuWidth * 0.9 < 10) {
+    // Trop à gauche, afficher à droite du bouton
+    transformX = '10px';
+  } else if (position.x > viewportWidth - 50) {
+    // Trop à droite, afficher complètement à gauche
+    transformX = '-100%';
+  }
+  
   return (
     <>
       <div className="fixed inset-0 z-40" onClick={onClose} />
       <div
-        className="absolute z-50 bg-white rounded-lg shadow-lg py-1 min-w-[200px]"
-        style={{ top: position.y, left: position.x, transform: 'translateX(-90%)' }}
+        className="fixed z-50 bg-white rounded-lg shadow-xl border border-gray-200 py-1 min-w-[200px]"
+        style={{ 
+          top: `${adjustedY}px`, 
+          left: `${adjustedX}px`, 
+          transform: `translateX(${transformX})`,
+          maxHeight: 'calc(100vh - 20px)',
+          overflowY: 'auto'
+        }}
       >
         {actions.map((action, index) =>
           action.href ? (

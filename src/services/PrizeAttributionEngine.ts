@@ -101,6 +101,8 @@ export class PrizeAttributionEngine {
   private async tryAttributePrize(prize: Prize, context: AttributionContext): Promise<AttributionResult> {
     const { attribution } = prize;
 
+    console.log(`🎯 [tryAttributePrize] Trying prize ${prize.id} (${prize.name}) with method: ${attribution.method}`, attribution);
+
     switch (attribution.method) {
       case 'calendar':
         return this.attributeByCalendar(prize, attribution, context);
@@ -118,6 +120,7 @@ export class PrizeAttributionEngine {
         return this.attributeInstantWin(prize, attribution, context);
       
       default:
+        console.warn(`⚠️ [tryAttributePrize] Unknown method: ${attribution.method}`);
         return this.createResult(false, null, 'Méthode d\'attribution inconnue', 'ERROR_SYSTEM', context);
     }
   }
@@ -368,19 +371,41 @@ export class PrizeAttributionEngine {
    */
   private getAvailablePrizes(): Prize[] {
     const now = new Date();
-    return this.config.prizes.filter(prize => {
+    const filtered = this.config.prizes.filter(prize => {
       // Vérifier le statut
-      if (prize.status !== 'active') return false;
+      if (prize.status !== 'active') {
+        console.log(`❌ [getAvailablePrizes] Prize ${prize.id} excluded: status=${prize.status}`);
+        return false;
+      }
 
       // Vérifier la quantité
-      if (prize.awardedQuantity >= prize.totalQuantity) return false;
+      if (prize.awardedQuantity >= prize.totalQuantity) {
+        console.log(`❌ [getAvailablePrizes] Prize ${prize.id} excluded: awarded=${prize.awardedQuantity}, total=${prize.totalQuantity}`);
+        return false;
+      }
 
       // Vérifier les dates
-      if (prize.startDate && new Date(prize.startDate) > now) return false;
-      if (prize.endDate && new Date(prize.endDate) < now) return false;
+      if (prize.startDate && new Date(prize.startDate) > now) {
+        console.log(`❌ [getAvailablePrizes] Prize ${prize.id} excluded: not started yet (${prize.startDate})`);
+        return false;
+      }
+      if (prize.endDate && new Date(prize.endDate) < now) {
+        console.log(`❌ [getAvailablePrizes] Prize ${prize.id} excluded: expired (${prize.endDate})`);
+        return false;
+      }
 
+      console.log(`✅ [getAvailablePrizes] Prize ${prize.id} available:`, {
+        name: prize.name,
+        status: prize.status,
+        awarded: prize.awardedQuantity,
+        total: prize.totalQuantity,
+        method: prize.attribution.method
+      });
       return true;
     });
+    
+    console.log(`📦 [getAvailablePrizes] Total available prizes: ${filtered.length}/${this.config.prizes.length}`);
+    return filtered;
   }
 
   /**

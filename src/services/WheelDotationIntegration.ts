@@ -25,12 +25,6 @@ export interface WheelSpinResult {
 }
 
 class WheelDotationIntegration {
-  private attributionEngine: PrizeAttributionEngine;
-
-  constructor() {
-    this.attributionEngine = new PrizeAttributionEngine();
-  }
-
   /**
    * Détermine si le participant doit gagner et quel lot
    */
@@ -54,17 +48,19 @@ class WheelDotationIntegration {
         prizes: dotationConfig.prizes.map(p => ({ id: p.id, name: p.name, segments: p.assignedSegments }))
       });
 
-      // 2. Tenter l'attribution d'un lot
-      const attributionResult = await this.attributionEngine.attributePrize(
-        params.campaignId,
-        params.participantEmail,
-        {
-          participantId: params.participantId,
-          ipAddress: params.ipAddress,
-          userAgent: params.userAgent,
-          deviceFingerprint: params.deviceFingerprint,
-        }
-      );
+      // 2. Créer l'engine avec la config chargée
+      const attributionEngine = new PrizeAttributionEngine(dotationConfig);
+
+      // 3. Tenter l'attribution d'un lot
+      const attributionResult = await attributionEngine.attributePrize({
+        campaignId: params.campaignId,
+        participantEmail: params.participantEmail,
+        participantId: params.participantId,
+        ipAddress: params.ipAddress,
+        userAgent: params.userAgent,
+        deviceFingerprint: params.deviceFingerprint,
+        timestamp: new Date().toISOString(),
+      });
 
       console.log('🎯 [WheelDotation] Attribution result:', attributionResult);
 

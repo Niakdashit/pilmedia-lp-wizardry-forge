@@ -140,8 +140,23 @@ const GameManagementPanel: React.FC<GameManagementPanelProps> = ({
     { id: '6', label: 'Segment 6', color: '#ffffff', contentType: 'text' },
   ];
 
-  const segments: WheelSegment[] = campaign?.wheelConfig?.segments || defaultSegments;
+  // Charger les segments depuis tous les emplacements possibles (priorité à wheelConfig)
+  const segments: WheelSegment[] = 
+    campaign?.wheelConfig?.segments ||
+    campaign?.gameConfig?.wheel?.segments ||
+    campaign?.config?.roulette?.segments ||
+    defaultSegments;
+  
   const prizes: Prize[] = campaign?.prizes || [];
+  
+  console.log('🎯 GameManagementPanel: Loaded segments', {
+    source: campaign?.wheelConfig?.segments ? 'wheelConfig' :
+            campaign?.gameConfig?.wheel?.segments ? 'gameConfig.wheel' :
+            campaign?.config?.roulette?.segments ? 'config.roulette' :
+            'defaultSegments',
+    count: segments.length,
+    segments: segments.map(s => ({ id: s.id, label: s.label, prizeId: s.prizeId }))
+  });
 
   const updateSegments = (newSegments: WheelSegment[]) => {
     console.log('🎯 GameManagementPanel: Updating segments', {
@@ -150,11 +165,26 @@ const GameManagementPanel: React.FC<GameManagementPanelProps> = ({
       previousSegments: campaign?.wheelConfig?.segments
     });
     
+    // Sauvegarder dans TOUS les emplacements pour assurer la persistance
     setCampaign({
       ...campaign,
       wheelConfig: {
         ...campaign.wheelConfig,
         segments: newSegments
+      },
+      gameConfig: {
+        ...campaign.gameConfig,
+        wheel: {
+          ...campaign.gameConfig?.wheel,
+          segments: newSegments
+        }
+      },
+      config: {
+        ...campaign.config,
+        roulette: {
+          ...campaign.config?.roulette,
+          segments: newSegments
+        }
       },
       _lastUpdate: Date.now() // Force re-render trigger
     });

@@ -138,7 +138,7 @@ export const useWheelAnimation = (props: UseWheelAnimationProps) => {
     );
   }, []);
 
-  const spin = useCallback((): void => {
+  const spin = useCallback((overrideForcedSegmentId?: string | null): void => {
     if (wheelState.isSpinning || disabled || segments.length === 0) return;
 
     // Clear any existing animation frame or timer
@@ -159,13 +159,19 @@ export const useWheelAnimation = (props: UseWheelAnimationProps) => {
     let targetIndex = 0;
     
     // 🎯 PRIORITÉ 1: Si un segment est forcé (système de dotation)
-    if (forcedSegmentId) {
-      const forcedIndex = segments.findIndex(seg => seg.id === forcedSegmentId);
+    const effectiveForcedId = overrideForcedSegmentId !== undefined ? overrideForcedSegmentId : forcedSegmentId;
+    if (effectiveForcedId) {
+      console.log('🔍 [useWheelAnimation] Searching for forced segment:', {
+        effectiveForcedId,
+        forcedSegmentIdType: typeof effectiveForcedId,
+        availableSegments: segments.map(s => ({ id: s.id, idType: typeof s.id, label: s.label }))
+      });
+      const forcedIndex = segments.findIndex(seg => String(seg.id) === String(effectiveForcedId));
       if (forcedIndex !== -1) {
         targetIndex = forcedIndex;
-        console.log('🎯 [useWheelAnimation] Forcing segment:', forcedSegmentId, 'at index:', forcedIndex);
+        console.log('🎯 [useWheelAnimation] Forcing segment:', effectiveForcedId, 'at index:', forcedIndex, 'label:', segments[forcedIndex].label);
       } else {
-        console.warn('⚠️ [useWheelAnimation] Forced segment not found:', forcedSegmentId);
+        console.warn('⚠️ [useWheelAnimation] Forced segment not found:', effectiveForcedId);
       }
     }
     // Vérifier d'abord si un segment a une probabilité de 100%

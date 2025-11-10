@@ -16,6 +16,7 @@ export const PrizeEditorModal: React.FC<PrizeEditorModalProps> = ({ prize, onSav
   const [activeTab, setActiveTab] = useState<'general' | 'attribution' | 'segments'>('general');
   const campaignData = useEditorStore((state) => state.campaignData);
   const campaign = useEditorStore((state) => state.campaign);
+  const setCampaign = useEditorStore((state) => state.setCampaign);
   const [wheelSegments, setWheelSegments] = useState<WheelSegment[]>([]);
 
   // Récupérer les segments de la roue depuis différents chemins possibles
@@ -73,6 +74,58 @@ export const PrizeEditorModal: React.FC<PrizeEditorModalProps> = ({ prize, onSav
       alert('La quantité doit être au moins 1');
       return;
     }
+    
+    // Synchroniser les segments : mettre à jour prizeId des segments assignés
+    if (editedPrize.assignedSegments && editedPrize.assignedSegments.length > 0 && campaign) {
+      const currentSegments = (campaign as any)?.wheelConfig?.segments || 
+                             (campaign as any)?.gameConfig?.wheel?.segments ||
+                             (campaign as any)?.config?.roulette?.segments ||
+                             [];
+      
+      if (currentSegments.length > 0) {
+        const updatedSegments = currentSegments.map((segment: WheelSegment) => {
+          // Si le segment est assigné à ce lot, mettre à jour son prizeId
+          if (editedPrize.assignedSegments?.includes(segment.id)) {
+            return { ...segment, prizeId: editedPrize.id };
+          }
+          // Si le segment avait ce lot mais n'est plus assigné, retirer le prizeId
+          if (segment.prizeId === editedPrize.id && !editedPrize.assignedSegments?.includes(segment.id)) {
+            return { ...segment, prizeId: undefined };
+          }
+          return segment;
+        });
+        
+        // Mettre à jour tous les emplacements
+        setCampaign({
+          ...campaign,
+          wheelConfig: {
+            ...(campaign as any).wheelConfig,
+            segments: updatedSegments
+          },
+          gameConfig: {
+            ...(campaign as any).gameConfig,
+            wheel: {
+              ...(campaign as any).gameConfig?.wheel,
+              segments: updatedSegments
+            }
+          },
+          config: {
+            ...(campaign as any).config,
+            roulette: {
+              ...(campaign as any).config?.roulette,
+              segments: updatedSegments
+            }
+          }
+        });
+        
+        console.log('✅ [PrizeEditorModal] Synchronized segments with prize', {
+          prizeId: editedPrize.id,
+          assignedSegments: editedPrize.assignedSegments,
+          updatedSegments: updatedSegments.map((s: WheelSegment) => ({ id: s.id, label: s.label, prizeId: s.prizeId }))
+        });
+      }
+    }
+    
     onSave(editedPrize);
   };
 

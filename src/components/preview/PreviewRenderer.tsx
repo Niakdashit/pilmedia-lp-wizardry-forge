@@ -49,6 +49,8 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
   const [forceUpdate, setForceUpdate] = useState(0);
   const [showContactForm, setShowContactForm] = useState(false);
   const [hasSubmittedForm, setHasSubmittedForm] = useState(false);
+  const [participantEmail, setParticipantEmail] = useState<string>('');
+  const [participantId, setParticipantId] = useState<string>('');
   // Verrou pour éviter que l'auto-sélection d'écran n'écrase une navigation manuelle (ex: clic Participer)
   const manualNavRef = useRef(false);
   
@@ -541,6 +543,15 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
 
   const handleFormSubmit = async (formData: Record<string, string>) => {
     console.log('📝 Form submitted:', formData);
+    
+    // Stocker l'email du participant pour le système de dotation
+    if (formData.email) {
+      setParticipantEmail(formData.email);
+      // Générer un ID unique pour ce participant (ou utiliser l'email comme ID)
+      setParticipantId(formData.email);
+      console.log('✅ [PreviewRenderer] Participant email stored:', formData.email);
+    }
+    
     setShowContactForm(false);
     setHasSubmittedForm(true);
     // For quiz, transition to result screen after form submission
@@ -918,26 +929,43 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
                   style={{ padding: safeZonePadding, boxSizing: 'border-box', minHeight: modules2.length > 0 ? '400px' : '100vh' }}
                 >
                   {campaign.type === 'wheel' && (
-                    <StandardizedWheel
-                      campaign={campaign}
-                      extractedColors={campaign?.design?.extractedColors || []}
-                      wheelModalConfig={wheelModalConfig}
-                      device={previewMode}
-                      shouldCropWheel={true}
-                      disabled={campaign.type === 'wheel' && !hasSubmittedForm}
-                      onClick={handleWheelClick}
-                      onSpin={() => {
-                        if (campaign.type === 'wheel' && !hasSubmittedForm) {
-                          console.log('🎡 Wheel clicked but form not submitted yet');
-                          return;
-                        }
-                        console.log('🎡 Wheel spinning...');
-                        setTimeout(() => {
-                          const isWin = Math.random() > 0.5;
-                          handleGameFinish(isWin ? 'win' : 'lose');
-                        }, 3000);
-                      }}
-                    />
+                    <>
+                      {console.log('🔍 [PreviewRenderer] Campaign segments debug:', {
+                        wheelConfigSegments: campaign?.wheelConfig?.segments,
+                        gameConfigWheelSegments: campaign?.gameConfig?.wheel?.segments,
+                        configRouletteSegments: campaign?.config?.roulette?.segments,
+                        gameConfigWheelSegmentsCount: campaign?.gameConfig?.wheelSegments?.length,
+                        gameConfigWheelSegmentsPreview: campaign?.gameConfig?.wheelSegments?.map((s: any) => ({ id: s.id, label: s.label }))
+                      })}
+                      <StandardizedWheel
+                        campaign={campaign}
+                        extractedColors={campaign?.design?.extractedColors || []}
+                        wheelModalConfig={wheelModalConfig}
+                        device={previewMode}
+                        shouldCropWheel={true}
+                        disabled={campaign.type === 'wheel' && !hasSubmittedForm}
+                        onClick={handleWheelClick}
+                        useDotationSystem={true}
+                        participantEmail={participantEmail}
+                        participantId={participantId}
+                        onSpin={() => {
+                          if (campaign.type === 'wheel' && !hasSubmittedForm) {
+                            console.log('🎡 Wheel clicked but form not submitted yet');
+                            return;
+                          }
+                          console.log('🎡 Wheel spinning with dotation system...');
+                        }}
+                        onComplete={(prize) => {
+                          console.log('🎡 Wheel completed, prize:', prize);
+                          // Le résultat sera déterminé par le système de dotation
+                          // Pour l'instant, on considère que si un prize est retourné, c'est un win
+                          const isWin = !!prize;
+                          setTimeout(() => {
+                            handleGameFinish(isWin ? 'win' : 'lose');
+                          }, 1000);
+                        }}
+                      />
+                    </>
                   )}
 
                   {/* Quiz */}

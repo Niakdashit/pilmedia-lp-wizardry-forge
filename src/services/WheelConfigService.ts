@@ -225,8 +225,10 @@ export class WheelConfigService {
       },
 
       // Segments provenant de la campagne avec couleurs mises à jour
+      // PRIORITÉ: gameConfig.wheelSegments (sauvegarde principale) > wheelConfig.segments > gameConfig.wheel.segments > config.roulette.segments
       segments: WheelConfigService.updateSegmentColors(
-        (campaign as any)?.wheelConfig?.segments
+        (campaign as any)?.gameConfig?.wheelSegments
+          || (campaign as any)?.wheelConfig?.segments
           || (campaign as any)?.gameConfig?.wheel?.segments
           || (campaign as any)?.config?.roulette?.segments,
         extractedColors
@@ -239,12 +241,20 @@ export class WheelConfigService {
     try {
       const outSegs = (finalConfig as any)?.segments || [];
       const outSegIds = Array.isArray(outSegs) ? outSegs.map((s: any) => s?.id ?? '?') : [];
+      const outSegLabels = Array.isArray(outSegs) ? outSegs.map((s: any) => s?.label ?? '?') : [];
       console.log('🔧 WheelConfigService - Configuration canonique:', {
         input: { campaign: campaign?.id, extractedColors, wheelModalConfig, options },
+        segmentSources: {
+          gameConfigWheelSegments: (campaign as any)?.gameConfig?.wheelSegments?.length || 0,
+          wheelConfigSegments: (campaign as any)?.wheelConfig?.segments?.length || 0,
+          gameConfigWheelSegments2: (campaign as any)?.gameConfig?.wheel?.segments?.length || 0,
+          configRouletteSegments: (campaign as any)?.config?.roulette?.segments?.length || 0,
+        },
         output: {
           ...finalConfig,
           segmentsCount: Array.isArray(outSegs) ? outSegs.length : 0,
           segmentIds: outSegIds,
+          segmentLabels: outSegLabels,
           segmentColors: Array.isArray(outSegs) ? outSegs.map((s: any) => s?.color) : []
         }
       });

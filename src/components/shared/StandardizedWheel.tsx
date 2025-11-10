@@ -18,6 +18,10 @@ interface StandardizedWheelProps {
   spinMode?: 'random' | 'instant_winner' | 'probability';
   speed?: 'slow' | 'medium' | 'fast';
   winProbability?: number;
+  // Dotation system
+  useDotationSystem?: boolean;
+  participantEmail?: string;
+  participantId?: string;
   // External config handlers (optional)
   getCanonicalConfig?: (options?: { device?: string; shouldCropWheel?: boolean }) => any;
   updateWheelConfig?: (updates: any) => void;
@@ -42,6 +46,9 @@ const StandardizedWheel: React.FC<StandardizedWheelProps> = ({
   spinMode,
   speed,
   winProbability,
+  useDotationSystem = false,
+  participantEmail,
+  participantId,
 }) => {
   // Configuration canonique via le service (évaluée à chaque rendu pour capter les mutations profondes)
   // Option A: ignorer toute fonction getCanonicalConfig potentiellement stale.
@@ -228,6 +235,10 @@ const StandardizedWheel: React.FC<StandardizedWheelProps> = ({
           spinMode={resolvedSpinMode}
           speed={resolvedSpeed}
           winProbability={resolvedWinProbability}
+          useDotationSystem={useDotationSystem}
+          participantEmail={participantEmail}
+          participantId={participantId}
+          campaign={campaign}
         />
       </div>
     </div>

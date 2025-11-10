@@ -5,6 +5,7 @@ import { useWheelAnimation } from './hooks/useWheelAnimation';
 import { useSmartWheelRenderer } from './hooks/useSmartWheelRenderer';
 import BorderStyleSelector from './components/BorderStyleSelector';
 import ParticipationModal from './components/ParticipationModal';
+import { wheelDotationIntegration } from '../../services/WheelDotationIntegration';
 type Mode2State = 'form' | 'wheel' | 'result';
 
 const SmartWheel: React.FC<SmartWheelProps> = ({
@@ -31,7 +32,11 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
   spinMode,
   winProbability,
   speed,
-  forcedSegmentId
+  forcedSegmentId,
+  useDotationSystem = false,
+  participantEmail,
+  participantId,
+  campaign
 }) => {
   // Forcer la mise à jour des couleurs des segments avec brandColors
   const updatedSegments = useMemo(() => {
@@ -52,6 +57,12 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
   // États pour le mode 2
   const [mode2State, setMode2State] = useState<Mode2State>('form');
   const [showParticipationModal, setShowParticipationModal] = useState(false);
+  
+  // État pour le segment forcé par le système de dotation
+  const [internalForcedSegmentId, setInternalForcedSegmentId] = useState<string | null>(null);
+  
+  // Utiliser forcedSegmentId de la prop ou l'état interne
+  const effectiveForcedSegmentId = forcedSegmentId !== undefined ? forcedSegmentId : internalForcedSegmentId;
 
   // Synchroniser l'état local avec la prop borderStyle
   useEffect(() => {
@@ -160,7 +171,7 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
     spinMode,
     winProbability,
     speed: speed === 'medium' ? 'normal' : speed, // Map 'medium' to 'normal' for compatibility
-    forcedSegmentId // Passer le segment forcé pour le système de dotation
+    forcedSegmentId: effectiveForcedSegmentId // Passer le segment forcé (prop ou interne)
   }) || {};
 
   // Create a stable wheelState object
@@ -185,7 +196,39 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
     brandColors
   });
   
-  const handleSpin = () => {
+  const handleSpin = async () => {
+    let forcedSegment: string | null = null;
+    
+    // Si le système de dotation est activé, déterminer le segment avant de lancer le spin
+    if (useDotationSystem && campaign?.id && participantEmail) {
+      try {
+        console.log('🎯 [SmartWheel] Using dotation system');
+        
+        const spinResult = await wheelDotationIntegration.determineWheelSpin({
+          campaignId: campaign.id,
+          participantEmail: participantEmail,
+          participantId: participantId,
+          userAgent: navigator.userAgent,
+        });
+
+        console.log('✅ [SmartWheel] Dotation result:', spinResult);
+
+        // Forcer le segment si déterminé par le système de dotation
+        if (spinResult.segmentId) {
+          forcedSegment = spinResult.segmentId;
+          setInternalForcedSegmentId(spinResult.segmentId);
+          console.log('✅ [SmartWheel] Forcing segment:', spinResult.segmentId);
+          console.log('🔍 [SmartWheel] Available segment IDs:', segments.map(s => ({ id: s.id, label: s.label })));
+        } else {
+          setInternalForcedSegmentId(null);
+          console.log('🎲 [SmartWheel] No forced segment');
+        }
+      } catch (error) {
+        console.error('❌ [SmartWheel] Error in dotation system:', error);
+        setInternalForcedSegmentId(null);
+      }
+    }
+    
     if (!isMode1) {
       // Mode 2: ouvrir la modale de participation
       if (mode2State === 'form') {
@@ -200,7 +243,7 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
       // Si on est déjà dans l'état wheel, faire tourner
       if (mode2State === 'wheel') {
         if (onSpin) onSpin();
-        spin();
+        spin(forcedSegment); // Passer le segment forcé directement
         return;
       }
     }
@@ -209,7 +252,7 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
     if (onSpin) {
       onSpin();
     }
-    spin();
+    spin(forcedSegment); // Passer le segment forcé directement
   };
   
   const handleParticipationSubmit = () => {

@@ -1,7 +1,8 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import SmartWheel from '../SmartWheel';
 import { useWheelSync } from '../../../hooks/useWheelSync';
+import { wheelDotationIntegration } from '../../../services/WheelDotationIntegration';
 
 interface SmartWheelWrapperProps {
   // Props de compatibilité avec l'ancienne roue
@@ -27,6 +28,10 @@ interface SmartWheelWrapperProps {
   spinMode?: 'random' | 'instant_winner' | 'probability';
   winProbability?: number;
   speed?: 'slow' | 'medium' | 'fast';
+  // Système de dotation
+  useDotationSystem?: boolean;
+  participantEmail?: string;
+  participantId?: string;
 }
 
 const SmartWheelWrapper: React.FC<SmartWheelWrapperProps> = ({
@@ -46,8 +51,12 @@ const SmartWheelWrapper: React.FC<SmartWheelWrapperProps> = ({
   className = '',
   spinMode,
   winProbability,
-  speed
+  speed,
+  useDotationSystem = false,
+  participantEmail,
+  participantId
 }) => {
+  const [forcedSegmentId, setForcedSegmentId] = useState<string | null>(null);
   // Déterminer les segments à utiliser - priorité aux segments du GameManagementPanel
   const segments = propSegments || 
                   (campaign as any)?.wheelConfig?.segments ||
@@ -158,7 +167,46 @@ const SmartWheelWrapper: React.FC<SmartWheelWrapperProps> = ({
     }
   };
 
-  const handleSpin = () => {
+  const handleSpin = async () => {
+    console.log('🎯 [SmartWheelWrapper] handleSpin called', {
+      useDotationSystem,
+      campaignId: campaign?.id,
+      participantEmail,
+      segmentsCount: processedSegments.length
+    });
+
+    // Si le système de dotation est activé
+    if (useDotationSystem && campaign?.id && participantEmail) {
+      try {
+        console.log('🎯 [SmartWheelWrapper] Using dotation system');
+        
+        const spinResult = await wheelDotationIntegration.determineWheelSpin({
+          campaignId: campaign.id,
+          participantEmail: participantEmail,
+          participantId: participantId,
+          userAgent: navigator.userAgent,
+        });
+
+        console.log('✅ [SmartWheelWrapper] Dotation result:', spinResult);
+
+        // Si un segment spécifique doit être forcé
+        if (spinResult.segmentId) {
+          setForcedSegmentId(spinResult.segmentId);
+          console.log('✅ [SmartWheelWrapper] Forcing segment:', spinResult.segmentId);
+        } else {
+          // Pas de segment forcé, utiliser le mode aléatoire
+          setForcedSegmentId(null);
+          console.log('🎲 [SmartWheelWrapper] No forced segment, using random');
+        }
+      } catch (error) {
+        console.error('❌ [SmartWheelWrapper] Error in dotation system:', error);
+        setForcedSegmentId(null);
+      }
+    } else {
+      console.log('🎲 [SmartWheelWrapper] Dotation disabled, using random mode');
+      setForcedSegmentId(null);
+    }
+
     if (onSpin) {
       onSpin();
     }
@@ -212,6 +260,7 @@ const SmartWheelWrapper: React.FC<SmartWheelWrapperProps> = ({
       spinMode={resolvedSpinMode}
       speed={resolvedSpeed}
       winProbability={resolvedWinProbability}
+      forcedSegmentId={forcedSegmentId}
       customButton={{
         text: buttonLabel || 
               campaign?.gameConfig?.wheel?.buttonLabel || 
