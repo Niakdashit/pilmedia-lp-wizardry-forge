@@ -599,7 +599,7 @@ export async function createAttributionEngine(campaignId: string): Promise<Prize
       .from('dotation_configs')
       .select('*')
       .eq('campaign_id', campaignId)
-      .single();
+      .maybeSingle();
 
     if (error || !data) {
       console.error('❌ [CreateEngine] Config not found:', error);

@@ -80,7 +80,8 @@ const DotationManagement: React.FC<DotationManagementProps> = ({
         .from('dotation_configs')
         .upsert(config, {
           onConflict: 'campaign_id'
-        });
+        })
+        .select();
 
       if (error) throw error;
 

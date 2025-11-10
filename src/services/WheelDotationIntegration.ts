@@ -155,7 +155,7 @@ class WheelDotationIntegration {
         .from('dotation_configs')
         .select('*')
         .eq('campaign_id', campaignId)
-        .single();
+        .maybeSingle();
 
       if (error) {
         if (error.code === 'PGRST116') {

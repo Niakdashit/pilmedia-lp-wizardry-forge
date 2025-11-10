@@ -74,7 +74,7 @@ const GameManagementPanel: React.FC<GameManagementPanelProps> = ({
           .from('dotation_configs')
           .select('prizes')
           .eq('campaign_id', campaign.id)
-          .single();
+          .maybeSingle();
 
         if (error) {
           console.log('⚠️ [GameManagementPanel] No dotation config found:', error);
