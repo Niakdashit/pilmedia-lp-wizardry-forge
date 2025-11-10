@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Globe, Sparkles, Eye, ArrowRight, Loader2, Image, Palette, Zap } from 'lucide-react';
+import { Globe, Sparkles, Eye, ArrowRight, Image, Palette, Zap } from 'lucide-react';
 import { supabase } from '../../integrations/supabase/client';
 import { GeneratedGameConcept } from '../../services/openAIGameGeneratorService';
 import Spinner from '../shared/Spinner';

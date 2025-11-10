@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Palette, Image, Upload, Trash2, Sparkles, Globe } from 'lucide-react';
 import type { EditorConfig } from '../GameEditorLayout';
 import { supabase } from '@/integrations/supabase/client';
-import Spinner from '../shared/Spinner';
+import { Loader2 } from 'lucide-react';
 
 interface DesignTabProps {
   config: EditorConfig;
@@ -366,7 +366,7 @@ Réponds UNIQUEMENT avec un JSON valide suivant cette structure exacte (en fran�
           >
             {isGenerating ? (
               <>
-                <Spinner size="sm" />
+                <Loader2 className="w-4 h-4 animate-spin" />
                 <span className="ml-2">Génération en cours...</span>
               </>
             ) : (

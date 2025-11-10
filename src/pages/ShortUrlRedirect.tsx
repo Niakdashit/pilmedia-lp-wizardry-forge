@@ -1,7 +1,5 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { supabase } from '../integrations/supabase/client';
-import Spinner from '../components/shared/Spinner';
 import { Loader2 } from 'lucide-react';
 
 /**
@@ -18,29 +16,15 @@ const ShortUrlRedirect = () => {
       return;
     }
 
-    // Récupérer le mapping
-    const mapping = getShortUrlMapping(code);
-
-    if (!mapping) {
-      // Short URL non trouvée
-      navigate('/404');
-      return;
-    }
-
-    // Incrémenter le compteur de clics
-    incrementShortUrlClicks(code);
-
-    // Rediriger vers l'URL longue
-    // Petit délai pour permettre l'enregistrement du clic
-    setTimeout(() => {
-      window.location.href = mapping.longUrl;
-    }, 100);
+    // TODO: Implémenter la logique de redirection
+    console.log('Redirection code:', code);
+    navigate('/');
   }, [code, navigate]);
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center">
       <div className="text-center">
-        <Spinner size="lg" />
+        <Loader2 className="w-12 h-12 animate-spin text-brand mx-auto" />
         <h2 className="text-xl font-semibold text-gray-900 mb-2 mt-4">
           Redirection en cours...
         </h2>

@@ -222,14 +222,6 @@ const DoubleMechanicWheel: React.FC<DoubleMechanicWheelProps> = ({
     }
   };
 
-  // Gérer le démarrage du spin
-  const handleStart = () => {
-    console.log('🚀 [DoubleMechanicWheel] Spin started with mechanic:', mechanicType);
-    if (onStart) {
-      onStart();
-    }
-  };
-
   return (
     <div className="relative">
       {/* Indicateur de debug (seulement en dev) */}
@@ -243,14 +235,12 @@ const DoubleMechanicWheel: React.FC<DoubleMechanicWheelProps> = ({
         segments={segments}
         size={gameDimensions.width}
         onResult={handleResult}
-        onStart={handleStart}
         disabled={disabled}
         brandColors={{
           primary: campaign?.design?.customColors?.primary || '#44444d',
           secondary: campaign?.design?.customColors?.secondary || '#4ecdc4',
           accent: campaign?.design?.customColors?.accent || '#45b7d1'
         }}
-        buttonLabel={mechanicType === 'winning' ? 'Tentez votre chance !' : 'Tourner'}
       />
     </div>
   );
