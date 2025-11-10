@@ -45,8 +45,19 @@ class WheelDotationIntegration {
 
       console.log('📦 [WheelDotation] Dotation config loaded:', {
         prizesCount: dotationConfig.prizes.length,
-        prizes: dotationConfig.prizes.map(p => ({ id: p.id, name: p.name, segments: p.assignedSegments }))
+        prizes: dotationConfig.prizes.map(p => ({
+          id: p.id,
+          name: p.name,
+          status: p.status,
+          totalQuantity: p.totalQuantity,
+          awardedQuantity: p.awardedQuantity,
+          startDate: p.startDate,
+          endDate: p.endDate,
+          attribution: p.attribution,
+          assignedSegments: p.assignedSegments
+        }))
       });
+      console.log('📦 [WheelDotation] Full dotation config:', JSON.stringify(dotationConfig, null, 2));
 
       // 2. Créer l'engine avec la config chargée
       const attributionEngine = new PrizeAttributionEngine(dotationConfig);

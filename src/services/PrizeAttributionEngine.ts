@@ -101,7 +101,9 @@ export class PrizeAttributionEngine {
   private async tryAttributePrize(prize: Prize, context: AttributionContext): Promise<AttributionResult> {
     const { attribution } = prize;
 
-    console.log(`🎯 [tryAttributePrize] Trying prize ${prize.id} (${prize.name}) with method: ${attribution.method}`, attribution);
+    console.log(`\n🎯 [tryAttributePrize] Trying prize ${prize.id} (${prize.name})`);
+    console.log(`🎯 [tryAttributePrize] Attribution method: ${attribution?.method}`);
+    console.log(`🎯 [tryAttributePrize] Full attribution config:`, attribution);
 
     switch (attribution.method) {
       case 'calendar':
@@ -370,21 +372,39 @@ export class PrizeAttributionEngine {
    * Récupère les lots disponibles
    */
   private getAvailablePrizes(): Prize[] {
+    console.log('🔍 [getAvailablePrizes] START - Filtering prizes');
+    console.log('🔍 [getAvailablePrizes] Total prizes in config:', this.config.prizes.length);
+    console.log('🔍 [getAvailablePrizes] All prizes RAW:', JSON.stringify(this.config.prizes, null, 2));
+    
     const now = new Date();
-    const filtered = this.config.prizes.filter(prize => {
-      // Vérifier le statut
-      if (prize.status !== 'active') {
-        console.log(`❌ [getAvailablePrizes] Prize ${prize.id} excluded: status=${prize.status}`);
+    const filtered = this.config.prizes.filter((prize, index) => {
+      console.log(`\n🔍 [getAvailablePrizes] Examining prize ${index}:`, {
+        id: prize.id,
+        name: prize.name,
+        status: prize.status,
+        statusType: typeof prize.status,
+        totalQuantity: prize.totalQuantity,
+        awardedQuantity: prize.awardedQuantity,
+        startDate: prize.startDate,
+        endDate: prize.endDate,
+        attribution: prize.attribution,
+        assignedSegments: prize.assignedSegments
+      });
+      
+      // Vérifier le statut (accepter à la fois 'active' et 'Actif')
+      const statusLower = (prize.status || '').toLowerCase();
+      if (statusLower !== 'active') {
+        console.log(`❌ [getAvailablePrizes] Prize ${prize.id} excluded: status="${prize.status}" (lowercase: "${statusLower}")`);
         return false;
       }
 
       // Vérifier la quantité
       if (prize.awardedQuantity >= prize.totalQuantity) {
-        console.log(`❌ [getAvailablePrizes] Prize ${prize.id} excluded: awarded=${prize.awardedQuantity}, total=${prize.totalQuantity}`);
+        console.log(`❌ [getAvailablePrizes] Prize ${prize.id} excluded: awarded=${prize.awardedQuantity} >= total=${prize.totalQuantity}`);
         return false;
       }
 
-      // Vérifier les dates
+      // Vérifier les dates (optionnelles)
       if (prize.startDate && new Date(prize.startDate) > now) {
         console.log(`❌ [getAvailablePrizes] Prize ${prize.id} excluded: not started yet (${prize.startDate})`);
         return false;
@@ -394,17 +414,20 @@ export class PrizeAttributionEngine {
         return false;
       }
 
-      console.log(`✅ [getAvailablePrizes] Prize ${prize.id} available:`, {
+      console.log(`✅ [getAvailablePrizes] Prize ${prize.id} PASSED all filters:`, {
         name: prize.name,
         status: prize.status,
         awarded: prize.awardedQuantity,
         total: prize.totalQuantity,
-        method: prize.attribution.method
+        method: prize.attribution?.method
       });
       return true;
     });
     
-    console.log(`📦 [getAvailablePrizes] Total available prizes: ${filtered.length}/${this.config.prizes.length}`);
+    console.log(`\n📦 [getAvailablePrizes] RESULT: ${filtered.length}/${this.config.prizes.length} prizes available`);
+    if (filtered.length > 0) {
+      console.log('📦 [getAvailablePrizes] Available prizes:', filtered.map(p => ({ id: p.id, name: p.name })));
+    }
     return filtered;
   }
 
