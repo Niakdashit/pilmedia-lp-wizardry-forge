@@ -81,6 +81,7 @@ export interface SmartWheelProps {
   spinMode?: 'random' | 'instant_winner' | 'probability';
   winProbability?: number; // Utilisé uniquement pour instant_winner
   speed?: 'slow' | 'medium' | 'fast';
+  forcedSegmentId?: string | null; // ID du segment à forcer (système de dotation)
 }
 
 export interface WheelState {

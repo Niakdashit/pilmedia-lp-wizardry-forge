@@ -292,4 +292,37 @@ export class PrizeValidation {
   static isPrizeAvailable(prize: Prize): boolean {
     return prize.totalUnits - prize.awardedUnits > 0;
   }
+
+  /**
+   * Vérifie si on est EXACTEMENT à la date/heure programmée pour un lot calendrier
+   * (avec une tolérance de 1 minute avant et après)
+   */
+  static isExactCalendarMoment(prize: Prize, currentDate: Date = new Date()): boolean {
+    if (prize.method !== 'calendar') return false;
+    if (!prize.startDate || !prize.startTime) return false;
+
+    try {
+      const targetMoment = new Date(`${prize.startDate}T${prize.startTime}`);
+      const timeDiff = Math.abs(currentDate.getTime() - targetMoment.getTime());
+      const toleranceMs = 60000; // 1 minute de tolérance
+      
+      const isExactMoment = timeDiff <= toleranceMs;
+      
+      console.log(`🎯 Exact calendar moment check: ${prize.name}`, {
+        targetDate: prize.startDate,
+        targetTime: prize.startTime,
+        targetMoment: targetMoment.toISOString(),
+        currentMoment: currentDate.toISOString(),
+        timeDiffMs: timeDiff,
+        timeDiffSeconds: Math.round(timeDiff / 1000),
+        toleranceSeconds: toleranceMs / 1000,
+        isExactMoment
+      });
+
+      return isExactMoment;
+    } catch (error) {
+      console.error(`❌ Error checking exact calendar moment for ${prize.name}:`, error);
+      return false;
+    }
+  }
 }

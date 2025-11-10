@@ -1,13 +1,13 @@
 // @ts-nocheck
-import React, { useMemo, useEffect, useState } from 'react';
+import React, { useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import ContrastBackground from '../../common/ContrastBackground';
 import ValidationMessage from '../../common/ValidationMessage';
+import WheelPreview from '../../GameTypes/WheelPreview';
+import { Jackpot } from '../../GameTypes';
 import QuizPreview from '../../GameTypes/QuizPreview';
+import ScratchPreview from '../../GameTypes/ScratchPreview';
 import DicePreview from '../../GameTypes/DicePreview';
-import DoubleMechanicWheel from '../../GameTypes/DoubleMechanicWheel';
-import DoubleMechanicJackpot from '../../GameTypes/DoubleMechanicJackpot';
-import DoubleMechanicScratch from '../../GameTypes/DoubleMechanicScratch';
 import { GAME_SIZES, GameSize } from '../../configurators/GameSizeSelector';
 import useCenteredStyles from '../../../hooks/useCenteredStyles';
 import { getCampaignBackgroundImage } from '../../../utils/background';
@@ -15,7 +15,6 @@ import { useUniversalResponsive } from '../../../hooks/useUniversalResponsive';
 import { useEditorStore } from '../../../stores/editorStore';
 import FormPreview from '../../GameTypes/FormPreview';
 import CustomElementsRenderer from '../../ModernEditor/components/CustomElementsRenderer';
-import { useCampaignSettings } from '../../../hooks/useCampaignSettings';
 
 // Import statique pour éviter les remounts et Suspense en plein spin
 import SlotJackpot from '../../SlotJackpot';
@@ -46,29 +45,6 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
   onGameButtonClick,
   fullScreen = true
 }) => {
-  const { getSettings } = useCampaignSettings();
-  const [campaignSettings, setCampaignSettings] = useState<any>(null);
-  
-  // Charger les settings de campagne incluant dotation
-  useEffect(() => {
-    console.log('🎯 [CanvasGameRenderer] Campaign ID:', campaign?.id);
-    if (campaign?.id) {
-      getSettings(campaign.id).then(settings => {
-        if (settings) {
-          setCampaignSettings(settings);
-          console.log('🎯 [CanvasGameRenderer] Campaign settings loaded:', settings);
-          console.log('🎯 [CanvasGameRenderer] Dotation data:', settings.dotation);
-        } else {
-          console.warn('⚠️ [CanvasGameRenderer] No settings found for campaign:', campaign.id);
-        }
-      }).catch(error => {
-        console.error('❌ [CanvasGameRenderer] Error loading settings:', error);
-      });
-    } else {
-      console.warn('⚠️ [CanvasGameRenderer] No campaign ID provided');
-    }
-  }, [campaign?.id, getSettings]);
-  
   // Plus de logique portail locale: on utilise un composant singleton dédié pour le fullscreen
   // Configuration du canvas depuis la campagne - essayer plusieurs sources
   const canvasConfig = campaign.canvasConfig || {};
@@ -250,28 +226,28 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
   const renderGameComponent = () => {
     console.log('🎮 Rendering game component for type:', campaign.type);
     console.log('🎮 Full campaign object:', campaign);
-    console.log('🎮 Campaign settings:', campaignSettings);
-    
-    // Créer une campagne enrichie avec les settings
-    const enrichedCampaign = {
-      ...campaign,
-      settings: campaignSettings
-    };
     
     if (campaign.type === 'wheel') {
       return (
         <div className="absolute inset-0" style={{ zIndex: 10 }}>
-          <DoubleMechanicWheel
-            config={{}}
-            campaign={enrichedCampaign}
-            isPreview={false}
-            onComplete={(prize) => {
-              console.log('Prize won:', prize);
+          <WheelPreview
+            campaign={campaign}
+            config={{
+              mode: 'instant_winner' as const,
+              winProbability: campaign.gameConfig?.wheel?.winProbability || 0.1,
+              maxWinners: campaign.gameConfig?.wheel?.maxWinners,
+              winnersCount: 0
             }}
             onFinish={handleGameComplete}
             onStart={handleGameStartInternal}
-            disabled={!formValidated}
             gameSize={'medium'}
+            previewDevice={previewMode}
+            wheelModalConfig={{
+              ...wheelModalConfig,
+              extractedColors: campaign?.design?.extractedColors || []
+            }}
+            disabled={!formValidated}
+            disableForm={false}
           />
         </div>
       );
@@ -330,12 +306,53 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
     }
 
     if (campaign.type === 'jackpot') {
+      // Fusionner campagne fournie et store réactif (le store gagne si la campagne est vide)
+      const campaignJackpot = campaign?.gameConfig?.jackpot || {};
+      const effectiveTemplate = campaignJackpot?.template ?? storeJackpotCfg?.template;
+      const effectiveSymbols = campaignJackpot?.symbols ?? storeJackpotCfg?.symbols;
+      const effectiveCustomUrl = campaignJackpot?.customTemplateUrl ?? storeJackpotCfg?.customTemplateUrl;
+      
+      // Récupérer toutes les configurations pour assurer la parité avec le mode édition
+      const effectiveBorderColor = campaignJackpot?.borderColor ?? storeJackpotCfg?.borderColor;
+      const effectiveBackgroundColor = campaignJackpot?.backgroundColor ?? storeJackpotCfg?.backgroundColor;
+      const effectiveTextColor = campaignJackpot?.textColor ?? storeJackpotCfg?.textColor;
+      const effectiveCustomFrame = campaignJackpot?.customFrame ?? storeJackpotCfg?.customFrame;
+      const effectiveButton = campaignJackpot?.button ?? storeJackpotCfg?.button;
+      void effectiveCustomFrame; // Reserved for future functionality
+      void effectiveButton; // Reserved for future functionality
+      
+      console.log('🎰 Rendering Jackpot component (SlotJackpot)', {
+        template: effectiveTemplate,
+        symbols: Array.isArray(effectiveSymbols) ? effectiveSymbols.length : 0,
+        borderColor: effectiveBorderColor,
+        backgroundColor: effectiveBackgroundColor,
+        textColor: effectiveTextColor,
+        campaignTemplate: campaignJackpot?.template,
+        storeTemplate: storeJackpotCfg?.template,
+        effectiveTemplate
+      });
+      
+      // En fullscreen, utiliser le portail singleton pour éviter tout unmount
+      if (fullScreen) {
+        return (
+          <FullscreenJackpotPortal
+            templateOverride={effectiveTemplate}
+            symbols={effectiveSymbols}
+            onWin={handleWin}
+            onLose={handleLose}
+          />
+        );
+      }
+
+      // Mode non-fullscreen: rendu direct
       return (
         <div className="absolute inset-0" style={{ zIndex: 10 }}>
-          <DoubleMechanicJackpot
-            campaign={enrichedCampaign}
-            isPreview={false}
-            onFinish={handleGameComplete}
+          <SlotJackpot
+            key="slotjackpot-stable"
+            templateOverride={effectiveTemplate}
+            symbols={effectiveSymbols}
+            onWin={handleWin}
+            onLose={handleLose}
             disabled={!formValidated}
           />
         </div>

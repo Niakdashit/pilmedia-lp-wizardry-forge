@@ -2,6 +2,9 @@ import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Database } from '@/integrations/supabase/types';
 import { participationSchema, viewParamsSchema } from '@/lib/validation';
+import { RateLimiter } from '@/services/RateLimiter';
+import { getDeviceFingerprint } from '@/utils/deviceFingerprint';
+import { getClientIPWithTimeout } from '@/utils/getClientIP';
 
 type DatabaseParticipation = Database['public']['Tables']['participations']['Row'];
 
@@ -28,7 +31,45 @@ export const useParticipations = () => {
     setError(null);
     
     try {
-      // Validate input data
+      console.log('🔐 [useParticipations] Starting secure participation creation...');
+      
+      // 1. Récupérer IP et device fingerprint en parallèle
+      const [ipAddress, deviceFingerprint] = await Promise.all([
+        getClientIPWithTimeout(3000), // Timeout 3s
+        getDeviceFingerprint()
+      ]);
+      
+      console.log('🔍 [useParticipations] Security info:', {
+        ipAddress,
+        deviceFingerprint: deviceFingerprint.substring(0, 16) + '...'
+      });
+      
+      // 2. Vérifier rate limiting
+      const rateLimitCheck = await RateLimiter.checkLimit(
+        participation.campaign_id,
+        participation.user_email,
+        ipAddress,
+        deviceFingerprint
+      );
+      
+      if (!rateLimitCheck.allowed) {
+        console.warn('❌ [useParticipations] Rate limit exceeded:', rateLimitCheck.reason);
+        
+        // Logger la tentative bloquée
+        await RateLimiter.logBlockedAttempt(
+          participation.campaign_id,
+          participation.user_email,
+          ipAddress,
+          deviceFingerprint,
+          rateLimitCheck.reason || 'Unknown'
+        );
+        
+        throw new Error(rateLimitCheck.reason || 'Limite de participations atteinte');
+      }
+      
+      console.log('✅ [useParticipations] Rate limit check passed');
+      
+      // 3. Valider les données
       const validation = participationSchema.safeParse({
         campaign_id: participation.campaign_id,
         user_email: participation.user_email,
@@ -44,22 +85,33 @@ export const useParticipations = () => {
         throw new Error(`Validation failed: ${validation.error.message}`);
       }
 
-      const userAgent = navigator.userAgent;
-      const ip_address = '127.0.0.1';
-
+      // 4. Préparer les données avec sécurité
       const participationData = {
         ...validation.data,
-        ip_address,
-        user_agent: userAgent,
+        ip_address: ipAddress, // ✅ Vraie IP (plus de hardcode)
+        user_agent: navigator.userAgent,
+        device_fingerprint: deviceFingerprint, // ✅ Nouveau
       };
 
+      console.log('💾 [useParticipations] Inserting participation with security data...');
+
+      // 5. Insérer en base
       const { error } = await supabase
         .from('participations')
         .insert(participationData);
       
-      if (error) throw error;
+      if (error) {
+        // Gérer erreur de contrainte unique
+        if (error.code === '23505') {
+          throw new Error('Vous avez déjà participé à cette campagne');
+        }
+        throw error;
+      }
+      
+      console.log('✅ [useParticipations] Participation created successfully');
       return true;
     } catch (err: any) {
+      console.error('❌ [useParticipations] Error:', err);
       setError(err.message || 'Erreur lors de l\'enregistrement de la participation');
       return false;
     } finally {

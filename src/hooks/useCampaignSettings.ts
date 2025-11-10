@@ -11,7 +11,6 @@ export type CampaignSettings = {
   email_verification?: any;
   legal?: any;
   winners?: any;
-  dotation?: any; // Configuration des lots programmés (double mécanique)
   output?: any;
   data_push?: any;
   advanced?: any;
@@ -224,7 +223,6 @@ export const useCampaignSettings = () => {
         email_verification: values.email_verification ?? null,
         legal: values.legal ?? null,
         winners: values.winners ?? null,
-        dotation: values.dotation ?? null, // Configuration des lots programmés
         output: values.output ?? null,
         data_push: values.data_push ?? null,
         advanced: values.advanced ?? null,
@@ -232,8 +230,6 @@ export const useCampaignSettings = () => {
         tags: values.tags ?? null,
         updated_at: new Date().toISOString(),
       };
-      
-      console.log('💾 [useCampaignSettings] Payload dotation:', payload.dotation);
 
       // Derive dedicated date/time columns from publication.start/end when provided
       try {

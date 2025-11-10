@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { 
   Plus, 
   Trash2, 
@@ -12,6 +12,8 @@ import {
   Upload,
   Gamepad2
 } from 'lucide-react';
+import { supabase } from '../../../integrations/supabase/client';
+import type { Prize as DotationPrize } from '../../../types/dotation';
 
 interface GameManagementPanelProps {
   campaign: any;
@@ -59,6 +61,37 @@ const GameManagementPanel: React.FC<GameManagementPanelProps> = ({
   const [activeSection, setActiveSection] = useState<'segments' | 'prizes'>('segments');
   const [localGameType, setLocalGameType] = useState(campaign?.type || 'wheel');
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [dotationPrizes, setDotationPrizes] = useState<DotationPrize[]>([]);
+
+  // Récupérer les lots de dotation depuis Supabase
+  useEffect(() => {
+    const loadDotationPrizes = async () => {
+      if (!campaign?.id) return;
+
+      try {
+        // Utiliser une requête sans typage strict pour dotation_configs
+        const { data, error } = await (supabase as any)
+          .from('dotation_configs')
+          .select('prizes')
+          .eq('campaign_id', campaign.id)
+          .single();
+
+        if (error) {
+          console.log('⚠️ [GameManagementPanel] No dotation config found:', error);
+          return;
+        }
+
+        if (data?.prizes) {
+          console.log('✅ [GameManagementPanel] Loaded dotation prizes:', data.prizes);
+          setDotationPrizes(data.prizes as DotationPrize[]);
+        }
+      } catch (err) {
+        console.error('❌ [GameManagementPanel] Error loading dotation prizes:', err);
+      }
+    };
+
+    loadDotationPrizes();
+  }, [campaign?.id]);
 
   // Synchroniser le type local avec la campagne
   React.useEffect(() => {
@@ -485,12 +518,32 @@ const GameManagementPanel: React.FC<GameManagementPanelProps> = ({
                       className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-[#44444d] focus:border-transparent"
                     >
                       <option value="">Aucun lot</option>
-                      {prizes.map((prize) => (
-                        <option key={prize.id} value={prize.id}>
-                          {prize.name}
-                        </option>
-                      ))}
+                      {/* Lots de dotation (prioritaires) */}
+                      {dotationPrizes.length > 0 && (
+                        <optgroup label="🎁 Lots de dotation">
+                          {dotationPrizes.map((prize) => (
+                            <option key={prize.id} value={prize.id}>
+                              {prize.name} ({(prize as any).attributionMethod === 'calendar' ? '📅 Calendrier' : '🎲 Probabilité'})
+                            </option>
+                          ))}
+                        </optgroup>
+                      )}
+                      {/* Anciens lots (fallback) */}
+                      {prizes.length > 0 && (
+                        <optgroup label="📦 Lots classiques">
+                          {prizes.map((prize) => (
+                            <option key={prize.id} value={prize.id}>
+                              {prize.name}
+                            </option>
+                          ))}
+                        </optgroup>
+                      )}
                     </select>
+                    {dotationPrizes.length === 0 && prizes.length === 0 && (
+                      <p className="text-xs text-gray-500 mt-1">
+                        💡 Créez des lots dans "Paramètres" → "Dotation"
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>

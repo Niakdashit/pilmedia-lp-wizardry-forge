@@ -246,6 +246,26 @@ export const saveCampaignToDB = async (
   };
 
   // Build comprehensive game_config
+  console.log('🎯 [saveCampaignToDB] Building game_config with segments and prizes:', {
+    hasWheelConfig: !!campaign?.wheelConfig,
+    hasSegments: !!campaign?.wheelConfig?.segments,
+    segmentsCount: campaign?.wheelConfig?.segments?.length || 0,
+    segmentsPreview: campaign?.wheelConfig?.segments?.slice(0, 2).map((s: any) => ({
+      id: s.id,
+      label: s.label,
+      prizeId: s.prizeId
+    })),
+    hasPrizes: !!campaign?.prizes,
+    prizesCount: campaign?.prizes?.length || 0,
+    prizesPreview: campaign?.prizes?.slice(0, 2).map((p: any) => ({
+      id: p.id,
+      name: p.name,
+      method: p.method,
+      startDate: p.startDate,
+      startTime: p.startTime
+    }))
+  });
+
   const mergedGameConfig = {
     ...(campaign?.game_config || {}),
     ...(campaign?.gameConfig || {}),
@@ -254,8 +274,24 @@ export const saveCampaignToDB = async (
     ...(campaign?.type === 'wheel' && campaign?.wheelConfig ? { wheel: campaign.wheelConfig } : {}),
     ...(campaign?.type === 'quiz' && campaign?.quizConfig ? { quiz: campaign.quizConfig } : {}),
     ...(campaign?.type === 'scratch' && campaign?.scratchConfig ? { scratch: campaign.scratchConfig } : {}),
-    ...(campaign?.type === 'jackpot' && campaign?.jackpotConfig ? { jackpot: campaign.jackpotConfig } : {})
+    ...(campaign?.type === 'jackpot' && campaign?.jackpotConfig ? { jackpot: campaign.jackpotConfig } : {}),
+    
+    // 🎯 CRITICAL: Save wheel segments configuration (labels, colors, prize assignments)
+    // This ensures segment names like "ON GAGNE" and prize assignments persist
+    ...(campaign?.wheelConfig?.segments ? { 
+      wheelSegments: campaign.wheelConfig.segments 
+    } : {}),
+    
+    // 🎁 CRITICAL: Save prizes configuration (dotation system)
+    // This ensures prize data, calendar dates, and awarded units persist
+    ...(campaign?.prizes ? { 
+      prizes: campaign.prizes 
+    } : {})
   };
+
+  console.log('✅ [saveCampaignToDB] Merged game_config keys:', Object.keys(mergedGameConfig));
+  console.log('✅ [saveCampaignToDB] Merged game_config.wheelSegments count:', mergedGameConfig.wheelSegments?.length || 0);
+  console.log('✅ [saveCampaignToDB] Merged game_config.prizes count:', mergedGameConfig.prizes?.length || 0);
 
   // Detect editor mode (article vs fullscreen)
   // ✅ CRITICAL: Check both editorMode and editor_mode fields

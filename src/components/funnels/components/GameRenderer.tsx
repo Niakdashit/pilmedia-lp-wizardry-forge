@@ -1,16 +1,16 @@
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import ContrastBackground from '../../common/ContrastBackground';
 import ValidationMessage from '../../common/ValidationMessage';
+import WheelPreview from '../../GameTypes/WheelPreview';
+import { Jackpot } from '../../GameTypes';
 import QuizPreview from '../../GameTypes/QuizPreview';
+import ScratchPreview from '../../GameTypes/ScratchPreview';
 import DicePreview from '../../GameTypes/DicePreview';
-import DoubleMechanicWheel from '../../GameTypes/DoubleMechanicWheel';
-import DoubleMechanicJackpot from '../../GameTypes/DoubleMechanicJackpot';
-import DoubleMechanicScratch from '../../GameTypes/DoubleMechanicScratch';
 import { GAME_SIZES, GameSize } from '../../configurators/GameSizeSelector';
 // Removed legacy CampaignEditor dependency: inline position calculator
 import useCenteredStyles from '../../../hooks/useCenteredStyles';
-import { useCampaignSettings } from '../../../hooks/useCampaignSettings';
+import { getCampaignBackgroundImage } from '../../../utils/background';
 
 interface GameRendererProps {
   campaign: any;
@@ -33,35 +33,18 @@ const GameRenderer: React.FC<GameRendererProps> = ({
   onGameStart,
   onGameButtonClick
 }) => {
-  const { getSettings } = useCampaignSettings();
-  const [campaignSettings, setCampaignSettings] = useState<any>(null);
-  
-  // Charger les settings de campagne incluant dotation
-  useEffect(() => {
-    console.log('🎯 [GameRenderer] Campaign ID:', campaign?.id);
-    if (campaign?.id) {
-      getSettings(campaign.id).then(settings => {
-        if (settings) {
-          setCampaignSettings(settings);
-          console.log('🎯 [GameRenderer] Campaign settings loaded:', settings);
-          console.log('🎯 [GameRenderer] Dotation data:', settings.dotation);
-        } else {
-          console.warn('⚠️ [GameRenderer] No settings found for campaign:', campaign.id);
-        }
-      }).catch(error => {
-        console.error('❌ [GameRenderer] Error loading settings:', error);
-      });
-    } else {
-      console.warn('⚠️ [GameRenderer] No campaign ID provided');
-    }
-  }, [campaign?.id, getSettings]);
-  
+  const gameBackgroundImage = getCampaignBackgroundImage(campaign, previewMode);
+  const buttonLabel = campaign.gameConfig?.[campaign.type]?.buttonLabel || campaign.buttonConfig?.text;
+  const buttonColor = campaign.buttonConfig?.color || campaign.gameConfig?.[campaign.type]?.buttonColor || '#44444d';
   const contrastBg = mobileConfig?.contrastBackground || campaign.screens?.[2]?.contrastBackground;
 
   const gameSize: GameSize = (campaign.gameSize && Object.keys(GAME_SIZES).includes(campaign.gameSize)) 
     ? campaign.gameSize as GameSize 
     : 'medium';
   const gamePosition = campaign.gamePosition || 'center';
+
+  // Détecter si on est dans une modal (pour ajuster l'affichage)
+  const isModal = previewMode !== 'desktop' || window.location.pathname.includes('preview');
 
   const { containerStyle, wrapperStyle } = useCenteredStyles();
   const getPositionStyles = () => {
@@ -99,48 +82,63 @@ const GameRenderer: React.FC<GameRendererProps> = ({
   const renderGameComponent = () => {
     console.log('Rendering game component for type:', campaign.type);
     console.log('Form validated:', formValidated);
-    console.log('Campaign settings:', campaignSettings);
-    
-    // Créer une campagne enrichie avec les settings
-    const enrichedCampaign = {
-      ...campaign,
-      settings: campaignSettings
-    };
     
     switch (campaign.type) {
       case 'wheel':
         return (
-          <DoubleMechanicWheel
-            config={{}}
-            campaign={enrichedCampaign}
-            isPreview={false}
-            onComplete={(prize) => {
-              console.log('Prize won:', prize);
+          <WheelPreview
+            campaign={campaign} 
+            config={{
+              mode: 'instant_winner' as const,
+              winProbability: campaign.gameConfig?.wheel?.winProbability || 0.1,
+              maxWinners: campaign.gameConfig?.wheel?.maxWinners,
+              winnersCount: 0
             }}
             onFinish={handleGameComplete}
             onStart={handleGameStartInternal}
-            disabled={!formValidated}
             gameSize={gameSize}
+            gamePosition={gamePosition}
+            previewDevice={previewMode}
+            wheelModalConfig={{
+              extractedColors: campaign?.design?.extractedColors || []
+            }}
+            disableForm={formValidated}
           />
         );
       
       case 'scratch':
         return (
-          <DoubleMechanicScratch
+          <ScratchPreview 
             config={campaign.gameConfig?.scratch || {}}
-            campaign={enrichedCampaign}
-            isPreview={false}
+            buttonLabel={buttonLabel}
+            buttonColor={buttonColor}
+            gameSize={gameSize}
+            disabled={!formValidated}
             onFinish={handleGameComplete}
+            onStart={handleGameStartInternal}
+            isModal={isModal}
+            autoStart={false}
           />
         );
       
       case 'jackpot':
         return (
-          <DoubleMechanicJackpot
-            campaign={enrichedCampaign}
-            isPreview={false}
-            onFinish={handleGameComplete}
+          <Jackpot
+            isPreview={true}
+            instantWinConfig={campaign.gameConfig?.jackpot?.instantWin}
+            buttonLabel={buttonLabel}
+            buttonColor={buttonColor}
+            backgroundImage={gameBackgroundImage}
+            containerBackgroundColor={campaign.gameConfig?.jackpot?.containerBackgroundColor}
+            backgroundColor={campaign.gameConfig?.jackpot?.backgroundColor}
+            borderStyle="classic"
+            slotBorderColor={campaign.gameConfig?.jackpot?.slotBorderColor}
+            slotBorderWidth={campaign.gameConfig?.jackpot?.slotBorderWidth}
+            slotBackgroundColor={campaign.gameConfig?.jackpot?.slotBackgroundColor}
             disabled={!formValidated}
+            onFinish={handleGameComplete}
+            onStart={handleGameStartInternal}
+            onButtonClick={onGameButtonClick}
           />
         );
       case 'quiz':

@@ -6,6 +6,7 @@ const jackpotSession = {
 };
 import React, { useState, useCallback, useMemo, useRef } from 'react';
 import { useEditorStore } from '../../stores/editorStore';
+import { jackpotDotationIntegration } from '@/services/JackpotDotationIntegration';
 import './SlotMachine.css';
 
 interface SlotMachineProps {
@@ -16,6 +17,10 @@ interface SlotMachineProps {
   disabled?: boolean;
   symbols?: string[]; // Optionnel: permet d'injecter des symboles
   templateOverride?: string; // Optionnel: forcer un template (preview)
+  // Dotation system
+  participantEmail?: string;
+  participantId?: string;
+  useDotationSystem?: boolean;
 }
 
 const DEFAULT_SYMBOLS = ['🍒', '🍋', '🍊', '🍇', '⭐', '💎', '🔔', '7️⃣'];
@@ -43,7 +48,18 @@ const getTemplateUrl = (templateId: string): string => {
   return encodeURI(path);
 };
 
-const SlotMachine: React.FC<SlotMachineProps> = ({ onWin, onLose, onOpenConfig, disabled = false, symbols: propSymbols, templateOverride }) => {
+const SlotMachine: React.FC<SlotMachineProps> = ({ 
+  campaign: campaignProp,
+  onWin, 
+  onLose, 
+  onOpenConfig, 
+  disabled = false, 
+  symbols: propSymbols, 
+  templateOverride,
+  participantEmail,
+  participantId,
+  useDotationSystem = false
+}) => {
   const [isSpinning, setIsSpinning] = useState(false);
   const animReqs = useRef<number[]>([]);
   const reelStartTimes = useRef<number[]>([]);
@@ -110,7 +126,9 @@ const SlotMachine: React.FC<SlotMachineProps> = ({ onWin, onLose, onOpenConfig, 
   }, [currentTemplate, templateOverride]);
   
   // Récupérer les symboles depuis le store
-  const campaign = useEditorStore?.((s: any) => s.campaign);
+  const campaignFromStore = useEditorStore?.((s: any) => s.campaign);
+  // Utiliser la prop en priorité, sinon le store
+  const campaign = campaignProp || campaignFromStore;
   const jackpotConfig = (campaign?.gameConfig?.jackpot as any) || {};
   const campaignSymbols = jackpotConfig.symbols as string[] | undefined;
   const jackpotStyle = (jackpotConfig.style as any) || {};
@@ -222,7 +240,7 @@ const SlotMachine: React.FC<SlotMachineProps> = ({ onWin, onLose, onOpenConfig, 
     }, 650);
   }, [onLose, onWin]);
 
-  const spin = useCallback(() => {
+  const spin = useCallback(async () => {
     if (jackpotSession.spinning || jackpotSession.hasSpun) {
       console.log('⏸️ [SlotMachine] SPIN BLOCKED by session:', { session: { ...jackpotSession } });
       return;
@@ -245,7 +263,35 @@ const SlotMachine: React.FC<SlotMachineProps> = ({ onWin, onLose, onOpenConfig, 
     setIsSpinning(true);
 
     // Choisir les résultats finaux dès le départ
-    const finals = [0, 1, 2].map(() => symbols[Math.floor(Math.random() * symbols.length)]);
+    let finals: string[];
+    
+    // 🎯 Utiliser le système de dotation si activé
+    if (useDotationSystem && campaign?.id && participantEmail) {
+      try {
+        console.log('🎰 [SlotMachine] Using dotation system');
+        
+        const result = await jackpotDotationIntegration.determineJackpotSpin(
+          {
+            campaignId: campaign.id,
+            participantEmail,
+            participantId,
+            userAgent: navigator.userAgent
+          },
+          symbols
+        );
+        
+        finals = result.symbols;
+        console.log('🎲 [SlotMachine] Dotation result:', result);
+      } catch (error) {
+        console.error('❌ [SlotMachine] Dotation error, falling back to random:', error);
+        finals = [0, 1, 2].map(() => symbols[Math.floor(Math.random() * symbols.length)]);
+      }
+    } else {
+      // Mode aléatoire (par défaut)
+      console.log('🎲 [SlotMachine] Using random mode');
+      finals = [0, 1, 2].map(() => symbols[Math.floor(Math.random() * symbols.length)]);
+    }
+    
     finalsRef.current = finals;
 
     // Durées identiques pour tous les rouleaux (ralentissement synchronisé = plus de suspense)
@@ -342,7 +388,7 @@ const SlotMachine: React.FC<SlotMachineProps> = ({ onWin, onLose, onOpenConfig, 
       
       animReqs.current[reelIndex] = requestAnimationFrame(animate);
     });
-  }, [isSpinning, disabled, hasPlayed, symbols, currentTemplate, finalizeSpin, clearFinishTimers]);
+  }, [isSpinning, disabled, hasPlayed, symbols, currentTemplate, finalizeSpin, clearFinishTimers, useDotationSystem, campaign, participantEmail, participantId, campaignProp]);
 
   const isCustomTemplate = currentTemplate === 'custom-frame';
   const isUserTemplate = currentTemplate === 'user-template' && !!customTemplateUrl;

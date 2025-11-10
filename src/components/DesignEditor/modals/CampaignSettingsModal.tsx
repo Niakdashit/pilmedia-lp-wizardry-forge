@@ -5,9 +5,9 @@ import { useNavigate } from 'react-router-dom';
 import { useCampaignSettings, CampaignSettings } from '@/hooks/useCampaignSettings';
 import ChannelsStep from '@/pages/CampaignSettings/ChannelsStep';
 import ParametersStep from '@/pages/CampaignSettings/ParametersStep';
-import DotationStep from '@/pages/CampaignSettings/DotationStep';
 import OutputStep from '@/pages/CampaignSettings/OutputStep';
 import ViralityStep from '@/pages/CampaignSettings/ViralityStep';
+import { DotationPanel } from '@/components/CampaignSettings/DotationPanel';
 import { useEditorStore } from '@/stores/editorStore';
 import { useCampaigns } from '@/hooks/useCampaigns';
 import { saveCampaignToDB } from '@/hooks/useModernCampaignEditor/saveHandler';
@@ -23,7 +23,7 @@ interface CampaignSettingsModalProps {
 const steps = [
   { id: 'channels', label: 'Canaux', component: ChannelsStep },
   { id: 'parameters', label: 'Paramètres', component: ParametersStep },
-  { id: 'dotation', label: 'Dotation', component: DotationStep },
+  { id: 'dotation', label: 'Dotation', component: null }, // Composant spécial
   { id: 'output', label: 'Sortie', component: OutputStep },
   { id: 'virality', label: 'Viralité', component: ViralityStep },
 ];
@@ -187,10 +187,6 @@ useEffect(() => {
       pub.start = combine(pub.startDate, pub.startTime) || pub.start;
       pub.end = combine(pub.endDate, pub.endTime) || pub.end;
 
-      // Debug: Log dotation data before saving
-      console.log('💾 [CampaignSettingsModal] Dotation data before save:', (form as any).dotation);
-      console.log('💾 [CampaignSettingsModal] Full form data:', form);
-      
       const saved = await upsertSettings(savedCampaignId, {
         publication: pub,
         campaign_url: (typeof (form.campaign_url as any) === 'string')
@@ -201,7 +197,6 @@ useEffect(() => {
         email_verification: form.email_verification ?? {},
         legal: form.legal ?? {},
         winners: form.winners ?? {},
-        dotation: (form as any).dotation ?? {},
         output: form.output ?? {},
         data_push: form.data_push ?? {},
         advanced: form.advanced ?? {},
@@ -380,16 +375,21 @@ useEffect(() => {
             </div>
           ) : (
             <div className="max-w-4xl mx-auto">
-              {ActiveStepComponent && (
-                // Pass down controlled form state so steps edit the modal's form
-                // Steps should treat props.form as source of truth and call props.setForm to update
+              {activeTab === 'dotation' ? (
+                // Onglet Dotation : composant spécial
+                <DotationPanel
+                  campaignId={effectiveCampaignId}
+                  campaignType={(campaign as any)?.type || 'wheel'}
+                />
+              ) : ActiveStepComponent ? (
+                // Autres onglets : composants standards
                 <ActiveStepComponent
                   // @ts-ignore allow steps to accept these props without strict typing here
                   form={form}
                   setForm={setForm}
                   campaignId={effectiveCampaignId}
                 />
-              )}
+              ) : null}
             </div>
           )}
         </div>

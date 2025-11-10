@@ -342,7 +342,7 @@ const Campaigns: React.FC = () => {
   };
 
   const handleStats = (id: string) => {
-    navigate(`/stats/${id}`);
+    navigate(`/campaign/${id}/statistics`);
   };
 
   const handleSelectAll = () => {

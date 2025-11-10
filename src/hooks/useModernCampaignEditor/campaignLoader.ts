@@ -301,7 +301,17 @@ export const loadCampaign = async (
           ...(existingCampaignType === 'quiz' && existingCampaign.game_config?.quiz ? { quiz: existingCampaign.game_config.quiz } : {}),
           ...(existingCampaignType === 'scratch' && existingCampaign.game_config?.scratch ? { scratch: existingCampaign.game_config.scratch } : {}),
           ...(existingCampaignType === 'jackpot' && existingCampaign.game_config?.jackpot ? { jackpot: existingCampaign.game_config.jackpot } : {})
-        }
+        },
+        
+        // 🎯 CRITICAL: Restore wheel segments configuration (labels, colors, prize assignments)
+        // This ensures segment names like "ON GAGNE" and prize assignments are restored
+        wheelConfig: existingCampaign.game_config?.wheel || existingCampaign.wheelConfig || {
+          segments: existingCampaign.game_config?.wheelSegments || []
+        },
+        
+        // 🎁 CRITICAL: Restore prizes configuration (dotation system)
+        // This ensures prize data, calendar dates, and awarded units are restored
+        prizes: existingCampaign.game_config?.prizes || existingCampaign.prizes || []
       };
       
       console.log('✅ [campaignLoader] Complete restored campaign:', {

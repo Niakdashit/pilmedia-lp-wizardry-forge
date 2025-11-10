@@ -1,10 +1,16 @@
 /**
  * Moteur de calcul de probabilité centralisé
  * Responsable de tous les calculs de probabilité avec une logique claire et testable
+ * 
+ * AMÉLIORATIONS v2.0:
+ * - Intégration de la distribution temporelle intelligente
+ * - Support du lissage temporel des probabilités
+ * - Ajustement dynamique selon les quotas journaliers
  */
 
 import type { Prize, WheelSegment, CampaignSegment, ProbabilityCalculationResult, SegmentPrizeMapping } from '../types/PrizeSystem';
 import { PrizeValidation } from '../utils/PrizeValidation';
+import { TemporalDistribution, TemporalConfig } from './TemporalDistribution';
 
 export class ProbabilityEngine {
   
@@ -40,19 +46,20 @@ export class ProbabilityEngine {
       if (pid) segsByPrize.set(pid, (segsByPrize.get(pid) || 0) + 1);
     });
 
-    // 3. Gating calendrier: si des lots calendrier sont actifs maintenant,
+    // 3. Gating calendrier: si des lots calendrier sont à leur moment exact,
     //    répartir 100% uniquement entre ces lots (puis par segments de chaque lot)
     const activeCalendarPrizes = availablePrizes.filter(
       (p) => {
         const method = p.method || (p as any).attributionMethod;
         const isCalendar = method === 'calendar';
-        const isActive = PrizeValidation.isPrizeActive(p);
+        // 🎯 CRITICAL: Utiliser isExactCalendarMoment pour vérifier la date/heure EXACTE programmée
+        const isExactMoment = PrizeValidation.isExactCalendarMoment(p);
         const isAvailable = PrizeValidation.isPrizeAvailable(p);
         
         console.log(`📅 Calendar prize check: ${p.name}`, {
           method,
           isCalendar,
-          isActive,
+          isExactMoment,
           isAvailable,
           startDate: p.startDate,
           startTime: p.startTime,
@@ -61,7 +68,7 @@ export class ProbabilityEngine {
           currentTime: new Date().toISOString()
         });
         
-        return isCalendar && isActive && isAvailable;
+        return isCalendar && isExactMoment && isAvailable;
       }
     );
 
@@ -454,6 +461,74 @@ export class ProbabilityEngine {
       isValid: errors.length === 0,
       errors,
       warnings
+    };
+  }
+
+  /**
+   * Calcule les probabilités avec ajustement temporel (v2.0)
+   * Intègre le lissage temporel pour éviter l'épuisement prématuré des lots
+   */
+  static calculateSegmentProbabilitiesWithTemporal(
+    segments: CampaignSegment[],
+    prizes: Prize[],
+    temporalConfig?: TemporalConfig
+  ): ProbabilityCalculationResult {
+    // Calcul de base
+    const baseResult = this.calculateSegmentProbabilities(segments, prizes);
+
+    // Si pas de config temporelle, retourner le résultat de base
+    if (!temporalConfig) {
+      return baseResult;
+    }
+
+    // Créer le système de distribution temporelle
+    const temporal = new TemporalDistribution(temporalConfig);
+
+    // Ajuster les probabilités de chaque segment selon le quota journalier
+    const adjustedSegments = baseResult.segments.map(segment => {
+      // Si le segment n'a pas de lot, pas d'ajustement
+      if (!segment.prizeId) {
+        return segment;
+      }
+
+      // Trouver le lot correspondant
+      const prize = prizes.find(p => p.id === segment.prizeId);
+      if (!prize) {
+        return segment;
+      }
+
+      // Appliquer l'ajustement temporel
+      const adjustment = temporal.adjustProbability(
+        prize,
+        segment.probability,
+        new Date()
+      );
+
+      return {
+        ...segment,
+        probability: adjustment.adjustedProbability,
+        // Ajouter les métadonnées d'ajustement
+        temporalAdjustment: adjustment
+      };
+    });
+
+    // Recalculer la probabilité totale
+    const totalProbability = adjustedSegments.reduce(
+      (sum, s) => sum + s.probability,
+      0
+    );
+
+    console.log('📊 Temporal adjustment applied:', {
+      originalTotal: baseResult.totalProbability,
+      adjustedTotal: totalProbability,
+      segmentsAdjusted: adjustedSegments.filter(s => (s as any).temporalAdjustment).length
+    });
+
+    return {
+      ...baseResult,
+      segments: adjustedSegments,
+      totalProbability,
+      residualProbability: Math.max(0, 100 - totalProbability)
     };
   }
 }

@@ -30,7 +30,8 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
   formFields,
   spinMode,
   winProbability,
-  speed
+  speed,
+  forcedSegmentId
 }) => {
   // Forcer la mise à jour des couleurs des segments avec brandColors
   const updatedSegments = useMemo(() => {
@@ -158,7 +159,8 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
     disabled,
     spinMode,
     winProbability,
-    speed: speed === 'medium' ? 'normal' : speed // Map 'medium' to 'normal' for compatibility
+    speed: speed === 'medium' ? 'normal' : speed, // Map 'medium' to 'normal' for compatibility
+    forcedSegmentId // Passer le segment forcé pour le système de dotation
   }) || {};
 
   // Create a stable wheelState object

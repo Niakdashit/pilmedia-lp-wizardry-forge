@@ -15,6 +15,7 @@ interface UseWheelAnimationProps {
   spinMode?: 'random' | 'probability' | 'instant_winner';
   winProbability?: number;
   theme?: Partial<WheelTheme>;
+  forcedSegmentId?: string | null; // ID du segment à forcer
 }
 
 interface WheelState {
@@ -57,7 +58,8 @@ export const useWheelAnimation = (props: UseWheelAnimationProps) => {
     speed = 'normal',
     spinMode = 'random',
     winProbability = 0.5,
-    theme: customTheme = {}
+    theme: customTheme = {},
+    forcedSegmentId = null
   } = props;
 
   // State for wheel animation
@@ -156,12 +158,21 @@ export const useWheelAnimation = (props: UseWheelAnimationProps) => {
     
     let targetIndex = 0;
     
+    // 🎯 PRIORITÉ 1: Si un segment est forcé (système de dotation)
+    if (forcedSegmentId) {
+      const forcedIndex = segments.findIndex(seg => seg.id === forcedSegmentId);
+      if (forcedIndex !== -1) {
+        targetIndex = forcedIndex;
+        console.log('🎯 [useWheelAnimation] Forcing segment:', forcedSegmentId, 'at index:', forcedIndex);
+      } else {
+        console.warn('⚠️ [useWheelAnimation] Forced segment not found:', forcedSegmentId);
+      }
+    }
     // Vérifier d'abord si un segment a une probabilité de 100%
-    const guaranteedWinSegment = segments.find(segment => segment.probability === 100);
-    
-    if (guaranteedWinSegment) {
+    else if (segments.find(segment => segment.probability === 100)) {
+      const guaranteedWinSegment = segments.find(segment => segment.probability === 100);
       // Si un segment a 100% de probabilité, le sélectionner systématiquement
-      targetIndex = segments.indexOf(guaranteedWinSegment);
+      targetIndex = segments.indexOf(guaranteedWinSegment!);
     } 
     // Si aucun segment n'a 100% de probabilité, utiliser la logique normale
     else if (spinMode === 'probability') {

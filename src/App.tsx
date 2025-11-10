@@ -7,6 +7,7 @@ import { ProtectedRoute } from './components/Auth/ProtectedRoute';
 import Layout from './components/Layout/Layout';
 import { LoadingBoundary, EditorLoader, MinimalLoader } from './components/shared/LoadingBoundary';
 import { routePrefetcher, ROUTE_LOADERS, ROUTE_NEIGHBORS } from './utils/routePrefetch';
+import CampaignStatisticsMinimal from './pages/CampaignStatisticsMinimal';
 
 // Lazy-loaded pages to prevent import-time crashes from heavy modules at startup
 const Dashboard = lazy(() => import('./pages/Dashboard'));
@@ -36,6 +37,8 @@ const Profile = lazy(() => import('./pages/Profile'));
 const Admin = lazy(() => import('./pages/Admin'));
 const MediaPortal = lazy(() => import('./pages/MediaPortal'));
 const CampaignSettings = lazy(() => import('./pages/CampaignSettings'));
+// Import direct sans lazy loading pour debug
+// const CampaignStatistics = lazy(() => import('./pages/CampaignStatisticsMinimal'));
 const PublicCampaign = lazy(() => import('./pages/PublicCampaign'));
 const OEmbed = lazy(() => import('./pages/OEmbed'));
 const IntegrationsTest = lazy(() => import('./pages/IntegrationsTest'));
@@ -172,6 +175,10 @@ function App() {
                   <CampaignSettings />
                 </LoadingBoundary>
               } />
+              {/* Campaign Statistics - Standalone page */}
+              <Route path="/campaign/:id/statistics" element={<CampaignStatisticsMinimal />} />
+              {/* Legacy stats route - redirect to new format */}
+              <Route path="/stats/:id" element={<CampaignStatisticsMinimal />} />
               {/* Public campaign view */}
               <Route path="/campaign/:id" element={
                 <LoadingBoundary>
