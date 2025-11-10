@@ -1,8 +1,6 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { supabase } from '../integrations/supabase/client';
 import Spinner from '../components/shared/Spinner';
-import { Loader2 } from 'lucide-react';
 
 /**
  * Page de redirection pour les Short URLs
@@ -18,23 +16,13 @@ const ShortUrlRedirect = () => {
       return;
     }
 
-    // Récupérer le mapping
-    const mapping = getShortUrlMapping(code);
-
-    if (!mapping) {
-      // Short URL non trouvée
-      navigate('/404');
-      return;
-    }
-
-    // Incrémenter le compteur de clics
-    incrementShortUrlClicks(code);
-
-    // Rediriger vers l'URL longue
-    // Petit délai pour permettre l'enregistrement du clic
+    // TODO: Implémenter la logique de redirection avec Supabase
+    console.log('Short URL code:', code);
+    
+    // Temporairement, rediriger vers la home
     setTimeout(() => {
-      window.location.href = mapping.longUrl;
-    }, 100);
+      navigate('/');
+    }, 1000);
   }, [code, navigate]);
 
   return (

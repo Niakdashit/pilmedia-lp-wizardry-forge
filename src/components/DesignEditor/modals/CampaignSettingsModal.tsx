@@ -7,7 +7,6 @@ import ChannelsStep from '@/pages/CampaignSettings/ChannelsStep';
 import ParametersStep from '@/pages/CampaignSettings/ParametersStep';
 import OutputStep from '@/pages/CampaignSettings/OutputStep';
 import ViralityStep from '@/pages/CampaignSettings/ViralityStep';
-import { DotationPanel } from '@/components/CampaignSettings/DotationPanel';
 import { useEditorStore } from '@/stores/editorStore';
 import { useCampaigns } from '@/hooks/useCampaigns';
 import { saveCampaignToDB } from '@/hooks/useModernCampaignEditor/saveHandler';
@@ -376,11 +375,10 @@ useEffect(() => {
           ) : (
             <div className="max-w-4xl mx-auto">
               {activeTab === 'dotation' ? (
-                // Onglet Dotation : composant spécial
-                <DotationPanel
-                  campaignId={effectiveCampaignId}
-                  campaignType={(campaign as any)?.type || 'wheel'}
-                />
+                // Onglet Dotation : temporairement désactivé
+                <div className="p-8 text-center text-gray-500">
+                  <p>L'onglet Dotation sera disponible prochainement.</p>
+                </div>
               ) : ActiveStepComponent ? (
                 // Autres onglets : composants standards
                 <ActiveStepComponent
