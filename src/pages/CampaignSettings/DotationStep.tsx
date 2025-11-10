@@ -1,7 +1,6 @@
-import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
-import { useCampaignSettings, CampaignSettings } from '@/hooks/useCampaignSettings';
+import React from 'react';
 import { Plus, Trash2, Calendar, Clock, Package, AlertCircle } from 'lucide-react';
+import { CampaignSettings } from '@/hooks/useCampaignSettings';
 
 export interface TimedPrize {
   id: string;
@@ -13,22 +12,13 @@ export interface TimedPrize {
   enabled: boolean;
 }
 
-const DotationStep: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
-  const { getSettings, upsertSettings, error, saveDraft } = useCampaignSettings();
-  const [form, setForm] = useState<Partial<CampaignSettings>>({});
-  const campaignId = id || '';
+interface DotationStepProps {
+  form: Partial<CampaignSettings>;
+  setForm: React.Dispatch<React.SetStateAction<Partial<CampaignSettings>>>;
+  campaignId?: string;
+}
 
-  useEffect(() => {
-    let mounted = true;
-    (async () => {
-      if (!campaignId) return;
-      const data = await getSettings(campaignId);
-      if (mounted) setForm(data || { campaign_id: campaignId });
-    })();
-    return () => { mounted = false; };
-  }, [campaignId, getSettings]);
-
+const DotationStep: React.FC<DotationStepProps> = ({ form, setForm }) => {
   const handleChange = (path: string, value: any) => {
     setForm(prev => {
       const next: any = JSON.parse(JSON.stringify(prev || {})); // Clone profond
@@ -41,33 +31,10 @@ const DotationStep: React.FC = () => {
       }
       ref[keys[keys.length - 1]] = value;
       console.log('📝 [DotationStep] handleChange:', path, value);
+      console.log('📝 [DotationStep] Updated form:', next);
       return next;
     });
   };
-
-  const handleSave = async () => {
-    if (!campaignId) return;
-    console.log('💾 [DotationStep] Saving dotation:', (form as any)?.dotation);
-    const saved = await upsertSettings(campaignId, {
-      dotation: (form as any)?.dotation,
-    });
-    if (!saved) {
-      try { saveDraft(campaignId, form); } catch {}
-      alert('Sauvegarde distante échouée, un brouillon local a été enregistré.');
-    }
-  };
-
-  // Listen to global save-and-close action from layout
-  useEffect(() => {
-    const onSaveAndClose = (_e: Event) => {
-      handleSave();
-    };
-    window.addEventListener('campaign:saveAndClose', onSaveAndClose as EventListener);
-    return () => {
-      window.removeEventListener('campaign:saveAndClose', onSaveAndClose as EventListener);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [campaignId, form]);
 
   const baseProbability = ((form as any)?.dotation?.base_probability ?? 10);
   const timedPrizes: TimedPrize[] = ((form as any)?.dotation?.timed_prizes ?? []);
@@ -102,11 +69,6 @@ const DotationStep: React.FC = () => {
   return (
     <div className="space-y-6 pb-20">
       <div aria-hidden className="h-[1.75rem]" />
-      {error && (
-        <div className="mb-4 p-3 rounded border border-red-200 bg-red-50 text-red-700 text-sm">
-          {error}
-        </div>
-      )}
 
       {/* Info Box */}
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">

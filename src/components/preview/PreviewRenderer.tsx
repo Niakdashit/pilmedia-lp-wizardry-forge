@@ -3,7 +3,9 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import StandardizedWheel from '../shared/StandardizedWheel';
+import DoubleMechanicWheel from '../GameTypes/DoubleMechanicWheel';
+import DoubleMechanicJackpot from '../GameTypes/DoubleMechanicJackpot';
+import DoubleMechanicScratch from '../GameTypes/DoubleMechanicScratch';
 import TemplatedQuiz from '../shared/TemplatedQuiz';
 import DynamicContactForm, { type FieldConfig } from '../forms/DynamicContactForm';
 import Modal from '../common/Modal';
@@ -15,6 +17,7 @@ import { DesignModuleRenderer } from '@/components/DesignEditor/DesignRenderer';
 import { QuizModuleRenderer } from '@/components/QuizEditor/QuizRenderer';
 import type { DesignScreenId } from '@/types/designEditorModular';
 import { isTempCampaignId } from '@/utils/tempCampaignId';
+import { useCampaignSettings } from '@/hooks/useCampaignSettings';
 
 interface PreviewRendererProps {
   campaign: any;
@@ -63,6 +66,22 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
   const campaignFromStore = useEditorStore((state) => state.campaign);
   const canvasConfigBackground = useEditorStore((state) => state.campaign?.canvasConfig?.background);
   const campaign = campaignFromStore || campaignProp;
+  
+  // Charger les settings de campagne (incluant dotation)
+  const { getSettings } = useCampaignSettings();
+  const [campaignSettings, setCampaignSettings] = useState<any>(null);
+  
+  useEffect(() => {
+    if (campaign?.id) {
+      console.log('🎯 [PreviewRenderer] Loading campaign settings for:', campaign.id);
+      getSettings(campaign.id).then(settings => {
+        if (settings) {
+          setCampaignSettings(settings);
+          console.log('🎯 [PreviewRenderer] Settings loaded:', settings);
+        }
+      });
+    }
+  }, [campaign?.id, getSettings]);
   
   // Forcer le re-render quand canvasConfigBackground change
   useEffect(() => {
@@ -531,14 +550,6 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
     setHasSubmittedForm(false);
   };
 
-  const handleWheelClick = () => {
-    console.log('🎡 Wheel clicked - hasSubmittedForm:', hasSubmittedForm);
-    // Afficher le formulaire uniquement pour les campagnes de type 'wheel'
-    if (campaign.type === 'wheel' && !hasSubmittedForm) {
-      setShowContactForm(true);
-    }
-  };
-
   const handleFormSubmit = async (formData: Record<string, string>) => {
     console.log('📝 Form submitted:', formData);
     setShowContactForm(false);
@@ -918,25 +929,48 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
                   style={{ padding: safeZonePadding, boxSizing: 'border-box', minHeight: modules2.length > 0 ? '400px' : '100vh' }}
                 >
                   {campaign.type === 'wheel' && (
-                    <StandardizedWheel
-                      campaign={campaign}
-                      extractedColors={campaign?.design?.extractedColors || []}
-                      wheelModalConfig={wheelModalConfig}
-                      device={previewMode}
-                      shouldCropWheel={true}
-                      disabled={campaign.type === 'wheel' && !hasSubmittedForm}
-                      onClick={handleWheelClick}
-                      onSpin={() => {
-                        if (campaign.type === 'wheel' && !hasSubmittedForm) {
-                          console.log('🎡 Wheel clicked but form not submitted yet');
-                          return;
-                        }
-                        console.log('🎡 Wheel spinning...');
-                        setTimeout(() => {
-                          const isWin = Math.random() > 0.5;
-                          handleGameFinish(isWin ? 'win' : 'lose');
-                        }, 3000);
+                    <DoubleMechanicWheel
+                      config={{}}
+                      campaign={{
+                        ...campaign,
+                        settings: campaignSettings
                       }}
+                      isPreview={false}
+                      onComplete={(prize) => {
+                        console.log('🎁 Prize won:', prize);
+                      }}
+                      onFinish={handleGameFinish}
+                      onStart={() => {
+                        console.log('🎡 Game started');
+                      }}
+                      disabled={campaign.type === 'wheel' && !hasSubmittedForm}
+                      gameSize="medium"
+                    />
+                  )}
+
+                  {/* Jackpot */}
+                  {campaign.type === 'jackpot' && (
+                    <DoubleMechanicJackpot
+                      campaign={{
+                        ...campaign,
+                        settings: campaignSettings
+                      }}
+                      isPreview={false}
+                      onFinish={handleGameFinish}
+                      disabled={!hasSubmittedForm}
+                    />
+                  )}
+
+                  {/* Scratch */}
+                  {campaign.type === 'scratch' && (
+                    <DoubleMechanicScratch
+                      config={campaign.gameConfig?.scratch || {}}
+                      campaign={{
+                        ...campaign,
+                        settings: campaignSettings
+                      }}
+                      isPreview={false}
+                      onFinish={handleGameFinish}
                     />
                   )}
 
