@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 const headerLogo = '/logos/prosplay-header-logo.svg';
@@ -22,24 +22,8 @@ const EditorOnlyLayout: React.FC<EditorOnlyLayoutProps> = ({
     navigate(backPath);
   };
 
-  useEffect(() => {
-    const previousBackground = document.body.style.background;
-    const previousHeight = document.body.style.height;
-    const previousMargin = document.body.style.margin;
-
-    document.body.style.background = 'linear-gradient(180deg, rgba(59, 56, 135, 0.855), rgba(156, 26, 96, 0.72), rgba(195, 85, 70, 0.775), rgba(156, 26, 96, 0.72))';
-    document.body.style.height = '100vh';
-    document.body.style.margin = '0';
-
-    return () => {
-      document.body.style.background = previousBackground;
-      document.body.style.height = previousHeight;
-      document.body.style.margin = previousMargin;
-    };
-  }, []);
-
   return (
-    <div className="min-h-screen w-full" style={{ background: 'linear-gradient(180deg, rgba(59, 56, 135, 0.855), rgba(156, 26, 96, 0.72), rgba(195, 85, 70, 0.775), rgba(156, 26, 96, 0.72))' }}>
+    <div className="app-viewport-container min-h-screen w-full">
       {/* Header minimal pour navigation */}
       {showBackButton && (
         <header className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">

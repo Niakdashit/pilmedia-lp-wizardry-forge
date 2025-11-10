@@ -23,31 +23,14 @@ const Layout: React.FC = () => {
   // Sidebar is permanently collapsed; no body scroll lock is needed
 
   return (
-    <>
-      <style>{`
-        body {
-          background: linear-gradient(
-            180deg,
-            rgba(59, 56, 135, 0.855),
-            rgba(156, 26, 96, 0.72),
-            rgba(195, 85, 70, 0.775),
-            rgba(156, 26, 96, 0.72)
-          );
-          background-attachment: fixed;
-          background-size: cover;
-          min-height: 100vh;
-          min-height: 100dvh;
-          margin: 0;
-        }
-      `}</style>
-      <div
-        className="flex min-h-screen w-full relative"
-        style={{
-          overflow: 'hidden',
-          height: '100vh',
-          margin: 0,
-        }}
-      >
+    <div
+      className="app-viewport-container flex min-h-screen w-full relative"
+      style={{
+        overflow: 'hidden',
+        minHeight: '100dvh',
+        margin: 0,
+      }}
+    >
         <header
           className="absolute z-40 flex items-center justify-between px-7"
           style={{
@@ -128,8 +111,7 @@ const Layout: React.FC = () => {
             </main>
           </div>
         </div>
-      </div>
-    </>
+    </div>
   );
 };
 
