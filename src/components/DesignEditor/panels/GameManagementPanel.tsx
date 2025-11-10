@@ -62,6 +62,7 @@ const GameManagementPanel: React.FC<GameManagementPanelProps> = ({
   const [localGameType, setLocalGameType] = useState(campaign?.type || 'wheel');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [dotationPrizes, setDotationPrizes] = useState<DotationPrize[]>([]);
+  const lastExtractedColorsRef = useRef<string>('');
 
   // Récupérer les lots de dotation depuis Supabase
   useEffect(() => {
@@ -123,7 +124,14 @@ const GameManagementPanel: React.FC<GameManagementPanelProps> = ({
 
   // Mettre à jour les couleurs quand les couleurs extraites changent
   React.useEffect(() => {
-    updateSegmentColorsFromExtractedColors();
+    const extractedColors = campaign?.design?.extractedColors || [];
+    const colorsKey = JSON.stringify(extractedColors);
+    
+    // Only update if colors actually changed
+    if (colorsKey !== lastExtractedColorsRef.current && extractedColors.length > 0) {
+      lastExtractedColorsRef.current = colorsKey;
+      updateSegmentColorsFromExtractedColors();
+    }
   }, [campaign?.design?.extractedColors]);
 
   // Segments par défaut pour la roue de la fortune avec alternance couleur/blanc
@@ -553,7 +561,7 @@ const GameManagementPanel: React.FC<GameManagementPanelProps> = ({
                         <optgroup label="🎁 Lots de dotation">
                           {dotationPrizes.map((prize) => (
                             <option key={prize.id} value={prize.id}>
-                              {prize.name} ({(prize as any).attributionMethod === 'calendar' ? '📅 Calendrier' : '🎲 Probabilité'})
+                              {prize.name} ({prize.attribution?.method === 'calendar' ? '📅 Calendrier' : '🎲 Probabilité'})
                             </option>
                           ))}
                         </optgroup>

@@ -73,6 +73,8 @@ export class PrizeAttributionEngine {
       const sortedPrizes = this.sortPrizesByPriority(availablePrizes);
 
       // 5. Tenter l'attribution pour chaque lot
+      let lastAttempt: AttributionResult | null = null;
+
       for (const prize of sortedPrizes) {
         const result = await this.tryAttributePrize(prize, context);
         if (result.isWinner) {
@@ -84,9 +86,15 @@ export class PrizeAttributionEngine {
           await this.sendNotifications(result);
           return result;
         }
+
+        lastAttempt = result;
       }
 
-      // 6. Aucun lot gagné
+      // 6. Aucun lot gagné - retourner la dernière raison connue si disponible
+      if (lastAttempt) {
+        return lastAttempt;
+      }
+
       return this.createResult(false, null, 'Aucune condition d\'attribution remplie', 'LOSE_NO_MATCH', context);
 
     } catch (error) {
@@ -133,13 +141,46 @@ export class PrizeAttributionEngine {
     config: CalendarAttribution,
     context: AttributionContext
   ): AttributionResult {
+    console.log('📅 [Calendar] Starting calendar check', {
+      prizeId: prize.id,
+      prizeName: prize.name,
+      config: config,
+      hasScheduledDate: !!config.scheduledDate,
+      hasScheduledTime: !!config.scheduledTime
+    });
+
+    if (!config.scheduledDate || !config.scheduledTime) {
+      console.warn(`⚠️ [Calendar] Missing date/time for prize ${prize.id}`, {
+        scheduledDate: config.scheduledDate,
+        scheduledTime: config.scheduledTime
+      });
+      return this.createResult(false, null, 'Configuration calendrier invalide', 'ERROR_SYSTEM', context);
+    }
+
     const now = new Date(context.timestamp);
-    const scheduledDateTime = new Date(`${config.scheduledDate}T${config.scheduledTime}`);
-    const timeWindow = config.timeWindow || 0; // minutes
+    const scheduledDateTime = this.getScheduledCalendarDate(config);
+    const configuredWindow = typeof config.timeWindow === 'number' ? Math.max(config.timeWindow, 0) : 0;
+
+    // Utiliser la fenêtre configurée (0 = instant précis, pas de tolérance automatique)
+    const effectiveWindowMinutes = configuredWindow;
 
     // Calculer la fenêtre de temps
-    const windowStart = new Date(scheduledDateTime.getTime() - (timeWindow * 60000));
-    const windowEnd = new Date(scheduledDateTime.getTime() + (timeWindow * 60000));
+    const windowStart = new Date(scheduledDateTime.getTime() - (effectiveWindowMinutes * 60000));
+    const windowEnd = new Date(scheduledDateTime.getTime() + (effectiveWindowMinutes * 60000));
+
+    console.log('📅 [Calendar] Checking window', {
+      prizeId: prize.id,
+      prizeName: prize.name,
+      scheduledDate: config.scheduledDate,
+      scheduledTime: config.scheduledTime,
+      scheduledDateTime: scheduledDateTime.toISOString(),
+      now: now.toISOString(),
+      configuredWindowMinutes: configuredWindow,
+      appliedWindowMinutes: effectiveWindowMinutes,
+      windowStart: windowStart.toISOString(),
+      windowEnd: windowEnd.toISOString(),
+      isInWindow: now >= windowStart && now <= windowEnd
+    });
 
     // Vérifier si on est dans la fenêtre
     if (now >= windowStart && now <= windowEnd) {
@@ -170,7 +211,15 @@ export class PrizeAttributionEngine {
     context: AttributionContext
   ): Promise<AttributionResult> {
     // Vérifier si le quota de gagnants est atteint
-    if (config.maxWinners && prize.awardedQuantity >= config.maxWinners) {
+    const winnersLimit = typeof config.maxWinners === 'number' && config.maxWinners > 0
+      ? config.maxWinners
+      : undefined;
+
+    if (winnersLimit !== undefined && prize.awardedQuantity >= winnersLimit) {
+      console.log(`❌ [Probability] Prize ${prize.id} quota reached`, {
+        awardedQuantity: prize.awardedQuantity,
+        winnersLimit
+      });
       return this.createResult(false, null, 'Quota de gagnants atteint', 'LOSE_QUOTA_FULL', context);
     }
 
@@ -553,6 +602,20 @@ export class PrizeAttributionEngine {
       [array[i], array[j]] = [array[j], array[i]];
     }
     return array;
+  }
+
+  /**
+   * Calcule la Date cible d'un lot calendrier (gestion des fuseaux si fournis)
+   */
+  private getScheduledCalendarDate(config: CalendarAttribution): Date {
+    const datePart = config.scheduledDate;
+    const timePart = config.scheduledTime || '00:00';
+
+    if (config.timezone) {
+      console.log(`ℹ️ [Calendar] Timezone ${config.timezone} provided but not yet applied; falling back to campaign timezone`);
+    }
+
+    return new Date(`${datePart}T${timePart}`);
   }
 }
 

@@ -16,6 +16,7 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
   disablePointerAnimation,
   onSpin,
   onResult,
+  onComplete,
   onShowParticipationModal,
   brandColors,
   customButton,
@@ -60,6 +61,9 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
   
   // État pour le segment forcé par le système de dotation
   const [internalForcedSegmentId, setInternalForcedSegmentId] = useState<string | null>(null);
+  
+  // État pour bloquer la roue après le premier spin
+  const [hasSpun, setHasSpun] = useState(false);
   
   // Utiliser forcedSegmentId de la prop ou l'état interne
   const effectiveForcedSegmentId = forcedSegmentId !== undefined ? forcedSegmentId : internalForcedSegmentId;
@@ -119,11 +123,57 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
 
   // Fonctions de gestion
   const handleWheelResult = (result: any) => {
+    // Marquer la roue comme ayant été lancée
+    setHasSpun(true);
+    
+    console.log('🎯 [SmartWheel] handleWheelResult called with:', result);
+    
     if (!isMode1) {
       setMode2State('result');
     }
     if (onResult) {
       onResult(result);
+    }
+    // Appeler onComplete après un délai de 2 secondes pour permettre l'animation
+    if (onComplete) {
+      console.log('🎯 [SmartWheel] onComplete exists, setting timeout...');
+      setTimeout(() => {
+        console.log('🎯 [SmartWheel] Timeout fired, determining result...');
+        // Méthode 1 (prioritaire): Utiliser prizeId - si un lot est attribué, c'est gagnant
+        const hasPrize = !!result?.prizeId;
+        
+        // Méthode 2 (fallback): Utiliser isWinning explicite SEULEMENT si pas de système de dotation
+        // Si dotation activée, on ignore isWinning et on se base uniquement sur prizeId
+        const isExplicitlyWinning = !useDotationSystem && result?.isWinning === true;
+        
+        // Méthode 3 (dernier recours): Vérifier le label pour les cas legacy
+        const label = (result?.label || '').toLowerCase();
+        const hasLosingLabel = label === 'perdant' || 
+          label.includes('dommage') || 
+          label.includes('perdu') || 
+          label.includes('essaie') ||
+          label.includes('rejouer');
+        
+        // Un segment est gagnant UNIQUEMENT si:
+        // - Il a un prizeId (lot attribué par dotation) OU
+        // - (Si pas de dotation) Il est explicitement marqué comme gagnant (isWinning: true)
+        // Tous les autres segments sont considérés comme perdants par défaut
+        const isWinningSegment = hasPrize || isExplicitlyWinning;
+        
+        console.log('🎯 [SmartWheel] Result determination:', {
+          label: result?.label,
+          prizeId: result?.prizeId,
+          isWinning: result?.isWinning,
+          hasPrize,
+          isExplicitlyWinning,
+          hasLosingLabel,
+          isWinningSegment,
+          finalResult: isWinningSegment ? 'WIN' : 'LOSE'
+        });
+        
+        const prizeLabel = isWinningSegment ? (result?.label || result?.id || 'prize') : null;
+        onComplete(prizeLabel);
+      }, 2000);
     }
   };
 
@@ -197,6 +247,12 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
   });
   
   const handleSpin = async () => {
+    // Bloquer si la roue a déjà été lancée
+    if (hasSpun) {
+      console.log('🚫 [SmartWheel] Wheel already spun, blocking additional spins');
+      return;
+    }
+    
     let forcedSegment: string | null = null;
     
     // Si le système de dotation est activé, déterminer le segment avant de lancer le spin
@@ -215,10 +271,24 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
 
         // Forcer le segment si déterminé par le système de dotation
         if (spinResult.segmentId) {
+          // Le joueur gagne - forcer le segment gagnant
           forcedSegment = spinResult.segmentId;
           setInternalForcedSegmentId(spinResult.segmentId);
-          console.log('✅ [SmartWheel] Forcing segment:', spinResult.segmentId);
+          console.log('✅ [SmartWheel] Forcing WINNING segment:', spinResult.segmentId);
           console.log('🔍 [SmartWheel] Available segment IDs:', segments.map(s => ({ id: s.id, label: s.label })));
+        } else if (spinResult.shouldWin === false) {
+          // Le joueur ne gagne pas - forcer un segment PERDANT
+          const losingSegments = segments.filter(s => s.label !== 'GAGNANT' && !s.label.toLowerCase().includes('gagn'));
+          if (losingSegments.length > 0) {
+            const randomLosingSegment = losingSegments[Math.floor(Math.random() * losingSegments.length)];
+            forcedSegment = randomLosingSegment.id;
+            setInternalForcedSegmentId(randomLosingSegment.id);
+            console.log('❌ [SmartWheel] Forcing LOSING segment:', randomLosingSegment.id, randomLosingSegment.label);
+            console.log('📋 [SmartWheel] Reason:', spinResult.reason);
+          } else {
+            setInternalForcedSegmentId(null);
+            console.log('⚠️ [SmartWheel] No losing segments found, random spin');
+          }
         } else {
           setInternalForcedSegmentId(null);
           console.log('🎲 [SmartWheel] No forced segment');

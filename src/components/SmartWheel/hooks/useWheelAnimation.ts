@@ -203,8 +203,10 @@ export const useWheelAnimation = (props: UseWheelAnimationProps) => {
       targetIndex = Math.floor(Math.random() * segments.length);
     }
     
-    // Calculate the target rotation
-    const desiredNormalizedAngle = targetIndex * segmentAngle + segmentAngle / 2;
+    // Calculate the target rotation with random variation within the segment
+    // Add random offset between -30% and +30% of segment width for natural landing
+    const randomOffset = (Math.random() - 0.5) * 0.6 * segmentAngle; // ±30% of segment
+    const desiredNormalizedAngle = targetIndex * segmentAngle + segmentAngle / 2 + randomOffset;
     const currentRotation = rotationRef.current;
     const currentMod = ((currentRotation % 360) + 360) % 360;
     const desiredMod = ((POINTER_ANGLE_DEG - (desiredNormalizedAngle + EPSILON)) % 360 + 360) % 360;
