@@ -40,19 +40,26 @@ const DoubleMechanicScratch: React.FC<DoubleMechanicScratchProps> = ({
     // Récupérer les lots déjà réclamés
     const claimedPrizeIds = getClaimedPrizes(campaignId);
 
-    // Vérifier si on doit utiliser la mécanique gagnante
-    const result = checkDoubleMechanic(timedPrizes, claimedPrizeIds);
+    // Récupérer la probabilité de base
+    const baseProbability = campaign?.settings?.dotation?.base_probability || 10;
+
+    // Vérifier si on doit gagner (soit probabilité de base, soit lot programmé)
+    const result = checkDoubleMechanic(timedPrizes, claimedPrizeIds, baseProbability);
 
     console.log('🎯 [DoubleMechanicScratch] Mechanic check result:', result);
 
-    if (result.isWinningMechanic && result.prizeId) {
+    if (result.shouldWin && result.isTimedPrize && result.prizeId) {
       setMechanicType('winning');
       setSelectedPrize({
         id: result.prizeId,
         name: result.prizeName,
         description: result.prizeDescription
       });
-      console.log('🎉 [DoubleMechanicScratch] WINNING MECHANIC ACTIVATED!', result);
+      console.log('🎉 [DoubleMechanicScratch] TIMED PRIZE MECHANIC ACTIVATED!', result);
+    } else if (result.shouldWin && !result.isTimedPrize) {
+      setMechanicType('winning');
+      setSelectedPrize(null);
+      console.log('✅ [DoubleMechanicScratch] Base probability WIN!', result);
     } else {
       setMechanicType('losing');
       setSelectedPrize(null);

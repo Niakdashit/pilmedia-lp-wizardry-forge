@@ -1,90 +1,103 @@
 import { TimedPrize } from '@/pages/CampaignSettings/DotationStep';
 
 /**
- * Service pour gérer la logique de double mécanique (perdante/gagnante)
+ * Service pour gérer la logique de double mécanique hybride
  * 
  * Principe:
- * - Par défaut, tous les participants tombent sur une mécanique 100% perdante
- * - Si un lot est programmé à une date/heure précise, seul le premier participant
- *   qui joue exactement à ce moment gagne
- * - Après l'attribution du lot, la mécanique perdante reprend
+ * - Probabilité de base configurable (ex: 10%) pour tous les participants
+ * - Lots programmés avec fenêtres temporelles où la probabilité passe à 100%
+ * - Durant la fenêtre, le premier participant gagne le lot programmé
+ * - Après attribution ou fin de fenêtre, retour à la probabilité de base
  */
 
 export interface DoubleMechanicResult {
-  isWinningMechanic: boolean;
+  shouldWin: boolean;
+  isTimedPrize: boolean; // true si c'est un lot programmé, false si c'est la probabilité de base
   prizeId?: string;
   prizeName?: string;
   prizeDescription?: string;
-  reason: 'default_losing' | 'timed_prize_match' | 'timed_prize_already_claimed' | 'no_active_prizes';
+  reason: 'base_probability_win' | 'base_probability_lose' | 'timed_prize_match' | 'timed_prize_already_claimed' | 'no_timed_prizes' | 'outside_window';
 }
 
 /**
- * Vérifie si le participant actuel doit tomber sur la mécanique gagnante
- * @param timedPrizes Liste des lots programmés
+ * Vérifie si le participant actuel doit gagner avec le système hybride
+ * @param timedPrizes Liste des lots programmés avec fenêtres temporelles
  * @param claimedPrizeIds Liste des IDs de lots déjà réclamés
- * @returns Résultat indiquant quelle mécanique utiliser
+ * @param baseProbability Probabilité de base (0-100)
+ * @returns Résultat indiquant si le joueur gagne et pourquoi
  */
 export function checkDoubleMechanic(
   timedPrizes: TimedPrize[] = [],
-  claimedPrizeIds: string[] = []
+  claimedPrizeIds: string[] = [],
+  baseProbability: number = 10
 ): DoubleMechanicResult {
-  // Si aucun lot programmé, toujours perdant
-  if (!timedPrizes || timedPrizes.length === 0) {
-    return {
-      isWinningMechanic: false,
-      reason: 'no_active_prizes'
-    };
-  }
-
-  // Filtrer les lots actifs uniquement
-  const activePrizes = timedPrizes.filter(p => p.enabled && p.date && p.time);
-
-  if (activePrizes.length === 0) {
-    return {
-      isWinningMechanic: false,
-      reason: 'no_active_prizes'
-    };
-  }
-
-  // Date et heure actuelles
   const now = new Date();
   const currentDate = formatDate(now);
-  const currentTime = formatTime(now);
+  const currentTime = now.getTime();
 
-  console.log('🎯 [DoubleMechanic] Checking at:', { currentDate, currentTime });
+  console.log('🎯 [DoubleMechanic] Checking at:', { currentDate, time: formatTime(now), baseProbability });
 
-  // Chercher un lot qui correspond à la date/heure actuelle
-  for (const prize of activePrizes) {
-    // Vérifier si le lot a déjà été réclamé
-    if (claimedPrizeIds.includes(prize.id)) {
-      console.log('⏭️ [DoubleMechanic] Prize already claimed:', prize.id);
-      continue;
-    }
+  // 1. Vérifier si on est dans une fenêtre temporelle d'un lot programmé
+  if (timedPrizes && timedPrizes.length > 0) {
+    const activePrizes = timedPrizes.filter(p => p.enabled && p.date && p.time && p.name);
 
-    // Vérifier si la date et l'heure correspondent exactement
-    if (prize.date === currentDate && prize.time === currentTime) {
-      console.log('🎉 [DoubleMechanic] WINNING MECHANIC! Prize match:', {
-        prizeId: prize.id,
-        prizeName: prize.name,
-        scheduledFor: `${prize.date} ${prize.time}`
-      });
+    for (const prize of activePrizes) {
+      // Vérifier si le lot a déjà été réclamé
+      if (claimedPrizeIds.includes(prize.id)) {
+        console.log('⏭️ [DoubleMechanic] Prize already claimed:', prize.id);
+        continue;
+      }
 
-      return {
-        isWinningMechanic: true,
-        prizeId: prize.id,
-        prizeName: prize.name,
-        prizeDescription: prize.description,
-        reason: 'timed_prize_match'
-      };
+      // Vérifier si on est dans la fenêtre temporelle
+      if (prize.date === currentDate) {
+        const [prizeHour, prizeMinute] = prize.time.split(':').map(Number);
+        const prizeStartTime = new Date(now);
+        prizeStartTime.setHours(prizeHour, prizeMinute, 0, 0);
+        
+        const windowDuration = prize.windowDuration || 5; // 5 minutes par défaut
+        const prizeEndTime = new Date(prizeStartTime.getTime() + windowDuration * 60 * 1000);
+
+        // On est dans la fenêtre !
+        if (currentTime >= prizeStartTime.getTime() && currentTime <= prizeEndTime.getTime()) {
+          console.log('🎉 [DoubleMechanic] TIMED PRIZE WINDOW! Winner guaranteed:', {
+            prizeId: prize.id,
+            prizeName: prize.name,
+            window: `${prize.time} -> ${formatTime(prizeEndTime)}`,
+            currentTime: formatTime(now)
+          });
+
+          return {
+            shouldWin: true,
+            isTimedPrize: true,
+            prizeId: prize.id,
+            prizeName: prize.name,
+            prizeDescription: prize.description,
+            reason: 'timed_prize_match'
+          };
+        }
+      }
     }
   }
 
-  // Aucun lot ne correspond à l'heure actuelle
-  console.log('❌ [DoubleMechanic] No prize match, using losing mechanic');
-  return {
-    isWinningMechanic: false,
-    reason: 'default_losing'
-  };
+  // 2. Aucune fenêtre active, utiliser la probabilité de base
+  const randomValue = Math.random() * 100;
+  const wins = randomValue <= baseProbability;
+
+  if (wins) {
+    console.log(`✅ [DoubleMechanic] Base probability WIN: ${randomValue.toFixed(2)}% <= ${baseProbability}%`);
+    return {
+      shouldWin: true,
+      isTimedPrize: false,
+      reason: 'base_probability_win'
+    };
+  } else {
+    console.log(`❌ [DoubleMechanic] Base probability LOSE: ${randomValue.toFixed(2)}% > ${baseProbability}%`);
+    return {
+      shouldWin: false,
+      isTimedPrize: false,
+      reason: 'base_probability_lose'
+    };
+  }
 }
 
 /**
