@@ -39,6 +39,10 @@ interface FunnelUnlockedGameProps {
   wheelModalConfig?: any; // Configuration en temps réel depuis le Design Editor
   onReset?: () => void;
   launchButtonStyles?: React.CSSProperties;
+  onCTAClick?: () => void;
+  onFormSubmit?: (data: Record<string, string>) => void;
+  onGameComplete?: () => void;
+  currentStep?: string;
 }
 
 const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
@@ -46,7 +50,11 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
   previewMode = 'desktop',
   mobileConfig,
   wheelModalConfig,
-  launchButtonStyles
+  launchButtonStyles,
+  onCTAClick,
+  onFormSubmit,
+  onGameComplete,
+  currentStep: externalCurrentStep
 }) => {
   // Vérifier que le type de jeu est compatible avec ce funnel
   if (!UNLOCKED_GAME_TYPES.includes(campaign.type)) {
@@ -63,6 +71,9 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
   const [participationLoading, setParticipationLoading] = useState(false);
   const [forceUpdate, setForceUpdate] = useState(0);
   const [hasPlayed, setHasPlayed] = useState(false);
+  // 🎯 Stocker l'email du participant pour le système de dotation
+  const [participantEmail, setParticipantEmail] = useState<string>('');
+  const [participantId, setParticipantId] = useState<string>('');
 
   // Écouter les mises à jour de style pour forcer le re-render (comme FunnelQuizParticipate)
   React.useEffect(() => {
@@ -542,13 +553,26 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
 
   const handleFormSubmit = async (formData: Record<string, string>) => {
     setParticipationLoading(true);
+    
+    // 🎯 Stocker l'email pour le système de dotation
+    if (formData.email) {
+      setParticipantEmail(formData.email);
+      console.log('🎯 [FunnelUnlockedGame] Participant email stored:', formData.email);
+    }
+    
     try {
       if (campaign.id) {
-        await createParticipation({
+        const participation = await createParticipation({
           campaign_id: campaign.id,
           form_data: formData,
           user_email: formData.email
         });
+        
+        // Stocker l'ID de participation si disponible
+        if (participation?.id) {
+          setParticipantId(participation.id);
+          console.log('🎯 [FunnelUnlockedGame] Participant ID stored:', participation.id);
+        }
       }
       console.log('✅ Form validated! Setting formValidated to true');
       setFormValidated(true);
@@ -588,9 +612,19 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
     }
     console.log('📦 [FunnelUnlockedGame] Setting gameResult to:', result);
     setGameResult(result);
-    // Afficher immédiatement l'écran de résultat (pendant la fenêtre de 4s précédente)
-    console.log('✅ [FunnelUnlockedGame] Showing result screen immediately');
-    setShowResultScreen(true);
+    
+    // Attendre 2 secondes avant d'afficher l'écran de résultat pour laisser voir le résultat du jackpot
+    console.log('⏱️ [FunnelUnlockedGame] Waiting 2 seconds before showing result screen...');
+    setTimeout(() => {
+      console.log('✅ [FunnelUnlockedGame] Showing result screen now');
+      setShowResultScreen(true);
+      
+      // Propager l'événement au parent (JackpotEditor)
+      if (onGameComplete) {
+        console.log('📤 [FunnelUnlockedGame] Calling onGameComplete');
+        onGameComplete();
+      }
+    }, 2000);
   };
 
   // FONCTION DE RESET COMPLET pour le funnel unlocked
@@ -1343,18 +1377,29 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
 
   return (
     <div className="w-full h-full">
-      <CanvasGameRenderer 
-        campaign={liveCampaign} 
-        formValidated={formValidated && !hasPlayed} 
-        showValidationMessage={showValidationMessage} 
-        previewMode={previewMode} 
-        mobileConfig={mobileConfig} 
-        wheelModalConfig={wheelModalConfig}
-        fullScreen={false}
-        onGameFinish={handleGameFinish} 
-        onGameStart={handleGameStart} 
-        onGameButtonClick={handleCardClick} 
-      />
+      {showResultScreen && gameResult ? (
+        <ResultScreen
+          result={gameResult}
+          campaign={campaign}
+          onReset={handleReset}
+        />
+      ) : (
+        <CanvasGameRenderer 
+          campaign={liveCampaign} 
+          formValidated={formValidated && !hasPlayed} 
+          showValidationMessage={showValidationMessage} 
+          previewMode={previewMode} 
+          mobileConfig={mobileConfig} 
+          wheelModalConfig={wheelModalConfig}
+          fullScreen={false}
+          onGameFinish={handleGameFinish} 
+          onGameStart={handleGameStart} 
+          onGameButtonClick={handleCardClick}
+          participantEmail={participantEmail}
+          participantId={participantId}
+          useDotationSystem={true}
+        />
+      )}
 
       {/* Modal de formulaire pour tous les jeux unlocked - avec styles appliqués */}
       <FormHandler

@@ -58,7 +58,7 @@ const SlotMachine: React.FC<SlotMachineProps> = ({
   templateOverride,
   participantEmail,
   participantId,
-  useDotationSystem = false
+  useDotationSystem = true // ✅ Activer par défaut le système de dotation
 }) => {
   const [isSpinning, setIsSpinning] = useState(false);
   const animReqs = useRef<number[]>([]);
@@ -69,6 +69,9 @@ const SlotMachine: React.FC<SlotMachineProps> = ({
   const finishScheduledRef = useRef(false);
   const lastFrameTimeRef = useRef<number>(performance.now());
   const heartbeatIdRef = useRef<number | null>(null);
+  
+  // 🚀 REFS DOM pour manipulation directe (pas de re-render)
+  const reelStripRefs = useRef<(HTMLDivElement | null)[]>([null, null, null]);
   
   // Persistance du template sélectionné via localStorage
   const getPersistedTemplate = () => {
@@ -133,6 +136,7 @@ const SlotMachine: React.FC<SlotMachineProps> = ({
   const storedSlotSymbols = Array.isArray(jackpotConfig.slotMachineSymbols)
     ? (jackpotConfig.slotMachineSymbols as unknown[]).filter((s) => typeof s === 'string') as string[]
     : undefined;
+  const symbolToPrizeMap = jackpotConfig.symbolToPrizeMap as Record<string, string> | undefined;
   const campaignSymbolsRaw = jackpotConfig.symbols;
   const campaignSymbols = useMemo(() => {
     if (!campaignSymbolsRaw) return undefined;
@@ -191,6 +195,9 @@ const SlotMachine: React.FC<SlotMachineProps> = ({
   const [reelOffsets, setReelOffsets] = useState<number[]>(() => [initialSetup.offsets0[0], initialSetup.offsets0[1], initialSetup.offsets0[2]]);
   const targetOffsetsRef = useRef<number[]>([initialSetup.offsets0[0], initialSetup.offsets0[1], initialSetup.offsets0[2]]);
   
+  // 🔒 CRITICAL: Ref séparé pour stocker le résultat final de manière IMMUABLE
+  const lockedFinalsRef = useRef<string[] | null>(null);
+  
   // Fonction helper pour mettre à jour completedReels de manière synchrone
   const updateCompletedReel = (index: number, value: boolean) => {
     completedReelsRef.current[index] = value;
@@ -214,9 +221,15 @@ const SlotMachine: React.FC<SlotMachineProps> = ({
       clearTimeout(finishTimeoutRef.current);
       finishTimeoutRef.current = null;
     }
-    const finals = finalsRef.current;
+    
+    // 🔒 CRITICAL: Utiliser lockedFinalsRef qui n'a JAMAIS été modifié depuis le début du spin
+    const finals = lockedFinalsRef.current ? [...lockedFinalsRef.current] : [];
     finishScheduledRef.current = false;
     console.log('🎯 [SlotMachine] finalizeSpin triggered');
+    console.log('🔍 [SlotMachine] Finals from lockedFinalsRef:', finals);
+    console.log('🔍 [SlotMachine] lockedFinalsRef.current:', lockedFinalsRef.current);
+    console.log('🔍 [SlotMachine] finalsRef.current (for comparison):', finalsRef.current);
+    
     setIsSpinning(false);
     jackpotSession.spinning = false;
     try {
@@ -248,20 +261,21 @@ const SlotMachine: React.FC<SlotMachineProps> = ({
       return;
     }
 
+    // 🔒 Calculer le résultat AVANT d'appeler les callbacks
     const isWinning = finals.every((symbol) => symbol === finals[0]);
     console.log(`🎲 [SlotMachine] Final result computed: ${isWinning ? 'WIN' : 'LOSE'}`, finals);
+    console.log('🔒 [SlotMachine] Result locked, calling callbacks with:', finals);
 
-    resultTimeoutRef.current = window.setTimeout(() => {
-      if (isWinning) {
-        console.log('🎉 [SlotMachine] Calling onWin after smooth stop');
-        onWin?.(finals);
-      } else {
-        console.log('😔 [SlotMachine] Calling onLose after smooth stop');
-        onLose?.();
-      }
-      // Pas de reset de spinLockRef: un seul spin autorisé par session de jeu
-    }, 650);
-  }, [onLose, onWin]);
+    // Appeler immédiatement car l'animation a déjà duré ~3.6s + 100ms
+    // Le délai de 2s sera géré par FunnelUnlockedGame qui affiche le jeu pendant 2s avant de montrer le résultat
+    if (isWinning) {
+      console.log('🎉 [SlotMachine] Calling onWin immediately with finals:', finals);
+      onWin?.(finals);
+    } else {
+      console.log('😔 [SlotMachine] Calling onLose immediately');
+      onLose?.();
+    }
+  }, [onLose, onWin, currentTemplate, symbols]);
 
   const spin = useCallback(async () => {
     if (jackpotSession.spinning || jackpotSession.hasSpun) {
@@ -292,6 +306,7 @@ const SlotMachine: React.FC<SlotMachineProps> = ({
     if (useDotationSystem && campaign?.id && participantEmail) {
       try {
         console.log('🎰 [SlotMachine] Using dotation system');
+        console.log('🗺️ [SlotMachine] symbolToPrizeMap:', symbolToPrizeMap);
         
         const result = await jackpotDotationIntegration.determineJackpotSpin(
           {
@@ -300,7 +315,8 @@ const SlotMachine: React.FC<SlotMachineProps> = ({
             participantId,
             userAgent: navigator.userAgent
           },
-          symbols
+          symbols,
+          symbolToPrizeMap
         );
         
         finals = result.symbols;
@@ -315,10 +331,20 @@ const SlotMachine: React.FC<SlotMachineProps> = ({
       finals = [0, 1, 2].map(() => symbols[Math.floor(Math.random() * symbols.length)]);
     }
     
-    finalsRef.current = finals;
+    // 🔒 CRITICAL: Verrouiller les finals pour qu'ils ne changent JAMAIS pendant le spin
+    finalsRef.current = [...finals]; // Copie pour éviter toute mutation
+    lockedFinalsRef.current = [...finals]; // Copie IMMUABLE pour finalizeSpin
+    console.log('🎯 [SlotMachine] Finals determined at spin start:', finals);
+    console.log('🔒 [SlotMachine] Finals locked in finalsRef.current:', finalsRef.current);
+    console.log('🔒 [SlotMachine] Finals locked in lockedFinalsRef.current:', lockedFinalsRef.current);
+    
+    // Sauvegarder aussi dans une variable locale pour l'animation
+    const lockedFinals = [...finals];
 
-    // Durées identiques pour tous les rouleaux (ralentissement synchronisé = plus de suspense)
-    const durations = [5200, 5200, 5200]; // ~5.2s pour tous les rouleaux (ralentissement encore plus long)
+    // 🎰 ANIMATION RÉALISTE AVEC DÉCALAGES
+    // Chaque rouleau a sa propre durée et son propre délai de démarrage
+    const durations = [2000, 2600, 3200]; // Durées progressives
+    const startDelays = [0, 150, 300]; // Délais de démarrage décalés (en ms)
     const cellSize = (currentTemplate === 'jackpot-4') ? 80 : 70;
     const stripLength = symbols.length * cellSize;
 
@@ -330,86 +356,104 @@ const SlotMachine: React.FC<SlotMachineProps> = ({
     setCompletedReels([false, false, false]);
 
     const startOffsets = [...reelOffsets];
-    // Nudge immédiat fort pour rendre le mouvement visible dès le 1er clic
-    const firstStep = Math.max(8, Math.floor(cellSize / 3));
-    setReelOffsets((prev) => prev.map((v, idx) => v - firstStep - idx));
+    
     [0, 1, 2].forEach((reelIndex) => {
-      const finalSymbol = finals[reelIndex];
+      const finalSymbol = lockedFinals[reelIndex];
       const finalSymbolIndex = symbols.indexOf(finalSymbol);
+      console.log(`🎯 [SlotMachine] Rouleau ${reelIndex} target:`, finalSymbol);
       
-      // Calculer la distance totale: plusieurs tours complets + position finale
-      const fullCycles = 10; // Même nombre de tours pour tous les rouleaux (synchronisé)
-      const totalDistance = (fullCycles * stripLength) + (finalSymbolIndex * cellSize);
-      // Tous les rouleaux utilisent le même offset (l'inversion visuelle est gérée par scaleY(-1))
+      // 🎰 CONFIGURATION PAR ROULEAU
+      // Chaque rouleau fait un nombre différent de tours pour plus de variété
+      const fullCycles = 10 + (reelIndex * 2); // 10, 12, 14 tours
+      
+      // Position finale du symbole gagnant
       const targetOffset = -(finalSymbolIndex * cellSize);
       targetOffsetsRef.current[reelIndex] = targetOffset;
-      const fastCycles = Math.max(1, fullCycles - 1);
-      const fastDistance = fastCycles * stripLength;
-      const slowDistance = totalDistance - fastDistance;
-      const fastPortion = Math.min(0.85, fastDistance / totalDistance);
+      
+      // Calculer la distance pour arriver pile sur le symbole final
+      const currentPos = startOffsets[reelIndex];
+      const distanceToTarget = currentPos - targetOffset;
+      const totalDistance = (fullCycles * stripLength) + distanceToTarget;
       const duration = durations[reelIndex];
+      const startDelay = startDelays[reelIndex];
 
-      const animate = (ts: number) => {
-        if (reelStartTimes.current[reelIndex] === 0) {
-          reelStartTimes.current[reelIndex] = ts;
-        }
-        const elapsed = ts - reelStartTimes.current[reelIndex];
-        const progress = Math.min(1, elapsed / duration);
-        let distanceTravelled: number;
+      // 🎰 DÉLAI DE DÉMARRAGE pour effet cascade
+      const startAnimation = () => {
+        const animate = (ts: number) => {
+          if (reelStartTimes.current[reelIndex] === 0) {
+            reelStartTimes.current[reelIndex] = ts;
+          }
+          const elapsed = ts - reelStartTimes.current[reelIndex];
+          
+          // Appliquer le délai de démarrage
+          if (elapsed < startDelay) {
+            animReqs.current[reelIndex] = requestAnimationFrame(animate);
+            return;
+          }
+          
+          const adjustedElapsed = elapsed - startDelay;
+          const progress = Math.min(1, adjustedElapsed / duration);
+          
+          // 🎰 EASING ULTRA-SIMPLE pour fluidité maximale
+          // Vitesse constante puis décélération douce
+          let eased: number;
+          if (progress < 0.85) {
+            // 85% du temps: vitesse linéaire constante
+            eased = progress;
+          } else {
+            // 15% final: décélération douce (easeOutQuad)
+            const t = (progress - 0.85) / 0.15;
+            eased = 0.85 + (0.15 * (1 - (1 - t) * (1 - t)));
+          }
+          
+          // 🎰 ANIMATION CONTINUE SANS MODULO (pas de saut)
+          const distanceTravelled = totalDistance * eased;
+          const currentOffset = startOffsets[reelIndex] - distanceTravelled;
 
-        if (progress < fastPortion) {
-          const phaseProgress = progress / fastPortion;
-          distanceTravelled = fastDistance * phaseProgress;
-        } else {
-          const phaseProgress = (progress - fastPortion) / (1 - fastPortion || 1);
-          const easedSlow = 1 - Math.pow(1 - phaseProgress, 4); // easeOutQuart
-          distanceTravelled = fastDistance + slowDistance * easedSlow;
-        }
+          // 🚀 MANIPULATION DOM DIRECTE pour 60 FPS (pas de re-render React)
+          const stripElement = reelStripRefs.current[reelIndex];
+          if (stripElement) {
+            // Pas de modulo = animation continue et fluide
+            stripElement.style.transform = `translateY(${currentOffset}px)`;
+          }
 
-        // Partir de l'offset courant pour éviter tout saut vers le premier symbole
-        let normalizedOffset = (startOffsets[reelIndex] - distanceTravelled) % stripLength;
-        if (normalizedOffset > 0) normalizedOffset -= stripLength; // garder offset négatif pour cohérence visuelle
-
-        setReelOffsets((prev) => {
-          const next = [...prev];
-          next[reelIndex] = normalizedOffset;
-          return next;
-        });
-
-        if (progress < 1) {
-          animReqs.current[reelIndex] = requestAnimationFrame(animate);
-        } else {
-          // Animation terminée: marquer comme complété et continuer à animer jusqu'à la position finale
-          console.log(`🎯 [SlotMachine] Rouleau ${reelIndex} terminé à ${Date.now()}`);
+          if (progress < 1) {
+            animReqs.current[reelIndex] = requestAnimationFrame(animate);
+          } else {
+          // Animation terminée: snap à la position finale exacte
+          console.log(`🎯 [SlotMachine] Rouleau ${reelIndex} terminé`);
           const snapOffset = targetOffsetsRef.current[reelIndex] ?? -(finalSymbolIndex * cellSize);
-          setReelOffsets((prev) => {
-            const next = [...prev];
-            next[reelIndex] = snapOffset;
-            return next;
-          });
           
-          // Utiliser updateCompletedReel pour mise à jour synchrone
+          // Snap final via DOM direct
+          if (stripElement) {
+            stripElement.style.transform = `translateY(${snapOffset}px)`;
+          }
+          
           updateCompletedReel(reelIndex, true);
-          console.log(`✅ [SlotMachine] completedReels mis à jour:`, completedReelsRef.current);
           
-          // Mettre à jour le symbole final
           setReels((prev) => {
             const next = [...prev];
             next[reelIndex] = finalSymbol;
-            console.log(`🎰 [SlotMachine] reels[${reelIndex}] = ${finalSymbol}`);
             return next;
           });
           
+          // Si tous les rouleaux sont terminés, finaliser
           if (completedReelsRef.current.every(Boolean) && !finishScheduledRef.current) {
             finishScheduledRef.current = true;
+            setIsSpinning(false);
+            
             finishTimeoutRef.current = window.setTimeout(() => {
               finalizeSpin();
-            }, 300);
+            }, 100);
           }
-        }
+          }
+        };
+        
+        animReqs.current[reelIndex] = requestAnimationFrame(animate);
       };
       
-      animReqs.current[reelIndex] = requestAnimationFrame(animate);
+      // Démarrer l'animation
+      startAnimation();
     });
   }, [isSpinning, disabled, hasPlayed, symbols, currentTemplate, finalizeSpin, clearFinishTimers, useDotationSystem, campaign, participantEmail, participantId, campaignProp]);
 
@@ -457,7 +501,7 @@ const SlotMachine: React.FC<SlotMachineProps> = ({
     };
   }, [clearFinishTimers]);
 
-  // If remount happened mid-spin (fullscreen editor), resume and smoothly finish to targets
+  // If remount happened mid-spin (fullscreen editor), snap directly to final positions
   React.useEffect(() => {
     if (!jackpotSession.spinning) return;
     // If there are already RAFs active, do nothing
@@ -473,30 +517,13 @@ const SlotMachine: React.FC<SlotMachineProps> = ({
     const targets = finals.map((s) => -(Math.max(symbols.indexOf(s), 0) * size));
     targetOffsetsRef.current = targets as any;
 
-    // Mark spinning visually
-    setIsSpinning(true);
-
-    const total = 2400; // smooth finish duration (even smoother)
-    const start = performance.now();
-
-    const step = () => {
-      const now = performance.now();
-      const t = Math.min(1, (now - start) / total);
-      const ease = (t === 1 ? 1 : 1 - Math.pow(2, -10 * t)); // easeOutExpo for ultra-smooth end
-      setReelOffsets((prev) => prev.map((v, idx) => v + (targets[idx] - v) * ease) as any);
-      if (t < 1) {
-        const id = requestAnimationFrame(step);
-        animReqs.current.push(id);
-      } else {
-        completedReelsRef.current = [true, true, true];
-        setCompletedReels([true, true, true]);
-        setReels([finals![0], finals![1], finals![2]]);
-        finalizeSpin();
-      }
-    };
-
-    const id = requestAnimationFrame(step);
-    animReqs.current = [id];
+    // CRITICAL: Snap directement aux positions finales (pas d'animation smooth)
+    setReelOffsets(targets as any);
+    setIsSpinning(false);
+    completedReelsRef.current = [true, true, true];
+    setCompletedReels([true, true, true]);
+    setReels([finals![0], finals![1], finals![2]]);
+    finalizeSpin();
   }, [currentTemplate, symbols, finalizeSpin]);
 
   // Heartbeat: if frames stop > 150ms while spinning, auto-resume smooth finish
@@ -637,12 +664,13 @@ const SlotMachine: React.FC<SlotMachineProps> = ({
                 >
                   {reels.map((symbol, reelIdx) => {
                     const size = 70;
-                    const isReverse = reelIdx === 1; // Rouleau du milieu en sens inverse
-                    // Strip répétée pour défilement fluide
-                    const strip = Array(80).fill(null).flatMap(() => symbols);
+                    const isReverse = false; // Tous les rouleaux tournent dans le même sens
+                    // Strip TRÈS LONGUE pour animation continue sans boucle
+                    const strip = Array(150).fill(null).flatMap(() => symbols);
                     const targetOffset = targetOffsetsRef.current[reelIdx] ?? -(Math.max(symbols.indexOf(reels[reelIdx]), 0) * size);
                     const shouldAnimate = isSpinning || jackpotSession.spinning;
-                    const currentOffset = shouldAnimate ? reelOffsets[reelIdx] : targetOffset;
+                    // L'offset est maintenant géré directement par le DOM via refs
+                    const currentOffset = targetOffset;
 
                     return (
                       <div
@@ -660,6 +688,7 @@ const SlotMachine: React.FC<SlotMachineProps> = ({
                         }}
                       >
                         <div
+                          ref={(el) => { reelStripRefs.current[reelIdx] = el; }}
                           style={{
                             position: 'absolute',
                             top: 0,
@@ -729,12 +758,14 @@ const SlotMachine: React.FC<SlotMachineProps> = ({
           >
             {reels.map((symbol, reelIdx) => {
               const size = (currentTemplate === 'jackpot-4') ? 80 : 70;
-              const isReverse = reelIdx === 1; // Rouleau du milieu en sens inverse
-              const strip = Array(80).fill(null).flatMap(() => symbols);
+              const isReverse = false; // Tous les rouleaux tournent dans le même sens
+              // Strip TRÈS LONGUE pour animation continue sans boucle
+              const strip = Array(150).fill(null).flatMap(() => symbols);
               const showBorders = !(currentTemplate === 'jackpot-2' || currentTemplate === 'jackpot-3' || currentTemplate === 'jackpot-4');
               const targetOffset = targetOffsetsRef.current[reelIdx] ?? -(Math.max(symbols.indexOf(reels[reelIdx]), 0) * size);
               const shouldAnimate = isSpinning;
-              const currentOffset = shouldAnimate ? reelOffsets[reelIdx] : targetOffset;
+              // L'offset est maintenant géré directement par le DOM via refs
+              const currentOffset = targetOffset;
               
               return (
                 <div
@@ -752,6 +783,7 @@ const SlotMachine: React.FC<SlotMachineProps> = ({
                   }}
                 >
                   <div
+                    ref={(el) => { reelStripRefs.current[reelIdx] = el; }}
                     style={{
                       position: 'absolute',
                       top: 0,

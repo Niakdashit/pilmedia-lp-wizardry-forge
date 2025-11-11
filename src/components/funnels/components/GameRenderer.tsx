@@ -122,9 +122,24 @@ const GameRenderer: React.FC<GameRendererProps> = ({
         );
       
       case 'jackpot':
+        // 🎰 Extract configured symbols from jackpotConfig
+        const jackpotConfig = campaign.jackpotConfig || campaign.gameConfig?.jackpot || {};
+        const configuredSymbols = jackpotConfig.slotMachineSymbols || jackpotConfig.symbols;
+        
+        console.log('🎰 [GameRenderer] Jackpot symbols:', {
+          hasJackpotConfig: !!jackpotConfig,
+          hasSlotMachineSymbols: !!jackpotConfig.slotMachineSymbols,
+          slotMachineSymbols: jackpotConfig.slotMachineSymbols,
+          hasSymbols: !!jackpotConfig.symbols,
+          symbolsCount: jackpotConfig.symbols?.length || 0,
+          configuredSymbols
+        });
+        
         return (
           <Jackpot
             isPreview={true}
+            campaign={campaign}
+            symbols={configuredSymbols}
             instantWinConfig={campaign.gameConfig?.jackpot?.instantWin}
             buttonLabel={buttonLabel}
             buttonColor={buttonColor}
@@ -135,7 +150,6 @@ const GameRenderer: React.FC<GameRendererProps> = ({
             slotBorderColor={campaign.gameConfig?.jackpot?.slotBorderColor}
             slotBorderWidth={campaign.gameConfig?.jackpot?.slotBorderWidth}
             slotBackgroundColor={campaign.gameConfig?.jackpot?.slotBackgroundColor}
-            disabled={!formValidated}
             onFinish={handleGameComplete}
             onStart={handleGameStartInternal}
             onButtonClick={onGameButtonClick}

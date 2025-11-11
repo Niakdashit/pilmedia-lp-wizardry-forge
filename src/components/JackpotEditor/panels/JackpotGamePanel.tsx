@@ -192,12 +192,14 @@ const JackpotGamePanel: React.FC<JackpotGamePanelProps> = ({
         .filter((symbol) => symbol.prizeId)
         .map((symbol) => [symbol.prizeId as string, convertSymbolToString(symbol) ?? '❓']);
 
+      const symbolToPrizeMap = Object.fromEntries(prizeMapEntries);
+      
       const enrichedJackpot = {
         ...mergedJackpot,
         symbols: allSymbols,
         activeSymbols: nextActiveSymbols,
         slotMachineSymbols: nextSlotSymbols,
-        symbolToPrizeMap: Object.fromEntries(prizeMapEntries),
+        symbolToPrizeMap,
         allSymbolStrings
       };
 
@@ -215,6 +217,7 @@ const JackpotGamePanel: React.FC<JackpotGamePanelProps> = ({
       };
 
       console.log('✅ [JackpotGamePanel] New campaign config:', newCampaign.jackpotConfig);
+      console.log('🗺️ [JackpotGamePanel] symbolToPrizeMap:', symbolToPrizeMap);
       return newCampaign;
     });
   }, [setCampaign]);
@@ -528,9 +531,9 @@ const JackpotGamePanel: React.FC<JackpotGamePanelProps> = ({
           )}
 
           {activeSymbols.length === 0 && symbols.length > 0 && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-              <p className="text-xs text-red-800">
-                🚫 <strong>Aucun symbole actif !</strong> Le jackpot ne fonctionnera pas tant qu'aucun symbole n'a de lot assigné. Assignez au moins un lot à un symbole.
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+              <p className="text-xs text-yellow-800">
+                ⚠️ <strong>Aucun lot attribué.</strong> Tous les symboles seront considérés comme perdants. Assignez au moins un lot à un symbole pour créer des symboles gagnants.
               </p>
             </div>
           )}
@@ -538,7 +541,7 @@ const JackpotGamePanel: React.FC<JackpotGamePanelProps> = ({
           {activeSymbols.length > 0 && (
             <div className="bg-green-50 border border-green-200 rounded-lg p-3">
               <p className="text-xs text-green-800">
-                ✅ <strong>{activeSymbols.length} symbole(s) actif(s)</strong> avec lots assignés. Le jackpot affichera uniquement ces symboles pendant le jeu.
+                ✅ <strong>{activeSymbols.length} symbole(s) gagnant(s)</strong> avec lots assignés. Les {symbols.length - activeSymbols.length} autre(s) symbole(s) sont automatiquement perdants.
               </p>
             </div>
           )}

@@ -19,7 +19,8 @@ class JackpotDotationIntegration {
    */
   async determineJackpotSpin(
     params: WheelSpinParams,
-    availableSymbols: string[]
+    availableSymbols: string[],
+    symbolToPrizeMap?: Record<string, string>
   ): Promise<JackpotSpinResult> {
     try {
       console.log('🎰 [JackpotDotation] Determining spin result for:', params);
@@ -31,9 +32,9 @@ class JackpotDotationIntegration {
 
       if (spinResult.shouldWin && spinResult.prize) {
         // GAGNANT : 3 symboles identiques
-        const winningSymbol = this.selectWinningSymbol(spinResult.prize, availableSymbols);
+        const winningSymbol = this.selectWinningSymbol(spinResult.prize, availableSymbols, symbolToPrizeMap);
         
-        console.log('✅ [JackpotDotation] Winner! Symbol:', winningSymbol);
+        console.log('✅ [JackpotDotation] Winner! Symbol:', winningSymbol, 'Prize ID:', spinResult.prize.id);
 
         return {
           shouldWin: true,
@@ -67,20 +68,33 @@ class JackpotDotationIntegration {
 
   /**
    * Sélectionne le symbole gagnant
-   * Peut être configuré dans le lot (metadata.winningSymbol)
+   * Priorité : symbolToPrizeMap > metadata.winningSymbol > premier symbole premium
    */
-  private selectWinningSymbol(prize: any, availableSymbols: string[]): string {
-    // Si le lot a un symbole spécifique configuré
+  private selectWinningSymbol(
+    prize: any, 
+    availableSymbols: string[], 
+    symbolToPrizeMap?: Record<string, string>
+  ): string {
+    // 1️⃣ PRIORITÉ : Chercher dans le symbolToPrizeMap (prizeId -> symbol)
+    if (symbolToPrizeMap && prize.id) {
+      const mappedSymbol = symbolToPrizeMap[prize.id];
+      if (mappedSymbol && availableSymbols.includes(mappedSymbol)) {
+        console.log('🎯 [JackpotDotation] Found symbol from map:', mappedSymbol, 'for prize:', prize.id);
+        return mappedSymbol;
+      }
+    }
+
+    // 2️⃣ Si le lot a un symbole spécifique configuré dans metadata
     if (prize.metadata?.winningSymbol && availableSymbols.includes(prize.metadata.winningSymbol)) {
       return prize.metadata.winningSymbol;
     }
 
-    // Si le lot a une image configurée
+    // 3️⃣ Si le lot a une image configurée
     if (prize.imageUrl) {
       return prize.imageUrl; // Utiliser l'URL de l'image comme symbole
     }
 
-    // Sinon, choisir le premier symbole "premium" (💎, ⭐, 7️⃣)
+    // 4️⃣ Sinon, choisir le premier symbole "premium" (💎, ⭐, 7️⃣)
     const premiumSymbols = ['💎', '⭐', '7️⃣'];
     const premiumSymbol = availableSymbols.find(s => premiumSymbols.includes(s));
     
@@ -88,7 +102,7 @@ class JackpotDotationIntegration {
       return premiumSymbol;
     }
 
-    // Fallback : premier symbole disponible
+    // 5️⃣ Fallback : premier symbole disponible
     return availableSymbols[0] || '💎';
   }
 

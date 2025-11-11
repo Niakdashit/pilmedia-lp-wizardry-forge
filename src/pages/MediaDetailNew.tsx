@@ -76,7 +76,7 @@ const MediaDetailNew: React.FC = () => {
               <div className="flex items-start gap-6">
                 {/* Logo */}
                 {mediaPartner.logo_url && (
-                  <div className={`w-30 h-30 rounded-xl shadow-lg p-4 border-2 flex-shrink-0 ${
+                  <div className={`w-24 h-24 rounded-xl shadow-lg p-4 border-2 flex-shrink-0 ${
                     mediaPartner.name === 'GEO' ? 'bg-[#8BC34A] border-[#8BC34A]' : 'bg-white border-white'
                   }`}>
                     <img 

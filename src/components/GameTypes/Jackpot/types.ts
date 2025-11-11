@@ -24,6 +24,10 @@ export interface JackpotProps {
   slotBorderWidth?: number;
   slotBackgroundColor?: string;
   containerBackgroundColor?: string;
+  /** Symboles configurés pour le jackpot (emojis ou images) */
+  symbols?: any[];
+  /** Campagne complète pour accéder à la configuration */
+  campaign?: any;
 }
 
 export type GameResult = 'win' | 'lose' | null;
