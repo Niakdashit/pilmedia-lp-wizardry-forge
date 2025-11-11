@@ -30,7 +30,7 @@ import HtmlModulePanel from '../QuizEditor/modules/HtmlModulePanel';
 import CartePanel from '../QuizEditor/panels/CartePanel';
 import QuizConfigPanel from '../QuizEditor/panels/QuizConfigPanel';
 import ModernFormTab from '../ModernEditor/ModernFormTab';
-import JackpotFullPanel from './panels/JackpotFullPanel';
+import JackpotGamePanel from './panels/JackpotGamePanel';
 import JackpotConfigPanel from '../SlotJackpot/panels/JackpotConfigPanel';
 import WheelConfigPanel from './panels/WheelConfigPanel';
 import MessagesPanel from './panels/MessagesPanel';
@@ -981,7 +981,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
         );
       case 'game':
         return (
-          <JackpotFullPanel
+          <JackpotGamePanel
             campaign={campaign}
             setCampaign={setCampaign}
           />

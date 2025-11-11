@@ -292,6 +292,50 @@ const { syncAllStates } = useCampaignStateSync();
     return !!(id && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id));
   })();
 
+  // 🎰 Initialiser jackpotConfig avec les symboles par défaut si absent
+  useEffect(() => {
+    if (!campaignState?.jackpotConfig?.symbols) {
+      const defaultSymbols = [
+        { id: '1', label: 'Cerise', contentType: 'emoji' as const, emoji: '🍒' },
+        { id: '2', label: 'Citron', contentType: 'emoji' as const, emoji: '🍋' },
+        { id: '3', label: 'Diamant', contentType: 'emoji' as const, emoji: '💎' },
+        { id: '4', label: 'Étoile', contentType: 'emoji' as const, emoji: '⭐' },
+        { id: '5', label: 'Sept', contentType: 'emoji' as const, emoji: '7️⃣' },
+      ];
+      
+      const allSymbolStrings = defaultSymbols.map(s => s.emoji);
+      
+      setCampaign((prev: any) => ({
+        ...prev,
+        jackpotConfig: {
+          ...(prev?.jackpotConfig ?? {}),
+          reels: 3,
+          symbolsPerReel: 3,
+          spinDuration: 3000,
+          symbols: defaultSymbols,
+          activeSymbols: [],
+          slotMachineSymbols: allSymbolStrings,
+          symbolToPrizeMap: {},
+          allSymbolStrings,
+          buttonText: 'SPIN',
+          buttonBorderColor: '#ffffff',
+          buttonBackgroundColor: '#ff00a6',
+          buttonTextColor: '#8b4513'
+        },
+        gameConfig: {
+          ...(prev?.gameConfig ?? {}),
+          jackpot: {
+            ...(prev?.gameConfig?.jackpot ?? {}),
+            symbols: defaultSymbols,
+            slotMachineSymbols: allSymbolStrings
+          }
+        }
+      }));
+      
+      console.log('🎰 [JackpotEditor] Initialized default symbols:', defaultSymbols);
+    }
+  }, [campaignState?.jackpotConfig?.symbols, setCampaign]);
+
   // 🔄 Auto-save to Supabase every 30 seconds (aligned with QuizEditor)
   useAutoSaveToSupabase(
     {

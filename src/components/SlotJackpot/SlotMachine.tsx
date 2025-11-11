@@ -130,7 +130,30 @@ const SlotMachine: React.FC<SlotMachineProps> = ({
   // Utiliser la prop en priorité, sinon le store
   const campaign = campaignProp || campaignFromStore;
   const jackpotConfig = (campaign?.gameConfig?.jackpot as any) || {};
-  const campaignSymbols = jackpotConfig.symbols as string[] | undefined;
+  const storedSlotSymbols = Array.isArray(jackpotConfig.slotMachineSymbols)
+    ? (jackpotConfig.slotMachineSymbols as unknown[]).filter((s) => typeof s === 'string') as string[]
+    : undefined;
+  const campaignSymbolsRaw = jackpotConfig.symbols;
+  const campaignSymbols = useMemo(() => {
+    if (!campaignSymbolsRaw) return undefined;
+    if (Array.isArray(campaignSymbolsRaw)) {
+      if (campaignSymbolsRaw.every((s) => typeof s === 'string')) {
+        return campaignSymbolsRaw as string[];
+      }
+      const converted = (campaignSymbolsRaw as any[]).map((symbol) => {
+        if (typeof symbol === 'string') return symbol;
+        if (symbol?.contentType === 'image' && typeof symbol?.imageUrl === 'string') {
+          return symbol.imageUrl;
+        }
+        if (typeof symbol?.emoji === 'string') {
+          return symbol.emoji;
+        }
+        return null;
+      }).filter((value): value is string => typeof value === 'string' && value.trim().length > 0);
+      return converted.length > 0 ? converted : undefined;
+    }
+    return undefined;
+  }, [campaignSymbolsRaw]);
   const jackpotStyle = (jackpotConfig.style as any) || {};
   const customFrameCfg = (jackpotConfig.customFrame as any) || {};
   const customTemplateUrl = (jackpotConfig.customTemplateUrl as string) || '';
@@ -145,10 +168,10 @@ const SlotMachine: React.FC<SlotMachineProps> = ({
   const reelTextColor = jackpotConfig.textColor || jackpotStyle.textColor || '#333333';
   
   const symbols = useMemo(() => {
-    const src = propSymbols ?? campaignSymbols ?? DEFAULT_SYMBOLS;
+    const src = propSymbols ?? storedSlotSymbols ?? campaignSymbols ?? DEFAULT_SYMBOLS;
     const cleaned = (src || []).filter((s) => typeof s === 'string' && s.trim().length > 0);
     return cleaned.length > 0 ? cleaned : DEFAULT_SYMBOLS;
-  }, [propSymbols, campaignSymbols]);
+  }, [propSymbols, storedSlotSymbols, campaignSymbols]);
   // Initialiser dès le premier render pour éviter tout flash de symboles par défaut
   const initialSetup = useMemo(() => {
     const size = (templateOverride === 'jackpot-4') ? 80 : 70;

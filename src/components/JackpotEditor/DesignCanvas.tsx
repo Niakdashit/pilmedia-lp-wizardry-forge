@@ -2383,7 +2383,45 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                     <SlotMachine 
                       disabled={readOnly}
                       onOpenConfig={onOpenElementsTab}
-                      symbols={(campaign as any)?.jackpotConfig?.symbols}
+                      symbols={(() => {
+                        const jackpotConfig = (campaign as any)?.jackpotConfig;
+                        if (!jackpotConfig) {
+                          console.log('⚠️ [DesignCanvas] No jackpotConfig, SlotMachine defaults will be used');
+                          return undefined;
+                        }
+
+                        const storedSlotSymbols = Array.isArray(jackpotConfig.slotMachineSymbols)
+                          ? jackpotConfig.slotMachineSymbols.filter((s: any) => typeof s === 'string')
+                          : undefined;
+                        if (storedSlotSymbols && storedSlotSymbols.length >= 3) {
+                          console.log('✅ [DesignCanvas] Using stored slotMachineSymbols:', storedSlotSymbols);
+                          return storedSlotSymbols;
+                        }
+
+                        const jackpotSymbols = jackpotConfig.symbols;
+                        console.log('🎰 [DesignCanvas] Raw jackpotSymbols:', jackpotSymbols);
+
+                        if (!jackpotSymbols || !Array.isArray(jackpotSymbols)) {
+                          console.log('⚠️ [DesignCanvas] No symbols found, SlotMachine will use defaults');
+                          return undefined;
+                        }
+
+                        const converted = jackpotSymbols.map((symbol: any) => {
+                          if (typeof symbol === 'string') {
+                            return symbol;
+                          }
+                          if (symbol?.contentType === 'image' && typeof symbol?.imageUrl === 'string') {
+                            return symbol.imageUrl;
+                          }
+                          if (typeof symbol?.emoji === 'string' && symbol.emoji.trim().length > 0) {
+                            return symbol.emoji;
+                          }
+                          return null;
+                        }).filter((value): value is string => typeof value === 'string' && value.trim().length > 0);
+
+                        console.log('✅ [DesignCanvas] Converted symbols for SlotMachine:', converted);
+                        return converted.length > 0 ? converted : undefined;
+                      })()}
                       templateOverride={(campaign as any)?.jackpotConfig?.template || (campaign as any)?.gameConfig?.jackpot?.template}
                     />
                   </div>
