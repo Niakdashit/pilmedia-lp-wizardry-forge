@@ -31,7 +31,7 @@ const MobileTestPage = lazy(() => import('./pages/MobileTestPage'));
 const MobileCompleteTestPage = lazy(() => import('./pages/MobileCompleteTestPage'));
 const Templates = lazy(() => import('./pages/Templates'));
 const Partnerships = lazy(() => import('./pages/Partnerships'));
-const MediaDetail = lazy(() => import('./pages/MediaDetail'));
+const MediaDetail = lazy(() => import('./pages/MediaDetailNew'));
 const Auth = lazy(() => import('./pages/Auth'));
 const Profile = lazy(() => import('./pages/Profile'));
 const Admin = lazy(() => import('./pages/Admin'));

@@ -619,16 +619,6 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
   const InnerContent = (
     <>
       <style>{`
-        @keyframes slideUpFromBottom {
-          from {
-            transform: translateY(100%);
-            opacity: 0;
-          }
-          to {
-            transform: translateY(0);
-            opacity: 1;
-          }
-        }
         @keyframes fadeIn {
           from {
             opacity: 0;
@@ -1023,10 +1013,7 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
           {/* SCREEN 3: Résultat */}
           {currentScreen === 'screen3' && (
             <div 
-              className="flex flex-col min-h-full animate-slide-up"
-              style={{
-                animation: 'slideUpFromBottom 0.5s ease-out forwards'
-              }}
+              className="flex flex-col min-h-full"
             >
               {/* Modules Logo (collés en haut sans padding) */}
               {logoModules3.length > 0 && (
@@ -1108,8 +1095,16 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
                   style={{ padding: safeZonePadding, boxSizing: 'border-box' }}
                 >
                   {(() => {
-                    // Sélection des messages avec priorité au mode confirmation neutre
-                    const resultMessagesAll = (campaign?.resultMessages) || (storeMessages as any) || {};
+                    // Sélection des messages selon le type de campagne
+                    // DesignEditor (roue) -> resultMessages
+                    // JackpotEditor -> jackpotResultMessages
+                    // ScratchCardEditor -> scratchResultMessages
+                    const resultMessagesAll = 
+                      campaign?.resultMessages || // DesignEditor (roue)
+                      campaign?.jackpotResultMessages || // JackpotEditor
+                      campaign?.scratchResultMessages || // ScratchCardEditor
+                      (storeMessages as any) || 
+                      {};
                     const hasConfirmation = Boolean((resultMessagesAll as any)?.confirmation);
                     const neutralMode = hasConfirmation || campaign?.type === 'form' || campaign?.resultMode === 'confirmation';
                     const confirmationDefaults = {
@@ -1149,6 +1144,44 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
                       }
                     };
 
+                    // Vérifier si on doit afficher une image de fond
+                    const displayType = messages.displayType || 'message';
+                    const backgroundImage = messages.backgroundImage;
+
+                    // Si displayType est 'image' et qu'une image est uploadée
+                    if (displayType === 'image' && backgroundImage) {
+                      return (
+                        <div
+                          className="absolute inset-0 w-full h-full bg-cover bg-center flex items-center justify-center"
+                          style={{
+                            backgroundImage: `url(${backgroundImage})`,
+                            backgroundSize: 'cover',
+                            backgroundPosition: 'center'
+                          }}
+                        >
+                          {/* Bouton d'action par-dessus l'image */}
+                          <button
+                            onClick={handleButtonClick}
+                            className="absolute left-1/2 transform -translate-x-1/2 px-6 py-2.5 font-medium text-sm hover:opacity-90 transition-all duration-200 shadow-lg"
+                            style={{
+                              bottom: '20%',
+                              ...globalButtonStyle,
+                              backgroundColor: (formConfig as any)?.buttonColor || (globalButtonStyle as any)?.backgroundColor || '#44444d',
+                              color: (formConfig as any)?.buttonTextColor || (globalButtonStyle as any)?.color || '#ffffff',
+                              borderRadius: (typeof (formConfig as any)?.borderRadius === 'number'
+                                ? `${(formConfig as any).borderRadius}px`
+                                : ((globalButtonStyle as any)?.borderRadius || '12px')),
+                              minWidth: 'auto',
+                              width: 'auto'
+                            }}
+                          >
+                            {messages.buttonText || 'Fermer'}
+                          </button>
+                        </div>
+                      );
+                    }
+
+                    // Sinon, afficher le message classique (carte)
                     return (
                       <div
                         className="shadow-lg p-8 text-center max-w-md w-full mx-auto"

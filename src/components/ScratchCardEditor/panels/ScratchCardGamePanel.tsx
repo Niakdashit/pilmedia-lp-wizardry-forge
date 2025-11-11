@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
-import { Grid3x3, Paintbrush, CreditCard, Settings, Plus, Trash2, Calendar, Percent } from 'lucide-react';
+import { Grid3x3, Paintbrush, CreditCard, Settings } from 'lucide-react';
 import { useScratchCardStore } from '../state/scratchcard.store';
-import { usePrizeLogic } from '../../../hooks/usePrizeLogic';
-import type { Prize } from '../../../types/PrizeSystem';
 
 interface ScratchCardGamePanelProps {
   campaign?: any;
@@ -17,11 +15,7 @@ const ScratchCardGamePanel: React.FC<ScratchCardGamePanelProps> = ({
   campaign,
   setCampaign
 }) => {
-  const { prizes, addPrize, removePrize } = usePrizeLogic({ 
-    campaign: campaign as any, 
-    setCampaign: setCampaign as any
-  });
-  const [activeTab, setActiveTab] = useState<'grid' | 'scratch' | 'cards' | 'logic'>('logic');
+  const [activeTab, setActiveTab] = useState<'grid' | 'scratch' | 'cards' | 'logic'>('grid');
   const scratchConfig = useScratchCardStore((state) => state.config);
   const updateStoreConfig = useScratchCardStore((state) => state.updateConfig);
   const updateStoreMaxCards = useScratchCardStore((state) => state.updateMaxCards);
@@ -104,25 +98,6 @@ const ScratchCardGamePanel: React.FC<ScratchCardGamePanelProps> = ({
 
   const handleSoftnessChange = (softness: number) => {
     updateConfig({ brush: { ...scratchConfig.brush, softness: softness / 100 } });
-  };
-
-  // Winner/Loser reveal content
-  const handleWinnerRevealChange = (type: 'text' | 'image', value: string) => {
-    updateConfig({
-      logic: {
-        ...scratchConfig.logic,
-        winnerReveal: { type, value: type === 'text' ? value : '', url: type === 'image' ? value : '' }
-      }
-    });
-  };
-
-  const handleLoserRevealChange = (type: 'text' | 'image', value: string) => {
-    updateConfig({
-      logic: {
-        ...scratchConfig.logic,
-        loserReveal: { type, value: type === 'text' ? value : '', url: type === 'image' ? value : '' }
-      }
-    });
   };
 
   const handleCardCoverChange = (cardIndex: number, type: 'color' | 'image', value: string) => {
@@ -344,144 +319,11 @@ const ScratchCardGamePanel: React.FC<ScratchCardGamePanelProps> = ({
 
         {activeTab === 'logic' && (
           <div className="space-y-6">
-            <div>
-              <h3 className="text-sm font-semibold mb-3">Contenu gagnant révélé</h3>
-              <div className="flex gap-2 mb-3">
-                <label className="flex items-center gap-2">
-                  <input
-                    type="radio"
-                    name="winner-type"
-                    checked={scratchConfig.logic?.winnerReveal?.type !== 'image'}
-                    onChange={() => handleWinnerRevealChange('text', (scratchConfig.logic?.winnerReveal?.type === 'text' ? scratchConfig.logic.winnerReveal.value : 'Gagné !'))}
-                  />
-                  <span className="text-sm">Texte</span>
-                </label>
-                <label className="flex items-center gap-2">
-                  <input
-                    type="radio"
-                    name="winner-type"
-                    checked={scratchConfig.logic?.winnerReveal?.type === 'image'}
-                    onChange={() => handleWinnerRevealChange('image', (scratchConfig.logic?.winnerReveal?.type === 'image' ? scratchConfig.logic.winnerReveal.url : ''))}
-                  />
-                  <span className="text-sm">Image</span>
-                </label>
-              </div>
-
-              {scratchConfig.logic?.winnerReveal?.type !== 'image' ? (
-                <div className="flex items-center gap-2">
-                  <input
-                    type="text"
-                    value={scratchConfig.logic?.winnerReveal?.type === 'text' ? scratchConfig.logic.winnerReveal.value : 'Gagné !'}
-                    onChange={(e) => handleWinnerRevealChange('text', e.target.value)}
-                    placeholder="Gagné !"
-                    className="flex-1 px-3 py-2 border rounded-lg"
-                  />
-                  <label className="text-sm">Couleur</label>
-                  <input
-                    type="color"
-                    defaultValue="#22c55e"
-                    className="w-12 h-8 rounded border"
-                  />
-                </div>
-              ) : (
-                <div className="text-sm text-gray-500">Upload d'image à implémenter</div>
-              )}
-            </div>
-
-            <div>
-              <h3 className="text-sm font-semibold mb-3">Contenu perdant révélé</h3>
-              <div className="flex gap-2 mb-3">
-                <label className="flex items-center gap-2">
-                  <input
-                    type="radio"
-                    name="loser-type"
-                    checked={scratchConfig.logic?.loserReveal?.type !== 'image'}
-                    onChange={() => handleLoserRevealChange('text', (scratchConfig.logic?.loserReveal?.type === 'text' ? scratchConfig.logic.loserReveal.value : 'Perdu'))}
-                  />
-                  <span className="text-sm">Texte</span>
-                </label>
-                <label className="flex items-center gap-2">
-                  <input
-                    type="radio"
-                    name="loser-type"
-                    checked={scratchConfig.logic?.loserReveal?.type === 'image'}
-                    onChange={() => handleLoserRevealChange('image', (scratchConfig.logic?.loserReveal?.type === 'image' ? scratchConfig.logic.loserReveal.url : ''))}
-                  />
-                  <span className="text-sm">Image</span>
-                </label>
-              </div>
-
-              {scratchConfig.logic?.loserReveal?.type !== 'image' ? (
-                <div className="flex items-center gap-2">
-                  <input
-                    type="text"
-                    value={scratchConfig.logic?.loserReveal?.value || 'Perdu'}
-                    onChange={(e) => handleLoserRevealChange('text', e.target.value)}
-                    placeholder="Perdu"
-                    className="flex-1 px-3 py-2 border rounded-lg"
-                  />
-                  <label className="text-sm">Couleur</label>
-                  <input
-                    type="color"
-                    defaultValue="#ef4444"
-                    className="w-12 h-8 rounded border"
-                  />
-                </div>
-              ) : (
-                <div className="text-sm text-gray-500">Upload d'image à implémenter</div>
-              )}
-            </div>
-
-            <div className="pt-4 border-t">
-              <h3 className="text-sm font-semibold mb-2">Lots à gagner ({prizes.length})</h3>
-              
-              {prizes.length > 0 && (
-                <div className="space-y-2 mb-3">
-                  {prizes.map((prize) => (
-                    <div key={prize.id} className="p-3 border rounded-lg flex items-center justify-between">
-                      <div className="flex-1">
-                        <div className="font-medium text-sm">{prize.name}</div>
-                        <div className="text-xs text-gray-500">
-                          {prize.method === 'calendar' ? (
-                            <span className="flex items-center gap-1">
-                              <Calendar className="w-3 h-3" />
-                              {prize.startDate}
-                            </span>
-                          ) : (
-                            <span className="flex items-center gap-1">
-                              <Percent className="w-3 h-3" />
-                              {prize.probabilityPercent}%
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => removePrize(prize.id)}
-                        className="p-1 text-red-600 hover:bg-red-50 rounded"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-              
-              <button 
-                onClick={() => {
-                  const newPrize = {
-                    name: 'Nouveau lot',
-                    totalUnits: 1,
-                    awardedUnits: 0,
-                    method: 'probability' as Prize['method'],
-                    probabilityPercent: 10,
-                  };
-                  addPrize(newPrize);
-                }}
-                className="w-full py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
-              >
-                <Plus className="w-4 h-4" />
-                Créer un lot
-              </button>
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <p className="text-sm text-blue-800">
+                <strong>🎁 Gestion de la dotation</strong><br />
+                Pour configurer les lots et les images gagnantes, ouvrez les <strong>Paramètres de la campagne</strong> (icône ⚙️ en haut) puis allez dans l'onglet <strong>"Dotation"</strong>.
+              </p>
             </div>
           </div>
         )}

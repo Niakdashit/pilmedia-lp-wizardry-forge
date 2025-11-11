@@ -53,7 +53,7 @@ const ResultScreenPreview: React.FC<ResultScreenPreviewProps> = ({
     };
   }, [isNeutralConfirmation]);
   
-  // Récupérer les messages depuis le store Zustand ou depuis campaign.scratchResultMessages
+  // Récupérer les messages depuis campaign.scratchResultMessages (pas de store pour ScratchCard)
   const { messages } = useMessageStore();
   
   // Fallbacks historiques + confirmation neutre

@@ -89,23 +89,8 @@ const ResultScreen: React.FC<ResultScreenProps> = ({
 
   return (
     <>
-      <style>{`
-        @keyframes slideUpFromBottom {
-          from {
-            transform: translateY(100%);
-            opacity: 0;
-          }
-          to {
-            transform: translateY(0);
-            opacity: 1;
-          }
-        }
-      `}</style>
       <div
         className="w-full h-full flex items-center justify-center p-4"
-        style={{
-          animation: 'slideUpFromBottom 0.5s ease-out forwards'
-        }}
       >
         <ContrastBackground
           enabled={true}

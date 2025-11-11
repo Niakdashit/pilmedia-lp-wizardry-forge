@@ -35,6 +35,28 @@ export const DotationPanel: React.FC<DotationPanelProps> = ({ campaignId, campai
       setLoading(true);
       console.log('📥 [DotationPanel] Loading config for campaign:', campaignId);
       
+      // Si pas d'ID valide, créer une config par défaut
+      if (!campaignId || campaignId === 'new' || campaignId === 'preview') {
+        console.log('ℹ️ [DotationPanel] No valid campaign ID, creating default config');
+        setConfig({
+          campaignId: campaignId || 'temp',
+          prizes: [],
+          globalStrategy: {
+            priorityOrder: 'sequential',
+            allowMultipleWins: false,
+            minDelayBetweenWins: 0
+          },
+          antiFraud: {
+            maxWinsPerIP: 1,
+            maxWinsPerEmail: 1,
+            maxWinsPerDevice: 1,
+            verificationPeriod: 24
+          }
+        });
+        setLoading(false);
+        return;
+      }
+      
       // @ts-ignore - Table créée par migration, types à régénérer
       const { data, error } = await supabase
         .from('dotation_configs')
@@ -44,7 +66,25 @@ export const DotationPanel: React.FC<DotationPanelProps> = ({ campaignId, campai
 
       if (error && error.code !== 'PGRST116') {
         console.error('❌ [DotationPanel] Load error:', error);
-        throw error;
+        // Ne pas throw, créer une config par défaut à la place
+        console.log('ℹ️ [DotationPanel] Error loading, creating default config');
+        setConfig({
+          campaignId,
+          prizes: [],
+          globalStrategy: {
+            priorityOrder: 'sequential',
+            allowMultipleWins: false,
+            minDelayBetweenWins: 0
+          },
+          antiFraud: {
+            maxWinsPerIP: 1,
+            maxWinsPerEmail: 1,
+            maxWinsPerDevice: 1,
+            verificationPeriod: 24
+          }
+        });
+        setLoading(false);
+        return;
       }
 
       if (data) {
@@ -77,7 +117,23 @@ export const DotationPanel: React.FC<DotationPanelProps> = ({ campaignId, campai
       }
     } catch (error) {
       console.error('Error loading dotation config:', error);
-      toast.error('Erreur lors du chargement de la configuration');
+      // Ne pas afficher de toast d'erreur, créer une config par défaut
+      console.log('ℹ️ [DotationPanel] Exception caught, creating default config');
+      setConfig({
+        campaignId: campaignId || 'temp',
+        prizes: [],
+        globalStrategy: {
+          priorityOrder: 'sequential',
+          allowMultipleWins: false,
+          minDelayBetweenWins: 0
+        },
+        antiFraud: {
+          maxWinsPerIP: 1,
+          maxWinsPerEmail: 1,
+          maxWinsPerDevice: 1,
+          verificationPeriod: 24
+        }
+      });
     } finally {
       setLoading(false);
     }
@@ -317,6 +373,7 @@ export const DotationPanel: React.FC<DotationPanelProps> = ({ campaignId, campai
           prize={editingPrize}
           onSave={savePrize}
           onCancel={() => setEditingPrize(null)}
+          campaignType={campaignType}
         />
       )}
     </div>

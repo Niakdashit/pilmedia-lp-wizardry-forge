@@ -7,11 +7,10 @@ export interface MediaPartner {
   name: string;
   description: string | null;
   logo_url: string | null;
-  website_url: string | null;
+  website: string | null;
   category: string | null;
-  reach_count: number;
-  monthly_visits: number;
-  audience_demographics: Record<string, any> | null;
+  audience_size: number;
+  monthly_visitors: number;
   contact_email: string | null;
   status: string;
   created_at: string;
@@ -32,7 +31,7 @@ export const useMediaPartners = () => {
         .from('media_partners')
         .select('*')
         .eq('status', 'active')
-        .order('reach_count', { ascending: false });
+        .order('audience_size', { ascending: false });
 
       if (category) {
         query = query.eq('category', category);

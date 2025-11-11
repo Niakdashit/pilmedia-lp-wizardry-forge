@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Trophy, Frown } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Trophy, Frown, Image as ImageIcon, MessageSquare, Upload, X } from 'lucide-react';
 
 interface MessagesPanelProps {
   campaign?: any;
@@ -8,6 +8,8 @@ interface MessagesPanelProps {
 
 const MessagesPanel: React.FC<MessagesPanelProps> = ({ campaign, setCampaign }) => {
   const [activeSection, setActiveSection] = useState<'winner' | 'loser'>('loser');
+  const winnerImageInputRef = useRef<HTMLInputElement>(null);
+  const loserImageInputRef = useRef<HTMLInputElement>(null);
   
   // Émettre un événement quand l'onglet change pour mettre à jour l'aperçu
   useEffect(() => {
@@ -60,6 +62,30 @@ const MessagesPanel: React.FC<MessagesPanelProps> = ({ campaign, setCampaign }) 
     }));
   };
 
+  // Gestion de l'upload d'image pour le gagnant
+  const handleWinnerImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        updateWinnerMessage({ backgroundImage: reader.result as string });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // Gestion de l'upload d'image pour le perdant
+  const handleLoserImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        updateLoserMessage({ backgroundImage: reader.result as string });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   return (
     <div className="h-full flex flex-col bg-white">
       <div className="p-4 border-b">
@@ -91,8 +117,40 @@ const MessagesPanel: React.FC<MessagesPanelProps> = ({ campaign, setCampaign }) 
       <div className="flex-1 overflow-y-auto p-4">
         {activeSection === 'winner' ? (
           <div className="space-y-4">
+            {/* Choix du type d'affichage */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Titre principal</label>
+              <label className="block text-sm font-medium text-gray-700 mb-3">Type d'affichage</label>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => updateWinnerMessage({ displayType: 'message' })}
+                  className={`flex flex-col items-center gap-1.5 p-3 rounded-lg border transition-all ${
+                    (winnerMessages.displayType || 'message') === 'message'
+                      ? 'border-green-500 bg-green-50 text-green-700'
+                      : 'border-gray-300 hover:border-gray-400 text-gray-600'
+                  }`}
+                >
+                  <MessageSquare className="w-5 h-5" />
+                  <span className="text-xs font-medium">Message</span>
+                </button>
+                <button
+                  onClick={() => updateWinnerMessage({ displayType: 'image' })}
+                  className={`flex flex-col items-center gap-1.5 p-3 rounded-lg border transition-all ${
+                    winnerMessages.displayType === 'image'
+                      ? 'border-green-500 bg-green-50 text-green-700'
+                      : 'border-gray-300 hover:border-gray-400 text-gray-600'
+                  }`}
+                >
+                  <ImageIcon className="w-5 h-5" />
+                  <span className="text-xs font-medium">Image de fond</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Contenu conditionnel selon le type */}
+            {(winnerMessages.displayType || 'message') === 'message' ? (
+              <>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Titre principal</label>
               <input type="text" value={winnerMessages.title} onChange={(e) => updateWinnerMessage({ title: e.target.value })} placeholder="🎉 Félicitations !" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500" />
             </div>
 
@@ -110,6 +168,32 @@ const MessagesPanel: React.FC<MessagesPanelProps> = ({ campaign, setCampaign }) 
               <input type="checkbox" id="showPrizeImage" checked={winnerMessages.showPrizeImage} onChange={(e) => updateWinnerMessage({ showPrizeImage: e.target.checked })} className="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500" />
               <label htmlFor="showPrizeImage" className="text-sm text-gray-700 cursor-pointer">Afficher l'image du prix gagné</label>
             </div>
+              </>
+            ) : (
+              /* Section Upload d'image */
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-3">Image de fond gagnant</label>
+                  {winnerMessages.backgroundImage ? (
+                    <div className="relative">
+                      <img src={winnerMessages.backgroundImage} alt="Aperçu" className="w-full h-48 object-cover rounded-lg border-2 border-green-200" />
+                      <button onClick={() => updateWinnerMessage({ backgroundImage: null })} className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors">
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <button onClick={() => winnerImageInputRef.current?.click()} className="w-full h-48 border-2 border-dashed border-green-300 rounded-lg hover:border-green-400 hover:bg-green-50 transition-all flex flex-col items-center justify-center gap-3 text-green-600">
+                      <Upload className="w-8 h-8" />
+                      <div className="text-center">
+                        <p className="font-medium">Cliquez pour uploader</p>
+                        <p className="text-sm text-gray-500">PNG, JPG jusqu'à 10MB</p>
+                      </div>
+                    </button>
+                  )}
+                  <input ref={winnerImageInputRef} type="file" accept="image/*" onChange={handleWinnerImageUpload} className="hidden" />
+                </div>
+              </div>
+            )}
 
             <div className="pt-4 border-t">
               <h3 className="text-sm font-semibold mb-3">Bouton d'action</h3>
@@ -139,8 +223,40 @@ const MessagesPanel: React.FC<MessagesPanelProps> = ({ campaign, setCampaign }) 
           </div>
         ) : (
           <div className="space-y-4">
+            {/* Choix du type d'affichage */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Titre principal</label>
+              <label className="block text-sm font-medium text-gray-700 mb-3">Type d'affichage</label>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => updateLoserMessage({ displayType: 'message' })}
+                  className={`flex flex-col items-center gap-1.5 p-3 rounded-lg border transition-all ${
+                    (loserMessages.displayType || 'message') === 'message'
+                      ? 'border-orange-500 bg-orange-50 text-orange-700'
+                      : 'border-gray-300 hover:border-gray-400 text-gray-600'
+                  }`}
+                >
+                  <MessageSquare className="w-5 h-5" />
+                  <span className="text-xs font-medium">Message</span>
+                </button>
+                <button
+                  onClick={() => updateLoserMessage({ displayType: 'image' })}
+                  className={`flex flex-col items-center gap-1.5 p-3 rounded-lg border transition-all ${
+                    loserMessages.displayType === 'image'
+                      ? 'border-orange-500 bg-orange-50 text-orange-700'
+                      : 'border-gray-300 hover:border-gray-400 text-gray-600'
+                  }`}
+                >
+                  <ImageIcon className="w-5 h-5" />
+                  <span className="text-xs font-medium">Image de fond</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Contenu conditionnel selon le type */}
+            {(loserMessages.displayType || 'message') === 'message' ? (
+              <>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Titre principal</label>
               <input type="text" value={loserMessages.title} onChange={(e) => updateLoserMessage({ title: e.target.value })} placeholder="Dommage !" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500" />
             </div>
 
@@ -153,6 +269,32 @@ const MessagesPanel: React.FC<MessagesPanelProps> = ({ campaign, setCampaign }) 
               <label className="block text-sm font-medium text-gray-700 mb-2">Sous-message (optionnel)</label>
               <input type="text" value={loserMessages.subMessage || ''} onChange={(e) => updateLoserMessage({ subMessage: e.target.value })} placeholder="Tentez votre chance une prochaine fois" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500" />
             </div>
+              </>
+            ) : (
+              /* Section Upload d'image */
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-3">Image de fond perdant</label>
+                  {loserMessages.backgroundImage ? (
+                    <div className="relative">
+                      <img src={loserMessages.backgroundImage} alt="Aperçu" className="w-full h-48 object-cover rounded-lg border-2 border-orange-200" />
+                      <button onClick={() => updateLoserMessage({ backgroundImage: null })} className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors">
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <button onClick={() => loserImageInputRef.current?.click()} className="w-full h-48 border-2 border-dashed border-orange-300 rounded-lg hover:border-orange-400 hover:bg-orange-50 transition-all flex flex-col items-center justify-center gap-3 text-orange-600">
+                      <Upload className="w-8 h-8" />
+                      <div className="text-center">
+                        <p className="font-medium">Cliquez pour uploader</p>
+                        <p className="text-sm text-gray-500">PNG, JPG jusqu'à 10MB</p>
+                      </div>
+                    </button>
+                  )}
+                  <input ref={loserImageInputRef} type="file" accept="image/*" onChange={handleLoserImageUpload} className="hidden" />
+                </div>
+              </div>
+            )}
 
             <div className="pt-4 border-t">
               <h3 className="text-sm font-semibold mb-3">Bouton d'action</h3>

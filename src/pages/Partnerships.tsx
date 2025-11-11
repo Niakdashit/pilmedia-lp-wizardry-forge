@@ -1,10 +1,12 @@
 // @ts-nocheck
 import React, { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Handshake, TrendingUp, Users, Award } from 'lucide-react';
 import { useMediaPartners } from '@/hooks/useMediaPartners';
 import Spinner from '@/components/shared/Spinner';
 
 export default function Partnerships() {
+  const navigate = useNavigate();
   const { mediaPartners, loading } = useMediaPartners();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
@@ -31,7 +33,7 @@ export default function Partnerships() {
     return result;
   }, [mediaPartners, searchTerm, selectedCategory]);
 
-  const totalAudience = filteredMedias.reduce((sum, media) => sum + media.monthly_visits, 0);
+  const totalAudience = filteredMedias.reduce((sum, media) => sum + media.monthly_visitors, 0);
   const categories = Array.from(new Set(mediaPartners.map(m => m.category).filter(Boolean)));
 
   if (loading) {
@@ -128,13 +130,24 @@ export default function Partnerships() {
         {filteredMedias.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredMedias.map(media => (
-              <div key={media.id} className="bg-card rounded-xl shadow-sm border p-6 hover:shadow-md transition-shadow">
+              <div 
+                key={media.id} 
+                onClick={() => navigate(`/partnerships/${media.id}`)}
+                className="bg-card rounded-xl shadow-sm border p-6 hover:shadow-md transition-shadow cursor-pointer">
                 <div className="flex items-start gap-4 mb-4">
                   {media.logo_url ? (
-                    <img src={media.logo_url} alt={media.name} className="w-12 h-12 rounded-lg object-cover" />
+                    <div className={`w-20 h-20 flex-shrink-0 rounded-lg p-1 border flex items-center justify-center ${
+                      media.name === 'GEO' ? 'bg-[#8BC34A]' : 'bg-white'
+                    }`}>
+                      <img 
+                        src={media.logo_url} 
+                        alt={media.name} 
+                        className="w-full h-full object-contain"
+                      />
+                    </div>
                   ) : (
-                    <div className="w-12 h-12 rounded-lg bg-accent flex items-center justify-center">
-                      <Handshake className="w-6 h-6 text-accent-foreground" />
+                    <div className="w-20 h-20 flex-shrink-0 rounded-lg bg-accent flex items-center justify-center">
+                      <Handshake className="w-10 h-10 text-accent-foreground" />
                     </div>
                   )}
                   <div className="flex-1 min-w-0">
@@ -152,16 +165,16 @@ export default function Partnerships() {
                 <div className="flex items-center justify-between text-sm">
                   <div>
                     <p className="text-muted-foreground">Audience mensuelle</p>
-                    <p className="font-semibold text-foreground">{(media.monthly_visits / 1000).toFixed(0)}K</p>
+                    <p className="font-semibold text-foreground">{(media.monthly_visitors / 1000000).toFixed(1)}M</p>
                   </div>
                   <div>
-                    <p className="text-muted-foreground">Portée</p>
-                    <p className="font-semibold text-foreground">{(media.reach_count / 1000).toFixed(0)}K</p>
+                    <p className="text-muted-foreground">Audience</p>
+                    <p className="font-semibold text-foreground">{(media.audience_size / 1000000).toFixed(1)}M</p>
                   </div>
                 </div>
-                {media.website_url && (
+                {media.website && (
                   <a
-                    href={media.website_url}
+                    href={media.website}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="mt-4 block text-center px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"

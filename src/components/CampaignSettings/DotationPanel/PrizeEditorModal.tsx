@@ -2,25 +2,47 @@ import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { Prize, PrizeStatus } from '@/types/dotation';
 import { AttributionMethodEditor } from './AttributionMethodEditor';
+import { WinningImagesTab } from './WinningImagesTab';
 import { useEditorStore } from '@/stores/editorStore';
 import { WheelSegment } from '@/types/PrizeSystem';
+
+interface WinningImage {
+  id: string;
+  imageUrl?: string;
+  prizeId?: string;
+  name?: string;
+}
 
 interface PrizeEditorModalProps {
   prize: Prize;
   onSave: (prize: Prize) => void;
   onCancel: () => void;
+  campaignType?: 'wheel' | 'jackpot' | 'scratch';
 }
 
-export const PrizeEditorModal: React.FC<PrizeEditorModalProps> = ({ prize, onSave, onCancel }) => {
+export const PrizeEditorModal: React.FC<PrizeEditorModalProps> = ({ prize, onSave, onCancel, campaignType = 'wheel' }) => {
   const [editedPrize, setEditedPrize] = useState<Prize>(prize);
-  const [activeTab, setActiveTab] = useState<'general' | 'attribution' | 'segments'>('general');
+  const [activeTab, setActiveTab] = useState<'general' | 'attribution' | 'segments' | 'images'>('general');
   const campaignData = useEditorStore((state) => state.campaignData);
   const campaign = useEditorStore((state) => state.campaign);
   const setCampaign = useEditorStore((state) => state.setCampaign);
   const [wheelSegments, setWheelSegments] = useState<WheelSegment[]>([]);
+  const [winningImages, setWinningImages] = useState<WinningImage[]>([]);
+
+  // Récupérer les images gagnantes pour Jackpot/Scratch
+  useEffect(() => {
+    if (campaignType === 'jackpot' || campaignType === 'scratch') {
+      const configKey = campaignType === 'jackpot' ? 'jackpotConfig' : 'scratchConfig';
+      const images = (campaign as any)?.[configKey]?.winningImages || [];
+      console.log(`🔍 [PrizeEditorModal] Found ${images.length} winning images for ${campaignType}`);
+      setWinningImages(images);
+    }
+  }, [campaign, campaignType]);
 
   // Récupérer les segments de la roue depuis différents chemins possibles
   useEffect(() => {
+    if (campaignType !== 'wheel') return;
+    
     console.log('🔍 [PrizeEditorModal] Searching for wheel segments');
     console.log('🔍 [PrizeEditorModal] campaign:', campaign);
     console.log('🔍 [PrizeEditorModal] campaignData:', campaignData);
@@ -63,7 +85,65 @@ export const PrizeEditorModal: React.FC<PrizeEditorModalProps> = ({ prize, onSav
     
     console.log('📊 [PrizeEditorModal] Formatted segments:', formattedSegments);
     setWheelSegments(formattedSegments);
-  }, [campaign, campaignData]);
+  }, [campaign, campaignData, campaignType]);
+
+  const updateWinningImage = (imageId: string, updates: Partial<WinningImage>) => {
+    const updatedImages = winningImages.map(img => 
+      img.id === imageId ? { ...img, ...updates } : img
+    );
+    setWinningImages(updatedImages);
+    
+    // Mettre à jour dans la campagne
+    if (campaign) {
+      const configKey = campaignType === 'jackpot' ? 'jackpotConfig' : 'scratchConfig';
+      setCampaign({
+        ...campaign,
+        [configKey]: {
+          ...(campaign as any)[configKey],
+          winningImages: updatedImages
+        }
+      });
+    }
+  };
+
+  const addWinningImage = () => {
+    const newImage: WinningImage = {
+      id: `win-${Date.now()}`,
+      name: campaignType === 'jackpot' ? 'Nouveau symbole' : 'Nouvelle carte',
+      prizeId: editedPrize.id
+    };
+    const updatedImages = [...winningImages, newImage];
+    setWinningImages(updatedImages);
+    
+    // Mettre à jour dans la campagne
+    if (campaign) {
+      const configKey = campaignType === 'jackpot' ? 'jackpotConfig' : 'scratchConfig';
+      setCampaign({
+        ...campaign,
+        [configKey]: {
+          ...(campaign as any)[configKey],
+          winningImages: updatedImages
+        }
+      });
+    }
+  };
+
+  const removeWinningImage = (imageId: string) => {
+    const updatedImages = winningImages.filter(img => img.id !== imageId);
+    setWinningImages(updatedImages);
+    
+    // Mettre à jour dans la campagne
+    if (campaign) {
+      const configKey = campaignType === 'jackpot' ? 'jackpotConfig' : 'scratchConfig';
+      setCampaign({
+        ...campaign,
+        [configKey]: {
+          ...(campaign as any)[configKey],
+          winningImages: updatedImages
+        }
+      });
+    }
+  };
 
   const handleSave = () => {
     if (!editedPrize.name.trim()) {
@@ -76,7 +156,7 @@ export const PrizeEditorModal: React.FC<PrizeEditorModalProps> = ({ prize, onSav
     }
     
     // Synchroniser les segments : mettre à jour prizeId des segments assignés
-    if (editedPrize.assignedSegments && editedPrize.assignedSegments.length > 0 && campaign) {
+    if (campaignType === 'wheel' && editedPrize.assignedSegments && editedPrize.assignedSegments.length > 0 && campaign) {
       const currentSegments = (campaign as any)?.wheelConfig?.segments || 
                              (campaign as any)?.gameConfig?.wheel?.segments ||
                              (campaign as any)?.config?.roulette?.segments ||
@@ -168,16 +248,30 @@ export const PrizeEditorModal: React.FC<PrizeEditorModalProps> = ({ prize, onSav
             >
               Méthode d'attribution
             </button>
-            <button
-              onClick={() => setActiveTab('segments')}
-              className={`pb-2 px-1 font-medium text-sm border-b-2 transition-colors ${
-                activeTab === 'segments'
-                  ? 'border-[#841b60] text-[#841b60]'
-                  : 'border-transparent text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              Segments de roue 🎡
-            </button>
+            {campaignType === 'wheel' && (
+              <button
+                onClick={() => setActiveTab('segments')}
+                className={`pb-2 px-1 font-medium text-sm border-b-2 transition-colors ${
+                  activeTab === 'segments'
+                    ? 'border-[#841b60] text-[#841b60]'
+                    : 'border-transparent text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                Segments de roue 🎡
+              </button>
+            )}
+            {(campaignType === 'jackpot' || campaignType === 'scratch') && (
+              <button
+                onClick={() => setActiveTab('images')}
+                className={`pb-2 px-1 font-medium text-sm border-b-2 transition-colors ${
+                  activeTab === 'images'
+                    ? 'border-[#841b60] text-[#841b60]'
+                    : 'border-transparent text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                {campaignType === 'jackpot' ? 'Symboles gagnants 🎰' : 'Cartes gagnantes 🎫'}
+              </button>
+            )}
           </div>
 
           {/* General Tab */}
@@ -310,8 +404,20 @@ export const PrizeEditorModal: React.FC<PrizeEditorModalProps> = ({ prize, onSav
             />
           )}
 
+          {/* Images Tab (Jackpot/Scratch) */}
+          {activeTab === 'images' && (campaignType === 'jackpot' || campaignType === 'scratch') && (
+            <WinningImagesTab
+              prize={editedPrize}
+              winningImages={winningImages}
+              onUpdateWinningImage={updateWinningImage}
+              onAddWinningImage={addWinningImage}
+              onRemoveWinningImage={removeWinningImage}
+              gameType={campaignType}
+            />
+          )}
+
           {/* Segments Tab */}
-          {activeTab === 'segments' && (
+          {activeTab === 'segments' && campaignType === 'wheel' && (
             <div className="space-y-4">
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <p className="text-sm text-blue-800">

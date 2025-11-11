@@ -53,12 +53,12 @@ const ResultScreenPreview: React.FC<ResultScreenPreviewProps> = ({
     };
   }, [isNeutralConfirmation]);
   
-  // Récupérer les messages depuis le store Zustand ou depuis campaign.scratchResultMessages
+  // Récupérer les messages depuis le store Zustand ou depuis campaign.jackpotResultMessages
   const { messages } = useMessageStore();
   
   // Fallbacks historiques + confirmation neutre
-  const winnerConfig = campaign?.scratchResultMessages?.winner || messages.winner;
-  const loserConfig = campaign?.scratchResultMessages?.loser || messages.loser;
+  const winnerConfig = campaign?.jackpotResultMessages?.winner || messages.winner;
+  const loserConfig = campaign?.jackpotResultMessages?.loser || messages.loser;
   const neutralConfig = (campaign?.resultMessages as any)?.confirmation || {
     title: 'Merci !',
     message: 'Votre participation a été enregistrée.',

@@ -6,6 +6,7 @@ import { getCampaignTypeIcon, getCampaignTypeText, CampaignType } from '../../ut
 import { RecentCampaign } from './types';
 import { supabase } from '../../integrations/supabase/client';
 import { getEditorUrl } from '../../utils/editorRouting';
+import { extractCampaignBackgroundImage, extractCampaignBackgroundColor, debugCampaignImage } from '../../utils/debugCampaignImages';
 
 const RecentCampaigns: React.FC = () => {
   const navigate = useNavigate();
@@ -33,87 +34,16 @@ const RecentCampaigns: React.FC = () => {
 
         if (data) {
         const formattedCampaigns: RecentCampaign[] = data.map((campaign: any) => {
-            // Récupérer l'image de fond - vérifier plusieurs sources possibles
-            let backgroundImage = null;
-            
-            // Source 1: canvasConfig.background (priorité haute)
-            if (campaign.canvasConfig?.background?.type === 'image' && campaign.canvasConfig?.background?.value) {
-              backgroundImage = campaign.canvasConfig.background.value;
-            }
-            // Source 2: design.background (objet structuré)
-            else if (campaign.design?.background?.type === 'image' && campaign.design?.background?.value) {
-              backgroundImage = campaign.design.background.value;
-            }
-            // Source 3: design.backgroundImage (propriété directe)
-            else if (campaign.design?.backgroundImage) {
-              backgroundImage = campaign.design.backgroundImage;
-            }
-            // Source 4: design.background.desktop
-            else if (campaign.design?.background?.desktop?.type === 'image' && campaign.design?.background?.desktop?.value) {
-              backgroundImage = campaign.design.background.desktop.value;
-            }
-            // Source 5: Pour les articles - modules avec images de fond
-            else if (campaign.type === 'article' && campaign.modules) {
-              // Chercher une image dans les modules
-              const moduleWithImage = campaign.modules.find((m: any) => 
-                m.type === 'image' || (m.backgroundImage && m.backgroundImage !== '')
-              );
-              if (moduleWithImage?.backgroundImage) {
-                backgroundImage = moduleWithImage.backgroundImage;
-              } else if (moduleWithImage?.src) {
-                backgroundImage = moduleWithImage.src;
-              }
-            }
+            // 🎯 Utiliser les fonctions utilitaires pour extraire l'image et la couleur
+            const backgroundImage = extractCampaignBackgroundImage(campaign);
+            const backgroundColor = backgroundImage ? null : extractCampaignBackgroundColor(campaign);
 
-            // Récupérer la couleur de fond si pas d'image
-            let backgroundColor = null;
-            if (!backgroundImage) {
-              // Source 1: canvasConfig.background
-              if (campaign.canvasConfig?.background?.type === 'color' && campaign.canvasConfig?.background?.value) {
-                backgroundColor = campaign.canvasConfig.background.value;
-              }
-              // Source 2: design.background (objet)
-              else if (campaign.design?.background?.type === 'color' && campaign.design?.background?.value) {
-                backgroundColor = campaign.design.background.value;
-              }
-              // Source 3: design.background (string direct - couleur hex ou gradient)
-              else if (typeof campaign.design?.background === 'string' && 
-                       (campaign.design.background.startsWith('#') || 
-                        campaign.design.background.startsWith('linear-gradient') ||
-                        campaign.design.background.startsWith('radial-gradient') ||
-                        campaign.design.background.startsWith('rgb'))) {
-                backgroundColor = campaign.design.background;
-              }
-              // Source 4: design.background.desktop
-              else if (campaign.design?.background?.desktop?.type === 'color' && campaign.design?.background?.desktop?.value) {
-                backgroundColor = campaign.design.background.desktop.value;
-              }
-              // Source 5: brandColors.primary
-              else if (campaign.design?.brandColors?.primary) {
-                backgroundColor = campaign.design.brandColors.primary;
-              }
-              // Source 6: backgroundColor direct
-              else if (campaign.design?.backgroundColor) {
-                backgroundColor = campaign.design.backgroundColor;
-              }
-              // Source 7: Pour les articles - couleur de fond des modules
-              else if (campaign.type === 'article' && campaign.modules) {
-                const moduleWithBg = campaign.modules.find((m: any) => m.backgroundColor);
-                if (moduleWithBg?.backgroundColor) {
-                  backgroundColor = moduleWithBg.backgroundColor;
-                }
-              }
-            }
 
-            // Log pour debug
-            console.log(`[Campaign ${campaign.name}]`, {
-              backgroundImage,
-              backgroundColor,
-              hasCanvasConfig: !!campaign.canvasConfig,
-              hasDesign: !!campaign.design,
-              designBackground: campaign.design?.background,
-              designBackgroundImage: campaign.design?.backgroundImage
-            });
+            // 🔍 Debug détaillé si aucune image/couleur trouvée
+            if (!backgroundImage && !backgroundColor) {
+              console.warn(`⚠️ [RecentCampaigns] Campagne sans visuel: ${campaign.name}`);
+              debugCampaignImage(campaign);
+            }
 
             return {
               id: campaign.id,
@@ -126,8 +56,8 @@ const RecentCampaigns: React.FC = () => {
                 month: 'long',
                 year: 'numeric'
               }),
-              image: backgroundImage,
-              backgroundColor: backgroundColor
+              image: backgroundImage || undefined,
+              backgroundColor: backgroundColor || undefined
             };
           });
 

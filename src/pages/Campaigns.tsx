@@ -151,8 +151,8 @@ const Campaigns: React.FC = () => {
     .sort((a, b) => {
       if (sortBy === 'date') {
         return sortOrder === 'desc'
-          ? new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-          : new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+          ? new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+          : new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
       }
       return 0;
     }), [campaigns, filterStatus, searchTerm, sortBy, sortOrder]);
