@@ -4,7 +4,7 @@
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import StandardizedWheel from '../shared/StandardizedWheel';
-import TemplatedQuiz from '../shared/TemplatedQuiz';
+import TemplatedSwiper from '../shared/TemplatedSwiper';
 import DynamicContactForm, { type FieldConfig } from '../forms/DynamicContactForm';
 import Modal from '../common/Modal';
 import { useMessageStore } from '@/stores/messageStore';
@@ -958,17 +958,16 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
                     </>
                   )}
 
-                  {/* Quiz */}
+                  {/* Swiper */}
                   {(campaign.type === 'quiz' || (campaign.type === 'form' && derivedQuizConfig?.templateId)) && (
-                    <TemplatedQuiz
+                    <TemplatedSwiper
                       campaign={previewQuizCampaign}
                       device={previewMode}
                       disabled={false}
-                      templateId={derivedQuizConfig?.templateId || 'image-quiz'}
-                      onAnswerSelected={(isCorrect) => {
-                        console.log('🎯 Quiz answer selected:', isCorrect ? 'correct' : 'incorrect');
+                      onClick={() => {
+                        console.log('🎯 Swiper completed');
                         setTimeout(() => {
-                          handleGameFinish(isCorrect ? 'win' : 'lose');
+                          handleGameFinish('win');
                         }, 1000);
                       }}
                     />

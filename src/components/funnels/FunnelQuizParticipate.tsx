@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { toast } from 'sonner';
-import TemplatedQuiz from '../shared/TemplatedQuiz';
+import TemplatedSwiper from '../shared/TemplatedSwiper';
 import FormHandler from './components/FormHandler';
 import DynamicContactForm from '../forms/DynamicContactForm';
 import type { Tables } from '@/integrations/supabase/types';
@@ -590,18 +590,12 @@ const FunnelQuizParticipate: React.FC<FunnelQuizParticipateProps> = ({ campaign,
             {/* Modules de l'écran 2 */}
             {renderModuleGrid(modules2 as Module[], { device: previewMode })}
             <div className="w-full max-w-2xl">
-              {/* Utiliser le composant TemplatedQuiz pour afficher le quiz */}
-              <TemplatedQuiz
+              {/* Utiliser le composant TemplatedSwiper pour afficher le swiper */}
+              <TemplatedSwiper
                 campaign={campaign}
                 device={previewMode}
                 disabled={false}
                 onClick={handleQuizComplete}
-                templateId={campaignAny?.gameConfig?.quiz?.templateId || 'image-quiz'}
-                onAnswerSelected={(isCorrect: boolean) => {
-                  if (isCorrect) {
-                    setScore(prev => prev + 1);
-                  }
-                }}
               />
             </div>
           </div>

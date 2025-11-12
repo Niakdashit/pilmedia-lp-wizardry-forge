@@ -154,7 +154,6 @@ export const ROUTE_LOADERS = {
   '/statistics': () => import('../pages/Statistics'),
   '/design-editor': () => import('../pages/DesignEditor'),
   '/quiz-editor': () => import('../pages/QuizEditor'),
-  '/model-editor': () => import('../pages/ModelEditor'),
   '/jackpot-editor': () => import('../pages/JackpotEditor'),
   '/form-editor': () => import('../pages/FormEditor'),
   '/scratch-editor': () => import('../pages/ScratchCardEditor'),
