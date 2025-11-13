@@ -5,11 +5,8 @@ import type { OptimizedCampaign } from '../../ModernEditor/types/CampaignTypes';
 interface ArticleModePanelProps {
   campaign: OptimizedCampaign | null;
   onCampaignChange: (updates: Partial<OptimizedCampaign>) => void;
-  activePanel: 'banner' | 'text' | 'button' | 'funnel' | 'result';
+  activePanel: 'banner' | 'text' | 'button' | 'funnel';
   grouped?: boolean;
-  currentGameResult?: 'winner' | 'loser';
-  onGameResultChange?: (result: 'winner' | 'loser') => void;
-  onStepChange?: (step: 'article' | 'form' | 'game' | 'result') => void;
 }
 
 /**
@@ -23,9 +20,6 @@ const ArticleModePanel: React.FC<ArticleModePanelProps> = ({
   onCampaignChange,
   activePanel,
   grouped = false,
-  currentGameResult = 'winner',
-  onGameResultChange,
-  onStepChange,
 }) => {
   const articleConfig = campaign?.articleConfig || {};
   const [groupTab, setGroupTab] = React.useState<'banner' | 'text' | 'button'>('banner');
@@ -169,7 +163,7 @@ const ArticleModePanel: React.FC<ArticleModePanelProps> = ({
   const renderBannerPanel = () => (
     <div className="space-y-6">
       <div>
-        <h3 className="font-semibold text-sm text-gray-700 mb-3">Bannière</h3>
+        <h3 className="font-semibold text-sm text-gray-700 mb-3">IMAGE DE FOND (DESKTOP/TABLET)</h3>
         <label className="w-full p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-[hsl(var(--primary))] hover:bg-[#44444d] hover:text-white transition-colors flex flex-col items-center group cursor-pointer">
           <Upload className="w-6 h-6 mb-2 text-gray-600 group-hover:text-white" />
           <span className="text-sm text-gray-600 group-hover:text-white">Télécharger pour Desktop/Tablet</span>
@@ -190,74 +184,6 @@ const ArticleModePanel: React.FC<ArticleModePanelProps> = ({
             />
             <button
               onClick={handleBannerImageRemove}
-              className="px-3 py-2 text-sm rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
-            >
-              Supprimer
-            </button>
-          </div>
-        )}
-      </div>
-
-      {/* Fond de page complet */}
-      <div>
-        <h3 className="font-semibold text-sm text-gray-700 mb-3">Fond de page (plein écran)</h3>
-        <label className="w-full p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-[hsl(var(--primary))] hover:bg-[#44444d] hover:text-white transition-colors flex flex-col items-center group cursor-pointer">
-          <Upload className="w-6 h-6 mb-2 text-gray-600 group-hover:text-white" />
-          <span className="text-sm text-gray-600 group-hover:text-white">Télécharger une image de fond</span>
-          <span className="text-xs text-gray-500 group-hover:text-white">PNG, JPG jusqu'à 10MB</span>
-          <input
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={async (e) => {
-              const file = e.target.files?.[0];
-              if (!file) return;
-              const toDataUrl = (f: File) =>
-                new Promise<string>((resolve, reject) => {
-                  const reader = new FileReader();
-                  reader.onload = () => resolve(reader.result as string);
-                  reader.onerror = reject;
-                  reader.readAsDataURL(f);
-                });
-              try {
-                const dataUrl = await toDataUrl(file);
-                onCampaignChange({
-                  articleConfig: {
-                    ...articleConfig,
-                    pageBackground: {
-                      ...(articleConfig as any)?.pageBackground,
-                      imageUrl: dataUrl,
-                    },
-                  },
-                });
-                try {
-                  const evt = new CustomEvent('applyFullPageBackground', { detail: { url: dataUrl } });
-                  window.dispatchEvent(evt);
-                } catch {}
-              } catch {}
-            }}
-          />
-        </label>
-        { (articleConfig as any)?.pageBackground?.imageUrl && (
-          <div className="mt-3 flex items-center gap-3">
-            <img
-              src={(articleConfig as any).pageBackground.imageUrl}
-              alt="Fond de page"
-              className="h-16 w-auto rounded border border-gray-200"
-            />
-            <button
-              onClick={() => {
-                onCampaignChange({
-                  articleConfig: {
-                    ...articleConfig,
-                    pageBackground: { imageUrl: undefined },
-                  },
-                });
-                try {
-                  const evt = new CustomEvent('applyFullPageBackground', { detail: { url: undefined } });
-                  window.dispatchEvent(evt);
-                } catch {}
-              }}
               className="px-3 py-2 text-sm rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
             >
               Supprimer
@@ -287,52 +213,6 @@ const ArticleModePanel: React.FC<ArticleModePanelProps> = ({
             />
             <span className="text-sm text-gray-700">1500×744px (Panoramique)</span>
           </label>
-        </div>
-      </div>
-
-      {/* Palette de couleurs */}
-      <div>
-        <h3 className="text-sm font-semibold text-gray-700 mb-3">Couleurs unies</h3>
-        <div className="grid grid-cols-5 gap-2">
-          {[
-            '#FFFFFF', '#F8F9FA', '#E9ECEF', '#DEE2E6', '#CED4DA',
-            '#ADB5BD', '#6C757D', '#495057', '#343A40', '#212529',
-            '#000000', '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4',
-            '#FFEAA7', '#DDA0DD', '#FF8C69', '#87CEEB', '#98FB98'
-          ].map((color) => (
-            <button
-              key={color}
-              onClick={() => onCampaignChange({
-                articleConfig: {
-                  ...articleConfig,
-                  brandColors: {
-                    ...(articleConfig as any)?.brandColors,
-                    primary: color,
-                  },
-                },
-              })}
-              className="w-10 h-10 rounded-full border-2 border-gray-300 hover:border-[#44444d] transition-colors"
-              style={{ backgroundColor: color }}
-              title={color}
-            />
-          ))}
-        </div>
-        <div className="mt-3">
-          <label className="block text-xs text-gray-600 mb-2">Couleur personnalisée</label>
-          <input
-            type="color"
-            value={(articleConfig as any)?.brandColors?.primary || '#44444d'}
-            onChange={(e) => onCampaignChange({
-              articleConfig: {
-                ...articleConfig,
-                brandColors: {
-                  ...(articleConfig as any)?.brandColors,
-                  primary: e.target.value,
-                },
-              },
-            })}
-            className="w-full h-10 border border-gray-300 rounded-lg cursor-pointer"
-          />
         </div>
       </div>
     </div>
@@ -574,74 +454,6 @@ const ArticleModePanel: React.FC<ArticleModePanelProps> = ({
     </div>
   );
 
-  // Panneau Sortie (Result)
-  const renderResultPanel = () => (
-    <div className="space-y-6">
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-        <p className="text-sm text-blue-800">
-          <strong>💡 Astuce :</strong> Personnalisez les messages affichés selon que le joueur gagne ou perd.
-        </p>
-      </div>
-
-      {/* Sélecteur de message à éditer */}
-      <div>
-        <h3 className="text-sm font-semibold text-gray-700 mb-3">Message à éditer</h3>
-        <div className="flex gap-2">
-          <button
-            onClick={() => {
-              onGameResultChange?.('winner');
-              onStepChange?.('result');
-            }}
-            className={`flex-1 px-4 py-3 rounded-lg font-medium transition-all ${
-              currentGameResult === 'winner'
-                ? 'bg-green-500 text-white shadow-lg'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            🎉 Message GAGNANT
-          </button>
-          <button
-            onClick={() => {
-              onGameResultChange?.('loser');
-              onStepChange?.('result');
-            }}
-            className={`flex-1 px-4 py-3 rounded-lg font-medium transition-all ${
-              currentGameResult === 'loser'
-                ? 'bg-orange-500 text-white shadow-lg'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            😔 Message PERDANT
-          </button>
-        </div>
-      </div>
-
-      {/* Indication du message actuel */}
-      <div className={`p-4 rounded-lg ${
-        currentGameResult === 'winner' ? 'bg-green-50 border border-green-200' : 'bg-orange-50 border border-orange-200'
-      }`}>
-        <p className="text-sm font-medium mb-2">
-          {currentGameResult === 'winner' ? '🎉 Édition du message GAGNANT' : '😔 Édition du message PERDANT'}
-        </p>
-        <p className="text-xs text-gray-600">
-          {currentGameResult === 'winner' 
-            ? 'Ce message s\'affiche quand le joueur gagne un lot (segment avec dotation).'
-            : 'Ce message s\'affiche quand le joueur ne gagne rien (segment sans dotation).'}
-        </p>
-      </div>
-
-      {/* Instructions */}
-      <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-        <h4 className="text-sm font-semibold text-gray-700 mb-2">📝 Comment ça marche ?</h4>
-        <ul className="text-xs text-gray-600 space-y-1 list-disc list-inside">
-          <li>Cliquez sur un bouton ci-dessus pour choisir le message à éditer</li>
-          <li>Modifiez le texte directement dans l'écran de sortie (étape 4)</li>
-          <li>Le bon message s'affichera automatiquement selon le résultat du jeu</li>
-        </ul>
-      </div>
-    </div>
-  );
-
   // Panneau Funnel
   const renderFunnelPanel = () => (
     <div className="space-y-6">
@@ -759,7 +571,7 @@ const ArticleModePanel: React.FC<ArticleModePanelProps> = ({
     );
   }
 
-  // Rendu selon le panneau actif (mode non-groupé ou pour 'funnel' ou 'result')
+  // Rendu selon le panneau actif (mode non-groupé ou pour 'funnel')
   switch (activePanel) {
     case 'banner':
       return renderBannerPanel();
@@ -769,8 +581,6 @@ const ArticleModePanel: React.FC<ArticleModePanelProps> = ({
       return renderButtonPanel();
     case 'funnel':
       return renderFunnelPanel();
-    case 'result':
-      return renderResultPanel();
     default:
       return null;
   }

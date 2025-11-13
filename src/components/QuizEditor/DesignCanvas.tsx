@@ -30,13 +30,8 @@ import { QuizModuleRenderer } from './QuizRenderer';
 import type { Module } from '@/types/modularEditor';
 
 // Import pour le mode Article
-const DEFAULT_ARTICLE_CONFIG = {
-  banner: { imageUrl: '' },
-  title: '',
-  description: '',
-  cta: { text: 'PARTICIPER', style: {} },
-  layout: { maxWidth: 810 }
-};
+import ArticleCanvas from '../ArticleEditor/ArticleCanvas';
+import { DEFAULT_ARTICLE_CONFIG } from '../ArticleEditor/types/ArticleTypes';
 
 type CanvasScreenId = 'screen1' | 'screen2' | 'screen3' | 'all';
 
@@ -2263,7 +2258,85 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   const selectedElementData = selectedElement ? elementById.get(selectedElement) ?? null : null;
 
   // ============================================
-  // RENDU PRINCIPAL - Mode fullscreen et article géré par DesignEditorLayout
+  // MODE ARTICLE - Rendu simplifié (après tous les hooks)
+  // ============================================
+  if (editorMode === 'article') {
+    const articleConfig = campaign?.articleConfig || DEFAULT_ARTICLE_CONFIG;
+    
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-100 p-8">
+        <ArticleCanvas
+          articleConfig={articleConfig}
+          onBannerChange={(imageUrl) => {
+            if (onCampaignChange && campaign) {
+              onCampaignChange({
+                ...campaign,
+                articleConfig: {
+                  ...articleConfig,
+                  banner: {
+                    ...articleConfig.banner,
+                    imageUrl,
+                  },
+                },
+              });
+            }
+          }}
+          onBannerRemove={() => {
+            if (onCampaignChange && campaign) {
+              onCampaignChange({
+                ...campaign,
+                articleConfig: {
+                  ...articleConfig,
+                  banner: {
+                    ...articleConfig.banner,
+                    imageUrl: undefined,
+                  },
+                },
+              });
+            }
+          }}
+          onTitleChange={(title) => {
+            if (onCampaignChange && campaign) {
+              onCampaignChange({
+                ...campaign,
+                articleConfig: {
+                  ...articleConfig,
+                  content: {
+                    ...articleConfig.content,
+                    title,
+                  },
+                },
+              });
+            }
+          }}
+          onDescriptionChange={(description) => {
+            if (onCampaignChange && campaign) {
+              onCampaignChange({
+                ...campaign,
+                articleConfig: {
+                  ...articleConfig,
+                  content: {
+                    ...articleConfig.content,
+                    description,
+                  },
+                },
+              });
+            }
+          }}
+          onCTAClick={() => {
+            console.log('🎯 Article CTA clicked - Navigation vers étape suivante');
+          }}
+          currentStep="article"
+          editable={!readOnly}
+          maxWidth={810}
+          campaignType={campaign?.type || 'quiz'}
+        />
+      </div>
+    );
+  }
+
+  // ============================================
+  // MODE FULLSCREEN - Rendu normal avec modules
   // ============================================
   // Les questions et réponses sont maintenant gérées par StandardizedQuiz
   return (

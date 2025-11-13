@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { LoadingBoundary, MinimalLoader } from '@/components/shared/LoadingBoundary';
 import { supabase } from '@/integrations/supabase/client';
+import ArticleFunnelView from '@/components/ArticleEditor/ArticleFunnelView';
 import PreviewRenderer from '@/components/preview/PreviewRenderer';
 
 const PublicCampaign: React.FC = () => {

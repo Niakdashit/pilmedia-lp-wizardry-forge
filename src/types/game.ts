@@ -10,21 +10,10 @@ export interface GameResult {
   createdAt: string;
 }
 
-export interface CardItem {
-  id: string;
-  title: string;
-  image: string;
-}
-
-export interface SwiperGameConfig {
-  cards: CardItem[];
-}
-
 export interface GameConfig {
   maxWinners: number;
   winRate: number;
   currentWinners?: number;
-  swiper?: SwiperGameConfig;
 }
 
 export interface BaseGameProps {

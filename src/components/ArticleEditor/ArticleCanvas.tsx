@@ -1,152 +1,330 @@
 import React from 'react';
-import DynamicContactForm, { type FieldConfig } from '../forms/DynamicContactForm';
-
-interface ArticleConfig {
-  banner?: { imageUrl?: string };
-  title?: string;
-  description?: string;
-  cta?: { text?: string; style?: any };
-  layout?: { maxWidth?: number };
-}
+import ArticleBanner from './components/ArticleBanner';
+import EditableText from './components/EditableText';
+import ArticleCTA from './components/ArticleCTA';
+import DynamicContactForm from '../forms/DynamicContactForm';
+import type { ArticleConfig } from './types/ArticleTypes';
+import type { FieldConfig } from '../forms/DynamicContactForm';
+import StandardizedWheel from '../shared/StandardizedWheel';
+import ArticleQuiz from './ArticleQuiz';
+import SlotMachine from '../SlotJackpot/SlotMachine';
+import ScratchCardCanvas from '../ScratchCardEditor/ScratchCardCanvas';
 
 interface ArticleCanvasProps {
   articleConfig: ArticleConfig;
-  onBannerChange?: (imageUrl: string) => void;
-  onBannerRemove?: () => void;
-  onTitleChange?: (title: string) => void;
-  onDescriptionChange?: (description: string) => void;
-  onCTAClick?: () => void;
+  onBannerChange: (imageUrl: string) => void;
+  onBannerRemove: () => void;
+  onTitleChange: (title: string) => void;
+  onDescriptionChange: (description: string) => void;
+  onCTAClick: () => void;
   onFormSubmit?: (data: Record<string, string>) => void;
   onGameComplete?: () => void;
-  currentStep?: 'article' | 'form' | 'game' | 'result';
-  editable?: boolean;
+  currentStep: 'article' | 'form' | 'game' | 'result';
+  editable: boolean;
   maxWidth?: number;
-  campaignType?: string;
+  campaignType: string;
   formFields?: FieldConfig[];
-  campaign?: any;
+  campaign?: any; // Full campaign data for games
   wheelModalConfig?: any;
   gameModalConfig?: any;
+  onStepChange?: (step: 'article' | 'form' | 'game' | 'result') => void;
 }
 
+/**
+ * ArticleCanvas - Zone de contenu central pour le mode Article
+ * 
+ * Contient: Bannière + Texte + CTA dans un format 810×1200px
+ * S'affiche dans la zone centrale du DesignEditor (comme les modules)
+ */
 const ArticleCanvas: React.FC<ArticleCanvasProps> = ({
   articleConfig,
+  onBannerChange,
+  onBannerRemove,
+  onTitleChange,
+  onDescriptionChange,
   onCTAClick,
   onFormSubmit,
   onGameComplete,
-  currentStep = 'article',
-  editable = false,
+  currentStep,
+  editable,
   maxWidth = 810,
-  campaignType = 'wheel',
-  formFields,
+  campaignType,
+  formFields = [
+    { id: 'firstName', label: 'Prénom', type: 'text', required: true },
+    { id: 'lastName', label: 'Nom', type: 'text', required: true },
+    { id: 'email', label: 'Email', type: 'email', required: true },
+    { id: 'phone', label: 'Téléphone', type: 'tel', required: false },
+  ],
   campaign,
+  wheelModalConfig,
+  gameModalConfig,
+  onStepChange,
 }) => {
-  const renderStep = () => {
+  console.log('🎨 [ArticleCanvas] Render with articleConfig:', {
+    hasBanner: !!articleConfig?.banner,
+    bannerImageUrl: articleConfig?.banner?.imageUrl,
+    bannerImageUrlLength: articleConfig?.banner?.imageUrl?.length,
+    currentStep,
+    hasOnCTAClick: !!onCTAClick,
+  });
+
+  // Navigation entre les étapes
+  const steps: Array<'article' | 'form' | 'game' | 'result'> = ['article', 'form', 'game', 'result'];
+  const currentStepIndex = steps.indexOf(currentStep);
+  const canGoBack = currentStepIndex > 0;
+  const canGoForward = currentStepIndex < steps.length - 1;
+
+  const handlePreviousStep = () => {
+    if (canGoBack && onStepChange) {
+      onStepChange(steps[currentStepIndex - 1]);
+    }
+  };
+
+  const handleNextStep = () => {
+    if (canGoForward && onStepChange) {
+      onStepChange(steps[currentStepIndex + 1]);
+    }
+  };
+  
+  // Rendu du contenu selon l'étape
+  const renderStepContent = () => {
+    console.log('🎬 [ArticleCanvas] Rendering step:', {
+      currentStep,
+      campaignType,
+      hasCampaign: !!campaign,
+      campaignId: campaign?.id
+    });
+    
     switch (currentStep) {
       case 'article':
         return (
-          <div className="w-full max-w-[810px] bg-white rounded-lg shadow-lg overflow-hidden">
-            {/* Bannière */}
-            {articleConfig.banner?.imageUrl && (
-              <div className="w-full h-64 overflow-hidden">
-                <img
-                  src={articleConfig.banner.imageUrl}
-                  alt="Banner"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            )}
-
-            {/* Contenu */}
-            <div className="p-8">
-              {/* Titre */}
-              {articleConfig.title && (
-                <h1 className="text-3xl font-bold text-gray-900 mb-4">
-                  {articleConfig.title}
-                </h1>
-              )}
-
-              {/* Description */}
-              {articleConfig.description && (
-                <div className="text-gray-700 mb-6 whitespace-pre-wrap">
-                  {articleConfig.description}
-                </div>
-              )}
-
-              {/* Bouton CTA */}
-              <button
-                onClick={onCTAClick}
-                className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold py-3 px-6 rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all duration-200 shadow-md hover:shadow-lg"
-                style={articleConfig.cta?.style}
-              >
-                {articleConfig.cta?.text || 'PARTICIPER'}
-              </button>
-            </div>
-          </div>
+          <>
+            <EditableText
+              title={articleConfig.content?.title}
+              description={articleConfig.content?.description}
+              htmlContent={articleConfig.content?.htmlContent}
+              onTitleChange={onTitleChange}
+              onDescriptionChange={onDescriptionChange}
+              onHtmlContentChange={(html) => {
+                // Store the full HTML content
+                if (articleConfig.content) {
+                  onDescriptionChange(html);
+                }
+              }}
+              editable={editable}
+              maxWidth={maxWidth}
+            />
+            
+            <ArticleCTA
+              text={articleConfig.cta?.text}
+              variant={articleConfig.cta?.variant}
+              size={articleConfig.cta?.size}
+              icon={articleConfig.cta?.icon}
+              mobileVerticalPosition={articleConfig.cta?.mobileVerticalPosition}
+              onClick={() => {
+                console.log('🔥 [ArticleCTA] Button clicked!');
+                onCTAClick?.();
+              }}
+              maxWidth={maxWidth}
+            />
+          </>
         );
-
+      
       case 'form':
         return (
-          <div className="w-full max-w-[810px] bg-white rounded-lg shadow-lg overflow-hidden p-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">
-              Remplissez le formulaire
-            </h2>
+          <div className="py-8 px-6" style={{ maxWidth: `${maxWidth}px`, margin: '0 auto' }}>
+            <div className="mb-8" style={{ textAlign: articleConfig.content?.titleStyle?.textAlign || 'center' }}>
+              <h2 
+                className="font-bold mb-4"
+                style={{
+                  fontSize: articleConfig.content?.titleStyle?.fontSize || '32px',
+                  color: articleConfig.content?.titleStyle?.color || '#1f2937',
+                  textAlign: articleConfig.content?.titleStyle?.textAlign || 'center',
+                  lineHeight: articleConfig.content?.titleStyle?.lineHeight || '1.4',
+                }}
+              >
+                Contactez-nous
+              </h2>
+              <p className="text-lg text-gray-600 max-w-2xl" style={{ margin: '0 auto' }}>
+                Remplissez ce formulaire pour être recontacté(e) et recevoir plus d'informations.
+              </p>
+            </div>
             <DynamicContactForm
-              fields={formFields || [
-                { id: 'firstName', label: 'Prénom', type: 'text', required: true },
-                { id: 'lastName', label: 'Nom', type: 'text', required: true },
-                { id: 'email', label: 'Email', type: 'email', required: true },
-                { id: 'phone', label: 'Téléphone', type: 'tel', required: false },
-              ]}
+              fields={formFields}
               onSubmit={(data) => {
-                console.log('📝 Form submitted:', data);
+                console.log('Form submitted:', data);
                 onFormSubmit?.(data);
               }}
-              submitButtonText="Valider"
+              submitLabel={campaignType === 'form' ? 'Envoyer' : 'Valider'}
+              className="max-w-md mx-auto"
             />
           </div>
         );
-
+      
       case 'game':
         return (
-          <div className="w-full max-w-[810px] bg-white rounded-lg shadow-lg overflow-hidden p-8 text-center">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">
-              {campaignType === 'wheel' && '🎡 Roue de la Fortune'}
-              {campaignType === 'jackpot' && '🎰 Jackpot'}
-              {campaignType === 'scratch' && '🎫 Carte à Gratter'}
-              {campaignType === 'quiz' && '📝 Quiz'}
-            </h2>
-            <p className="text-gray-600 mb-6">
-              Le jeu s'affiche ici...
-            </p>
-            <button
-              onClick={onGameComplete}
-              className="bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold py-3 px-6 rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all duration-200"
-            >
-              Continuer
-            </button>
+          <div className="w-full h-full flex items-center justify-center" style={{ minHeight: '600px' }}>
+            <div className="flex flex-col items-center justify-center w-full">
+              {campaignType === 'wheel' && campaign && (
+                <StandardizedWheel
+                  campaign={campaign}
+                  wheelModalConfig={wheelModalConfig}
+                  onComplete={(prize: string) => {
+                    console.log('🎡 Wheel completed with prize:', prize);
+                    onGameComplete?.();
+                    if (onStepChange) {
+                      setTimeout(() => onStepChange('result'), 4000);
+                    }
+                  }}
+                />
+              )}
+              {campaignType === 'jackpot' && campaign && (
+                <SlotMachine
+                  campaign={campaign}
+                  onWin={(results: string[]) => {
+                    console.log('🎰 Jackpot won:', results);
+                    onGameComplete?.();
+                    if (onStepChange) {
+                      setTimeout(() => onStepChange('result'), 4000);
+                    }
+                  }}
+                  onLose={() => {
+                    console.log('🎰 Jackpot lost');
+                    onGameComplete?.();
+                    if (onStepChange) {
+                      setTimeout(() => onStepChange('result'), 4000);
+                    }
+                  }}
+                />
+              )}
+              {campaignType === 'scratch' && campaign && (
+                <div style={{
+                  maxWidth: `${maxWidth}px`,
+                  width: '100%',
+                  margin: '0 auto',
+                  overflow: 'hidden',
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center'
+                }}>
+                  <div style={{
+                    transform: 'scale(0.6)',
+                    transformOrigin: 'center center',
+                    width: '100%'
+                  }}>
+                    <ScratchCardCanvas
+                      previewMode={true}
+                      selectedDevice="desktop"
+                    />
+                  </div>
+                </div>
+              )}
+              {campaignType === 'quiz' && campaign && (
+                <>
+                  {console.log('🎮 [ArticleCanvas] Rendering ArticleQuiz', { campaign: campaign?.id })}
+                  <ArticleQuiz
+                    campaign={campaign}
+                    onComplete={(result: any) => {
+                      console.log('📝 Quiz completed:', result);
+                      onGameComplete?.();
+                    }}
+                  />
+                </>
+              )}
+              {campaignType === 'quiz' && !campaign && (
+                <div className="text-center text-red-500 p-8">
+                  ⚠️ Campaign data missing for quiz
+                </div>
+              )}
+              {campaignType !== 'quiz' && campaignType !== 'wheel' && campaignType !== 'jackpot' && campaignType !== 'scratch' && (
+                <div className="text-center text-gray-500 p-8">
+                  ℹ️ Game type: {campaignType}
+                </div>
+              )}
+            </div>
           </div>
         );
-
+      
       case 'result':
         return (
-          <div className="w-full max-w-[810px] bg-white rounded-lg shadow-lg overflow-hidden p-8 text-center">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">
+          <div className="py-8 px-6" style={{ maxWidth: `${maxWidth}px`, margin: '0 auto' }}>
+            <h2 
+              className="font-bold mb-4"
+              style={{
+                fontSize: articleConfig.content?.titleStyle?.fontSize || '32px',
+                color: articleConfig.content?.titleStyle?.color || '#1f2937',
+                textAlign: articleConfig.content?.titleStyle?.textAlign || 'center',
+                lineHeight: articleConfig.content?.titleStyle?.lineHeight || '1.4',
+              }}
+            >
               Merci d'avoir participé !
             </h2>
-            <p className="text-gray-600">
-              Vous recevrez une confirmation par email.
+            <p 
+              className="text-gray-600"
+              style={{ textAlign: articleConfig.content?.titleStyle?.textAlign || 'center' }}
+            >
+              Vous recevrez un email de confirmation avec les détails de votre participation.
             </p>
           </div>
         );
-
+      
       default:
         return null;
     }
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen p-8">
-      {renderStep()}
+    <div 
+      className="article-canvas mx-auto bg-white relative"
+      style={{
+        width: `${maxWidth}px`,
+        minHeight: '1200px',
+      }}
+    >
+      {/* Flèches de navigation - Uniquement en mode preview */}
+      {onStepChange && (
+        <>
+          {/* Flèche gauche */}
+          {canGoBack && (
+            <button
+              onClick={handlePreviousStep}
+              className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-full ml-4 w-12 h-12 bg-white hover:bg-gray-100 border-2 border-gray-300 rounded-full flex items-center justify-center shadow-lg transition-all duration-200 hover:scale-110 z-10"
+              title="Étape précédente"
+            >
+              <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+          )}
+          
+          {/* Flèche droite */}
+          {canGoForward && (
+            <button
+              onClick={handleNextStep}
+              className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-full mr-4 w-12 h-12 bg-white hover:bg-gray-100 border-2 border-gray-300 rounded-full flex items-center justify-center shadow-lg transition-all duration-200 hover:scale-110 z-10"
+              title="Étape suivante"
+            >
+              <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          )}
+        </>
+      )}
+
+      {/* Bannière (toujours visible) */}
+      <ArticleBanner
+        key={articleConfig.banner?.imageUrl || 'no-banner'}
+        imageUrl={articleConfig.banner?.imageUrl}
+        onImageChange={onBannerChange}
+        onImageRemove={onBannerRemove}
+        editable={editable}
+        aspectRatio={articleConfig.banner?.aspectRatio}
+        maxWidth={maxWidth}
+      />
+
+      {/* Contenu selon l'étape */}
+      {renderStepContent()}
     </div>
   );
 };

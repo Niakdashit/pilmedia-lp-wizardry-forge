@@ -16,12 +16,11 @@ const Gamification = lazy(() => import('./pages/Gamification'));
 const Statistics = lazy(() => import('./pages/Statistics'));
 const DesignEditor = lazy(() => import('./pages/DesignEditor'));
 const QuizEditor = lazy(() => import('./pages/QuizEditor'));
-const ReferenceEditor = lazy(() => import('./pages/ReferenceEditor'));
-const WebEditor = lazy(() => import('./pages/WebEditor'));
-const SwiperEditor = lazy(() => import('./pages/SwiperEditor'));
+const ModelEditor = lazy(() => import('./pages/ModelEditor'));
 const JackpotEditor = lazy(() => import('./pages/JackpotEditor'));
 const FormEditor = lazy(() => import('./pages/FormEditor'));
 const ScratchCardEditor = lazy(() => import('./pages/ScratchCardEditor'));
+const ScratchCard2 = lazy(() => import('./pages/ScratchCard2'));
 const DesignEditorPlus = lazy(() => import('./pages/DesignEditorPlus'));
 const QuizEditorPlus = lazy(() => import('./pages/QuizEditorPlus'));
 const ScratchEditorPlus = lazy(() => import('./pages/ScratchEditorPlus'));
@@ -118,19 +117,9 @@ function App() {
                   <QuizEditor />
                 </LoadingBoundary>
               } />
-              <Route path="/reference-editor" element={
+              <Route path="/model-editor" element={
                 <LoadingBoundary fallback={<EditorLoader />}>
-                  <ReferenceEditor />
-                </LoadingBoundary>
-              } />
-              <Route path="/web-editor" element={
-                <LoadingBoundary fallback={<EditorLoader />}>
-                  <WebEditor />
-                </LoadingBoundary>
-              } />
-              <Route path="/swiper-editor" element={
-                <LoadingBoundary fallback={<EditorLoader />}>
-                  <SwiperEditor />
+                  <ModelEditor />
                 </LoadingBoundary>
               } />
               <Route path="/jackpot-editor" element={
@@ -146,6 +135,11 @@ function App() {
               <Route path="/scratch-editor" element={
                 <LoadingBoundary fallback={<EditorLoader />}>
                   <ScratchCardEditor />
+                </LoadingBoundary>
+              } />
+              <Route path="/scratch-card-2" element={
+                <LoadingBoundary fallback={<EditorLoader />}>
+                  <ScratchCard2 />
                 </LoadingBoundary>
               } />
               <Route path="/template-editor" element={

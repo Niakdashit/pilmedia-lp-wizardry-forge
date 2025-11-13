@@ -11,6 +11,7 @@ const HybridSidebar = lazy(() => import('./HybridSidebar'));
 const DesignToolbar = lazy(() => import('./DesignToolbar'));
 import GameCanvasPreview from '@/components/ModernEditor/components/GameCanvasPreview';
 import PreviewRenderer from '@/components/preview/PreviewRenderer';
+import ArticleFunnelView from '@/components/ArticleEditor/ArticleFunnelView';
 import { getArticleConfigWithDefaults } from '@/utils/articleConfigHelpers';
 import type { ModularPage, ScreenId, BlocBouton, Module } from '@/types/modularEditor';
 import { createEmptyModularPage } from '@/types/modularEditor';
@@ -3674,7 +3675,7 @@ useEffect(() => {
                 }
               `}</style>
               {editorMode === 'article' && (
-                <PreviewRenderer
+                <ArticleFunnelView
                   articleConfig={getArticleConfigWithDefaults(campaignState, memoCampaignData)}
                   campaignType={(campaignState as any)?.type || 'form'}
                   campaign={memoCampaignData}
@@ -4068,7 +4069,7 @@ useEffect(() => {
                 <div data-screen-anchor="screen1" className="relative">
                   <div className="flex-1 flex flex-col items-center justify-center overflow-hidden relative">
                     {editorMode === 'article' && (
-                      <PreviewRenderer
+                      <ArticleFunnelView
                         articleConfig={getArticleConfigWithDefaults(campaignState, memoCampaignData)}
                         campaignType={(campaignState as any)?.type || 'form'}
                         campaign={memoCampaignData}

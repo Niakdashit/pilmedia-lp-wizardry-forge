@@ -9,7 +9,6 @@ import { useCampaignValidation } from '@/hooks/useCampaignValidation';
 import { useCampaigns } from '@/hooks/useCampaigns';
 import { saveCampaignToDB } from '@/hooks/useModernCampaignEditor/saveHandler';
 import { useEditorStore } from '@/stores/editorStore';
-import { useUnsavedChangesWarning } from '@/hooks/useUnsavedChangesWarning';
 
 interface DesignToolbarProps {
   selectedDevice: 'desktop' | 'tablet' | 'mobile';
@@ -65,10 +64,6 @@ const DesignToolbar: React.FC<DesignToolbarProps> = React.memo(({
   
   const saveDesktopLabel = mode === 'template' ? 'Enregistrer template' : 'Sauvegarder et quitter';
   const saveMobileLabel = mode === 'template' ? 'Enregistrer' : 'Sauvegarder';
-  
-  // Détecter les modifications non sauvegardées (basé sur canUndo)
-  const hasUnsavedChanges = canUndo;
-  const { handleClose } = useUnsavedChangesWarning(hasUnsavedChanges);
   
   // Ensure a campaign exists before opening settings
   const handleOpenSettings = useCallback(async () => {
@@ -255,7 +250,7 @@ const DesignToolbar: React.FC<DesignToolbarProps> = React.memo(({
           Modèles
         </button>
         {/* Position du bouton d'aperçu */}
-        <div className="flex items-center bg-[hsl(var(--sidebar-surface))] rounded-lg p-0.5 border border-[hsl(var(--sidebar-border))] mr-2">
+        <div className="hidden items-center bg-[hsl(var(--sidebar-surface))] rounded-lg p-0.5 border border-[hsl(var(--sidebar-border))] mr-2">
           <button
             onClick={() => onPreviewButtonSideChange && onPreviewButtonSideChange('left')}
             className={`px-2 py-1 text-xs rounded-md transition-all duration-200 ${
@@ -301,7 +296,7 @@ const DesignToolbar: React.FC<DesignToolbarProps> = React.memo(({
         {showSaveCloseButtons && (
           <>
             <button 
-              onClick={() => handleClose('/dashboard')}
+              onClick={() => navigate('/dashboard')}
               className="flex items-center px-2.5 py-1.5 text-xs sm:text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
             >
               <X className="w-4 h-4 mr-1" />
