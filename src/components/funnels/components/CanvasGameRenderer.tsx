@@ -32,10 +32,6 @@ interface CanvasGameRendererProps {
   onGameButtonClick: () => void;
   /** When true, render the preview on a fixed full-screen overlay to ensure parity with other editors */
   fullScreen?: boolean;
-  // Dotation system props
-  participantEmail?: string;
-  participantId?: string;
-  useDotationSystem?: boolean;
 }
 
 const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
@@ -47,10 +43,7 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
   onGameFinish,
   onGameStart,
   onGameButtonClick,
-  fullScreen = true,
-  participantEmail,
-  participantId,
-  useDotationSystem = true // Activer par défaut le système de dotation
+  fullScreen = true
 }) => {
   // Plus de logique portail locale: on utilise un composant singleton dédié pour le fullscreen
   // Configuration du canvas depuis la campagne - essayer plusieurs sources
@@ -315,42 +308,28 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
     if (campaign.type === 'jackpot') {
       // Fusionner campagne fournie et store réactif (le store gagne si la campagne est vide)
       const campaignJackpot = campaign?.gameConfig?.jackpot || {};
-      const jackpotConfig = campaign?.jackpotConfig || {};
-      
-      const effectiveTemplate = campaignJackpot?.template ?? jackpotConfig?.template ?? storeJackpotCfg?.template;
-      
-      // 🎰 CRITICAL: Priority order for symbols: slotMachineSymbols > symbols > store
-      const effectiveSymbols = 
-        jackpotConfig?.slotMachineSymbols || 
-        campaignJackpot?.slotMachineSymbols || 
-        jackpotConfig?.symbols || 
-        campaignJackpot?.symbols || 
-        storeJackpotCfg?.slotMachineSymbols || 
-        storeJackpotCfg?.symbols;
-      
-      const effectiveCustomUrl = campaignJackpot?.customTemplateUrl ?? jackpotConfig?.customTemplateUrl ?? storeJackpotCfg?.customTemplateUrl;
+      const effectiveTemplate = campaignJackpot?.template ?? storeJackpotCfg?.template;
+      const effectiveSymbols = campaignJackpot?.symbols ?? storeJackpotCfg?.symbols;
+      const effectiveCustomUrl = campaignJackpot?.customTemplateUrl ?? storeJackpotCfg?.customTemplateUrl;
       
       // Récupérer toutes les configurations pour assurer la parité avec le mode édition
-      const effectiveBorderColor = campaignJackpot?.borderColor ?? jackpotConfig?.borderColor ?? storeJackpotCfg?.borderColor;
-      const effectiveBackgroundColor = campaignJackpot?.backgroundColor ?? jackpotConfig?.backgroundColor ?? storeJackpotCfg?.backgroundColor;
-      const effectiveTextColor = campaignJackpot?.textColor ?? jackpotConfig?.textColor ?? storeJackpotCfg?.textColor;
-      const effectiveCustomFrame = campaignJackpot?.customFrame ?? jackpotConfig?.customFrame ?? storeJackpotCfg?.customFrame;
-      const effectiveButton = campaignJackpot?.button ?? jackpotConfig?.button ?? storeJackpotCfg?.button;
+      const effectiveBorderColor = campaignJackpot?.borderColor ?? storeJackpotCfg?.borderColor;
+      const effectiveBackgroundColor = campaignJackpot?.backgroundColor ?? storeJackpotCfg?.backgroundColor;
+      const effectiveTextColor = campaignJackpot?.textColor ?? storeJackpotCfg?.textColor;
+      const effectiveCustomFrame = campaignJackpot?.customFrame ?? storeJackpotCfg?.customFrame;
+      const effectiveButton = campaignJackpot?.button ?? storeJackpotCfg?.button;
       void effectiveCustomFrame; // Reserved for future functionality
       void effectiveButton; // Reserved for future functionality
       
-      console.log('🎰 [CanvasGameRenderer] Rendering Jackpot component (SlotJackpot)', {
+      console.log('🎰 Rendering Jackpot component (SlotJackpot)', {
         template: effectiveTemplate,
-        hasJackpotConfig: !!jackpotConfig,
-        hasSlotMachineSymbols: !!jackpotConfig?.slotMachineSymbols,
-        slotMachineSymbols: jackpotConfig?.slotMachineSymbols,
-        hasSymbols: !!jackpotConfig?.symbols,
-        symbolsCount: jackpotConfig?.symbols?.length || 0,
-        effectiveSymbols,
-        effectiveSymbolsCount: Array.isArray(effectiveSymbols) ? effectiveSymbols.length : 0,
+        symbols: Array.isArray(effectiveSymbols) ? effectiveSymbols.length : 0,
         borderColor: effectiveBorderColor,
         backgroundColor: effectiveBackgroundColor,
-        textColor: effectiveTextColor
+        textColor: effectiveTextColor,
+        campaignTemplate: campaignJackpot?.template,
+        storeTemplate: storeJackpotCfg?.template,
+        effectiveTemplate
       });
       
       // En fullscreen, utiliser le portail singleton pour éviter tout unmount
@@ -374,32 +353,7 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
             symbols={effectiveSymbols}
             onWin={handleWin}
             onLose={handleLose}
-            campaign={campaign}
-            participantEmail={participantEmail}
-            participantId={participantId}
-            useDotationSystem={useDotationSystem}
-          />
-        </div>
-      );
-    }
-    
-    if (campaign.type === 'scratch') {
-      console.log('🎴 [CanvasGameRenderer] Rendering Scratch component', {
-        scratchConfig: campaign.gameConfig?.scratch,
-        hasScratchConfig: !!campaign.gameConfig?.scratch
-      });
-      
-      return (
-        <div className="absolute inset-0" style={{ zIndex: 10 }}>
-          <ScratchPreview
-            config={campaign.gameConfig?.scratch || campaign.scratchConfig || {}}
-            onFinish={handleGameFinish}
-            onStart={handleGameStart}
             disabled={!formValidated}
-            campaign={campaign}
-            participantEmail={participantEmail}
-            participantId={participantId}
-            useDotationSystem={useDotationSystem}
           />
         </div>
       );

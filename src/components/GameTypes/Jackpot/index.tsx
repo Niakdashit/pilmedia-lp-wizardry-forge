@@ -9,11 +9,8 @@ const Jackpot: React.FC<JackpotProps> = ({
   isPreview,
   onFinish,
   disabled = false,
-  symbols: propSymbols,
-  campaign: propCampaign,
 }) => {
-  const storeCampaign = useEditorStore((s: any) => s.campaign);
-  const campaign = propCampaign || storeCampaign;
+  const campaign = useEditorStore((s: any) => s.campaign);
 
   const handleWin = (results: string[]) => {
     console.log('🎆 [Jackpot] handleWin called, launching confetti');
@@ -35,24 +32,13 @@ const Jackpot: React.FC<JackpotProps> = ({
     return <div><p>Pas de configuration pour le moment.</p></div>;
   }
 
-  // 🎰 Priority: propSymbols > campaign symbols
-  const symbols = propSymbols || campaign?.gameConfig?.jackpot?.symbols || campaign?.jackpotConfig?.symbols;
-  
-  console.log('🎰 [Jackpot] Using symbols:', {
-    hasPropSymbols: !!propSymbols,
-    propSymbols,
-    hasCampaignSymbols: !!(campaign?.gameConfig?.jackpot?.symbols || campaign?.jackpotConfig?.symbols),
-    finalSymbols: symbols
-  });
-
   return (
     <div className="flex flex-col items-center justify-center">
       <SlotMachine
         disabled={disabled}
         onWin={handleWin}
         onLose={handleLose}
-        symbols={symbols}
-        campaign={campaign}
+        symbols={campaign?.gameConfig?.jackpot?.symbols || campaign?.jackpotConfig?.symbols}
         templateOverride={campaign?.gameConfig?.jackpot?.template || campaign?.jackpotConfig?.template}
       />
     </div>

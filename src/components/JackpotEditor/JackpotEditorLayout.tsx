@@ -293,28 +293,14 @@ const { syncAllStates } = useCampaignStateSync();
   })();
 
   // 🎰 Initialiser jackpotConfig avec les symboles par défaut si absent
-  // CRITICAL: Only run once on mount for new campaigns, never overwrite existing data
-  const hasInitializedSymbols = useRef(false);
   useEffect(() => {
-    // Skip if already initialized or if campaign is being loaded
-    if (hasInitializedSymbols.current) return;
-    
-    // Skip if campaign has an ID (it's being loaded from DB)
-    const campaignId = (campaignState as any)?.id;
-    if (campaignId && !campaignId.startsWith('temp-')) {
-      console.log('🎰 [JackpotEditor] Skipping symbol initialization - campaign loaded from DB');
-      hasInitializedSymbols.current = true;
-      return;
-    }
-    
-    // Only initialize if symbols are truly absent
-    if (!campaignState?.jackpotConfig?.symbols || campaignState.jackpotConfig.symbols.length === 0) {
-      console.log('🎰 [JackpotEditor] Initializing default symbols for new campaign');
+    if (!campaignState?.jackpotConfig?.symbols) {
       const defaultSymbols = [
         { id: '1', label: 'Cerise', contentType: 'emoji' as const, emoji: '🍒' },
         { id: '2', label: 'Citron', contentType: 'emoji' as const, emoji: '🍋' },
         { id: '3', label: 'Diamant', contentType: 'emoji' as const, emoji: '💎' },
         { id: '4', label: 'Étoile', contentType: 'emoji' as const, emoji: '⭐' },
+        { id: '5', label: 'Sept', contentType: 'emoji' as const, emoji: '7️⃣' },
       ];
       
       const allSymbolStrings = defaultSymbols.map(s => s.emoji);
@@ -346,13 +332,9 @@ const { syncAllStates } = useCampaignStateSync();
         }
       }));
       
-      hasInitializedSymbols.current = true;
-      console.log('✅ [JackpotEditor] Default symbols initialized');
-    } else {
-      console.log('🎰 [JackpotEditor] Symbols already exist, skipping initialization');
-      hasInitializedSymbols.current = true;
+      console.log('🎰 [JackpotEditor] Initialized default symbols:', defaultSymbols);
     }
-  }, [campaignState?.jackpotConfig?.symbols, campaignState?.id, setCampaign]);
+  }, [campaignState?.jackpotConfig?.symbols, setCampaign]);
 
   // 🔄 Auto-save to Supabase every 30 seconds (aligned with QuizEditor)
   useAutoSaveToSupabase(
@@ -432,17 +414,6 @@ useEffect(() => {
         });
         
         // Transform database row to campaign format
-        const gameConfig = (data.game_config || {}) as any;
-        const jackpotConfig = gameConfig.jackpot || (data as any).jackpotConfig || {};
-        
-        console.log('🎰 [JackpotEditor] Loaded jackpotConfig:', {
-          hasJackpotConfig: !!jackpotConfig,
-          hasSymbols: !!jackpotConfig.symbols,
-          symbolsCount: jackpotConfig.symbols?.length || 0,
-          hasSymbolToPrizeMap: !!jackpotConfig.symbolToPrizeMap,
-          symbolToPrizeMapKeys: Object.keys(jackpotConfig.symbolToPrizeMap || {})
-        });
-        
         const campaignData: any = {
           ...data,
           id: data.id,
@@ -452,9 +423,7 @@ useEffect(() => {
           editorMode: (data as any).editor_mode || (data as any).editorMode || editorMode,
           articleConfig: (data as any).article_config || (data as any).articleConfig || {},
           design: data.design || {},
-          gameConfig: gameConfig,
-          // 🎰 CRITICAL: Restore jackpotConfig at root level
-          jackpotConfig: jackpotConfig,
+          gameConfig: (data.game_config || {}) as any,
           buttonConfig: {},
           config: data.config || {},
           formFields: data.form_fields || [],
@@ -2604,22 +2573,9 @@ useEffect(() => {
       buttonActiveBackgroundColor: styleSource.buttonActiveBackgroundColor || activeHex
     };
 
-    // 🎰 CRITICAL: Use complete jackpotConfig with symbols and symbolToPrizeMap
     const jackpotConfig = (campaignState as any)?.jackpotConfig || {
       reels: 3,
-      symbols: [],
-      slotMachineSymbols: [],
-      symbolToPrizeMap: {}
     };
-
-    console.log('🎰 [JackpotEditor] campaignData jackpotConfig:', {
-      hasSymbols: !!jackpotConfig.symbols,
-      symbolsCount: jackpotConfig.symbols?.length || 0,
-      hasSlotMachineSymbols: !!jackpotConfig.slotMachineSymbols,
-      slotMachineSymbolsCount: jackpotConfig.slotMachineSymbols?.length || 0,
-      hasSymbolToPrizeMap: !!jackpotConfig.symbolToPrizeMap,
-      symbolToPrizeMapKeys: Object.keys(jackpotConfig.symbolToPrizeMap || {})
-    });
 
     return {
       id: (campaignState as any)?.id || (campaignConfig as any)?.id || 'jackpot-design-preview',
@@ -2641,8 +2597,6 @@ useEffect(() => {
       gameConfig: {
         jackpot: jackpotConfig
       },
-      // 🎰 CRITICAL: Also expose jackpotConfig at root level for JackpotGamePanel
-      jackpotConfig: jackpotConfig,
       buttonConfig: {
         text: buttonLabel,
         color: scratchStyle.buttonBackgroundColor,
@@ -2896,59 +2850,7 @@ useEffect(() => {
     }
   };
 
-  const handlePreview = async () => {
-    // 💾 CRITICAL: Save campaign before preview to ensure all changes (including prize assignments) are persisted
-    if (!showFunnel) {
-      console.log('💾 [JackpotEditor] Saving campaign before preview...');
-      try {
-        // Try to sync states, but don't fail if it errors
-        try {
-          await syncAllStates();
-        } catch (syncError) {
-          console.warn('⚠️ [JackpotEditor] syncAllStates failed, continuing anyway:', syncError);
-        }
-        
-        const payload = {
-          ...campaignState,
-          canvasElements,
-          modularPage,
-          screenBackgrounds,
-          extractedColors,
-          selectedDevice,
-          canvasZoom,
-          jackpotConfig: (campaignState as any)?.jackpotConfig,
-          gameConfig: (campaignState as any)?.gameConfig
-        };
-        
-        const saved = await saveCampaignToDB(payload, saveCampaign);
-        console.log('✅ [JackpotEditor] Campaign saved before preview');
-        
-        // 🔄 CRITICAL: Reload campaign from Supabase to ensure preview uses latest data
-        if (saved?.id && getCampaign) {
-          console.log('🔄 [JackpotEditor] Reloading campaign from Supabase...');
-          const reloaded = await getCampaign(saved.id);
-          if (reloaded) {
-            console.log('✅ [JackpotEditor] Campaign reloaded:', {
-              hasJackpotConfig: !!reloaded.jackpotConfig,
-              hasGameConfig: !!reloaded.game_config,
-              jackpotSymbols: reloaded.jackpotConfig?.symbols?.length || reloaded.game_config?.jackpot?.symbols?.length || 0
-            });
-            // Update store with reloaded data
-            setCampaign((prev: any) => ({
-              ...prev,
-              jackpotConfig: reloaded.game_config?.jackpot || reloaded.jackpotConfig || prev.jackpotConfig,
-              gameConfig: {
-                ...(prev.gameConfig || {}),
-                jackpot: reloaded.game_config?.jackpot || reloaded.jackpotConfig || prev.gameConfig?.jackpot
-              }
-            }));
-          }
-        }
-      } catch (e) {
-        console.error('❌ [JackpotEditor] Failed to save/reload before preview:', e);
-      }
-    }
-    
+  const handlePreview = () => {
     setShowFunnel(!showFunnel);
     // Reset to article step when entering preview
     if (!showFunnel) {
@@ -2969,8 +2871,8 @@ useEffect(() => {
 
   const handleGameComplete = () => {
     console.log('🎮 [JackpotEditor] Game completed');
-    // Le jackpot attend déjà 2s avant d'appeler onFinish, donc on passe immédiatement à l'écran de résultat
-    setCurrentStep('result');
+    // Delay 4s before showing result to keep the game visible
+    setTimeout(() => setCurrentStep('result'), 4000);
   };
 
   // Save & Quit with validation modal
@@ -3684,10 +3586,6 @@ useEffect(() => {
                       previewMode={actualDevice === 'desktop' && selectedDevice === 'desktop' ? 'desktop' : selectedDevice}
                       wheelModalConfig={wheelModalConfig}
                       launchButtonStyles={launchButtonStyles}
-                      onCTAClick={handleCTAClick}
-                      onFormSubmit={handleFormSubmit}
-                      onGameComplete={handleGameComplete}
-                      currentStep={currentStep}
                     />
                   )}
                 </div>

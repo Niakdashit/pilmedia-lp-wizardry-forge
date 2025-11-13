@@ -1,7 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
 import ScratchGameGrid from './ScratchGameGrid';
-import { scratchDotationIntegration } from '@/services/ScratchDotationIntegration';
 
 interface ScratchPreviewProps {
   config?: any;
@@ -14,11 +13,6 @@ interface ScratchPreviewProps {
   gamePosition?: 'top' | 'center' | 'bottom' | 'left' | 'right';
   autoStart?: boolean;
   isModal?: boolean;
-  // Dotation system props
-  campaign?: any;
-  participantEmail?: string;
-  participantId?: string;
-  useDotationSystem?: boolean;
 }
 
 const STORAGE_KEY = 'scratch_session_card';
@@ -33,11 +27,7 @@ const ScratchPreview: React.FC<ScratchPreviewProps> = ({
   buttonColor = '#44444d',
   gameSize = 'medium',
   autoStart = false,
-  isModal = false,
-  campaign,
-  participantEmail,
-  participantId,
-  useDotationSystem = true
+  isModal = false
 }) => {
   // ✅ LOGIQUE FUNNEL UNLOCKED : le jeu ne démarre que si disabled=false (formulaire validé)
   const [gameStarted, setGameStarted] = useState(false);
@@ -46,9 +36,6 @@ const ScratchPreview: React.FC<ScratchPreviewProps> = ({
   const [selectedCard, setSelectedCard] = useState<number | null>(null);
   const [scratchStarted, setScratchStarted] = useState(false);
   const [showResult, setShowResult] = useState(false);
-  // 🎯 Résultat du système de dotation
-  const [dotationResult, setDotationResult] = useState<any>(null);
-  const [dotationLoading, setDotationLoading] = useState(false);
 
   // Clear any previous session data on component mount to ensure fresh start
   useEffect(() => {
@@ -64,7 +51,7 @@ const ScratchPreview: React.FC<ScratchPreviewProps> = ({
     }
   }, [autoStart, gameStarted, disabled, onStart]);
 
-  const handleGameStart = async () => {
+  const handleGameStart = () => {
     // ✅ VERIFICATION FUNNEL : Ne peut pas démarrer si disabled (formulaire non validé)
     if (disabled) {
       if (process.env.NODE_ENV !== 'production') {
@@ -72,38 +59,9 @@ const ScratchPreview: React.FC<ScratchPreviewProps> = ({
       }
       return;
     }
-    
     if (process.env.NODE_ENV !== 'production') {
       console.log('🎮 Scratch: Démarrage du jeu autorisé');
     }
-    
-    // 🎯 Utiliser le système de dotation si activé
-    if (useDotationSystem && campaign?.id && participantEmail) {
-      setDotationLoading(true);
-      try {
-        console.log('🎴 [Scratch] Using dotation system');
-        
-        const totalCards = config?.cards?.length || 3;
-        const result = await scratchDotationIntegration.determineScratchResult(
-          {
-            campaignId: campaign.id,
-            participantEmail,
-            participantId,
-            userAgent: navigator.userAgent
-          },
-          totalCards
-        );
-        
-        setDotationResult(result);
-        console.log('🎲 [Scratch] Dotation result:', result);
-      } catch (error) {
-        console.error('❌ [Scratch] Dotation error:', error);
-        // En cas d'erreur, continuer sans dotation (mode aléatoire)
-      } finally {
-        setDotationLoading(false);
-      }
-    }
-    
     setGameStarted(true);
     if (onStart) onStart();
   };
@@ -128,15 +86,7 @@ const ScratchPreview: React.FC<ScratchPreviewProps> = ({
     const newFinishedCards = new Set([...finishedCards, cardIndex]);
     setFinishedCards(newFinishedCards);
 
-    // 🎯 Si le système de dotation est actif, utiliser son résultat
-    let actualResult = result;
-    if (dotationResult) {
-      const card = dotationResult.cards[cardIndex];
-      actualResult = card?.isWinning ? 'win' : 'lose';
-      console.log(`🎴 [Scratch] Card ${cardIndex} result from dotation:`, actualResult);
-    }
-
-    if (actualResult === 'win') {
+    if (result === 'win') {
       setHasWon(true);
     }
 
@@ -145,10 +95,7 @@ const ScratchPreview: React.FC<ScratchPreviewProps> = ({
       setShowResult(true);
       setTimeout(() => {
         if (onFinish) {
-          // Utiliser le résultat global de la dotation si disponible
-          const finalResult = dotationResult ? (dotationResult.shouldWin ? 'win' : 'lose') : (hasWon || actualResult === 'win' ? 'win' : 'lose');
-          console.log(`🎴 [Scratch] Final result:`, finalResult);
-          onFinish(finalResult);
+          onFinish(hasWon || result === 'win' ? 'win' : 'lose');
         }
       }, 1000);
     }

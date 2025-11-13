@@ -47,8 +47,6 @@ export const useAutoSaveToSupabase = (
         name: data.campaign?.name,
         design: data.campaign?.design,
         config: data.campaign?.config,
-        jackpotConfig: data.campaign?.jackpotConfig,
-        gameConfig: data.campaign?.gameConfig,
         canvasElements: data.canvasElements?.length,
         modularPage: data.modularPage?.screens ? Object.keys(data.modularPage.screens).length : 0,
         screenBackgrounds: data.screenBackgrounds
@@ -107,10 +105,7 @@ useEffect(() => {
             // Preserve background images from screenBackgrounds
             backgroundImage: campaignData.screenBackgrounds?.screen1?.value || campaignData.campaign.design?.backgroundImage,
             mobileBackgroundImage: campaignData.campaign.design?.mobileBackgroundImage
-          },
-          // 🎰 CRITICAL: Preserve jackpotConfig and gameConfig for symbol-prize mappings
-          jackpotConfig: campaignData.campaign.jackpotConfig,
-          gameConfig: campaignData.campaign.gameConfig
+          }
         };
 
         // Save to Supabase

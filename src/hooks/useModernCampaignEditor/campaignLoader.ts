@@ -309,10 +309,6 @@ export const loadCampaign = async (
           segments: existingCampaign.game_config?.wheelSegments || []
         },
         
-        // 🎰 CRITICAL: Restore jackpot configuration (symbols, prize mappings)
-        // This ensures symbol-prize assignments are restored
-        jackpotConfig: existingCampaign.game_config?.jackpot || existingCampaign.jackpotConfig || {},
-        
         // 🎁 CRITICAL: Restore prizes configuration (dotation system)
         // This ensures prize data, calendar dates, and awarded units are restored
         prizes: existingCampaign.game_config?.prizes || existingCampaign.prizes || []

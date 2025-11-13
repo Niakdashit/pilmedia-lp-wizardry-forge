@@ -1,16 +1,20 @@
-/* 🎰 Optimisations GPU pour fluidité maximale */
-.slot-reel {
-  /* Force GPU acceleration */
-  transform: translateZ(0);
-  backface-visibility: hidden;
-  perspective: 1000px;
+@keyframes spin-reel-0 {
+  0% { transform: rotateX(0deg); }
+  100% { transform: rotateX(1800deg); }
 }
 
-.slot-reel > div {
-  /* Force GPU acceleration sur les strips */
-  transform: translateZ(0);
-  backface-visibility: hidden;
-  will-change: transform;
+@keyframes spin-reel-1 {
+  0% { transform: rotateX(0deg); }
+  100% { transform: rotateX(2160deg); }
+}
+
+@keyframes spin-reel-2 {
+  0% { transform: rotateX(0deg); }
+  100% { transform: rotateX(2520deg); }
+}
+
+.slot-spinning {
+  animation-timing-function: cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
 }
 
 .slot-spin-button:hover:not(:disabled) {
