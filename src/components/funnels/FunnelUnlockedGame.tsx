@@ -10,7 +10,7 @@ import DynamicContactForm from '../forms/DynamicContactForm';
 import { UNLOCKED_GAME_TYPES } from '../../utils/funnelMatcher';
 import { FieldConfig } from '../forms/DynamicContactForm';
 import { useEditorStore } from '../../stores/editorStore';
-import CanvasElement from '../DesignEditor/CanvasElement';
+import CanvasElement from '../ModelEditor/CanvasElement';
 import { useUniversalResponsive } from '../../hooks/useUniversalResponsive';
 import { getDeviceDimensions } from '../../utils/deviceDimensions';
 import { useEditorPreviewSync } from '../../hooks/useEditorPreviewSync';

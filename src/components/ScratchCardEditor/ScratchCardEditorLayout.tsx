@@ -3880,14 +3880,99 @@ const handleSaveCampaignName = useCallback(async () => {
                 <div data-screen-anchor="screen1" className="relative">
                   <div className="flex-1 flex flex-col items-center justify-center overflow-hidden relative">
                     {editorMode === 'article' && (
-                      <PreviewRenderer
-                        campaign={campaignData}
-                        device={selectedDevice}
-                        onFormSubmit={handleFormSubmit}
-                        onGameComplete={handleGameComplete}
-                        onCTAClick={handleCTAClick}
+                      <ArticleFunnelView
+                        articleConfig={getArticleConfigWithDefaults(campaignState, campaignData)}
+                        campaignType={(campaignState as any)?.type || 'scratch'}
+                        campaign={(campaignState as any) || campaignData}
+                        wheelModalConfig={wheelModalConfig}
+                        gameModalConfig={wheelModalConfig}
                         currentStep={currentStep}
                         editable={true}
+                        formFields={(campaignState as any)?.formFields}
+                        onBannerChange={(imageUrl) => {
+                            if (campaignState) {
+                              setCampaign({
+                                ...campaignState,
+                                articleConfig: {
+                                  ...(campaignState as any).articleConfig,
+                                  banner: {
+                                    ...(campaignState as any).articleConfig?.banner,
+                                    imageUrl,
+                                  },
+                                },
+                              });
+                            }
+                          }}
+                          onBannerRemove={() => {
+                            if (campaignState) {
+                              setCampaign({
+                                ...campaignState,
+                                articleConfig: {
+                                  ...(campaignState as any).articleConfig,
+                                  banner: {
+                                    ...(campaignState as any).articleConfig?.banner,
+                                    imageUrl: undefined,
+                                  },
+                                },
+                              });
+                            }
+                          }}
+                          onTitleChange={(title) => {
+                            if (campaignState) {
+                              setCampaign({
+                                ...campaignState,
+                                articleConfig: {
+                                  ...(campaignState as any).articleConfig,
+                                  content: {
+                                    ...(campaignState as any).articleConfig?.content,
+                                    title,
+                                  },
+                                },
+                              });
+                            }
+                          }}
+                          onDescriptionChange={(description) => {
+                            if (campaignState) {
+                              setCampaign({
+                                ...campaignState,
+                                articleConfig: {
+                                  ...(campaignState as any).articleConfig,
+                                  content: {
+                                    ...(campaignState as any).articleConfig?.content,
+                                    description,
+                                  },
+                                },
+                              });
+                            }
+                          }}
+                        onCTAClick={handleCTAClick}
+                        onFormSubmit={handleFormSubmit}
+                        onGameComplete={handleGameComplete}
+                        onStepChange={setCurrentStep}
+                        currentGameResult={currentGameResult}
+                        onGameResultChange={setCurrentGameResult}
+                        onWinnerContentChange={(content) => {
+                          if (campaignState) {
+                            setCampaign({
+                              ...campaignState,
+                              articleConfig: {
+                                ...(campaignState as any).articleConfig,
+                                winnerContent: content,
+                              },
+                            });
+                          }
+                        }}
+                        onLoserContentChange={(content) => {
+                          if (campaignState) {
+                            setCampaign({
+                              ...campaignState,
+                              articleConfig: {
+                                ...(campaignState as any).articleConfig,
+                                loserContent: content,
+                              },
+                            });
+                          }
+                        }}
                       />
                     )}
                   {editorMode !== 'article' && (
@@ -3966,6 +4051,10 @@ const handleSaveCampaignName = useCallback(async () => {
                        setShowAnimationsInSidebar(false);
                        setShowPositionInSidebar(false);
                      }}
+                    // Mobile sidebar integrations
+                    onAddElement={handleAddElement}
+                    onBackgroundChange={handleBackgroundChange}
+                    onExtractedColorsChange={handleExtractedColorsChange}
                     // Group selection wiring
                     selectedGroupId={selectedGroupId as any}
                     onSelectedGroupChange={setSelectedGroupId as any}

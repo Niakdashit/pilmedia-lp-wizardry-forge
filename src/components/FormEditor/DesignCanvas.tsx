@@ -444,7 +444,44 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   onFormSubmit
 }, ref) => {
 
-  // Mode article géré par DesignEditorLayout avec PreviewRenderer
+  // MODE ARTICLE
+  if (editorMode === 'article') {
+    const articleConfig = campaign?.articleConfig || DEFAULT_ARTICLE_CONFIG;
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-100 p-8">
+        <ArticleCanvas
+          articleConfig={articleConfig}
+          onBannerChange={(imageUrl) => {
+            if (onCampaignChange && campaign) {
+              onCampaignChange({ ...campaign, articleConfig: { ...articleConfig, banner: { ...articleConfig.banner, imageUrl } } });
+            }
+          }}
+          onBannerRemove={() => {
+            if (onCampaignChange && campaign) {
+              onCampaignChange({ ...campaign, articleConfig: { ...articleConfig, banner: { ...articleConfig.banner, imageUrl: undefined } } });
+            }
+          }}
+          onTitleChange={(title) => {
+            if (onCampaignChange && campaign) {
+              onCampaignChange({ ...campaign, articleConfig: { ...articleConfig, content: { ...articleConfig.content, title } } });
+            }
+          }}
+          onDescriptionChange={(description) => {
+            if (onCampaignChange && campaign) {
+              onCampaignChange({ ...campaign, articleConfig: { ...articleConfig, content: { ...articleConfig.content, description } } });
+            }
+          }}
+          onCTAClick={() => console.log('🎯 Article CTA clicked')}
+          currentStep="article"
+          editable={!readOnly}
+          maxWidth={810}
+          campaignType={campaign?.type || 'form'}
+        />
+      </div>
+    );
+  }
+
+  // MODE FULLSCREEN
   const canvasRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const autoFitEnabledRef = useRef(true);

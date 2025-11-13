@@ -4200,6 +4200,10 @@ useEffect(() => {
                        setShowPositionInSidebar(false);
                        setShowDesignInSidebar(false);
                      }}
+                    // Mobile sidebar integrations
+                    onAddElement={handleAddElement}
+                    onBackgroundChange={handleBackgroundChange}
+                    onExtractedColorsChange={handleExtractedColorsChange}
                     // Group selection wiring
                     selectedGroupId={selectedGroupId as any}
                     onSelectedGroupChange={setSelectedGroupId as any}
