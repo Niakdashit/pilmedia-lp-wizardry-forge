@@ -12,7 +12,6 @@ const DesignToolbar = lazy(() => import('./DesignToolbar'));
 const FullScreenPreviewModal = lazy(() => import('@/components/shared/modals/FullScreenPreviewModal'));
 import EmptyGamePreview from './components/EmptyGamePreview';
 import PreviewRenderer from '@/components/preview/PreviewRenderer';
-import ArticleFunnelView from '@/components/ArticleEditor/ArticleFunnelView';
 import { getArticleConfigWithDefaults } from '@/utils/articleConfigHelpers';
 import type { ModularPage, ScreenId, BlocBouton, Module } from '@/types/modularEditor';
 import { createEmptyModularPage } from '@/types/modularEditor';
@@ -3687,7 +3686,7 @@ const handleSaveCampaignName = useCallback(async () => {
               /* Mobile Preview sur Desktop: Plein écran sans cadre */
               <div className="w-full h-full overflow-auto">
                   {editorMode === 'article' ? (
-                    <ArticleFunnelView
+                    <PreviewRenderer
                       articleConfig={getArticleConfigWithDefaults(campaignState, campaignData)}
                       campaignType={(campaignState as any)?.type || 'quiz'}
                       campaign={campaignData}
@@ -3715,7 +3714,7 @@ const handleSaveCampaignName = useCallback(async () => {
             ) : (
               /* Desktop/Tablet Preview OU Mobile physique: Fullscreen sans cadre */
               editorMode === 'article' ? (
-                <ArticleFunnelView
+                <PreviewRenderer
                   articleConfig={getArticleConfigWithDefaults(campaignState, campaignData)}
                   campaignType={(campaignState as any)?.type || 'quiz'}
                   campaign={campaignData}
@@ -4080,7 +4079,7 @@ const handleSaveCampaignName = useCallback(async () => {
                 <div data-screen-anchor="screen1" className="relative">
                   <div className="flex-1 flex flex-col items-center justify-center overflow-hidden relative">
                     {editorMode === 'article' && (
-                      <ArticleFunnelView
+                      <PreviewRenderer
                         articleConfig={getArticleConfigWithDefaults(campaignState, campaignData)}
                         campaignType={(campaignState as any)?.type || 'quiz'}
                         campaign={campaignData}

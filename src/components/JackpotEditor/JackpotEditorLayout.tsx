@@ -17,8 +17,6 @@ import type { ModularPage, ScreenId, BlocBouton, Module } from '@/types/modularE
 import { createEmptyModularPage } from '@/types/modularEditor';
 
 import PreviewRenderer from '@/components/preview/PreviewRenderer';
-import ArticleCanvas from '@/components/ArticleEditor/ArticleCanvas';
-import ArticleFunnelView from '@/components/ArticleEditor/ArticleFunnelView';
 import { getArticleConfigWithDefaults } from '@/utils/articleConfigHelpers';
 import ZoomSlider from './components/ZoomSlider';
 import EditorHeader from '@/components/shared/EditorHeader';
@@ -1539,6 +1537,7 @@ useEffect(() => {
   }, 'jackpot'), [quizModalConfig, extractedColors]);
   const [showFunnel, setShowFunnel] = useState(false);
   const [currentStep, setCurrentStep] = useState<'article' | 'form' | 'game' | 'result'>('article');
+  const [currentGameResult, setCurrentGameResult] = useState<'winner' | 'loser'>('winner');
   const [previewButtonSide, setPreviewButtonSide] = useState<'left' | 'right'>(() =>
     (typeof window !== 'undefined' && localStorage.getItem('previewButtonSide') === 'left') ? 'left' : 'right'
   );
@@ -3713,6 +3712,10 @@ useEffect(() => {
                 onElementUpdate={handleElementUpdate}
                 // Modular editor wiring
                 currentScreen={currentScreen}
+                // Article mode result props
+                currentGameResult={currentGameResult}
+                onGameResultChange={setCurrentGameResult}
+                onArticleStepChange={setCurrentStep}
                 onScreenChange={(screen) => {
                   const scrolled = scrollToScreen(screen);
                   if (scrolled) {
@@ -4023,7 +4026,7 @@ useEffect(() => {
                 <div data-screen-anchor="screen1" className="relative">
                   <div className="flex-1 flex flex-col items-center justify-center overflow-hidden relative">
                     {editorMode === 'article' && (
-                      <ArticleFunnelView
+                      <PreviewRenderer
                         articleConfig={getArticleConfigWithDefaults(campaignState, campaignData)}
                         campaignType={(campaignState as any)?.type || 'jackpot'}
                         campaign={(campaignState as any) || campaignData}
@@ -4092,6 +4095,30 @@ useEffect(() => {
                         onFormSubmit={handleFormSubmit}
                         onGameComplete={handleGameComplete}
                         onStepChange={setCurrentStep}
+                        currentGameResult={currentGameResult}
+                        onGameResultChange={setCurrentGameResult}
+                        onWinnerContentChange={(content) => {
+                          if (campaignState) {
+                            setCampaign({
+                              ...campaignState,
+                              articleConfig: {
+                                ...(campaignState as any).articleConfig,
+                                winnerContent: content,
+                              },
+                            });
+                          }
+                        }}
+                        onLoserContentChange={(content) => {
+                          if (campaignState) {
+                            setCampaign({
+                              ...campaignState,
+                              articleConfig: {
+                                ...(campaignState as any).articleConfig,
+                                loserContent: content,
+                              },
+                            });
+                          }
+                        }}
                       />
                     )}
                   </div>
@@ -4173,10 +4200,6 @@ useEffect(() => {
                        setShowPositionInSidebar(false);
                        setShowDesignInSidebar(false);
                      }}
-                    // Mobile sidebar integrations
-                    onAddElement={handleAddElement}
-                    onBackgroundChange={handleBackgroundChange}
-                    onExtractedColorsChange={handleExtractedColorsChange}
                     // Group selection wiring
                     selectedGroupId={selectedGroupId as any}
                     onSelectedGroupChange={setSelectedGroupId as any}

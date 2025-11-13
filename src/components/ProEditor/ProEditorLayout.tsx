@@ -15,7 +15,6 @@ import type { ModularPage, ScreenId, BlocBouton, Module } from '@/types/modularE
 import { createEmptyModularPage } from '@/types/modularEditor';
 
 import PreviewRenderer from '@/components/preview/PreviewRenderer';
-import ArticleCanvas from '@/components/ArticleEditor/ArticleCanvas';
 import ZoomSlider from './components/ZoomSlider';
 import EditorHeader from '@/components/shared/EditorHeader';
 import DesignCanvas from './DesignCanvas';
@@ -1443,6 +1442,7 @@ useEffect(() => {
   }, 'pro'), [quizModalConfig, extractedColors]);
   const [showFunnel, setShowFunnel] = useState(false);
   const [currentStep, setCurrentStep] = useState<'article' | 'form' | 'game' | 'result'>('article');
+  const [currentGameResult, setCurrentGameResult] = useState<'winner' | 'loser'>('winner');
   const [previewButtonSide, setPreviewButtonSide] = useState<'left' | 'right'>(() =>
     (typeof window !== 'undefined' && localStorage.getItem('previewButtonSide') === 'left') ? 'left' : 'right'
   );
@@ -3537,6 +3537,10 @@ useEffect(() => {
                 onElementUpdate={handleElementUpdate}
                 // Modular editor wiring
                 currentScreen={currentScreen}
+                // Article mode result props
+                currentGameResult={currentGameResult}
+                onGameResultChange={setCurrentGameResult}
+                onArticleStepChange={setCurrentStep}
                 onScreenChange={(screen) => {
                   const scrolled = scrollToScreen(screen);
                   if (scrolled) {
@@ -3906,18 +3910,38 @@ useEffect(() => {
                               });
                             }
                           }}
-                          onCTAClick={handleCTAClick}
-                          onFormSubmit={handleFormSubmit}
-                          onGameComplete={handleGameComplete}
+                          onCTAClick={() => {}}
                           currentStep={currentStep}
                           editable={true}
-                          maxWidth={810}
-                          campaignType={(campaignState as any)?.type || 'pro'}
-                          formFields={(campaignState as any)?.formFields}
+                          campaignType="wheel"
                           campaign={campaignData}
                           wheelModalConfig={wheelModalConfig}
                           gameModalConfig={wheelModalConfig}
                           onStepChange={setCurrentStep}
+                          currentGameResult={currentGameResult}
+                          onGameResultChange={setCurrentGameResult}
+                          onWinnerContentChange={(content) => {
+                            if (campaignState) {
+                              setCampaign({
+                                ...campaignState,
+                                articleConfig: {
+                                  ...(campaignState as any).articleConfig,
+                                  winnerContent: content,
+                                },
+                              });
+                            }
+                          }}
+                          onLoserContentChange={(content) => {
+                            if (campaignState) {
+                              setCampaign({
+                                ...campaignState,
+                                articleConfig: {
+                                  ...(campaignState as any).articleConfig,
+                                  loserContent: content,
+                                },
+                              });
+                            }
+                          }}
                         />
                       </div>
                     ) : null}

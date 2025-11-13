@@ -30,8 +30,6 @@ import { QuizModuleRenderer } from './QuizRenderer';
 import type { Module } from '@/types/modularEditor';
 
 // Import pour le mode Article
-import ArticleCanvas from '../ArticleEditor/ArticleCanvas';
-import { DEFAULT_ARTICLE_CONFIG } from '../ArticleEditor/types/ArticleTypes';
 
 type CanvasScreenId = 'screen1' | 'screen2' | 'screen3' | 'all';
 

@@ -996,10 +996,25 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
           </div>
         );
       case 'messages':
+        // En mode article, afficher le panneau de sortie (gagnant/perdant)
+        if (editorMode === 'article') {
+          return (
+            <ArticleModePanel
+              campaign={campaign}
+              onCampaignChange={(updates) => setCampaign((prev: any) => ({ ...(prev || {}), ...updates }))}
+              activePanel={'result'}
+              currentGameResult={currentGameResult}
+              onGameResultChange={onGameResultChange}
+              onArticleStepChange={onArticleStepChange}
+            />
+          );
+        }
+        // Sinon, afficher le panneau de messages classique
         return (
           <MessagesPanel 
             campaign={campaign}
             setCampaign={setCampaign}
+            onCampaignConfigChange={onCampaignConfigChange}
           />
         );
       case 'code':

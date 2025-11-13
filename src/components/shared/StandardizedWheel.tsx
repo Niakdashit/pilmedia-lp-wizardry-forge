@@ -223,11 +223,11 @@ const StandardizedWheel: React.FC<StandardizedWheelProps> = ({
             accent: wheelConfig.brandColors?.accent || '#45b7d1'
           }}
           customButton={{
-            text: 'GO',
+            text: 'LANCER',
             color: wheelConfig.borderColor,
             textColor: '#ffffff'
           }}
-          buttonPosition="center"
+          buttonPosition="bottom"
           disabled={disabled}
           disablePointerAnimation={true}
           onSpin={onSpin}

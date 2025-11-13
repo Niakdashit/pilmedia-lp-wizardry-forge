@@ -12,7 +12,7 @@ const DesignToolbar = lazy(() => import('./DesignToolbar'));
 const FullScreenPreviewModal = lazy(() => import('@/components/shared/modals/FullScreenPreviewModal'));
 import GameCanvasPreview from '@/components/ModernEditor/components/GameCanvasPreview';
 import PreviewRenderer from '@/components/preview/PreviewRenderer';
-import ArticleFunnelView from '@/components/ArticleEditor/ArticleFunnelView';
+import ArticleCanvas from '@/components/ArticleEditor/ArticleCanvas';
 import { getArticleConfigWithDefaults } from '@/utils/articleConfigHelpers';
 import type { ModularPage, ScreenId, BlocBouton, Module } from '@/types/modularEditor';
 import { createEmptyModularPage } from '@/types/modularEditor';
@@ -3687,21 +3687,16 @@ const handleSaveCampaignName = useCallback(async () => {
               /* Mobile Preview sur Desktop: Plein écran sans cadre */
               <div className="w-full h-full overflow-auto">
                   {editorMode === 'article' ? (
-                    <ArticleFunnelView
+                    <ArticleCanvas
                       articleConfig={getArticleConfigWithDefaults(campaignState, campaignData)}
                       campaignType={(campaignState as any)?.type || 'quiz'}
                       campaign={campaignData}
-                      wheelModalConfig={wheelModalConfig}
-                      gameModalConfig={quizModalConfig}
-                      currentStep={currentStep}
-                      editable={false}
-                      formFields={(campaignState as any)?.formFields}
                       onCTAClick={handleCTAClick}
                       onFormSubmit={handleFormSubmit}
                       onGameComplete={handleGameComplete}
-                      onStepChange={setCurrentStep}
-                      containerClassName="p-0"
-                      containerStyle={{ backgroundColor: 'transparent' }}
+                      currentStep={currentStep}
+                      editable={false}
+                      formFields={(campaignState as any)?.formFields}
                     />
                   ) : (
                     <PreviewRenderer
@@ -3715,21 +3710,16 @@ const handleSaveCampaignName = useCallback(async () => {
             ) : (
               /* Desktop/Tablet Preview OU Mobile physique: Fullscreen sans cadre */
               editorMode === 'article' ? (
-                <ArticleFunnelView
+                <ArticleCanvas
                   articleConfig={getArticleConfigWithDefaults(campaignState, campaignData)}
                   campaignType={(campaignState as any)?.type || 'quiz'}
                   campaign={campaignData}
-                  wheelModalConfig={wheelModalConfig}
-                  gameModalConfig={quizModalConfig}
-                  currentStep={currentStep}
-                  editable={false}
-                  formFields={(campaignState as any)?.formFields}
                   onCTAClick={handleCTAClick}
                   onFormSubmit={handleFormSubmit}
                   onGameComplete={handleGameComplete}
-                  onStepChange={setCurrentStep}
-                  containerClassName="py-8"
-                  containerStyle={{ backgroundColor: '#3a3a42' }}
+                  currentStep={currentStep}
+                  editable={false}
+                  formFields={(campaignState as any)?.formFields}
                 />
               ) : (
                 <PreviewRenderer
@@ -4080,75 +4070,16 @@ const handleSaveCampaignName = useCallback(async () => {
                 <div data-screen-anchor="screen1" className="relative">
                   <div className="flex-1 flex flex-col items-center justify-center overflow-hidden relative">
                     {editorMode === 'article' && (
-                      <ArticleFunnelView
+                      <ArticleCanvas
                         articleConfig={getArticleConfigWithDefaults(campaignState, campaignData)}
                         campaignType={(campaignState as any)?.type || 'quiz'}
                         campaign={campaignData}
-                        wheelModalConfig={quizModalConfig}
-                        gameModalConfig={quizModalConfig}
-                        currentStep={currentStep}
-                        editable={true}
-                        formFields={(campaignState as any)?.formFields}
-                        onBannerChange={(imageUrl) => {
-                          if (campaignState) {
-                            setCampaign({
-                              ...campaignState,
-                              articleConfig: {
-                                ...(campaignState as any).articleConfig,
-                                banner: {
-                                  ...(campaignState as any).articleConfig?.banner,
-                                  imageUrl,
-                                },
-                              },
-                            });
-                          }
-                        }}
-                        onBannerRemove={() => {
-                          if (campaignState) {
-                            setCampaign({
-                              ...campaignState,
-                              articleConfig: {
-                                ...(campaignState as any).articleConfig,
-                                banner: {
-                                  ...(campaignState as any).articleConfig?.banner,
-                                  imageUrl: undefined,
-                                },
-                              },
-                            });
-                          }
-                        }}
-                        onTitleChange={(title) => {
-                          if (campaignState) {
-                            setCampaign({
-                              ...campaignState,
-                              articleConfig: {
-                                ...(campaignState as any).articleConfig,
-                                content: {
-                                  ...(campaignState as any).articleConfig?.content,
-                                  title,
-                                },
-                              },
-                            });
-                          }
-                        }}
-                        onDescriptionChange={(description) => {
-                          if (campaignState) {
-                            setCampaign({
-                              ...campaignState,
-                              articleConfig: {
-                                ...(campaignState as any).articleConfig,
-                                content: {
-                                  ...(campaignState as any).articleConfig?.content,
-                                  description,
-                                },
-                              },
-                            });
-                          }
-                        }}
                         onCTAClick={handleCTAClick}
                         onFormSubmit={handleFormSubmit}
                         onGameComplete={handleGameComplete}
-                        onStepChange={setCurrentStep}
+                        currentStep={currentStep}
+                        editable={true}
+                        formFields={(campaignState as any)?.formFields}
                       />
                     )}
                   </div>

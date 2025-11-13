@@ -12,7 +12,6 @@ const DesignToolbar = lazy(() => import('./DesignToolbar'));
 const FullScreenPreviewModal = lazy(() => import('@/components/shared/modals/FullScreenPreviewModal'));
 import GameCanvasPreview from '@/components/ModernEditor/components/GameCanvasPreview';
 import PreviewRenderer from '@/components/preview/PreviewRenderer';
-import ArticleFunnelView from '@/components/ArticleEditor/ArticleFunnelView';
 // import GradientBand from '../shared/GradientBand';
 import type { ModularPage, ScreenId, BlocBouton, Module } from '@/types/modularEditor';
 import { createEmptyModularPage } from '@/types/modularEditor';
@@ -2434,6 +2433,106 @@ useEffect(() => {
     }
   }, [campaignState, navigate, setCampaign]);
 
+  // Recalculate mobile scaling for all elements
+  const recalculateMobileScaling = useCallback(() => {
+    const confirmed = window.confirm(
+      '⚠️ Cette action va recalculer toutes les dimensions mobiles.\n\n' +
+      'Les ajustements manuels seront écrasés.\n' +
+      'Ratio appliqué : 51.8% de la taille desktop\n\n' +
+      'Voulez-vous continuer ?'
+    );
+    
+    if (!confirmed) return;
+    
+    const MOBILE_SCALE_RATIO = 0.518;
+    let elementsUpdated = 0;
+    
+    setCampaign((prev: any) => {
+      if (!prev) return prev;
+      
+      const updated = { ...prev };
+      
+      // Recalculate canvas elements
+      if (updated.design?.elements) {
+        updated.design.elements = updated.design.elements.map((el: any) => {
+          elementsUpdated++;
+          return {
+            ...el,
+            responsive: {
+              ...el.responsive,
+              mobile: {
+                ...el.responsive?.mobile,
+                width: el.width ? Math.round(el.width * MOBILE_SCALE_RATIO) : el.responsive?.mobile?.width,
+                height: el.height ? Math.round(el.height * MOBILE_SCALE_RATIO) : el.responsive?.mobile?.height,
+                x: el.x ? Math.round(el.x * MOBILE_SCALE_RATIO) : el.responsive?.mobile?.x,
+                y: el.y ? Math.round(el.y * MOBILE_SCALE_RATIO) : el.responsive?.mobile?.y,
+                fontSize: el.fontSize ? Math.round(el.fontSize * MOBILE_SCALE_RATIO) : el.responsive?.mobile?.fontSize
+              }
+            }
+          };
+        });
+      }
+      
+      // Recalculate modular page modules
+      if (updated.modularPage?.screens) {
+        Object.keys(updated.modularPage.screens).forEach((screenKey) => {
+          const screen = screenKey as 'screen1' | 'screen2' | 'screen3';
+          updated.modularPage.screens[screen] = updated.modularPage.screens[screen].map((module: any) => {
+            elementsUpdated++;
+            return {
+              ...module,
+              responsive: {
+                ...module.responsive,
+                mobile: {
+                  ...module.responsive?.mobile,
+                  width: module.width ? Math.round(module.width * MOBILE_SCALE_RATIO) : module.responsive?.mobile?.width,
+                  height: module.height ? Math.round(module.height * MOBILE_SCALE_RATIO) : module.responsive?.mobile?.height,
+                  fontSize: module.fontSize ? Math.round(module.fontSize * MOBILE_SCALE_RATIO) : module.responsive?.mobile?.fontSize
+                }
+              }
+            };
+          });
+        });
+      }
+      
+      // Recalculate design modules
+      if (updated.design?.designModules?.screens) {
+        Object.keys(updated.design.designModules.screens).forEach((screenKey) => {
+          const screen = screenKey as 'screen1' | 'screen2' | 'screen3';
+          updated.design.designModules.screens[screen] = updated.design.designModules.screens[screen].map((module: any) => {
+            elementsUpdated++;
+            return {
+              ...module,
+              responsive: {
+                ...module.responsive,
+                mobile: {
+                  ...module.responsive?.mobile,
+                  width: module.width ? Math.round(module.width * MOBILE_SCALE_RATIO) : module.responsive?.mobile?.width,
+                  height: module.height ? Math.round(module.height * MOBILE_SCALE_RATIO) : module.responsive?.mobile?.height,
+                  fontSize: module.fontSize ? Math.round(module.fontSize * MOBILE_SCALE_RATIO) : module.responsive?.mobile?.fontSize
+                }
+              }
+            };
+          });
+        });
+      }
+      
+      return updated;
+    });
+    
+    console.log(`✅ [MobileScaling] ${elementsUpdated} éléments recalculés`);
+    alert(`✅ Scaling mobile recalculé avec succès !\n\n${elementsUpdated} éléments mis à jour.`);
+    
+    // Auto-save after recalculation
+    setTimeout(() => {
+      try {
+        window.dispatchEvent(new CustomEvent('editor-request-save'));
+      } catch (e) {
+        console.error('[MobileScaling] Failed to trigger auto-save', e);
+      }
+    }, 100);
+  }, [setCampaign]);
+
   // Fonction pour appliquer les couleurs extraites à la roue et aux segments
   const handleExtractedColorsChange = (colors: string[]) => {
     if (!colors || !Array.isArray(colors) || colors.length === 0) return;
@@ -2763,6 +2862,7 @@ useEffect(() => {
               mode={mode}
               onSave={handleSaveAndQuit}
               showSaveCloseButtons={false}
+              onRecalculateMobileScaling={recalculateMobileScaling}
               campaignId={(campaignState as any)?.id || new URLSearchParams(location.search).get('campaign') || undefined}
             />
 
@@ -2789,21 +2889,10 @@ useEffect(() => {
               /* Mobile Preview sur Desktop: Plein écran sans cadre */
               <div className="w-full h-full overflow-auto">
                   {editorMode === 'article' ? (
-                    <ArticleFunnelView
-                      articleConfig={(campaignState as any)?.articleConfig || {}}
-                      campaignType={(campaignState as any)?.type || 'wheel'}
+                    <PreviewRenderer
                       campaign={campaignData}
-                      wheelModalConfig={wheelModalConfig}
-                      gameModalConfig={wheelModalConfig}
-                      currentStep={currentStep}
-                      editable={false}
-                      formFields={(campaignState as any)?.formFields}
-                      onCTAClick={handleCTAClick}
-                      onFormSubmit={handleFormSubmit}
-                      onGameComplete={handleGameComplete}
-                      onStepChange={setCurrentStep}
-                      containerClassName="p-0"
-                      containerStyle={{ backgroundColor: 'transparent' }}
+                      device="mobile"
+                      currentScreen={currentScreen}
                     />
                   ) : (
                     <PreviewRenderer
@@ -2817,22 +2906,11 @@ useEffect(() => {
             ) : (
               /* Desktop/Tablet Preview OU Mobile physique: Fullscreen */
               editorMode === 'article' ? (
-                <div className="w-full h-full flex items-start justify-center overflow-y-auto py-8" style={{ backgroundColor: '#2c2c35' }}>
-                  <ArticleFunnelView
-                    articleConfig={(campaignState as any)?.articleConfig || {}}
-                    campaignType={(campaignState as any)?.type || 'wheel'}
+                <div className="w-full h-full flex items-center justify-center overflow-hidden">
+                  <PreviewRenderer
                     campaign={campaignData}
-                    wheelModalConfig={wheelModalConfig}
-                    gameModalConfig={wheelModalConfig}
-                    currentStep={currentStep}
-                    editable={false}
-                    formFields={(campaignState as any)?.formFields}
-                    onCTAClick={handleCTAClick}
-                    onFormSubmit={handleFormSubmit}
-                    onGameComplete={handleGameComplete}
-                    onStepChange={setCurrentStep}
-                    containerClassName="py-8"
-                    containerStyle={{ backgroundColor: '#2c2c35' }}
+                    device={selectedDevice}
+                    currentScreen={currentScreen}
                   />
                 </div>
               ) : (
@@ -2957,75 +3035,10 @@ useEffect(() => {
                 <div data-screen-anchor="screen1" className="relative">
                   <div className="flex-1 flex flex-col items-center justify-center overflow-hidden relative">
                     {editorMode === 'article' && (
-                      <ArticleFunnelView
-                        articleConfig={(campaignState as any)?.articleConfig || {}}
-                        campaignType={(campaignState as any)?.type || 'wheel'}
+                      <PreviewRenderer
                         campaign={campaignData}
-                        wheelModalConfig={wheelModalConfig}
-                        gameModalConfig={wheelModalConfig}
-                        currentStep={currentStep}
-                        editable={true}
-                        formFields={(campaignState as any)?.formFields}
-                        onBannerChange={(imageUrl) => {
-                          if (campaignState) {
-                            setCampaign({
-                              ...campaignState,
-                              articleConfig: {
-                                ...(campaignState as any).articleConfig,
-                                banner: {
-                                  ...(campaignState as any).articleConfig?.banner,
-                                  imageUrl,
-                                },
-                              },
-                            });
-                          }
-                        }}
-                        onBannerRemove={() => {
-                          if (campaignState) {
-                            setCampaign({
-                              ...campaignState,
-                              articleConfig: {
-                                ...(campaignState as any).articleConfig,
-                                banner: {
-                                  ...(campaignState as any).articleConfig?.banner,
-                                  imageUrl: undefined,
-                                },
-                              },
-                            });
-                          }
-                        }}
-                        onTitleChange={(title) => {
-                          if (campaignState) {
-                            setCampaign({
-                              ...campaignState,
-                              articleConfig: {
-                                ...(campaignState as any).articleConfig,
-                                content: {
-                                  ...(campaignState as any).articleConfig?.content,
-                                  title,
-                                },
-                              },
-                            });
-                          }
-                        }}
-                        onDescriptionChange={(description) => {
-                          if (campaignState) {
-                            setCampaign({
-                              ...campaignState,
-                              articleConfig: {
-                                ...(campaignState as any).articleConfig,
-                                content: {
-                                  ...(campaignState as any).articleConfig?.content,
-                                  description,
-                                },
-                              },
-                            });
-                          }
-                        }}
-                        onCTAClick={handleCTAClick}
-                        onFormSubmit={handleFormSubmit}
-                        onGameComplete={handleGameComplete}
-                        onStepChange={setCurrentStep}
+                        device={selectedDevice}
+                        currentScreen={currentScreen}
                       />
                     )}
                   </div>

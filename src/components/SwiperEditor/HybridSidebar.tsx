@@ -137,6 +137,10 @@ interface HybridSidebarProps extends React.HTMLAttributes<HTMLDivElement> {
   // Modular editor props
   currentScreen?: 'screen1' | 'screen2' | 'screen3';
   onAddModule?: (screen: 'screen1' | 'screen2' | 'screen3', module: any) => void;
+  // Article mode result props
+  currentGameResult?: 'winner' | 'loser';
+  onGameResultChange?: (result: 'winner' | 'loser') => void;
+  onArticleStepChange?: (step: 'article' | 'form' | 'game' | 'result') => void;
   // Wheel configuration props
   wheelBorderStyle?: string;
   wheelBorderColor?: string;
@@ -212,6 +216,10 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
   // modular editor
   currentScreen,
   onAddModule,
+  // article mode result
+  currentGameResult,
+  onGameResultChange,
+  onArticleStepChange,
   // wheel configuration
   wheelBorderStyle,
   wheelBorderColor,
@@ -680,6 +688,9 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
               onCampaignChange={(updates) => setCampaign((prev: any) => ({ ...(prev || {}), ...updates }))}
               activePanel={'banner'}
               grouped
+              currentGameResult={currentGameResult}
+              onGameResultChange={onGameResultChange}
+              onStepChange={onArticleStepChange}
             />
           );
         }
@@ -862,6 +873,20 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
           </div>
         );
       case 'messages':
+        // En mode article, afficher le panneau de sortie (gagnant/perdant)
+        if (editorMode === 'article') {
+          return (
+            <ArticleModePanel
+              campaign={campaign}
+              onCampaignChange={(updates) => setCampaign((prev: any) => ({ ...(prev || {}), ...updates }))}
+              activePanel={'result'}
+              currentGameResult={currentGameResult}
+              onGameResultChange={onGameResultChange}
+              onStepChange={onArticleStepChange}
+            />
+          );
+        }
+        // Sinon, afficher le panneau de messages classique
         return (
           <MessagesPanel 
             campaign={campaign}

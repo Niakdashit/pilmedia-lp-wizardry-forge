@@ -12,7 +12,6 @@ const DesignToolbar = lazy(() => import('./DesignToolbar'));
 const FullScreenPreviewModal = lazy(() => import('@/components/shared/modals/FullScreenPreviewModal'));
 import GameCanvasPreview from '@/components/ModernEditor/components/GameCanvasPreview';
 import PreviewRenderer from '@/components/preview/PreviewRenderer';
-import ArticleFunnelView from '@/components/ArticleEditor/ArticleFunnelView';
 import { getArticleConfigWithDefaults } from '@/utils/articleConfigHelpers';
 import type { ModularPage, ScreenId, BlocBouton, Module } from '@/types/modularEditor';
 import { createEmptyModularPage } from '@/types/modularEditor';
@@ -1163,6 +1162,7 @@ const handleSaveCampaignName = useCallback(async () => {
   
   // État pour le funnel article
   const [currentStep, setCurrentStep] = useState<'article' | 'form' | 'game' | 'result'>('article');
+  const [currentGameResult, setCurrentGameResult] = useState<'winner' | 'loser'>('winner');
   const [showFunnel, setShowFunnel] = useState(false);
   const [showFullScreenPreview, setShowFullScreenPreview] = useState(false);
   const [fullScreenPreviewDevice, setFullScreenPreviewDevice] = useState<'desktop' | 'mobile'>('desktop');
@@ -3687,7 +3687,7 @@ const handleSaveCampaignName = useCallback(async () => {
               /* Mobile Preview sur Desktop: Plein écran sans cadre */
               <div className="w-full h-full overflow-auto">
                   {editorMode === 'article' ? (
-                    <ArticleFunnelView
+                    <PreviewRenderer
                       articleConfig={getArticleConfigWithDefaults(campaignState, campaignData)}
                       campaignType={(campaignState as any)?.type || 'swiper'}
                       campaign={campaignData}
@@ -3715,7 +3715,7 @@ const handleSaveCampaignName = useCallback(async () => {
             ) : (
               /* Desktop/Tablet Preview OU Mobile physique: Fullscreen sans cadre */
               editorMode === 'article' ? (
-                <ArticleFunnelView
+                <PreviewRenderer
                   articleConfig={getArticleConfigWithDefaults(campaignState, campaignData)}
                   campaignType={(campaignState as any)?.type || 'swiper'}
                   campaign={campaignData}
@@ -3761,6 +3761,10 @@ const handleSaveCampaignName = useCallback(async () => {
                 // Modular editor wiring
                 currentScreen={currentScreen}
                 onAddModule={handleAddModule}
+                // Article mode result props
+                currentGameResult={currentGameResult}
+                onGameResultChange={setCurrentGameResult}
+                onArticleStepChange={setCurrentStep}
                 showAnimationsPanel={showAnimationsInSidebar}
                 onAnimationsPanelChange={setShowAnimationsInSidebar}
                 showPositionPanel={showPositionInSidebar}
@@ -4080,7 +4084,7 @@ const handleSaveCampaignName = useCallback(async () => {
                 <div data-screen-anchor="screen1" className="relative">
                   <div className="flex-1 flex flex-col items-center justify-center overflow-hidden relative">
                     {editorMode === 'article' && (
-                      <ArticleFunnelView
+                      <PreviewRenderer
                         articleConfig={getArticleConfigWithDefaults(campaignState, campaignData)}
                         campaignType={(campaignState as any)?.type || 'swiper'}
                         campaign={campaignData}
@@ -4149,6 +4153,30 @@ const handleSaveCampaignName = useCallback(async () => {
                         onFormSubmit={handleFormSubmit}
                         onGameComplete={handleGameComplete}
                         onStepChange={setCurrentStep}
+                        currentGameResult={currentGameResult}
+                        onGameResultChange={setCurrentGameResult}
+                        onWinnerContentChange={(content) => {
+                          if (campaignState) {
+                            setCampaign({
+                              ...campaignState,
+                              articleConfig: {
+                                ...(campaignState as any).articleConfig,
+                                winnerContent: content,
+                              },
+                            });
+                          }
+                        }}
+                        onLoserContentChange={(content) => {
+                          if (campaignState) {
+                            setCampaign({
+                              ...campaignState,
+                              articleConfig: {
+                                ...(campaignState as any).articleConfig,
+                                loserContent: content,
+                              },
+                            });
+                          }
+                        }}
                       />
                     )}
                   </div>

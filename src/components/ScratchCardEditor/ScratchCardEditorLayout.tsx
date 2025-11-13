@@ -17,8 +17,6 @@ import type { ModularPage, ScreenId, BlocBouton, Module } from '@/types/modularE
 import { createEmptyModularPage } from '@/types/modularEditor';
 
 import PreviewRenderer from '@/components/preview/PreviewRenderer';
-import ArticleCanvas from '@/components/ArticleEditor/ArticleCanvas';
-import ArticleFunnelView from '@/components/ArticleEditor/ArticleFunnelView';
 import { getArticleConfigWithDefaults } from '@/utils/articleConfigHelpers';
 import ZoomSlider from './components/ZoomSlider';
 import EditorHeader from '@/components/shared/EditorHeader';
@@ -1541,6 +1539,7 @@ const handleSaveCampaignName = useCallback(async () => {
   }, 'scratch'), [quizModalConfig, extractedColors]);
   const [showFunnel, setShowFunnel] = useState(false);
   const [currentStep, setCurrentStep] = useState<'article' | 'form' | 'game' | 'result'>('article');
+  const [currentGameResult, setCurrentGameResult] = useState<'winner' | 'loser'>('winner');
   const [previewButtonSide, setPreviewButtonSide] = useState<'left' | 'right'>(() =>
     (typeof window !== 'undefined' && localStorage.getItem('previewButtonSide') === 'left') ? 'left' : 'right'
   );
@@ -3576,6 +3575,10 @@ const handleSaveCampaignName = useCallback(async () => {
                 // Modular editor wiring
                 currentScreen={currentScreen}
                 onAddModule={handleAddModule}
+                // Article mode result props
+                currentGameResult={currentGameResult}
+                onGameResultChange={setCurrentGameResult}
+                onArticleStepChange={setCurrentStep}
                 showAnimationsPanel={showAnimationsInSidebar}
                 onAnimationsPanelChange={setShowAnimationsInSidebar}
                 showPositionPanel={showPositionInSidebar}
@@ -3877,75 +3880,14 @@ const handleSaveCampaignName = useCallback(async () => {
                 <div data-screen-anchor="screen1" className="relative">
                   <div className="flex-1 flex flex-col items-center justify-center overflow-hidden relative">
                     {editorMode === 'article' && (
-                      <ArticleFunnelView
-                        articleConfig={getArticleConfigWithDefaults(campaignState, campaignData)}
-                        campaignType={(campaignState as any)?.type || 'scratch'}
-                        campaign={(campaignState as any) || campaignData}
-                        wheelModalConfig={wheelModalConfig}
-                        gameModalConfig={wheelModalConfig}
-                        currentStep={currentStep}
-                        editable={true}
-                        formFields={(campaignState as any)?.formFields}
-                        onBannerChange={(imageUrl) => {
-                            if (campaignState) {
-                              setCampaign({
-                                ...campaignState,
-                                articleConfig: {
-                                  ...(campaignState as any).articleConfig,
-                                  banner: {
-                                    ...(campaignState as any).articleConfig?.banner,
-                                    imageUrl,
-                                  },
-                                },
-                              });
-                            }
-                          }}
-                          onBannerRemove={() => {
-                            if (campaignState) {
-                              setCampaign({
-                                ...campaignState,
-                                articleConfig: {
-                                  ...(campaignState as any).articleConfig,
-                                  banner: {
-                                    ...(campaignState as any).articleConfig?.banner,
-                                    imageUrl: undefined,
-                                  },
-                                },
-                              });
-                            }
-                          }}
-                          onTitleChange={(title) => {
-                            if (campaignState) {
-                              setCampaign({
-                                ...campaignState,
-                                articleConfig: {
-                                  ...(campaignState as any).articleConfig,
-                                  content: {
-                                    ...(campaignState as any).articleConfig?.content,
-                                    title,
-                                  },
-                                },
-                              });
-                            }
-                          }}
-                          onDescriptionChange={(description) => {
-                            if (campaignState) {
-                              setCampaign({
-                                ...campaignState,
-                                articleConfig: {
-                                  ...(campaignState as any).articleConfig,
-                                  content: {
-                                    ...(campaignState as any).articleConfig?.content,
-                                    description,
-                                  },
-                                },
-                              });
-                            }
-                          }}
-                        onCTAClick={handleCTAClick}
+                      <PreviewRenderer
+                        campaign={campaignData}
+                        device={selectedDevice}
                         onFormSubmit={handleFormSubmit}
                         onGameComplete={handleGameComplete}
-                        onStepChange={setCurrentStep}
+                        onCTAClick={handleCTAClick}
+                        currentStep={currentStep}
+                        editable={true}
                       />
                     )}
                   {editorMode !== 'article' && (
@@ -4024,10 +3966,6 @@ const handleSaveCampaignName = useCallback(async () => {
                        setShowAnimationsInSidebar(false);
                        setShowPositionInSidebar(false);
                      }}
-                    // Mobile sidebar integrations
-                    onAddElement={handleAddElement}
-                    onBackgroundChange={handleBackgroundChange}
-                    onExtractedColorsChange={handleExtractedColorsChange}
                     // Group selection wiring
                     selectedGroupId={selectedGroupId as any}
                     onSelectedGroupChange={setSelectedGroupId as any}

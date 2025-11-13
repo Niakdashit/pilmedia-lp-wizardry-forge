@@ -17,6 +17,7 @@ const Statistics = lazy(() => import('./pages/Statistics'));
 const DesignEditor = lazy(() => import('./pages/DesignEditor'));
 const QuizEditor = lazy(() => import('./pages/QuizEditor'));
 const ReferenceEditor = lazy(() => import('./pages/ReferenceEditor'));
+const WebEditor = lazy(() => import('./pages/WebEditor'));
 const SwiperEditor = lazy(() => import('./pages/SwiperEditor'));
 const JackpotEditor = lazy(() => import('./pages/JackpotEditor'));
 const FormEditor = lazy(() => import('./pages/FormEditor'));
@@ -120,6 +121,11 @@ function App() {
               <Route path="/reference-editor" element={
                 <LoadingBoundary fallback={<EditorLoader />}>
                   <ReferenceEditor />
+                </LoadingBoundary>
+              } />
+              <Route path="/web-editor" element={
+                <LoadingBoundary fallback={<EditorLoader />}>
+                  <WebEditor />
                 </LoadingBoundary>
               } />
               <Route path="/swiper-editor" element={
