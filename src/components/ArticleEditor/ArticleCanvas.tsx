@@ -28,6 +28,10 @@ interface ArticleCanvasProps {
   wheelModalConfig?: any;
   gameModalConfig?: any;
   onStepChange?: (step: 'article' | 'form' | 'game' | 'result') => void;
+  currentGameResult?: 'winner' | 'loser';
+  onGameResultChange?: (result: 'winner' | 'loser') => void;
+  onWinnerContentChange?: (content: string) => void;
+  onLoserContentChange?: (content: string) => void;
 }
 
 /**
@@ -59,7 +63,20 @@ const ArticleCanvas: React.FC<ArticleCanvasProps> = ({
   wheelModalConfig,
   gameModalConfig,
   onStepChange,
+  currentGameResult: externalGameResult,
+  onGameResultChange,
+  onWinnerContentChange,
+  onLoserContentChange,
 }) => {
+  // Separate states for winner and loser result content
+  const [winnerHtmlContent, setWinnerHtmlContent] = React.useState<string>(
+    (articleConfig as any)?.winnerContent || '<h2>🎉 Félicitations !</h2><p>Vous avez gagné ! Vous recevrez un email de confirmation avec les détails de votre lot.</p>'
+  );
+  const [loserHtmlContent, setLoserHtmlContent] = React.useState<string>(
+    (articleConfig as any)?.loserContent || '<h2>Merci d\'avoir participé !</h2><p>Vous n\'avez pas gagné cette fois-ci, mais vous recevrez un email de confirmation.</p>'
+  );
+  // Track game result (winner/loser)
+  const [gameResult, setGameResult] = React.useState<'winner' | 'loser' | null>(null);
   console.log('🎨 [ArticleCanvas] Render with articleConfig:', {
     hasBanner: !!articleConfig?.banner,
     bannerImageUrl: articleConfig?.banner?.imageUrl,
@@ -166,17 +183,36 @@ const ArticleCanvas: React.FC<ArticleCanvasProps> = ({
           <div className="w-full h-full flex items-center justify-center" style={{ minHeight: '600px' }}>
             <div className="flex flex-col items-center justify-center w-full">
               {campaignType === 'wheel' && campaign && (
-                <StandardizedWheel
-                  campaign={campaign}
-                  wheelModalConfig={wheelModalConfig}
-                  onComplete={(prize: string) => {
-                    console.log('🎡 Wheel completed with prize:', prize);
-                    onGameComplete?.();
-                    if (onStepChange) {
-                      setTimeout(() => onStepChange('result'), 4000);
-                    }
-                  }}
-                />
+                <div style={{
+                  position: 'relative',
+                  width: '100%',
+                  height: '100%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                  <div style={{
+                    transform: 'translateY(5%)',
+                    width: '100%'
+                  }}>
+                    <StandardizedWheel
+                      campaign={campaign}
+                      wheelModalConfig={wheelModalConfig}
+                      onComplete={(prize: string) => {
+                        console.log('🎡 Wheel completed with prize:', prize);
+                        // Detect if winner or loser based on prize
+                        const isWinner = prize && !['Perdu', 'Dommage', 'Rien', 'Vide', ''].includes(prize);
+                        const result: 'winner' | 'loser' = isWinner ? 'winner' : 'loser';
+                        setGameResult(result);
+                        console.log('🎯 Game result detected:', result, 'Prize:', prize);
+                        onGameComplete?.();
+                        if (onStepChange) {
+                          setTimeout(() => onStepChange('result'), 4000);
+                        }
+                      }}
+                    />
+                  </div>
+                </div>
               )}
               {campaignType === 'jackpot' && campaign && (
                 <SlotMachine
@@ -246,25 +282,39 @@ const ArticleCanvas: React.FC<ArticleCanvasProps> = ({
         );
       
       case 'result':
+        // Use external game result for display (from parent) or fallback to internal state
+        const effectiveGameResult = externalGameResult || gameResult || 'winner';
+        // Display winner or loser message based on game result
+        const displayContent = effectiveGameResult === 'winner' ? winnerHtmlContent : loserHtmlContent;
+        const setDisplayContent = effectiveGameResult === 'winner' ? setWinnerHtmlContent : setLoserHtmlContent;
+        
         return (
-          <div className="py-8 px-6" style={{ maxWidth: `${maxWidth}px`, margin: '0 auto' }}>
-            <h2 
-              className="font-bold mb-4"
-              style={{
-                fontSize: articleConfig.content?.titleStyle?.fontSize || '32px',
-                color: articleConfig.content?.titleStyle?.color || '#1f2937',
-                textAlign: articleConfig.content?.titleStyle?.textAlign || 'center',
-                lineHeight: articleConfig.content?.titleStyle?.lineHeight || '1.4',
+          <div className="space-y-4">
+            {editable && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+                <p className="text-sm text-blue-800">
+                  <strong>Mode édition :</strong> Vous éditez actuellement le message {effectiveGameResult === 'winner' ? 'GAGNANT' : 'PERDANT'}. 
+                  Changez via l'onglet "Sortie" dans le panneau Design.
+                </p>
+              </div>
+            )}
+            <EditableText
+              title=""
+              description=""
+              htmlContent={displayContent}
+              onHtmlContentChange={(html) => {
+                // Store content in the appropriate state
+                setDisplayContent(html);
+                // Save to campaign
+                if (effectiveGameResult === 'winner' && onWinnerContentChange) {
+                  onWinnerContentChange(html);
+                } else if (effectiveGameResult === 'loser' && onLoserContentChange) {
+                  onLoserContentChange(html);
+                }
               }}
-            >
-              Merci d'avoir participé !
-            </h2>
-            <p 
-              className="text-gray-600"
-              style={{ textAlign: articleConfig.content?.titleStyle?.textAlign || 'center' }}
-            >
-              Vous recevrez un email de confirmation avec les détails de votre participation.
-            </p>
+              editable={editable}
+              maxWidth={maxWidth}
+            />
           </div>
         );
       

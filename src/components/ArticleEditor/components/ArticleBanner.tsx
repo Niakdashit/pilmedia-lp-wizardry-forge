@@ -38,27 +38,18 @@ const ArticleBanner: React.FC<ArticleBannerProps> = ({
       className="article-banner relative w-full"
       style={{ maxWidth: `${maxWidth}px` }}
     >
-      <div 
-        className="relative w-full overflow-hidden"
-        style={{ 
-          paddingBottom,
-          background: noImage 
-            ? 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)' 
-            : undefined 
-        }}
-      >
-        {imageUrl ? (
+      {imageUrl && (
+        <div 
+          className="relative w-full overflow-hidden"
+          style={{ paddingBottom }}
+        >
           <img
             src={imageUrl}
             alt="Bannière article"
             className="absolute inset-0 w-full h-full object-cover"
           />
-        ) : (
-          <div className="absolute inset-0 flex items-center justify-center bg-transparent">
-            <div className="text-center text-gray-400 text-sm">Aucune bannière</div>
-          </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 };

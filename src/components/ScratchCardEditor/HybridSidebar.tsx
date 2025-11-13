@@ -142,6 +142,10 @@ interface HybridSidebarProps extends React.HTMLAttributes<HTMLDivElement> {
   // Modular editor props
   currentScreen?: 'screen1' | 'screen2' | 'screen3';
   onAddModule?: (screen: 'screen1' | 'screen2' | 'screen3', module: any) => void;
+  // Article mode result props
+  currentGameResult?: 'winner' | 'loser';
+  onGameResultChange?: (result: 'winner' | 'loser') => void;
+  onArticleStepChange?: (step: 'article' | 'form' | 'game' | 'result') => void;
   // Wheel configuration props
   wheelBorderStyle?: string;
   wheelBorderColor?: string;
@@ -217,6 +221,10 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
   // modular editor
   currentScreen,
   onAddModule,
+  // article mode result
+  currentGameResult,
+  onGameResultChange,
+  onArticleStepChange,
   // wheel configuration
   wheelBorderStyle,
   wheelBorderColor,
@@ -973,7 +981,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
               activePanel={'result'}
               currentGameResult={currentGameResult}
               onGameResultChange={onGameResultChange}
-              onArticleStepChange={onArticleStepChange}
+              onStepChange={onArticleStepChange}
             />
           );
         }

@@ -22,6 +22,10 @@ interface ArticleFunnelViewProps {
   onCTAClick?: () => void;
   onFormSubmit?: (data: Record<string, string>) => void;
   onGameComplete?: () => void;
+  currentGameResult?: 'winner' | 'loser';
+  onGameResultChange?: (result: 'winner' | 'loser') => void;
+  onWinnerContentChange?: (content: string) => void;
+  onLoserContentChange?: (content: string) => void;
   onStepChange?: (step: ArticleFunnelStep) => void;
   containerClassName?: string;
   containerStyle?: React.CSSProperties;
@@ -36,6 +40,10 @@ const ArticleFunnelView: React.FC<ArticleFunnelViewProps> = ({
   wheelModalConfig,
   gameModalConfig,
   currentStep,
+  currentGameResult,
+  onGameResultChange,
+  onWinnerContentChange,
+  onLoserContentChange,
   editable,
   formFields,
   maxWidth = 810,
@@ -62,6 +70,9 @@ const ArticleFunnelView: React.FC<ArticleFunnelViewProps> = ({
   const handleFormSubmit = (data: Record<string, string>) => onFormSubmit?.(data);
   const handleGameComplete = () => onGameComplete?.();
   const handleStepChange = (step: ArticleFunnelStep) => onStepChange?.(step);
+  const handleGameResultChange = (result: 'winner' | 'loser') => onGameResultChange?.(result);
+  const handleWinnerContentChange = (content: string) => onWinnerContentChange?.(content);
+  const handleLoserContentChange = (content: string) => onLoserContentChange?.(content);
 
   return (
     <div className={composedClassName} style={containerStyle}>
@@ -83,6 +94,10 @@ const ArticleFunnelView: React.FC<ArticleFunnelViewProps> = ({
         wheelModalConfig={wheelModalConfig}
         gameModalConfig={gameModalConfig}
         onStepChange={handleStepChange}
+        currentGameResult={currentGameResult}
+        onGameResultChange={handleGameResultChange}
+        onWinnerContentChange={handleWinnerContentChange}
+        onLoserContentChange={handleLoserContentChange}
       />
     </div>
   );
