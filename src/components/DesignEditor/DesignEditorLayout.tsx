@@ -71,47 +71,6 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
   
   console.log('🎨 [DesignEditorLayout] Editor Mode:', editorMode);
 
-  useEffect(() => {
-    const previousBackground = document.body.style.background;
-    const previousBackgroundAttachment = document.body.style.backgroundAttachment;
-    const previousBackgroundSize = document.body.style.backgroundSize;
-    const previousMinHeight = document.body.style.minHeight;
-    const previousMargin = document.body.style.margin;
-
-    document.body.style.background = 'linear-gradient(180deg, rgba(59, 56, 135, 0.855), rgba(156, 26, 96, 0.72), rgba(195, 85, 70, 0.775), rgba(156, 26, 96, 0.72))';
-    document.body.style.backgroundAttachment = 'fixed';
-    document.body.style.backgroundSize = 'cover';
-    document.body.style.minHeight = '100vh';
-    document.body.style.margin = '0';
-
-    // Suppress CSS transitions/animations briefly on mount to avoid initial flicker when restoring saved campaigns
-    let styleEl: HTMLStyleElement | null = null;
-    try {
-      styleEl = document.createElement('style');
-      styleEl.setAttribute('data-no-anim', 'true');
-      // Target the editor containers more explicitly to prevent module jitter at first paint
-      styleEl.textContent = `
-        .design-canvas-container, .design-canvas-container *,
-        [data-editor-root], [data-editor-root] * {
-          transition: none !important;
-          animation: none !important;
-        }
-      `;
-      document.head.appendChild(styleEl);
-      setTimeout(() => {
-        try { if (styleEl && styleEl.parentNode) styleEl.parentNode.removeChild(styleEl); } catch {}
-      }, 1000);
-    } catch {}
-
-    return () => {
-      document.body.style.background = previousBackground;
-      document.body.style.backgroundAttachment = previousBackgroundAttachment;
-      document.body.style.backgroundSize = previousBackgroundSize;
-      document.body.style.minHeight = previousMinHeight;
-      document.body.style.margin = previousMargin;
-    };
-  }, []);
-
   // Détection automatique de l'appareil basée sur l'user-agent pour éviter le basculement lors du redimensionnement de fenêtre
   const detectDevice = (): 'desktop' | 'tablet' | 'mobile' => {
     const override = getEditorDeviceOverride();

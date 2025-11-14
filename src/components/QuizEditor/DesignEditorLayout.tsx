@@ -130,40 +130,6 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
   const editorMode: 'article' | 'fullscreen' = searchParams.get('mode') === 'article' ? 'article' : 'fullscreen';
   
   console.log('🎨 [QuizEditorLayout] Editor Mode:', editorMode);
-
-  useEffect(() => {
-    const previousBackground = document.body.style.background;
-    const previousBackgroundAttachment = document.body.style.backgroundAttachment;
-    const previousBackgroundSize = document.body.style.backgroundSize;
-    const previousMinHeight = document.body.style.minHeight;
-    const previousMargin = document.body.style.margin;
-
-    document.body.style.background = 'linear-gradient(180deg, rgba(59, 56, 135, 0.855), rgba(156, 26, 96, 0.72), rgba(195, 85, 70, 0.775), rgba(156, 26, 96, 0.72))';
-    document.body.style.backgroundAttachment = 'fixed';
-    document.body.style.backgroundSize = 'cover';
-    document.body.style.minHeight = '100vh';
-    document.body.style.margin = '0';
-
-    // Suppress CSS transitions/animations briefly on mount to avoid initial flicker when restoring saved campaigns
-    let styleEl: HTMLStyleElement | null = null;
-    try {
-      styleEl = document.createElement('style');
-      styleEl.setAttribute('data-no-anim', 'true');
-      styleEl.textContent = `* { transition: none !important; animation: none !important; }`;
-      document.head.appendChild(styleEl);
-      setTimeout(() => {
-        try { if (styleEl && styleEl.parentNode) styleEl.parentNode.removeChild(styleEl); } catch {}
-      }, 300);
-    } catch {}
-
-    return () => {
-      document.body.style.background = previousBackground;
-      document.body.style.backgroundAttachment = previousBackgroundAttachment;
-      document.body.style.backgroundSize = previousBackgroundSize;
-      document.body.style.minHeight = previousMinHeight;
-      document.body.style.margin = previousMargin;
-    };
-  }, []);
   const getTemplateBaseWidths = useCallback((templateId?: string) => {
     const template = quizTemplates.find((tpl) => tpl.id === templateId) || quizTemplates[0];
     const width = template?.style?.containerWidth ?? 450;

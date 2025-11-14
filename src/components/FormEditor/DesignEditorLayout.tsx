@@ -127,28 +127,6 @@ const FormEditorLayout: React.FC<FormEditorLayoutProps> = ({ mode = 'campaign', 
   
   console.log('🎨 [FormEditorLayout] Editor Mode:', editorMode);
 
-  useEffect(() => {
-    const previousBackground = document.body.style.background;
-    const previousBackgroundAttachment = document.body.style.backgroundAttachment;
-    const previousBackgroundSize = document.body.style.backgroundSize;
-    const previousMinHeight = document.body.style.minHeight;
-    const previousMargin = document.body.style.margin;
-
-    document.body.style.background = 'linear-gradient(180deg, rgba(59, 56, 135, 0.855), rgba(156, 26, 96, 0.72), rgba(195, 85, 70, 0.775), rgba(156, 26, 96, 0.72))';
-    document.body.style.backgroundAttachment = 'fixed';
-    document.body.style.backgroundSize = 'cover';
-    document.body.style.minHeight = '100vh';
-    document.body.style.margin = '0';
-
-    return () => {
-      document.body.style.background = previousBackground;
-      document.body.style.backgroundAttachment = previousBackgroundAttachment;
-      document.body.style.backgroundSize = previousBackgroundSize;
-      document.body.style.minHeight = previousMinHeight;
-      document.body.style.margin = previousMargin;
-    };
-  }, []);
-
   const getTemplateBaseWidths = useCallback((templateId?: string) => {
     const template = quizTemplates.find((tpl) => tpl.id === templateId) || quizTemplates[0];
     const width = template?.style?.containerWidth ?? 450;
