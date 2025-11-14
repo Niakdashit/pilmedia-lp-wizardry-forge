@@ -22,52 +22,32 @@ const Auth: React.FC = () => {
   // Afficher un loader pendant la vérification
   if (loading) {
     return (
-      <>
-        <style>{`
-          body {
-            background: linear-gradient(
-              180deg,
-              rgba(59, 56, 135, 0.855),
-              rgba(156, 26, 96, 0.72),
-              rgba(195, 85, 70, 0.775),
-              rgba(156, 26, 96, 0.72)
-            );
-            background-attachment: fixed;
-            background-size: cover;
-            min-height: 100vh;
-            margin: 0;
-          }
-        `}</style>
-        <div className="min-h-screen flex items-center justify-center p-4" style={{ margin: 0 }}>
-          <Spinner size="lg" text="Vérification de la connexion..." className="text-white" />
-        </div>
-      </>
+      <div 
+        className="min-h-screen flex items-center justify-center p-4" 
+        style={{ 
+          margin: 0,
+          background: 'linear-gradient(180deg, rgba(59, 56, 135, 0.855), rgba(156, 26, 96, 0.72), rgba(195, 85, 70, 0.775), rgba(156, 26, 96, 0.72))',
+          minHeight: '100vh'
+        }}
+      >
+        <Spinner size="lg" text="Vérification de la connexion..." className="text-white" />
+      </div>
     );
   }
 
   // Si l'utilisateur est connecté, ne rien afficher (il sera redirigé)
   if (user) {
     return (
-      <>
-        <style>{`
-          body {
-            background: linear-gradient(
-              180deg,
-              rgba(59, 56, 135, 0.855),
-              rgba(156, 26, 96, 0.72),
-              rgba(195, 85, 70, 0.775),
-              rgba(156, 26, 96, 0.72)
-            );
-            background-attachment: fixed;
-            background-size: cover;
-            min-height: 100vh;
-            margin: 0;
-          }
-        `}</style>
-        <div className="min-h-screen flex items-center justify-center p-4" style={{ margin: 0 }}>
-          <Spinner size="lg" text="Redirection en cours..." className="text-white" />
-        </div>
-      </>
+      <div 
+        className="min-h-screen flex items-center justify-center p-4" 
+        style={{ 
+          margin: 0,
+          background: 'linear-gradient(180deg, rgba(59, 56, 135, 0.855), rgba(156, 26, 96, 0.72), rgba(195, 85, 70, 0.775), rgba(156, 26, 96, 0.72))',
+          minHeight: '100vh'
+        }}
+      >
+        <Spinner size="lg" text="Redirection en cours..." className="text-white" />
+      </div>
     );
   }
 
@@ -77,43 +57,33 @@ const Auth: React.FC = () => {
   };
 
   return (
-    <>
-      <style>{`
-        body {
-          background: linear-gradient(
-            180deg,
-            rgba(59, 56, 135, 0.855),
-            rgba(156, 26, 96, 0.72),
-            rgba(195, 85, 70, 0.775),
-            rgba(156, 26, 96, 0.72)
-          );
-          background-attachment: fixed;
-          background-size: cover;
-          min-height: 100vh;
-          margin: 0;
-        }
-      `}</style>
-      <div className="min-h-screen flex items-center justify-center p-4" style={{ margin: 0 }}>
-        <div className="max-w-md mx-auto">
-          {/* Logo */}
-          <div className="text-center mb-8">
-            <img
-              src="/logos/prosplay-header-logo.svg"
-              alt="Prosplay Logo"
-              className="h-16 mx-auto mb-4 filter brightness-0 invert"
-            />
-            <h1 className="text-4xl font-bold text-white mb-2">Prosplay</h1>
-            <p className="text-white/80">Plateforme de marketing digital</p>
-          </div>
-
-          <AuthModal
-            isOpen={isModalOpen}
-            onClose={handleClose}
-            initialMode="login"
+    <div 
+      className="min-h-screen flex items-center justify-center p-4" 
+      style={{ 
+        margin: 0,
+        background: 'linear-gradient(180deg, rgba(59, 56, 135, 0.855), rgba(156, 26, 96, 0.72), rgba(195, 85, 70, 0.775), rgba(156, 26, 96, 0.72))',
+        minHeight: '100vh'
+      }}
+    >
+      <div className="max-w-md mx-auto">
+        {/* Logo */}
+        <div className="text-center mb-8">
+          <img
+            src="/logos/prosplay-header-logo.svg"
+            alt="Prosplay Logo"
+            className="h-16 mx-auto mb-4 filter brightness-0 invert"
           />
+          <h1 className="text-4xl font-bold text-white mb-2">Prosplay</h1>
+          <p className="text-white/80">Plateforme de marketing digital</p>
         </div>
+
+        <AuthModal
+          isOpen={isModalOpen}
+          onClose={handleClose}
+          initialMode="login"
+        />
       </div>
-    </>
+    </div>
   );
 };
 
