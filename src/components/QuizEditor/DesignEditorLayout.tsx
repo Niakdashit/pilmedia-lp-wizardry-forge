@@ -6,6 +6,7 @@ import CampaignValidationModal from '@/components/shared/CampaignValidationModal
 import { useCampaignValidation } from '@/hooks/useCampaignValidation';
 import { useLocation, useNavigate } from '@/lib/router-adapter';
 import { Save, X } from 'lucide-react';
+import { MobileToolbar } from '@/components/shared/MobileToolbar';
 
 const HybridSidebar = lazy(() => import('./HybridSidebar'));
 const DesignToolbar = lazy(() => import('./DesignToolbar'));
@@ -3620,27 +3621,43 @@ const handleSaveCampaignName = useCallback(async () => {
       {/* Top Toolbar - Hidden only in preview mode */}
       {!showFunnel && (
         <>
-          <DesignToolbar
-            selectedDevice={selectedDevice}
-            onDeviceChange={handleDeviceChange}
-            onPreviewToggle={handlePreview}
-            isPreviewMode={showFunnel}
-            onUndo={undo}
-            onRedo={redo}
-            canUndo={canUndo}
-            canRedo={canRedo}
-            previewButtonSide={previewButtonSide}
-            onPreviewButtonSideChange={setPreviewButtonSide}
-            mode={mode}
-            onSave={handleSaveAndQuit}
-            showSaveCloseButtons={false}
-            campaignId={(campaignState as any)?.id || new URLSearchParams(location.search).get('campaign') || undefined}
-          />
+          {(isWindowMobile || actualDevice === 'mobile') ? (
+            <MobileToolbar
+              isMobile={true}
+              selectedDevice={selectedDevice}
+              onDeviceChange={handleDeviceChange}
+              onPreview={handlePreview}
+              onUndo={undo}
+              onRedo={redo}
+              canUndo={canUndo}
+              canRedo={canRedo}
+              onSave={handleSaveAndQuit}
+            />
+          ) : (
+            <>
+              <DesignToolbar
+                selectedDevice={selectedDevice}
+                onDeviceChange={handleDeviceChange}
+                onPreviewToggle={handlePreview}
+                isPreviewMode={showFunnel}
+                onUndo={undo}
+                onRedo={redo}
+                canUndo={canUndo}
+                canRedo={canRedo}
+                previewButtonSide={previewButtonSide}
+                onPreviewButtonSideChange={setPreviewButtonSide}
+                mode={mode}
+                onSave={handleSaveAndQuit}
+                showSaveCloseButtons={false}
+                campaignId={(campaignState as any)?.id || new URLSearchParams(location.search).get('campaign') || undefined}
+              />
 
-          {/* Bouton d'aide des raccourcis clavier */}
-          <div className="absolute top-4 right-4 z-10">
-            <KeyboardShortcutsHelp shortcuts={shortcuts} />
-          </div>
+              {/* Bouton d'aide des raccourcis clavier */}
+              <div className="absolute top-4 right-4 z-10">
+                <KeyboardShortcutsHelp shortcuts={shortcuts} />
+              </div>
+            </>
+          )}
         </>
       )}
       
