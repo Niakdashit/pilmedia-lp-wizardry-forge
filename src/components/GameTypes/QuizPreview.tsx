@@ -1,6 +1,7 @@
 
 import React from 'react';
 import QuizContainer from './Quiz/QuizContainer';
+import QuizCanvasPreview from './Quiz/QuizCanvasPreview';
 import { ScreenLayoutWrapper, useLayoutFromCampaign } from '../Layout/ScreenLayoutWrapper';
 
 interface QuizPreviewProps {
@@ -8,14 +9,30 @@ interface QuizPreviewProps {
   design?: any;
   className?: string;
   campaign?: any; // Pour récupérer la configuration de layout
+  previewDevice?: 'desktop' | 'tablet' | 'mobile';
+  isCanvasPreview?: boolean; // Mode mirroring pur du canvas
 }
 
 const QuizPreview: React.FC<QuizPreviewProps> = ({ 
   config, 
   design = {},
   className = '',
-  campaign
+  campaign,
+  previewDevice = 'desktop',
+  isCanvasPreview = true // Par défaut, on affiche le canvas en mode preview
 }) => {
+  // 🎯 Mode Canvas Preview : Affiche les 3 écrans du canvas en plein écran (mirroring pur)
+  if (isCanvasPreview) {
+    return (
+      <QuizCanvasPreview
+        campaign={campaign}
+        previewDevice={previewDevice}
+        className={className}
+      />
+    );
+  }
+
+  // Mode Quiz Interactif : Affiche le swiper de questions (ancien comportement)
   // Configuration par défaut si aucune question n'est fournie
   const defaultConfig = {
     questions: [

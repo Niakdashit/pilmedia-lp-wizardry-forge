@@ -65,6 +65,7 @@ const GameRenderer: React.FC<GameRendererProps> = ({
         return (
           <QuizPreview
             {...commonProps}
+            isCanvasPreview={true}
             key={`quiz-${campaign._lastUpdate || Date.now()}`}
           />
         );
