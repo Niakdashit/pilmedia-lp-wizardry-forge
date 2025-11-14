@@ -10,7 +10,7 @@ import { Save, X } from 'lucide-react';
 const HybridSidebar = lazy(() => import('./HybridSidebar'));
 const DesignToolbar = lazy(() => import('./DesignToolbar'));
 const FullScreenPreviewModal = lazy(() => import('@/components/shared/modals/FullScreenPreviewModal'));
-import EmptyGamePreview from './components/EmptyGamePreview';
+import BurgerKingApp from './components/BurgerKingApp';
 import PreviewRenderer from '@/components/preview/PreviewRenderer';
 import { getArticleConfigWithDefaults } from '@/utils/articleConfigHelpers';
 import type { ModularPage, ScreenId, BlocBouton, Module } from '@/types/modularEditor';
@@ -1157,8 +1157,8 @@ const handleSaveCampaignName = useCallback(async () => {
   };
   const [selectedElements, setSelectedElements] = useState<any[]>([]);
   
-  // État pour tracker la position de scroll (quel écran est visible)
-  const [currentScreen, setCurrentScreen] = useState<'screen1' | 'screen2' | 'screen3'>('screen1');
+  // WebEditor: Un seul écran (screen1 uniquement)
+  const currentScreen = 'screen1';
   
   // État pour le funnel article
   const [currentStep, setCurrentStep] = useState<'article' | 'form' | 'game' | 'result'>('article');
@@ -1413,12 +1413,12 @@ const handleSaveCampaignName = useCallback(async () => {
     return () => clearTimeout(t);
   }, [campaignState?.id, canvasElements, screenBackgrounds, selectedDevice, modularPage]);
 
-  // Handler utilisé par HybridSidebar → BackgroundPanel (placé après currentScreen pour éviter TDZ)
+  // Handler utilisé par HybridSidebar → BackgroundPanel
   const handleBackgroundChange = useCallback((
     background: { type: 'color' | 'image'; value: string },
-    options?: { screenId?: 'screen1' | 'screen2' | 'screen3'; applyToAllScreens?: boolean; device?: 'desktop' | 'tablet' | 'mobile' }
+    options?: { screenId?: 'screen1'; applyToAllScreens?: boolean; device?: 'desktop' | 'tablet' | 'mobile' }
   ) => {
-    const targetScreen = options?.screenId || currentScreen;
+    const targetScreen = 'screen1';
     const applyAll = !!options?.applyToAllScreens;
     const targetDevice = options?.device || selectedDevice;
 
@@ -1540,10 +1540,10 @@ const handleSaveCampaignName = useCallback(async () => {
 
   // Assurer la présence d'un bouton "Rejouer" sur l'écran 3 en mode édition
   // - Conserve l'option B: screen3 = fin avec "Rejouer"
-  // - Rend l'ajout plus robuste (évite doublons, tient compte des cartes avec boutons)
+  // WebEditor: Pas de bouton replay automatique (un seul écran)
   React.useEffect(() => {
-    // Ne s'exécute que lorsque l'écran 3 est affiché pour éviter des insertions inutiles
-    if (currentScreen !== 'screen3') return;
+    // Désactivé pour WebEditor (un seul écran)
+    return;
 
     const screen3Modules = Array.isArray(modularPage.screens.screen3)
       ? modularPage.screens.screen3
@@ -3614,9 +3614,7 @@ const handleSaveCampaignName = useCallback(async () => {
       className="min-h-screen w-full"
       style={{
         padding: showFunnel ? '0' : (isWindowMobile ? '9px' : '0 9px 9px 9px'),
-        boxSizing: 'border-box',
-        background: 'linear-gradient(180deg, rgba(59, 56, 135, 0.855), rgba(156, 26, 96, 0.72), rgba(195, 85, 70, 0.775), rgba(156, 26, 96, 0.72))',
-        minHeight: '100vh'
+        boxSizing: 'border-box'
       }}
     >
       {!showFunnel && <EditorHeader />}
@@ -4153,219 +4151,23 @@ const handleSaveCampaignName = useCallback(async () => {
                       />
                     )}
                   </div>
-                  <DesignCanvas
-                    editorMode={editorMode}
-                    screenId="screen1"
-                    ref={canvasRef}
-                    selectedDevice={selectedDevice}
-                    elements={canvasElements}
-                    onElementsChange={setCanvasElements}
-                    background={screenBackgrounds.screen1?.devices?.[selectedDevice] || screenBackgrounds.screen1}
-                    campaign={campaignData}
-                    onCampaignChange={handleCampaignConfigChange}
-                    zoom={canvasZoom}
-                    enableInternalAutoFit={true}
-                    onZoomChange={setCanvasZoom}
-                    selectedElement={selectedElement}
-                    onSelectedElementChange={debugSetSelectedElement}
-                    selectedElements={selectedElements}
-                    onSelectedElementsChange={setSelectedElements}
-                    onElementUpdate={handleElementUpdate}
-                    // Quiz sync props
-                    extractedColors={extractedColors}
-                    quizModalConfig={quizModalConfig}
-                    containerClassName={mode === 'template' ? 'bg-gray-50' : undefined}
-                    hideInlineQuizPreview
-                    elementFilter={(element: any) => {
-                      const role = typeof element?.role === 'string' ? element.role.toLowerCase() : '';
-                      return !role.includes('exit-message');
-                    }}
-                    // Sidebar panel triggers
-                    onShowAnimationsPanel={() => {
-                      if (!isWindowMobile) {
-                        setShowAnimationsInSidebar(true);
-                        setShowPositionInSidebar(false);
-                      }
-                    }}
-                    onShowPositionPanel={() => {
-                      if (!isWindowMobile) {
-                        setShowPositionInSidebar(true);
-                        setShowAnimationsInSidebar(false);
-                        setShowDesignInSidebar(false);
-                      }
-                    }}
-                    onShowDesignPanel={(context?: 'fill' | 'border' | 'text') => {
-                      if (!isWindowMobile) {
-                        // Met à jour le contexte immédiatement même si le panneau est déjà ouvert
-                        if (context) {
-                          setDesignColorContext(context);
-                        }
-                        // Toujours ouvrir/forcer l'onglet Design
-                        setShowDesignInSidebar(true);
-                        setShowEffectsInSidebar(false);
-                        setShowAnimationsInSidebar(false);
-                        setShowPositionInSidebar(false);
-
-                        if (sidebarRef.current) {
-                          sidebarRef.current.setActiveTab('background');
-                        }
-                      }
-                    }}
-                    onOpenElementsTab={() => {
-                      // Toujours ouvrir l'onglet Éléments, même en mode mobile/portrait
-                      if (sidebarRef.current) {
-                        sidebarRef.current.setActiveTab('elements');
-                      }
-                      // Fermer les autres panneaux
-                      setShowAnimationsInSidebar(false);
-                      setShowPositionInSidebar(false);
-                    }}
-                    // Mobile sidebar integrations
-                    onAddElement={handleAddElement}
-                    onBackgroundChange={handleBackgroundChange}
-                    onExtractedColorsChange={handleExtractedColorsChange}
-                    // Group selection wiring
-                    selectedGroupId={selectedGroupId as any}
-                    onSelectedGroupChange={setSelectedGroupId as any}
-                    onUndo={undo}
-                    onRedo={redo}
-                    canUndo={canUndo}
-                    canRedo={canRedo}
-                    // Quiz panels
-                    showQuizPanel={showQuizPanel}
-                    onQuizPanelChange={setShowQuizPanel}
-                    // Modular page (screen1)
-                    modularModules={modularPage.screens.screen1}
-                    onModuleUpdate={handleUpdateModule}
-                    onModuleDelete={handleDeleteModule}
-                    onModuleMove={handleMoveModule}
-                    onModuleDuplicate={handleDuplicateModule}
-                  />
-                </div>
-                
-                {/* Deuxième Canvas - Seulement en mode Fullscreen - VIDE pour ReferenceEditor */}
-                {editorMode === 'fullscreen' && (
-                <div className="mt-4 relative" data-screen-anchor="screen2">
-                  <EmptyGamePreview />
-                </div>
-                )}
-
-                {/* Troisième Canvas - Seulement en mode Fullscreen */}
-                {editorMode === 'fullscreen' && (
-                <div className="mt-4 relative" data-screen-anchor="screen3">
-                  {/* Background pour éviter la transparence de la bande magenta */}
-                  <div 
-                    className="absolute inset-0 z-0"
-                    style={{
-                      background: canvasBackground.type === 'image'
-                        ? `url(${canvasBackground.value}) center/cover no-repeat`
-                        : canvasBackground.value || 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)'
-                    }}
-                  />
-                  {/* Background supplémentaire pour l'espace entre les canvas */}
-                  <div 
-                    className="absolute -top-4 left-0 right-0 h-4 z-0"
-                    style={{
-                      background: '#ffffff'
-                    }}
-                  />
-                  <div className="relative z-10">
-                    <DesignCanvas
-                      editorMode={editorMode}
-                      screenId="screen3"
-                      selectedDevice={selectedDevice}
-                      elements={canvasElements}
-                      onElementsChange={setCanvasElements}
-                      background={screenBackgrounds.screen3?.devices?.[selectedDevice] || screenBackgrounds.screen3}
-                      campaign={campaignData}
-                      onCampaignChange={handleCampaignConfigChange}
-                      zoom={canvasZoom}
-                      onZoomChange={setCanvasZoom}
-                      enableInternalAutoFit={true}
-                      selectedElement={selectedElement}
-                      onSelectedElementChange={setSelectedElement}
-                      selectedElements={selectedElements}
-                      onSelectedElementsChange={setSelectedElements}
-                      onElementUpdate={handleElementUpdate}
-                      // Quiz sync props
-                      extractedColors={extractedColors}
-                      quizModalConfig={quizModalConfig}
-                      containerClassName={mode === 'template' ? 'bg-gray-50' : undefined}
-                      elementFilter={(element: any) => {
-                        const role = typeof element?.role === 'string' ? element.role.toLowerCase() : '';
-                        return role.includes('exit-message');
+                  {/* WebEditor: Un seul canvas avec BurgerKingApp */}
+                  <div className="w-full h-full flex items-center justify-center bg-gray-50">
+                    <div 
+                      className="mx-auto shadow-2xl transition-all duration-300"
+                      style={{
+                        width: selectedDevice === 'mobile' ? '375px' : 
+                               selectedDevice === 'tablet' ? '768px' : 
+                               '100%',
+                        maxWidth: selectedDevice === 'desktop' ? '1200px' : undefined
                       }}
-                      // Sidebar panel triggers
-                      onShowEffectsPanel={() => {
-                        if (!isWindowMobile) {
-                          setShowEffectsInSidebar(true);
-                          setShowAnimationsInSidebar(false);
-                          setShowPositionInSidebar(false);
-                        }
-                      }}
-                      onShowAnimationsPanel={() => {
-                        if (!isWindowMobile) {
-                          setShowAnimationsInSidebar(true);
-                          setShowEffectsInSidebar(false);
-                          setShowPositionInSidebar(false);
-                        }
-                      }}
-                      onShowPositionPanel={() => {
-                        if (!isWindowMobile) {
-                          setShowPositionInSidebar(true);
-                          setShowEffectsInSidebar(false);
-                          setShowAnimationsInSidebar(false);
-                          setShowDesignInSidebar(false);
-                        }
-                      }}
-                      onShowDesignPanel={(context?: 'fill' | 'border' | 'text') => {
-                        // Met à jour le contexte immédiatement même si le panneau est déjà ouvert
-                        if (context) {
-                          setDesignColorContext(context);
-                        }
-                        // Toujours ouvrir/forcer l'onglet Design
-                        setShowDesignInSidebar(true);
-                        setShowEffectsInSidebar(false);
-                        setShowAnimationsInSidebar(false);
-                        setShowPositionInSidebar(false);
-
-                        if (sidebarRef.current) {
-                          sidebarRef.current.setActiveTab('background');
-                        }
-                      }}
-                      onOpenElementsTab={() => {
-                        // Utiliser la même logique que onForceElementsTab
-                        if (sidebarRef.current) {
-                          sidebarRef.current.setActiveTab('elements');
-                        }
-                        // Fermer les autres panneaux
-                        setShowEffectsInSidebar(false);
-                        setShowAnimationsInSidebar(false);
-                        setShowPositionInSidebar(false);
-                      }}
-                      // Mobile sidebar integrations
-                      onAddElement={handleAddElement}
-                      onBackgroundChange={handleBackgroundChange}
-                      onExtractedColorsChange={handleExtractedColorsChange}
-                      // Group selection wiring
-                      selectedGroupId={selectedGroupId as any}
-                      onSelectedGroupChange={setSelectedGroupId as any}
-                      onUndo={undo}
-                      onRedo={redo}
-                      canUndo={canUndo}
-                      canRedo={canRedo}
-                      // Quiz panels
-                      showQuizPanel={showQuizPanel}
-                      onQuizPanelChange={setShowQuizPanel}
-                      // Modular page (screen3)
-                      modularModules={modularPage.screens.screen3}
-                      onModuleUpdate={handleUpdateModule}
-                      onModuleDelete={handleDeleteModule}
-                      onModuleMove={handleMoveModule}
-                    />
+                    >
+                      <BurgerKingApp />
+                    </div>
                   </div>
                 </div>
-                )}
+                
+                {/* WebEditor: Pas de canvas supplémentaires */}
               </div>
             </div>
             {/* Zoom Slider with integrated Screen navigation button */}
@@ -4376,17 +4178,6 @@ const handleSaveCampaignName = useCallback(async () => {
                 minZoom={0.1}
                 maxZoom={1}
                 step={0.05}
-                onNavigateToScreen2={() => {
-                  const nextScreen = currentScreen === 'screen1'
-                    ? 'screen2'
-                    : currentScreen === 'screen2'
-                      ? 'screen3'
-                      : 'screen1';
-                  const scrolled = scrollToScreen(nextScreen);
-                  if (scrolled) {
-                    setCurrentScreen(nextScreen);
-                  }
-                }}
                 currentScreen={currentScreen}
               />
             )}
@@ -4462,15 +4253,25 @@ const handleSaveCampaignName = useCallback(async () => {
         </div>
       )}
 
-      {/* Full Screen Preview Modal */}
+      {/* Full Screen Preview Modal - WebEditor avec BurgerKingApp */}
       <FullScreenPreviewModal
         isOpen={showFullScreenPreview}
         onClose={() => setShowFullScreenPreview(false)}
         device={fullScreenPreviewDevice}
         onDeviceChange={setFullScreenPreviewDevice}
       >
-        <div className="w-full h-full overflow-hidden bg-white">
-          <EmptyGamePreview />
+        <div className="w-full h-full overflow-hidden bg-white flex items-center justify-center">
+          <div 
+            className="mx-auto transition-all duration-300"
+            style={{
+              width: fullScreenPreviewDevice === 'mobile' ? '375px' : 
+                     fullScreenPreviewDevice === 'tablet' ? '768px' : 
+                     '100%',
+              maxWidth: fullScreenPreviewDevice === 'desktop' ? '1200px' : undefined
+            }}
+          >
+            <BurgerKingApp />
+          </div>
         </div>
       </FullScreenPreviewModal>
     </MobileStableEditor>

@@ -2676,7 +2676,9 @@ useEffect(() => {
       className="min-h-screen w-full"
       style={{
         padding: showFunnel ? '0' : (isWindowMobile ? '9px' : '0 9px 9px 9px'),
-        boxSizing: 'border-box'
+        boxSizing: 'border-box',
+        background: 'linear-gradient(180deg, rgba(59, 56, 135, 0.855), rgba(156, 26, 96, 0.72), rgba(195, 85, 70, 0.775), rgba(156, 26, 96, 0.72))',
+        minHeight: '100vh'
       }}
     >
       {!showFunnel && <EditorHeader />}

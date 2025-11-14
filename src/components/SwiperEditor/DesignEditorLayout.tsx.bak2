@@ -10,7 +10,7 @@ import { Save, X } from 'lucide-react';
 const HybridSidebar = lazy(() => import('./HybridSidebar'));
 const DesignToolbar = lazy(() => import('./DesignToolbar'));
 const FullScreenPreviewModal = lazy(() => import('@/components/shared/modals/FullScreenPreviewModal'));
-import EmptyGamePreview from './components/EmptyGamePreview';
+import GameCanvasPreview from '@/components/ModernEditor/components/GameCanvasPreview';
 import PreviewRenderer from '@/components/preview/PreviewRenderer';
 import { getArticleConfigWithDefaults } from '@/utils/articleConfigHelpers';
 import type { ModularPage, ScreenId, BlocBouton, Module } from '@/types/modularEditor';
@@ -22,7 +22,7 @@ import EditorHeader from '@/components/shared/EditorHeader';
 import { useEditorStore } from '../../stores/editorStore';
 import { useKeyboardShortcuts } from '../ModernEditor/hooks/useKeyboardShortcuts';
 import { useUndoRedo, useUndoRedoShortcuts } from '../../hooks/useUndoRedo';
-// Quiz Editor doesn't need wheel config sync
+// Swiper Editor doesn't need wheel config sync
 // import { useWheelConfigSync } from '../../hooks/useWheelConfigSync';
 import { useGroupManager } from '../../hooks/useGroupManager';
 import { getDeviceDimensions } from '../../utils/deviceDimensions';
@@ -36,7 +36,7 @@ import { useEditorUnmountSave } from '@/hooks/useEditorUnmountSave';
 import { useCampaigns } from '@/hooks/useCampaigns';
 import { saveCampaignToDB } from '@/hooks/useModernCampaignEditor/saveHandler';
 import { useCampaignStateSync } from '@/hooks/useCampaignStateSync';
-import { quizTemplates } from '../../types/quizTemplates';
+import { swiperTemplates } from '../../types/swiperTemplates';
 import { supabase } from '@/integrations/supabase/client';
 // import { CampaignStorage } from '@/utils/campaignStorage';
 import { useAutoSaveToSupabase } from '@/hooks/useAutoSaveToSupabase';
@@ -52,8 +52,8 @@ const LAUNCH_BUTTON_DEFAULT_SHADOW = '0 4px 12px rgba(0, 0, 0, 0.15)';
 
 const buildLaunchButtonStyles = (
   buttonModule: BlocBouton | undefined,
-  quizStyleOverrides: Record<string, any>,
-  quizConfig: {
+  swiperStyleOverrides: Record<string, any>,
+  swiperConfig: {
     buttonBackgroundColor: string;
     buttonTextColor: string;
     buttonHoverBackgroundColor: string;
@@ -76,51 +76,51 @@ const buildLaunchButtonStyles = (
       : {};
 
   const resolvedBorderRadius =
-    quizStyleOverrides.borderRadius ||
+    swiperStyleOverrides.borderRadius ||
     moduleStyles.borderRadius ||
-    (typeof quizConfig.borderRadius === 'number'
-      ? `${quizConfig.borderRadius}px`
-      : quizConfig.borderRadius) ||
+    (typeof swiperConfig.borderRadius === 'number'
+      ? `${swiperConfig.borderRadius}px`
+      : swiperConfig.borderRadius) ||
     '9999px';
 
   return {
     background:
       moduleStyles.background ||
-      quizStyleOverrides.buttonBackgroundColor ||
-      quizConfig.buttonBackgroundColor ||
+      swiperStyleOverrides.buttonBackgroundColor ||
+      swiperConfig.buttonBackgroundColor ||
       LAUNCH_BUTTON_FALLBACK_GRADIENT,
     color:
       moduleStyles.color ||
-      quizStyleOverrides.buttonTextColor ||
-      quizConfig.buttonTextColor ||
+      swiperStyleOverrides.buttonTextColor ||
+      swiperConfig.buttonTextColor ||
       LAUNCH_BUTTON_DEFAULT_TEXT_COLOR,
     padding:
       moduleStyles.padding ||
-      quizStyleOverrides.buttonPadding ||
+      swiperStyleOverrides.buttonPadding ||
       LAUNCH_BUTTON_DEFAULT_PADDING,
     borderRadius: resolvedBorderRadius,
     boxShadow:
       moduleStyles.boxShadow ||
-      quizStyleOverrides.buttonBoxShadow ||
+      swiperStyleOverrides.buttonBoxShadow ||
       LAUNCH_BUTTON_DEFAULT_SHADOW,
-    display: quizStyleOverrides.buttonDisplay || 'inline-flex',
-    alignItems: quizStyleOverrides.buttonAlignItems || 'center',
-    justifyContent: quizStyleOverrides.buttonJustifyContent || 'center',
-    minWidth: quizStyleOverrides.buttonMinWidth,
-    minHeight: quizStyleOverrides.buttonMinHeight,
-    width: quizStyleOverrides.buttonWidth,
-    height: quizStyleOverrides.buttonHeight,
-    textTransform: quizStyleOverrides.buttonTextTransform,
-    fontWeight: quizStyleOverrides.buttonFontWeight || 600
+    display: swiperStyleOverrides.buttonDisplay || 'inline-flex',
+    alignItems: swiperStyleOverrides.buttonAlignItems || 'center',
+    justifyContent: swiperStyleOverrides.buttonJustifyContent || 'center',
+    minWidth: swiperStyleOverrides.buttonMinWidth,
+    minHeight: swiperStyleOverrides.buttonMinHeight,
+    width: swiperStyleOverrides.buttonWidth,
+    height: swiperStyleOverrides.buttonHeight,
+    textTransform: swiperStyleOverrides.buttonTextTransform,
+    fontWeight: swiperStyleOverrides.buttonFontWeight || 600
   } as React.CSSProperties;
 };
 
-interface QuizEditorLayoutProps {
+interface SwiperEditorLayoutProps {
   mode?: 'template' | 'campaign';
   hiddenTabs?: string[];
 }
 
-const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', hiddenTabs }) => {
+const SwiperEditorLayout: React.FC<SwiperEditorLayoutProps> = ({ mode = 'campaign', hiddenTabs }) => {
   const navigate = useNavigate();
   const location = useLocation();
   
@@ -128,7 +128,7 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
   const searchParams = new URLSearchParams(location.search);
   const editorMode: 'article' | 'fullscreen' = searchParams.get('mode') === 'article' ? 'article' : 'fullscreen';
   
-  console.log('🎨 [QuizEditorLayout] Editor Mode:', editorMode);
+  console.log('🎨 [SwiperEditorLayout] Editor Mode:', editorMode);
 
   useEffect(() => {
     const previousBackground = document.body.style.background;
@@ -164,7 +164,7 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
     };
   }, []);
   const getTemplateBaseWidths = useCallback((templateId?: string) => {
-    const template = quizTemplates.find((tpl) => tpl.id === templateId) || quizTemplates[0];
+    const template = swiperTemplates.find((tpl) => tpl.id === templateId) || swiperTemplates[0];
     const width = template?.style?.containerWidth ?? 450;
     // Zoom mobile par défaut à 70%
     const mobileWidth = Math.round(width * 0.7);
@@ -175,7 +175,7 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
   const resetCampaign = useEditorStore(s => s.resetCampaign);
   useEffect(() => {
     return () => {
-      console.log('🧹 [QuizEditor] Unmounting - resetting store for next editor');
+      console.log('🧹 [SwiperEditor] Unmounting - resetting store for next editor');
       resetCampaign();
     };
   }, [resetCampaign]);
@@ -184,25 +184,25 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
   useEffect(() => {
     try {
       const w = window as any;
-      if (!w.__quizBgSessionInitialized) {
-        w.__quizBgSessionInitialized = true;
+      if (!w.__swiperBgSessionInitialized) {
+        w.__swiperBgSessionInitialized = true;
         
         // CRITICAL: Clean up old localStorage keys without namespacing
-        console.log('🧹 [QuizEditor] Cleaning up old localStorage background keys');
+        console.log('🧹 [SwiperEditor] Cleaning up old localStorage background keys');
         const screens: Array<'screen1' | 'screen2' | 'screen3'> = ['screen1', 'screen2', 'screen3'];
         const devices: Array<'desktop' | 'tablet' | 'mobile'> = ['desktop', 'tablet', 'mobile'];
         
         screens.forEach((s) => devices.forEach((d) => {
           try { 
             // Remove old keys without campaign ID
-            localStorage.removeItem(`quiz-bg-${d}-${s}`);
+            localStorage.removeItem(`swiper-bg-${d}-${s}`);
           } catch {}
         }));
         
         // Remove global owner key
-        try { localStorage.removeItem('quiz-bg-owner'); } catch {}
+        try { localStorage.removeItem('swiper-bg-owner'); } catch {}
         
-        console.log('✅ [QuizEditor] Old background keys cleaned');
+        console.log('✅ [SwiperEditor] Old background keys cleaned');
       }
     } catch {}
   }, []);
@@ -215,13 +215,13 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
     // Laisser intacts les overrides en localStorage et l'état en mémoire
     // Optionnel: notifier les canvases pour re-synchroniser visuellement
     try {
-      window.dispatchEvent(new CustomEvent('quiz-bg-sync', { detail: { screenId: 'screen1' } }));
-      window.dispatchEvent(new CustomEvent('quiz-bg-sync', { detail: { screenId: 'screen2' } }));
-      window.dispatchEvent(new CustomEvent('quiz-bg-sync', { detail: { screenId: 'screen3' } }));
+      window.dispatchEvent(new CustomEvent('swiper-bg-sync', { detail: { screenId: 'screen1' } }));
+      window.dispatchEvent(new CustomEvent('swiper-bg-sync', { detail: { screenId: 'screen2' } }));
+      window.dispatchEvent(new CustomEvent('swiper-bg-sync', { detail: { screenId: 'screen3' } }));
     } catch {}
   }, []);
 
-  const initialTemplateWidths = useMemo(() => getTemplateBaseWidths('image-quiz'), [getTemplateBaseWidths]);
+  const initialTemplateWidths = useMemo(() => getTemplateBaseWidths('image-swiper'), [getTemplateBaseWidths]);
 
   // Détection automatique de l'appareil basée sur l'user-agent pour éviter le basculement lors du redimensionnement de fenêtre
   const detectDevice = (): 'desktop' | 'tablet' | 'mobile' => {
@@ -297,7 +297,7 @@ useEffect(() => {
   
   // CRITICAL: Skip loading for temporary campaign IDs - they should remain blank
   if (isTempCampaignId(campaignId)) {
-    console.log('⏭️ [QuizEditor] Skipping load for temporary campaign:', campaignId);
+    console.log('⏭️ [SwiperEditor] Skipping load for temporary campaign:', campaignId);
     dataHydratedRef.current = true; // Mark as hydrated to prevent default data loading
     return;
   }
@@ -307,7 +307,7 @@ useEffect(() => {
   // Check if we're switching campaigns
   const currentCampaignId = (campaignState as any)?.id;
   if (currentCampaignId && currentCampaignId !== campaignId) {
-    console.log('🔄 [QuizEditor] Switching campaigns, saving current state');
+    console.log('🔄 [SwiperEditor] Switching campaigns, saving current state');
     
     // Local cache disabled
   }
@@ -316,19 +316,19 @@ useEffect(() => {
   if (currentCampaignId === campaignId) {
     const hasPayload = campaignState && Object.keys(campaignState).length > 0;
     if (hasPayload) {
-      console.log('✅ [QuizEditor] Campaign already loaded:', campaignId);
+      console.log('✅ [SwiperEditor] Campaign already loaded:', campaignId);
       return;
     }
-    console.log('⚠️ [QuizEditor] Campaign id matches but store empty, forcing reload');
+    console.log('⚠️ [SwiperEditor] Campaign id matches but store empty, forcing reload');
   }
   
-  console.log('🔄 [QuizEditor] Loading campaign:', campaignId);
+  console.log('🔄 [SwiperEditor] Loading campaign:', campaignId);
   
   // Try to load from cache first (but NOT for temp campaigns)
   if (!isTempCampaignId(campaignId)) {
     const cachedData = loadFromCampaignCache(campaignId);
     if (cachedData && cachedData.campaign) {
-      console.log('📦 [QuizEditor] Restoring from cache');
+      console.log('📦 [SwiperEditor] Restoring from cache');
       setCampaign(cachedData.campaign);
       if (cachedData.canvasElements) setCanvasElements(cachedData.canvasElements);
       if (cachedData.modularPage) setModularPage(cachedData.modularPage);
@@ -354,12 +354,12 @@ useEffect(() => {
       if (error) throw error;
       
       if (data) {
-        console.log('✅ [QuizEditor] Campaign loaded from DB:', {
+        console.log('✅ [SwiperEditor] Campaign loaded from DB:', {
           id: data.id,
           name: data.name,
           hasConfig: !!data.config,
           hasDesign: !!data.design,
-          hasModules: !!((data.design as any)?.quizModules || (data.config as any)?.modularPage)
+          hasModules: !!((data.design as any)?.swiperModules || (data.config as any)?.modularPage)
         });
 
         // Transform database row to OptimizedCampaign format
@@ -367,7 +367,7 @@ useEffect(() => {
           ...data,
           id: data.id,
           name: data.name || 'Campaign',
-          type: data.type || 'quiz',
+          type: data.type || 'swiper',
           // Map DB fields to editor-friendly shape
           editorMode: (data as any).editor_mode || (data as any).editorMode || editorMode,
           articleConfig: (data as any).article_config || (data as any).articleConfig,
@@ -386,7 +386,7 @@ useEffect(() => {
         // Local cache disabled
       }
     } catch (error) {
-      console.error('❌ [QuizEditor] Failed to load campaign:', error);
+      console.error('❌ [SwiperEditor] Failed to load campaign:', error);
     }
   };
   
@@ -402,10 +402,10 @@ const { syncAllStates, syncModularPage } = useCampaignStateSync();
     const params = new URLSearchParams(location.search);
     const cid = params.get('campaign');
     if (!cid) {
-      console.log('🆕 [QuizEditor] Creating new blank campaign');
-      beginNewCampaign('quiz');
+      console.log('🆕 [SwiperEditor] Creating new blank campaign');
+      beginNewCampaign('swiper');
       // Générer un ID temporaire unique
-      const tempId = generateTempCampaignId('quiz');
+      const tempId = generateTempCampaignId('swiper');
       
       // CRITICAL: Nettoyer TOUTES les données d'abord pour garantir une campagne vierge
       clearTempCampaignData(tempId);
@@ -415,15 +415,15 @@ const { syncAllStates, syncModularPage } = useCampaignStateSync();
         const devices: Array<'desktop' | 'tablet' | 'mobile'> = ['desktop', 'tablet', 'mobile'];
         const screens: Array<'screen1' | 'screen2' | 'screen3'> = ['screen1', 'screen2', 'screen3'];
         devices.forEach((d) => screens.forEach((s) => {
-          try { localStorage.removeItem(`quiz-modules-${d}-${s}`); } catch {}
-          try { localStorage.removeItem(`quiz-bg-${d}-${s}`); } catch {}
+          try { localStorage.removeItem(`swiper-modules-${d}-${s}`); } catch {}
+          try { localStorage.removeItem(`swiper-bg-${d}-${s}`); } catch {}
           try { localStorage.removeItem(`design-bg-${d}-${s}`); } catch {}
         }));
       } catch {}
       
       // CRITICAL: Initialiser la campagne avec l'ID temporaire dans le store
       // pour que campaign.id soit défini immédiatement et évite les fallback 'global'
-      initializeNewCampaignWithId('quiz', tempId);
+      initializeNewCampaignWithId('swiper', tempId);
       
       // Mettre à jour l'URL pour inclure le temp ID
       navigate(`${location.pathname}?campaign=${tempId}${searchParams.get('mode') ? `&mode=${searchParams.get('mode')}` : ''}`, { replace: true });
@@ -447,7 +447,7 @@ const { syncAllStates, syncModularPage } = useCampaignStateSync();
     // If campaign ID changed, reset all local states to prevent data mixing
     // BUT ONLY if data is not currently being hydrated from DB
     if (prevCampaignId && currentCampaignId && prevCampaignId !== currentCampaignId && !dataHydratedRef.current) {
-      console.log('🔄 [QuizEditor] Campaign changed from', prevCampaignId, 'to', currentCampaignId, '→ Resetting all local state');
+      console.log('🔄 [SwiperEditor] Campaign changed from', prevCampaignId, 'to', currentCampaignId, '→ Resetting all local state');
       
       // Reset canvas elements
       setCanvasElements([]);
@@ -530,14 +530,14 @@ const { syncAllStates, syncModularPage } = useCampaignStateSync();
 
   // 🧹 CRITICAL: Save complete state before unmount to prevent data loss
   // Placed here AFTER all state declarations to avoid TDZ errors
-  useEditorUnmountSave('quiz', {
+  useEditorUnmountSave('swiper', {
     canvasElements,
     modularPage,
     screenBackgrounds,
     extractedColors,
     selectedDevice,
     canvasZoom,
-    gameConfig: (campaignState as any)?.quizConfig
+    gameConfig: (campaignState as any)?.swiperConfig
   }, saveCampaign);
 
   useEffect(() => {
@@ -591,16 +591,16 @@ useEffect(() => {
 // ✅ Hydrater les éléments/modularPage/backgrounds depuis la DB à l'ouverture
 useEffect(() => {
   const cfg = (campaignState as any)?.config?.canvasConfig || (campaignState as any)?.canvasConfig;
-  // Prioritize design.quizModules as it's the primary save location
-  const mp = (campaignState as any)?.design?.quizModules || (campaignState as any)?.config?.modularPage || (campaignState as any)?.modularPage;
+  // Prioritize design.swiperModules as it's the primary save location
+  const mp = (campaignState as any)?.design?.swiperModules || (campaignState as any)?.config?.modularPage || (campaignState as any)?.modularPage;
   const topLevelElements = (campaignState as any)?.config?.elements;
 
   // N'hydrate que si on a des données utiles ET que le local est vide
   if (Array.isArray(cfg?.elements) && cfg.elements.length > 0 && canvasElements.length === 0) {
-    console.log('🧩 [QuizEditor] Hydration: applying canvas elements (canvasConfig)', cfg.elements.length);
+    console.log('🧩 [SwiperEditor] Hydration: applying canvas elements (canvasConfig)', cfg.elements.length);
     setCanvasElements(cfg.elements);
   } else if (Array.isArray(topLevelElements) && topLevelElements.length > 0 && canvasElements.length === 0) {
-    console.log('🧩 [QuizEditor] Hydration: applying canvas elements (config.elements)', topLevelElements.length);
+    console.log('🧩 [SwiperEditor] Hydration: applying canvas elements (config.elements)', topLevelElements.length);
     setCanvasElements(topLevelElements);
   }
 
@@ -636,8 +636,8 @@ useEffect(() => {
   if (mp && mp.screens) {
     const total = Object.values(mp.screens || {}).reduce((n: number, arr: any) => n + (Array.isArray(arr) ? arr.length : 0), 0);
     if (total > 0) {
-      console.log('🧩 [QuizEditor] Hydration: applying modularPage from', {
-        fromDesignQuizModules: !!(campaignState as any)?.design?.quizModules,
+      console.log('🧩 [SwiperEditor] Hydration: applying modularPage from', {
+        fromDesignSwiperModules: !!(campaignState as any)?.design?.swiperModules,
         fromConfigModularPage: !!(campaignState as any)?.config?.modularPage,
         fromTopLevelModularPage: !!(campaignState as any)?.modularPage,
         modulesCount: total
@@ -800,7 +800,7 @@ useEffect(() => {
             if (bg?.type === 'image' && typeof bg.value === 'string') value = bg.value;
             if (!value && bg?.devices?.[device]?.type === 'image' && typeof bg?.devices?.[device]?.value === 'string') value = bg.devices[device].value;
             if (!value) value = device === 'mobile' ? globalMobile : globalDesktop;
-            const key = `quiz-bg-${(campaignState as any)?.id || 'global'}-${device}-${s}`;
+            const key = `swiper-bg-${(campaignState as any)?.id || 'global'}-${device}-${s}`;
             if (value) {
               try { localStorage.setItem(key, value); } catch {}
               try { window.dispatchEvent(new CustomEvent('applyBackgroundCurrentScreen', { detail: { url: value, device, screenId: s } })); } catch {}
@@ -846,7 +846,7 @@ useEffect(() => {
 
   // Fonction commune pour mettre à jour l'image de fond
   const updateBackgroundImage = useCallback((url: string, targetDevice: string) => {
-    console.log('🎨 [QuizEditor] Updating background image:', { url: url.substring(0, 50), targetDevice, selectedDevice });
+    console.log('🎨 [SwiperEditor] Updating background image:', { url: url.substring(0, 50), targetDevice, selectedDevice });
     
     // Ne pas définir canvasBackground global ici: les fonds sont gérés par écran.
     
@@ -902,7 +902,7 @@ useEffect(() => {
       const targetDevice = detail?.device || 'desktop';
       if (!url) return;
       
-      console.log('🎨 [QuizEditor] Received applyBackgroundAllScreens:', { url: url.substring(0, 50), targetDevice, selectedDevice });
+      console.log('🎨 [SwiperEditor] Received applyBackgroundAllScreens:', { url: url.substring(0, 50), targetDevice, selectedDevice });
       updateBackgroundImage(url, targetDevice);
     };
     window.addEventListener('applyBackgroundAllScreens', handler as EventListener);
@@ -918,7 +918,7 @@ useEffect(() => {
       const url = detail?.url;
       if (!url) return;
       const targetDevice = (detail?.device as 'desktop' | 'tablet' | 'mobile' | undefined) || selectedDevice;
-      console.log('🎨 [QuizEditor] applyBackgroundCurrentScreen → preview-only sync:', {
+      console.log('🎨 [SwiperEditor] applyBackgroundCurrentScreen → preview-only sync:', {
         url: url.substring(0, 50),
         targetDevice,
         selectedDevice,
@@ -927,14 +927,14 @@ useEffect(() => {
 
       // Synchroniser via le hook dédié pour que le store Zustand soit mis à jour
       try {
-        console.log('🔔 [QuizEditor] Syncing background via useEditorPreviewSync:', {
+        console.log('🔔 [SwiperEditor] Syncing background via useEditorPreviewSync:', {
           url: url.substring(0, 50) + '...',
           device: targetDevice,
           screenId: detail?.screenId
         });
         syncBackground({ type: 'image', value: url }, targetDevice as 'desktop' | 'tablet' | 'mobile');
       } catch (err) {
-        console.error('❌ [QuizEditor] Failed to sync background:', err);
+        console.error('❌ [SwiperEditor] Failed to sync background:', err);
       }
 
       // Légère impulsion locale quand l'appareil correspond
@@ -959,11 +959,11 @@ useEffect(() => {
   const sidebarRef = useRef<{ setActiveTab: (tab: string) => void }>(null); // Nouvelle référence pour suivre la demande d'ouverture
   // Context de couleur demandé depuis la toolbar ('fill' | 'border' | 'text')
   const [designColorContext, setDesignColorContext] = useState<'fill' | 'border' | 'text'>('fill');
-  // Inline QuizConfigPanel visibility (controlled at layout level)
-  const [showQuizPanel, setShowQuizPanel] = useState(false);
+  // Inline SwiperConfigPanel visibility (controlled at layout level)
+  const [showSwiperPanel, setShowSwiperPanel] = useState(false);
   const [campaignConfig, setCampaignConfig] = useState<any>({
     design: {
-      quizConfig: {
+      swiperConfig: {
         questionCount: 5,
         timeLimit: 30,
         style: {
@@ -989,7 +989,7 @@ useEffect(() => {
     // CRITICAL: Don't show modal until campaign is fully loaded from DB
     // If URL has a campaign ID but state doesn't match yet, campaign is still loading
     if (urlCampaignId && urlCampaignId !== id) {
-      console.log('⏳ [QuizEditor] Campaign still loading, waiting...', { urlCampaignId, stateId: id });
+      console.log('⏳ [SwiperEditor] Campaign still loading, waiting...', { urlCampaignId, stateId: id });
       return;
     }
     
@@ -999,7 +999,7 @@ useEffect(() => {
       return;
     }
     
-    const promptedKey = id ? `campaign:name:prompted:${id}` : `campaign:name:prompted:new:quiz`;
+    const promptedKey = id ? `campaign:name:prompted:${id}` : `campaign:name:prompted:new:swiper`;
     const alreadyPrompted = typeof window !== 'undefined' ? localStorage.getItem(promptedKey) === '1' : true;
     const forceOpen = searchParams.get('forceNameModal') === '1';
     
@@ -1026,7 +1026,7 @@ useEffect(() => {
     const needsName = !name || defaultNames.has((name || '').trim());
     
     if (needsName && !alreadyPrompted) {
-      console.log('📝 [QuizEditor] Campaign needs name, opening modal', { id, name });
+      console.log('📝 [SwiperEditor] Campaign needs name, opening modal', { id, name });
       try { requestAnimationFrame(() => setIsNameModalOpen(true)); } catch { setIsNameModalOpen(true); }
     }
   }, [campaignState?.id, campaignState?.name, location.search]);
@@ -1062,7 +1062,7 @@ const handleSaveCampaignName = useCallback(async () => {
     id: isUuid(currentId) ? currentId : undefined,
     _allowFirstInsert: !isUuid(currentId), // Autoriser la première insertion lors de la saisie du nom
     name,
-    type: 'quiz'
+    type: 'swiper'
   };
 
   let saved: any = null;
@@ -1096,19 +1096,19 @@ const handleSaveCampaignName = useCallback(async () => {
       if (cid) await upsertSettings(cid, { publication: { name } });
     } catch {}
 
-    try { localStorage.setItem(`campaign:name:prompted:${(saved as any)?.id || currentId || 'new:quiz'}`, '1'); } catch {}
+    try { localStorage.setItem(`campaign:name:prompted:${(saved as any)?.id || currentId || 'new:swiper'}`, '1'); } catch {}
     setIsNameModalOpen(false);
     setIsModified(false);
   }
 }, [campaignState, newCampaignName, saveCampaign, setCampaign, upsertSettings, location.pathname, location.search, navigate, syncAllStates, selectedDevice, setIsModified]);
-  // Quiz config state
-  const [quizConfig, setQuizConfig] = useState({
+  // Swiper config state
+  const [swiperConfig, setSwiperConfig] = useState({
     questionCount: 5,
     timeLimit: 30,
     difficulty: 'medium' as 'easy' | 'medium' | 'hard',
-    templateId: 'image-quiz',
+    templateId: 'image-swiper',
     borderRadius: 12, // Valeur par défaut pour le border radius
-    // Taille par défaut du quiz
+    // Taille par défaut du swiper
     width: initialTemplateWidths.desktop,
     mobileWidth: initialTemplateWidths.mobile,
     height: 'auto',
@@ -1119,20 +1119,20 @@ const handleSaveCampaignName = useCallback(async () => {
     buttonActiveBackgroundColor: '#a7acb5'
   });
 
-  // Quiz modal config - synchronisé avec quizConfig
-  const [quizModalConfig, setQuizModalConfig] = useState<any>({
-    templateId: quizConfig.templateId,
-    borderRadius: quizConfig.borderRadius
+  // Swiper modal config - synchronisé avec swiperConfig
+  const [swiperModalConfig, setSwiperModalConfig] = useState<any>({
+    templateId: swiperConfig.templateId,
+    borderRadius: swiperConfig.borderRadius
   });
 
-  // Synchroniser quizModalConfig avec quizConfig
+  // Synchroniser swiperModalConfig avec swiperConfig
   React.useEffect(() => {
-    setQuizModalConfig((prev: any) => ({
+    setSwiperModalConfig((prev: any) => ({
       ...prev,
-      templateId: quizConfig.templateId,
-      borderRadius: quizConfig.borderRadius
+      templateId: swiperConfig.templateId,
+      borderRadius: swiperConfig.borderRadius
     }));
-  }, [quizConfig.templateId, quizConfig.borderRadius]);
+  }, [swiperConfig.templateId, swiperConfig.borderRadius]);
 
   // État pour l'élément sélectionné
   const [selectedElement, setSelectedElement] = useState<any>(null);
@@ -1156,12 +1156,29 @@ const handleSaveCampaignName = useCallback(async () => {
     setSelectedElement(element);
   };
   const [selectedElements, setSelectedElements] = useState<any[]>([]);
+
+  // Ensure a Google Font stylesheet is loaded for a given family (idempotent)
+  const ensureGoogleFontLoaded = useCallback((family: string) => {
+    try {
+      const slug = (family || '').trim().replace(/\s+/g, '+');
+      if (!slug) return;
+      const linkId = `gf-${slug.toLowerCase()}`;
+      if (document.getElementById(linkId)) return; // already loaded
+      const href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(family).replace(/%20/g, '+')}&display=swap`;
+      const link = document.createElement('link');
+      link.id = linkId;
+      link.rel = 'stylesheet';
+      link.href = href;
+      document.head.appendChild(link);
+    } catch {}
+  }, []);
   
   // État pour tracker la position de scroll (quel écran est visible)
   const [currentScreen, setCurrentScreen] = useState<'screen1' | 'screen2' | 'screen3'>('screen1');
   
   // État pour le funnel article
   const [currentStep, setCurrentStep] = useState<'article' | 'form' | 'game' | 'result'>('article');
+  const [currentGameResult, setCurrentGameResult] = useState<'winner' | 'loser'>('winner');
   const [showFunnel, setShowFunnel] = useState(false);
   const [showFullScreenPreview, setShowFullScreenPreview] = useState(false);
   const [fullScreenPreviewDevice, setFullScreenPreviewDevice] = useState<'desktop' | 'mobile'>('desktop');
@@ -1174,7 +1191,7 @@ const handleSaveCampaignName = useCallback(async () => {
     if (!id || !isTempCampaignId(id)) return;
     if (showFunnel) return; // skip cleanup during preview to avoid flicker/back-to-screen1
 
-    console.log('🧹 [QuizEditor] Cleaning temp campaign:', id);
+    console.log('🧹 [SwiperEditor] Cleaning temp campaign:', id);
 
     // Clear localStorage
     clearTempCampaignData(id);
@@ -1223,25 +1240,25 @@ const handleSaveCampaignName = useCallback(async () => {
 
   // Handlers pour le funnel article
   const handleCTAClick = useCallback(() => {
-    console.log('🎯 [QuizEditor] CTA clicked, starting quiz (game step)');
-    console.log('🎯 [QuizEditor] Current state before:', { currentStep, showFunnel, editorMode });
-    setCurrentStep('game'); // Quiz IS the game
-    console.log('🎯 [QuizEditor] setCurrentStep called with "game"');
+    console.log('🎯 [SwiperEditor] CTA clicked, starting swiper (game step)');
+    console.log('🎯 [SwiperEditor] Current state before:', { currentStep, showFunnel, editorMode });
+    setCurrentStep('game'); // Swiper IS the game
+    console.log('🎯 [SwiperEditor] setCurrentStep called with "game"');
   }, [currentStep, showFunnel, editorMode]);
 
   const handleFormSubmit = useCallback((data: Record<string, string>) => {
-    console.log('📝 [QuizEditor] Form submitted:', data);
+    console.log('📝 [SwiperEditor] Form submitted:', data);
     setCurrentStep('result'); // After form, go to result
   }, []);
 
   const handleGameComplete = useCallback(() => {
-    console.log('🎮 [QuizEditor] Quiz completed, moving to form');
-    setCurrentStep('form'); // After quiz, show form
+    console.log('🎮 [SwiperEditor] Swiper completed, moving to form');
+    setCurrentStep('form'); // After swiper, show form
   }, []);
   
   // Debug: Logger les changements de currentStep
   useEffect(() => {
-    console.log('🔄 [QuizEditor] currentStep changed to:', currentStep);
+    console.log('🔄 [SwiperEditor] currentStep changed to:', currentStep);
     console.trace('Stack trace for currentStep change');
   }, [currentStep]);
   
@@ -1329,7 +1346,7 @@ const handleSaveCampaignName = useCallback(async () => {
 
   // Initialize modular page from campaignConfig if present
   useEffect(() => {
-    const mp = (campaignConfig as any)?.design?.quizModules as ModularPage | undefined;
+    const mp = (campaignConfig as any)?.design?.swiperModules as ModularPage | undefined;
     if (mp && mp.screens) {
       setModularPage(mp);
     }
@@ -1343,19 +1360,19 @@ const handleSaveCampaignName = useCallback(async () => {
     // Guard: only autosave if campaign has valid UUID
     const isUuid = (v?: string) => !!v && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v);
     if (!isUuid(id)) {
-      console.log('🚫 [QuizEditor] Autosave skipped: not a valid UUID', id);
+      console.log('🚫 [SwiperEditor] Autosave skipped: not a valid UUID', id);
       return;
     }
 
     // CRITICAL: avoid wiping modules during initial hydration after a refresh
     if (!dataHydratedRef.current) {
-      console.log('⏭️ [QuizEditor] Autosave skipped: hydration not completed yet');
+      console.log('⏭️ [SwiperEditor] Autosave skipped: hydration not completed yet');
       return;
     }
     
     const t = window.setTimeout(async () => {
       try {
-        console.log('💾 [QuizEditor] Autosave START for campaign:', id);
+        console.log('💾 [SwiperEditor] Autosave START for campaign:', id);
         const payload: any = {
           ...(campaignState || {}),
           editorMode, // Ajouter le mode éditeur (article ou fullscreen)
@@ -1366,7 +1383,7 @@ const handleSaveCampaignName = useCallback(async () => {
           modularPage,
           design: {
             ...(campaignState as any)?.design,
-            quizModules: modularPage
+            swiperModules: modularPage
           },
           config: {
             ...(campaignState as any)?.config,
@@ -1385,7 +1402,7 @@ const handleSaveCampaignName = useCallback(async () => {
             device: selectedDevice
           }
         };
-        console.log('💾 [QuizEditor] Autosave payload:', {
+        console.log('💾 [SwiperEditor] Autosave payload:', {
           id,
           name: payload.name,
           canvasElements: canvasElements.length,
@@ -1395,19 +1412,19 @@ const handleSaveCampaignName = useCallback(async () => {
         
         // Skip autosave for temporary campaigns - they should only be saved manually
         if (isTempCampaignId(id)) {
-          console.log('⏭️ [QuizEditor] Skipping autosave for temporary campaign:', id);
+          console.log('⏭️ [SwiperEditor] Skipping autosave for temporary campaign:', id);
           return;
         }
         
         const savedResult = await saveCampaignToDB(payload, saveCampaign);
         
-        console.log('✅ [QuizEditor] Autosave SUCCESS:', {
+        console.log('✅ [SwiperEditor] Autosave SUCCESS:', {
           savedId: savedResult?.id,
           savedName: savedResult?.name
         });
         setIsModified(false);
       } catch (e) {
-        console.error('❌ [QuizEditor] Autosave FAILED:', e);
+        console.error('❌ [SwiperEditor] Autosave FAILED:', e);
       }
     }, 1500);
     return () => clearTimeout(t);
@@ -1498,7 +1515,7 @@ const handleSaveCampaignName = useCallback(async () => {
         ...(prev || {}),
         design: {
           ...(prev?.design || {}),
-          quizModules: { ...next, _updatedAt: Date.now() }
+          swiperModules: { ...next, _updatedAt: Date.now() }
         }
       };
       return updated;
@@ -1947,19 +1964,19 @@ const handleSaveCampaignName = useCallback(async () => {
     if (campaignId) {
       // Skip DB loading for temporary campaign IDs to avoid invalid UUID errors
       if (isTempCampaignId(campaignId)) {
-        console.log('⏭️ [QuizEditor] Skipping DB load for temp campaign id:', campaignId);
+        console.log('⏭️ [SwiperEditor] Skipping DB load for temp campaign id:', campaignId);
         dataHydratedRef.current = true;
         setIsLoading(false);
         return;
       }
       // Skip DB loading for non-UUID ids to avoid Postgres 22P02
       if (!isPersistedCampaignId(campaignId)) {
-        console.log('⏭️ [QuizEditor] Skipping DB load for non-UUID id:', campaignId);
+        console.log('⏭️ [SwiperEditor] Skipping DB load for non-UUID id:', campaignId);
         dataHydratedRef.current = true;
         setIsLoading(false);
         return;
       }
-      console.log('📂 [QuizEditor] Loading existing campaign:', campaignId);
+      console.log('📂 [SwiperEditor] Loading existing campaign:', campaignId);
       setIsLoading(true);
       dataHydratedRef.current = false; // Mark that we're starting to load data
       
@@ -2037,34 +2054,34 @@ const handleSaveCampaignName = useCallback(async () => {
           }
           
           // Initialize config
-          const quizFromConfig = {
+          const swiperFromConfig = {
             ...(data?.config || {} as any),
-            quizConfig: (data?.config as any)?.quizConfig ?? (data as any)?.modularPage,
-            quizModules: (data?.config as any)?.quizModules || (data?.design as any)?.quizModules || [],
-            modularPage: (data as any)?.modularPage || (data?.design as any)?.quizModules || [],
+            swiperConfig: (data?.config as any)?.swiperConfig ?? (data as any)?.modularPage,
+            swiperModules: (data?.config as any)?.swiperModules || (data?.design as any)?.swiperModules || [],
+            modularPage: (data as any)?.modularPage || (data?.design as any)?.swiperModules || [],
           };
-          if ((data?.config as any)?.quizModules) {
-            quizFromConfig.quizModules = (data.config as any).quizModules;
-          } else if ((data?.design as any)?.quizModules) {
-            quizFromConfig.quizModules = (data.design as any).quizModules;
+          if ((data?.config as any)?.swiperModules) {
+            swiperFromConfig.swiperModules = (data.config as any).swiperModules;
+          } else if ((data?.design as any)?.swiperModules) {
+            swiperFromConfig.swiperModules = (data.design as any).swiperModules;
           } else if ((data as any)?.modularPage) {
-            quizFromConfig.modularPage = (data as any).modularPage;
+            swiperFromConfig.modularPage = (data as any).modularPage;
           }
-          if (!quizFromConfig.quizConfig) {
+          if (!swiperFromConfig.swiperConfig) {
             const qC = (
-              (data?.design as any)?.quizConfig ||
-              (quizFromConfig as any)?.quizConfig ||
+              (data?.design as any)?.swiperConfig ||
+              (swiperFromConfig as any)?.swiperConfig ||
               {}
             );
-            quizFromConfig.quizConfig = qC;
+            swiperFromConfig.swiperConfig = qC;
           }
 
-          console.log('📦 [QuizEditor] Modules to restore:', {
-            fromConfigQuizModules: (data?.config as any)?.quizModules,
-            fromDesignQuizModules: (data?.design as any)?.quizModules,
+          console.log('📦 [SwiperEditor] Modules to restore:', {
+            fromConfigSwiperModules: (data?.config as any)?.swiperModules,
+            fromDesignSwiperModules: (data?.design as any)?.swiperModules,
             fromModularPage: (data as any)?.modularPage,
-            finalQuizModules: quizFromConfig.quizModules,
-            finalModularPage: quizFromConfig.modularPage
+            finalSwiperModules: swiperFromConfig.swiperModules,
+            finalModularPage: swiperFromConfig.modularPage
           });
 
           // Restore campaign config
@@ -2072,15 +2089,15 @@ const handleSaveCampaignName = useCallback(async () => {
             ...data,
             design: {
               ...(data?.design || {} as any),
-              quizConfig: quizFromConfig.quizConfig || {},
-              quizModules: quizFromConfig.quizModules || quizFromConfig.modularPage || modularPage
+              swiperConfig: swiperFromConfig.swiperConfig || {},
+              swiperModules: swiperFromConfig.swiperModules || swiperFromConfig.modularPage || modularPage
             }
           });
           
           // Restore modular page (modules) - check all possible sources
-          const modulesToRestore = quizFromConfig.quizModules || quizFromConfig.modularPage || (data as any)?.modularPage || (data?.design as any)?.quizModules;
+          const modulesToRestore = swiperFromConfig.swiperModules || swiperFromConfig.modularPage || (data as any)?.modularPage || (data?.design as any)?.swiperModules;
           
-          console.log('📦 [QuizEditor] Final modules to restore:', {
+          console.log('📦 [SwiperEditor] Final modules to restore:', {
             modulesToRestore,
             isArray: Array.isArray(modulesToRestore),
             hasScreens: modulesToRestore?.screens,
@@ -2092,11 +2109,11 @@ const handleSaveCampaignName = useCallback(async () => {
           
           if (modulesToRestore) {
             if (modulesToRestore.screens) {
-              console.log('✅ [QuizEditor] Restoring modules with screens structure');
+              console.log('✅ [SwiperEditor] Restoring modules with screens structure');
               setModularPage(modulesToRestore);
               dataHydratedRef.current = true;
             } else if (Array.isArray(modulesToRestore) && modulesToRestore.length > 0) {
-              console.log('✅ [QuizEditor] Converting array modules to screens structure');
+              console.log('✅ [SwiperEditor] Converting array modules to screens structure');
               setModularPage({
                 screens: {
                   screen1: modulesToRestore,
@@ -2107,17 +2124,17 @@ const handleSaveCampaignName = useCallback(async () => {
               });
               dataHydratedRef.current = true;
             } else {
-              console.warn('⚠️ [QuizEditor] Modules format not recognized:', modulesToRestore);
+              console.warn('⚠️ [SwiperEditor] Modules format not recognized:', modulesToRestore);
             }
           } else {
-            console.warn('⚠️ [QuizEditor] No modules found to restore');
+            console.warn('⚠️ [SwiperEditor] No modules found to restore');
           }
           
-          // Restore quiz config
-          if (quizFromConfig.quizConfig) {
-            setQuizConfig((prev: any) => ({
+          // Restore swiper config
+          if (swiperFromConfig.swiperConfig) {
+            setSwiperConfig((prev: any) => ({
               ...prev,
-              ...quizFromConfig.quizConfig
+              ...swiperFromConfig.swiperConfig
             }));
           }
           
@@ -2130,7 +2147,7 @@ const handleSaveCampaignName = useCallback(async () => {
           // Update editor store
           setCampaign(data as any);
           
-          console.log('✅ [QuizEditor] Campaign hydration complete, dataHydratedRef=true');
+          console.log('✅ [SwiperEditor] Campaign hydration complete, dataHydratedRef=true');
           dataHydratedRef.current = true; // CRITICAL: Mark hydration as complete
           
         } catch (err) {
@@ -2224,13 +2241,21 @@ const handleSaveCampaignName = useCallback(async () => {
       totalElements: canvasElements.length
     });
 
+    // Auto-load Google Font when a new fontFamily is applied
+    if (updates && typeof updates.fontFamily === 'string') {
+      ensureGoogleFontLoaded(updates.fontFamily);
+    }
+
     const isModuleText = (selectedElement as any)?.role === 'module-text' && (selectedElement as any)?.moduleId;
     if (isModuleText) {
       const moduleId = (selectedElement as any).moduleId as string;
 
       // Route ALL updates to the module (including rotation)
       const modulePatch: Partial<Module> & Record<string, any> = {};
-      if (updates.fontFamily) modulePatch.bodyFontFamily = updates.fontFamily;
+      if (updates.fontFamily) {
+        modulePatch.bodyFontFamily = updates.fontFamily;
+        ensureGoogleFontLoaded(updates.fontFamily);
+      }
       if (updates.color) modulePatch.bodyColor = updates.color;
       if (updates.fontSize) modulePatch.bodyFontSize = updates.fontSize;
       if (updates.fontWeight) modulePatch.bodyBold = updates.fontWeight === 'bold';
@@ -2307,18 +2332,18 @@ const handleSaveCampaignName = useCallback(async () => {
     setCampaignConfig((currentConfig: any) => {
       const updatedConfig = { ...currentConfig };
       updatedConfig.design = updatedConfig.design || {};
-      updatedConfig.design.quizConfig = updatedConfig.design.quizConfig || {};
+      updatedConfig.design.swiperConfig = updatedConfig.design.swiperConfig || {};
       // Ne pas écraser les couleurs; ne mettre à jour que borderRadius
-      updatedConfig.design.quizConfig.style = {
-        ...(updatedConfig.design.quizConfig.style || {}),
+      updatedConfig.design.swiperConfig.style = {
+        ...(updatedConfig.design.swiperConfig.style || {}),
         borderRadius: `${borderRadius}px`
       };
-      console.log('🎯 CampaignConfig mise à jour (borderRadius uniquement):', updatedConfig.design.quizConfig.style);
+      console.log('🎯 CampaignConfig mise à jour (borderRadius uniquement):', updatedConfig.design.swiperConfig.style);
       return updatedConfig;
     });
     
-    // Émettre un événement pour forcer le re-render du TemplatedQuiz
-    const event = new CustomEvent('quizStyleUpdate', { 
+    // Émettre un événement pour forcer le re-render du TemplatedSwiper
+    const event = new CustomEvent('swiperStyleUpdate', { 
       detail: { 
         borderRadius: `${borderRadius}px`
       } 
@@ -2328,7 +2353,7 @@ const handleSaveCampaignName = useCallback(async () => {
     // Mettre à jour les éléments du canvas (pour compatibilité)
     setCanvasElements(currentElements => 
       currentElements.map(element => {
-        if (element?.type === 'quiz' || element?.id === 'quiz-template') {
+        if (element?.type === 'swiper' || element?.id === 'swiper-template') {
           return {
             ...element,
             borderRadius: `${borderRadius}px`,
@@ -2343,7 +2368,7 @@ const handleSaveCampaignName = useCallback(async () => {
     );
   }, [setCampaignConfig]);
 
-  // Quiz Editor doesn't need wheel config sync - using quiz config instead
+  // Swiper Editor doesn't need wheel config sync - using swiper config instead
   const wheelModalConfig = null;
 
   // Système d'historique pour undo/redo avec le nouveau hook
@@ -2494,8 +2519,8 @@ const handleSaveCampaignName = useCallback(async () => {
     }
   }, [selectedElement, handleAddElement]);
   
-  const quizStyleOverrides = useMemo<Record<string, any>>(() => {
-    return (campaignConfig?.design?.quizConfig?.style || {}) as Record<string, any>;
+  const swiperStyleOverrides = useMemo<Record<string, any>>(() => {
+    return (campaignConfig?.design?.swiperConfig?.style || {}) as Record<string, any>;
   }, [campaignConfig]);
 
   const buttonModule = useMemo(() => {
@@ -2554,21 +2579,21 @@ const handleSaveCampaignName = useCallback(async () => {
     );
   }, [canvasElements]);
 
-  const campaignQuizStyle = (campaignConfig?.design?.quizConfig?.style ?? {}) as Record<string, any>;
+  const campaignSwiperStyle = (campaignConfig?.design?.swiperConfig?.style ?? {}) as Record<string, any>;
 
   const launchButtonStyles = useMemo(() => {
-    const base = buildLaunchButtonStyles(buttonModule, quizStyleOverrides, {
+    const base = buildLaunchButtonStyles(buttonModule, swiperStyleOverrides, {
       buttonBackgroundColor:
-        typeof quizStyleOverrides.buttonBackgroundColor === 'string' && quizStyleOverrides.buttonBackgroundColor.length > 0
-          ? quizStyleOverrides.buttonBackgroundColor
-          : ((campaignQuizStyle as any)?.buttonBackgroundColor as string | undefined) || LAUNCH_BUTTON_FALLBACK_GRADIENT,
+        typeof swiperStyleOverrides.buttonBackgroundColor === 'string' && swiperStyleOverrides.buttonBackgroundColor.length > 0
+          ? swiperStyleOverrides.buttonBackgroundColor
+          : ((campaignSwiperStyle as any)?.buttonBackgroundColor as string | undefined) || LAUNCH_BUTTON_FALLBACK_GRADIENT,
       buttonTextColor:
-        typeof quizStyleOverrides.buttonTextColor === 'string' && quizStyleOverrides.buttonTextColor.length > 0
-          ? quizStyleOverrides.buttonTextColor
-          : (quizConfig.buttonTextColor || LAUNCH_BUTTON_DEFAULT_TEXT_COLOR),
-      buttonHoverBackgroundColor: quizConfig.buttonHoverBackgroundColor,
-      buttonActiveBackgroundColor: quizConfig.buttonActiveBackgroundColor,
-      borderRadius: quizConfig.borderRadius
+        typeof swiperStyleOverrides.buttonTextColor === 'string' && swiperStyleOverrides.buttonTextColor.length > 0
+          ? swiperStyleOverrides.buttonTextColor
+          : (swiperConfig.buttonTextColor || LAUNCH_BUTTON_DEFAULT_TEXT_COLOR),
+      buttonHoverBackgroundColor: swiperConfig.buttonHoverBackgroundColor,
+      buttonActiveBackgroundColor: swiperConfig.buttonActiveBackgroundColor,
+      borderRadius: swiperConfig.borderRadius
     });
     if (exitMessageElement) {
       return {
@@ -2577,33 +2602,33 @@ const handleSaveCampaignName = useCallback(async () => {
       } satisfies React.CSSProperties;
     }
     return base;
-  }, [buttonModule, quizStyleOverrides, campaignQuizStyle, quizConfig.buttonHoverBackgroundColor, quizConfig.buttonActiveBackgroundColor, quizConfig.borderRadius, exitMessageElement]);
+  }, [buttonModule, swiperStyleOverrides, campaignSwiperStyle, swiperConfig.buttonHoverBackgroundColor, swiperConfig.buttonActiveBackgroundColor, swiperConfig.borderRadius, exitMessageElement]);
 
   const launchButtonText = useMemo(() => {
-    return buttonModule?.label || (quizStyleOverrides.buttonLabel as string | undefined) || 'Participer';
-  }, [buttonModule, quizStyleOverrides.buttonLabel]);
+    return buttonModule?.label || (swiperStyleOverrides.buttonLabel as string | undefined) || 'Participer';
+  }, [buttonModule, swiperStyleOverrides.buttonLabel]);
 
-  const emitQuizStyleUpdate = useCallback((detail: Record<string, any>) => {
+  const emitSwiperStyleUpdate = useCallback((detail: Record<string, any>) => {
     if (!detail || Object.keys(detail).length === 0) return;
     try {
-      const target = document.getElementById('quiz-preview-container') || window;
-      const event = new CustomEvent('quizStyleUpdate', { detail });
+      const target = document.getElementById('swiper-preview-container') || window;
+      const event = new CustomEvent('swiperStyleUpdate', { detail });
       const dispatched = target.dispatchEvent(event);
       if (!dispatched) {
-        const fallback = new CustomEvent('quizStyleUpdateFallback', { detail });
+        const fallback = new CustomEvent('swiperStyleUpdateFallback', { detail });
         target.dispatchEvent(fallback);
       }
     } catch (error) {
-      console.error('❌ Erreur lors de l\'émission de quizStyleUpdate pour le bouton:', error);
+      console.error('❌ Erreur lors de l\'émission de swiperStyleUpdate pour le bouton:', error);
     }
   }, []);
 
-  const updateCampaignQuizStyle = useCallback((changes: Record<string, any>) => {
+  const updateCampaignSwiperStyle = useCallback((changes: Record<string, any>) => {
     setCampaignConfig((prev: any) => {
       const next = { ...(prev || {}) };
       const design = { ...(next.design || {}) };
-      const quizDesign = { ...(design.quizConfig || {}) };
-      const style = { ...(quizDesign.style || {}) };
+      const swiperDesign = { ...(design.swiperConfig || {}) };
+      const style = { ...(swiperDesign.style || {}) };
 
       Object.entries(changes).forEach(([key, value]) => {
         if (value === undefined || value === null || value === '') {
@@ -2615,8 +2640,8 @@ const handleSaveCampaignName = useCallback(async () => {
 
       next.design = {
         ...design,
-        quizConfig: {
-          ...quizDesign,
+        swiperConfig: {
+          ...swiperDesign,
           style
         }
       };
@@ -2631,7 +2656,7 @@ const handleSaveCampaignName = useCallback(async () => {
     if (!targetModule) return;
 
     const patch: Partial<BlocBouton> = {};
-    const quizStyleDetail: Record<string, any> = {};
+    const swiperStyleDetail: Record<string, any> = {};
 
     if (styles.background !== undefined) {
       const backgroundValue: string =
@@ -2639,9 +2664,9 @@ const handleSaveCampaignName = useCallback(async () => {
           ? styles.background
           : LAUNCH_BUTTON_FALLBACK_GRADIENT;
       patch.background = backgroundValue;
-      setQuizConfig(prev => ({ ...prev, buttonBackgroundColor: backgroundValue }));
-      updateCampaignQuizStyle({ buttonBackgroundColor: backgroundValue });
-      quizStyleDetail.buttonBackgroundColor = backgroundValue;
+      setSwiperConfig(prev => ({ ...prev, buttonBackgroundColor: backgroundValue }));
+      updateCampaignSwiperStyle({ buttonBackgroundColor: backgroundValue });
+      swiperStyleDetail.buttonBackgroundColor = backgroundValue;
     }
 
     if (styles.color !== undefined) {
@@ -2650,9 +2675,9 @@ const handleSaveCampaignName = useCallback(async () => {
           ? styles.color
           : LAUNCH_BUTTON_DEFAULT_TEXT_COLOR;
       patch.textColor = textColorValue;
-      setQuizConfig(prev => ({ ...prev, buttonTextColor: textColorValue }));
-      updateCampaignQuizStyle({ buttonTextColor: textColorValue });
-      quizStyleDetail.buttonTextColor = textColorValue;
+      setSwiperConfig(prev => ({ ...prev, buttonTextColor: textColorValue }));
+      updateCampaignSwiperStyle({ buttonTextColor: textColorValue });
+      swiperStyleDetail.buttonTextColor = textColorValue;
     }
 
     if (styles.borderRadius !== undefined) {
@@ -2661,47 +2686,47 @@ const handleSaveCampaignName = useCallback(async () => {
         : parseFloat(String(styles.borderRadius).replace('px', ''));
       const normalizedRadius = Number.isNaN(radiusValue) ? 9999 : radiusValue;
       patch.borderRadius = normalizedRadius;
-      setQuizConfig(prev => ({ ...prev, borderRadius: normalizedRadius }));
-      updateCampaignQuizStyle({ borderRadius: `${normalizedRadius}px` });
-      quizStyleDetail.borderRadius = `${normalizedRadius}px`;
+      setSwiperConfig(prev => ({ ...prev, borderRadius: normalizedRadius }));
+      updateCampaignSwiperStyle({ borderRadius: `${normalizedRadius}px` });
+      swiperStyleDetail.borderRadius = `${normalizedRadius}px`;
     }
 
     if (styles.padding !== undefined) {
       const paddingValue = typeof styles.padding === 'number' ? `${styles.padding}px` : styles.padding || LAUNCH_BUTTON_DEFAULT_PADDING;
       patch.padding = paddingValue;
-      updateCampaignQuizStyle({ buttonPadding: paddingValue });
-      quizStyleDetail.buttonPadding = paddingValue;
+      updateCampaignSwiperStyle({ buttonPadding: paddingValue });
+      swiperStyleDetail.buttonPadding = paddingValue;
     }
 
     if (styles.boxShadow !== undefined) {
       const shadowValue = styles.boxShadow || LAUNCH_BUTTON_DEFAULT_SHADOW;
       patch.boxShadow = shadowValue;
-      updateCampaignQuizStyle({ buttonBoxShadow: shadowValue });
-      quizStyleDetail.buttonBoxShadow = shadowValue;
+      updateCampaignSwiperStyle({ buttonBoxShadow: shadowValue });
+      swiperStyleDetail.buttonBoxShadow = shadowValue;
     }
 
     if (styles.textTransform !== undefined) {
       const transformValue = styles.textTransform || undefined;
-      updateCampaignQuizStyle({ buttonTextTransform: transformValue });
-      quizStyleDetail.buttonTextTransform = transformValue;
+      updateCampaignSwiperStyle({ buttonTextTransform: transformValue });
+      swiperStyleDetail.buttonTextTransform = transformValue;
     }
 
     if (styles.fontWeight !== undefined) {
       const fontWeightValue = styles.fontWeight || undefined;
-      updateCampaignQuizStyle({ buttonFontWeight: fontWeightValue });
-      quizStyleDetail.buttonFontWeight = fontWeightValue;
+      updateCampaignSwiperStyle({ buttonFontWeight: fontWeightValue });
+      swiperStyleDetail.buttonFontWeight = fontWeightValue;
     }
 
     handleUpdateModule(targetModule.id, patch);
-    emitQuizStyleUpdate(quizStyleDetail);
-  }, [buttonModule, handleUpdateModule, updateCampaignQuizStyle, emitQuizStyleUpdate, setQuizConfig]);
+    emitSwiperStyleUpdate(swiperStyleDetail);
+  }, [buttonModule, handleUpdateModule, updateCampaignSwiperStyle, emitSwiperStyleUpdate, setSwiperConfig]);
 
   const handleLaunchButtonTextChange = useCallback((text: string) => {
     const targetModule = buttonModule;
     if (!targetModule) return;
     handleUpdateModule(targetModule.id, { label: text });
-    updateCampaignQuizStyle({ buttonLabel: text });
-  }, [buttonModule, handleUpdateModule, updateCampaignQuizStyle]);
+    updateCampaignSwiperStyle({ buttonLabel: text });
+  }, [buttonModule, handleUpdateModule, updateCampaignSwiperStyle]);
 
   const handleLaunchButtonReset = useCallback(() => {
     handleLaunchButtonStyleChange({
@@ -2739,7 +2764,7 @@ const handleSaveCampaignName = useCallback(async () => {
       modules: allModules.map((m: any) => ({ id: m.id, type: m.type, label: m.label }))
     });
 
-    // Primary color used by quiz buttons and participation form
+    // Primary color used by swiper buttons and participation form
     const toRgb = (color: string): { r: number; g: number; b: number } | null => {
       if (!color) return null;
       const m = color.match(/rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)/i);
@@ -2778,12 +2803,12 @@ const handleSaveCampaignName = useCallback(async () => {
     })();
     const secondaryColor = '#ffffff';
 
-    // Build dynamic quiz questions for preview:
+    // Build dynamic swiper questions for preview:
     let configuredQuestions = (
-      (campaignState as any)?.quizConfig?.questions ||
-      (campaignConfig as any)?.quizConfig?.questions ||
-      (campaignState as any)?.gameConfig?.quiz?.questions ||
-      (campaignConfig as any)?.gameConfig?.quiz?.questions ||
+      (campaignState as any)?.swiperConfig?.questions ||
+      (campaignConfig as any)?.swiperConfig?.questions ||
+      (campaignState as any)?.gameConfig?.swiper?.questions ||
+      (campaignConfig as any)?.gameConfig?.swiper?.questions ||
       []
     );
     // If none are defined (e.g., user hasn't opened the "Jeu" tab yet), seed a default question
@@ -2802,7 +2827,7 @@ const handleSaveCampaignName = useCallback(async () => {
       ];
     }
     
-    console.log('🧭 [QuizEditorLayout] campaignData questions:', {
+    console.log('🧭 [SwiperEditorLayout] campaignData questions:', {
       count: Array.isArray(configuredQuestions) ? configuredQuestions.length : 0,
       device: selectedDevice
     });
@@ -2868,7 +2893,7 @@ const handleSaveCampaignName = useCallback(async () => {
       return merged;
     });
 
-    console.log('🎨 [QuizEditorLayout] Creating campaignData with background:', {
+    console.log('🎨 [SwiperEditorLayout] Creating campaignData with background:', {
       canvasBackground,
       backgroundImage: campaignConfig?.design?.backgroundImage,
       mobileBackgroundImage: campaignConfig?.design?.mobileBackgroundImage
@@ -2876,7 +2901,7 @@ const handleSaveCampaignName = useCallback(async () => {
     
     return {
       id: (campaignState as any)?.id || (campaignConfig as any)?.id || (useEditorStore.getState().campaign as any)?.id,
-      type: 'quiz',
+      type: 'swiper',
       // Fournir la configuration Article pour le mode article
       articleConfig: (campaignConfig as any)?.articleConfig,
       design: {
@@ -2893,26 +2918,26 @@ const handleSaveCampaignName = useCallback(async () => {
           secondary: secondaryColor,
           accent: extractedColors[2] || '#45b7d1'
         },
-        quizConfig: {
-          questionCount: campaignConfig?.design?.quizConfig?.questionCount || quizConfig.questionCount || 5,
-          timeLimit: campaignConfig?.design?.quizConfig?.timeLimit || quizConfig.timeLimit || 30,
-          templateId: quizConfig.templateId,
+        swiperConfig: {
+          questionCount: campaignConfig?.design?.swiperConfig?.questionCount || swiperConfig.questionCount || 5,
+          timeLimit: campaignConfig?.design?.swiperConfig?.timeLimit || swiperConfig.timeLimit || 30,
+          templateId: swiperConfig.templateId,
           style: {
-            ...campaignConfig?.design?.quizConfig?.style,
-            buttonBackgroundColor: campaignConfig?.design?.quizConfig?.style?.buttonBackgroundColor || quizConfig.buttonBackgroundColor,
-            buttonTextColor: campaignConfig?.design?.quizConfig?.style?.buttonTextColor || quizConfig.buttonTextColor,
-            buttonHoverBackgroundColor: campaignConfig?.design?.quizConfig?.style?.buttonHoverBackgroundColor || quizConfig.buttonHoverBackgroundColor,
-            buttonActiveBackgroundColor: campaignConfig?.design?.quizConfig?.style?.buttonActiveBackgroundColor || quizConfig.buttonActiveBackgroundColor,
-            borderRadius: campaignConfig?.design?.quizConfig?.style?.borderRadius || `${quizConfig.borderRadius}px` || '8px',
+            ...campaignConfig?.design?.swiperConfig?.style,
+            buttonBackgroundColor: campaignConfig?.design?.swiperConfig?.style?.buttonBackgroundColor || swiperConfig.buttonBackgroundColor,
+            buttonTextColor: campaignConfig?.design?.swiperConfig?.style?.buttonTextColor || swiperConfig.buttonTextColor,
+            buttonHoverBackgroundColor: campaignConfig?.design?.swiperConfig?.style?.buttonHoverBackgroundColor || swiperConfig.buttonHoverBackgroundColor,
+            buttonActiveBackgroundColor: campaignConfig?.design?.swiperConfig?.style?.buttonActiveBackgroundColor || swiperConfig.buttonActiveBackgroundColor,
+            borderRadius: campaignConfig?.design?.swiperConfig?.style?.borderRadius || `${swiperConfig.borderRadius}px` || '8px',
             // Styles pour le texte
-            textColor: campaignConfig?.design?.quizConfig?.style?.textColor || '#000000',
+            textColor: campaignConfig?.design?.swiperConfig?.style?.textColor || '#000000',
             questionTextWrap: 'break-word',
             answerTextWrap: 'break-word',
             // Zoom/largeur - respecter les valeurs ajustées par le panel
-            width: campaignConfig?.design?.quizConfig?.style?.width || (quizConfig.width || initialTemplateWidths.desktop),
-            mobileWidth: campaignConfig?.design?.quizConfig?.style?.mobileWidth || (quizConfig.mobileWidth || initialTemplateWidths.mobile),
+            width: campaignConfig?.design?.swiperConfig?.style?.width || (swiperConfig.width || initialTemplateWidths.desktop),
+            mobileWidth: campaignConfig?.design?.swiperConfig?.style?.mobileWidth || (swiperConfig.mobileWidth || initialTemplateWidths.mobile),
             // Opacité de fond si définie
-            backgroundOpacity: campaignConfig?.design?.quizConfig?.style?.backgroundOpacity ?? 100,
+            backgroundOpacity: campaignConfig?.design?.swiperConfig?.style?.backgroundOpacity ?? 100,
             // Mise en page responsive
             questionPadding: '12px',
             answerPadding: '12px 16px',
@@ -2922,10 +2947,10 @@ const handleSaveCampaignName = useCallback(async () => {
         }
       },
       gameConfig: {
-        quiz: {
+        swiper: {
           questions: configuredQuestions,
-          timeLimit: campaignConfig?.design?.quizConfig?.timeLimit || quizConfig.timeLimit || 30,
-          templateId: quizConfig.templateId,
+          timeLimit: campaignConfig?.design?.swiperConfig?.timeLimit || swiperConfig.timeLimit || 30,
+          templateId: swiperConfig.templateId,
           buttonLabel: fallbackButtonText,
           buttonStyles: buttonCustomStyles
         }
@@ -2935,13 +2960,13 @@ const handleSaveCampaignName = useCallback(async () => {
         color: primaryColor,
         textColor:
           buttonCustomStyles?.color ||
-          quizStyleOverrides.buttonTextColor ||
-          quizConfig.buttonTextColor ||
+          swiperStyleOverrides.buttonTextColor ||
+          swiperConfig.buttonTextColor ||
           '#ffffff',
         borderRadius:
           buttonCustomStyles?.borderRadius as any ||
-          quizStyleOverrides.borderRadius ||
-          (typeof quizConfig.borderRadius === 'number' ? `${quizConfig.borderRadius}px` : quizConfig.borderRadius) ||
+          swiperStyleOverrides.borderRadius ||
+          (typeof swiperConfig.borderRadius === 'number' ? `${swiperConfig.borderRadius}px` : swiperConfig.borderRadius) ||
           '8px',
         styles: buttonCustomStyles
       },
@@ -2983,8 +3008,8 @@ const handleSaveCampaignName = useCallback(async () => {
     wheelModalConfig,
     campaignState,
     launchButtonStyles,
-    quizStyleOverrides,
-    quizConfig,
+    swiperStyleOverrides,
+    swiperConfig,
     modularPage,
     backgroundUpdateTrigger
   ]);
@@ -3011,8 +3036,8 @@ const handleSaveCampaignName = useCallback(async () => {
     const transformedCampaign = {
       ...campaignData,
       name: 'Ma Campagne',
-      type: (campaignData.type || 'wheel') as 'wheel' | 'scratch' | 'jackpot' | 'quiz' | 'dice' | 'form' | 'memory' | 'puzzle',
-      // Important: preserve background as an object for preview so FunnelQuizParticipate
+      type: (campaignData.type || 'wheel') as 'wheel' | 'scratch' | 'jackpot' | 'swiper' | 'dice' | 'form' | 'memory' | 'puzzle',
+      // Important: preserve background as an object for preview so FunnelSwiperParticipate
       // can detect image backgrounds (type === 'image'). Do not flatten to string.
       design: {
         ...campaignData.design,
@@ -3080,10 +3105,10 @@ const handleSaveCampaignName = useCallback(async () => {
           },
           // Préserver modularPage pour la synchronisation avec le preview
           modularPage: (transformedCampaign as any).modularPage || prev.modularPage,
-          // Préserver design.quizModules et les images de fond si présentes
+          // Préserver design.swiperModules et les images de fond si présentes
           design: {
             ...(transformedCampaign as any).design,
-            quizModules: (transformedCampaign as any).modularPage || prev.design?.quizModules,
+            swiperModules: (transformedCampaign as any).modularPage || prev.design?.swiperModules,
             // Préserver les images de fond qui ont pu être définies par applyBackgroundAllScreens
             backgroundImage: (transformedCampaign as any).design?.backgroundImage || prev.design?.backgroundImage,
             mobileBackgroundImage: (transformedCampaign as any).design?.mobileBackgroundImage || prev.design?.mobileBackgroundImage
@@ -3138,7 +3163,7 @@ const handleSaveCampaignName = useCallback(async () => {
         _allowFirstInsert: !isUuid(currentId),
         design: {
           ...((updatedCampaign as any)?.design || {}),
-          quizModules: modularPage
+          swiperModules: modularPage
         },
         config: {
           ...((updatedCampaign as any)?.config || {}),
@@ -3157,7 +3182,7 @@ const handleSaveCampaignName = useCallback(async () => {
           device: selectedDevice
         }
       };
-      console.log('💾 [QuizEditor] handleSave complete payload', {
+      console.log('💾 [SwiperEditor] handleSave complete payload', {
         id: payload.id,
         modules: Object.values(modularPage?.screens || {}).reduce((sum: number, arr: any) => sum + (Array.isArray(arr) ? arr.length : 0), 0)
       });
@@ -3173,7 +3198,7 @@ const handleSaveCampaignName = useCallback(async () => {
         
         // If we just saved a temporary campaign, replace temp ID with real ID
         if (wasTempId && tempId) {
-          console.log('🔄 [QuizEditor] Replacing temp ID with persisted ID:', { tempId, persistedId: saved.id });
+          console.log('🔄 [SwiperEditor] Replacing temp ID with persisted ID:', { tempId, persistedId: saved.id });
           
           replaceTempWithPersistedId(tempId, saved.id, (newId) => {
             // Update URL with real campaign ID
@@ -3182,7 +3207,7 @@ const handleSaveCampaignName = useCallback(async () => {
             navigate(newUrl, { replace: true });
             
             // Update store
-            selectCampaign(newId, 'quiz');
+            selectCampaign(newId, 'swiper');
           });
         }
       }
@@ -3242,7 +3267,7 @@ const handleSaveCampaignName = useCallback(async () => {
                        !currentName.includes('New Campaign');
     
     if (!isValidName) {
-      console.log('❌ [QuizEditor] Invalid campaign name, opening name modal before save');
+      console.log('❌ [SwiperEditor] Invalid campaign name, opening name modal before save');
       setIsNameModalOpen(true);
       return;
     }
@@ -3394,11 +3419,11 @@ const handleSaveCampaignName = useCallback(async () => {
             // Forcer la mise à jour
             _updatedAt: Date.now()
           },
-          // Appliquer aussi aux styles du quiz
-          quizConfig: {
-            ...(currentConfig.design?.quizConfig || {}),
+          // Appliquer aussi aux styles du swiper
+          swiperConfig: {
+            ...(currentConfig.design?.swiperConfig || {}),
             style: {
-              ...(currentConfig.design?.quizConfig?.style || {}),
+              ...(currentConfig.design?.swiperConfig?.style || {}),
               buttonBackgroundColor: (primaryColor.startsWith('#') ? primaryColor : toHex(primaryRgb)),
               buttonTextColor: buttonText,
               buttonHoverBackgroundColor: hoverHex,
@@ -3614,9 +3639,7 @@ const handleSaveCampaignName = useCallback(async () => {
       className="min-h-screen w-full"
       style={{
         padding: showFunnel ? '0' : (isWindowMobile ? '9px' : '0 9px 9px 9px'),
-        boxSizing: 'border-box',
-        background: 'linear-gradient(180deg, rgba(59, 56, 135, 0.855), rgba(156, 26, 96, 0.72), rgba(195, 85, 70, 0.775), rgba(156, 26, 96, 0.72))',
-        minHeight: '100vh'
+        boxSizing: 'border-box'
       }}
     >
       {!showFunnel && <EditorHeader />}
@@ -3690,10 +3713,10 @@ const handleSaveCampaignName = useCallback(async () => {
                   {editorMode === 'article' ? (
                     <PreviewRenderer
                       articleConfig={getArticleConfigWithDefaults(campaignState, campaignData)}
-                      campaignType={(campaignState as any)?.type || 'quiz'}
+                      campaignType={(campaignState as any)?.type || 'swiper'}
                       campaign={campaignData}
                       wheelModalConfig={wheelModalConfig}
-                      gameModalConfig={quizModalConfig}
+                      gameModalConfig={swiperModalConfig}
                       currentStep={currentStep}
                       editable={false}
                       formFields={(campaignState as any)?.formFields}
@@ -3718,10 +3741,10 @@ const handleSaveCampaignName = useCallback(async () => {
               editorMode === 'article' ? (
                 <PreviewRenderer
                   articleConfig={getArticleConfigWithDefaults(campaignState, campaignData)}
-                  campaignType={(campaignState as any)?.type || 'quiz'}
+                  campaignType={(campaignState as any)?.type || 'swiper'}
                   campaign={campaignData}
                   wheelModalConfig={wheelModalConfig}
-                  gameModalConfig={quizModalConfig}
+                  gameModalConfig={swiperModalConfig}
                   currentStep={currentStep}
                   editable={false}
                   formFields={(campaignState as any)?.formFields}
@@ -3762,12 +3785,16 @@ const handleSaveCampaignName = useCallback(async () => {
                 // Modular editor wiring
                 currentScreen={currentScreen}
                 onAddModule={handleAddModule}
+                // Article mode result props
+                currentGameResult={currentGameResult}
+                onGameResultChange={setCurrentGameResult}
+                onArticleStepChange={setCurrentStep}
                 showAnimationsPanel={showAnimationsInSidebar}
                 onAnimationsPanelChange={setShowAnimationsInSidebar}
                 showPositionPanel={showPositionInSidebar}
                 onPositionPanelChange={setShowPositionInSidebar}
-                showQuizPanel={showQuizPanel}
-                onQuizPanelChange={setShowQuizPanel}
+                showSwiperPanel={showSwiperPanel}
+                onSwiperPanelChange={setShowSwiperPanel}
                 showDesignPanel={showDesignInSidebar}
                 onDesignPanelChange={setShowDesignInSidebar}
                 activeTab={activeSidebarTab}
@@ -3795,45 +3822,45 @@ const handleSaveCampaignName = useCallback(async () => {
                 // Modules de l'écran actuel pour le panneau de calques
                 modules={modularPage.screens[currentScreen] || []}
                 onModuleDelete={handleDeleteModule}
-                // Quiz config props for HybridSidebar
-                quizQuestionCount={quizConfig.questionCount}
-                quizTimeLimit={quizConfig.timeLimit}
-                quizDifficulty={quizConfig.difficulty}
-                quizBorderRadius={quizConfig.borderRadius}
-                selectedQuizTemplate={quizConfig.templateId}
-                onQuizQuestionCountChange={(count) => setQuizConfig(prev => ({ ...prev, questionCount: count }))}
-                onQuizTimeLimitChange={(time) => setQuizConfig(prev => ({ ...prev, timeLimit: time }))}
-                onQuizDifficultyChange={(difficulty) => setQuizConfig(prev => ({ ...prev, difficulty }))}
-                onQuizBorderRadiusChange={(borderRadius) => {
-                  setQuizConfig(prev => ({ ...prev, borderRadius }));
+                // Swiper config props for HybridSidebar
+                swiperQuestionCount={swiperConfig.questionCount}
+                swiperTimeLimit={swiperConfig.timeLimit}
+                swiperDifficulty={swiperConfig.difficulty}
+                swiperBorderRadius={swiperConfig.borderRadius}
+                selectedSwiperTemplate={swiperConfig.templateId}
+                onSwiperQuestionCountChange={(count) => setSwiperConfig(prev => ({ ...prev, questionCount: count }))}
+                onSwiperTimeLimitChange={(time) => setSwiperConfig(prev => ({ ...prev, timeLimit: time }))}
+                onSwiperDifficultyChange={(difficulty) => setSwiperConfig(prev => ({ ...prev, difficulty }))}
+                onSwiperBorderRadiusChange={(borderRadius) => {
+                  setSwiperConfig(prev => ({ ...prev, borderRadius }));
                   updateCanvasElementsBorderRadius(borderRadius);
                 }}
-                onQuizTemplateChange={(templateId) => {
-                  console.log('🎯 Changement de template quiz:', templateId);
+                onSwiperTemplateChange={(templateId) => {
+                  console.log('🎯 Changement de template swiper:', templateId);
                   const { desktop, mobile } = getTemplateBaseWidths(templateId);
 
-                  setQuizConfig(prev => ({
+                  setSwiperConfig(prev => ({
                     ...prev,
                     templateId
                   }));
 
                   try {
-                    const event = new CustomEvent('quizStyleUpdate', {
+                    const event = new CustomEvent('swiperStyleUpdate', {
                       detail: { width: desktop, mobileWidth: mobile }
                     });
-                    (document.getElementById('quiz-preview-container') || window).dispatchEvent(event);
+                    (document.getElementById('swiper-preview-container') || window).dispatchEvent(event);
                   } catch (error) {
-                    console.error('❌ Erreur lors de la diffusion de quizStyleUpdate après changement de template:', error);
+                    console.error('❌ Erreur lors de la diffusion de swiperStyleUpdate après changement de template:', error);
                   }
                 }}
-                // Gestion de la largeur du quiz
-                quizWidth={typeof quizConfig.width === 'string' ? quizConfig.width : initialTemplateWidths.desktop}
-                onQuizWidthChange={(width) => {
+                // Gestion de la largeur du swiper
+                swiperWidth={typeof swiperConfig.width === 'string' ? swiperConfig.width : initialTemplateWidths.desktop}
+                onSwiperWidthChange={(width) => {
                   // S'assurer que width est une chaîne avec 'px' à la fin
                   const normalizedWidth = width.endsWith('px') ? width : `${width}px`;
-                  console.log('🔄 Mise à jour de la largeur du quiz:', normalizedWidth);
+                  console.log('🔄 Mise à jour de la largeur du swiper:', normalizedWidth);
                   
-                  setQuizConfig(prev => ({ ...prev, width: normalizedWidth }));
+                  setSwiperConfig(prev => ({ ...prev, width: normalizedWidth }));
                   
                   // Mettre à jour campaignConfig
                   setCampaignConfig((current: any) => {
@@ -3841,10 +3868,10 @@ const handleSaveCampaignName = useCallback(async () => {
                       ...current,
                       design: {
                         ...current.design,
-                        quizConfig: {
-                          ...current.design.quizConfig,
+                        swiperConfig: {
+                          ...current.design.swiperConfig,
                           style: {
-                            ...(current.design.quizConfig?.style || {}),
+                            ...(current.design.swiperConfig?.style || {}),
                             width: normalizedWidth
                           }
                         }
@@ -3856,12 +3883,12 @@ const handleSaveCampaignName = useCallback(async () => {
                   
                   // Créer et dispatcher l'événement personnalisé
                   try {
-                    const event = new CustomEvent('quizStyleUpdate', {
+                    const event = new CustomEvent('swiperStyleUpdate', {
                       detail: { width }
                     });
                     
                     const logData = {
-                      type: 'quizStyleUpdate',
+                      type: 'swiperStyleUpdate',
                       detail: { width },
                       timestamp: new Date().toISOString(),
                       target: 'window',
@@ -3870,21 +3897,21 @@ const handleSaveCampaignName = useCallback(async () => {
                       composed: true
                     };
                     
-                    console.log('📤 [DesignEditorLayout] Émission de l\'événement quizStyleUpdate (width):', logData);
+                    console.log('📤 [DesignEditorLayout] Émission de l\'événement swiperStyleUpdate (width):', logData);
                     
                     // Émettre l'événement de manière synchrone
-                    const target = document.getElementById('quiz-preview-container') || window;
+                    const target = document.getElementById('swiper-preview-container') || window;
                     const eventDispatched = target.dispatchEvent(event);
                     
                     console.log('📤 [DesignEditorLayout] Événement émis avec succès:', {
                       eventDispatched,
-                      target: target === window ? 'window' : 'quiz-preview-container'
+                      target: target === window ? 'window' : 'swiper-preview-container'
                     });
                     
                     // Si l'événement n'a pas été traité, émettre un événement de secours
                     if (!eventDispatched) {
                       console.warn('⚠️ [DesignEditorLayout] L\'événement n\'a pas été traité, tentative avec un événement de secours');
-                      const fallbackEvent = new CustomEvent('quizStyleUpdateFallback', {
+                      const fallbackEvent = new CustomEvent('swiperStyleUpdateFallback', {
                         detail: { width },
                         bubbles: true,
                         cancelable: true
@@ -3892,17 +3919,17 @@ const handleSaveCampaignName = useCallback(async () => {
                       target.dispatchEvent(fallbackEvent);
                     }
                   } catch (error) {
-                    console.error('❌ Erreur lors de l\'émission de l\'événement quizStyleUpdate:', error);
+                    console.error('❌ Erreur lors de l\'émission de l\'événement swiperStyleUpdate:', error);
                   }
                 }}
-                // Gestion de la largeur mobile du quiz
-                quizMobileWidth={typeof quizConfig.mobileWidth === 'string' ? quizConfig.mobileWidth : initialTemplateWidths.mobile}
-                onQuizMobileWidthChange={(width: string) => {
+                // Gestion de la largeur mobile du swiper
+                swiperMobileWidth={typeof swiperConfig.mobileWidth === 'string' ? swiperConfig.mobileWidth : initialTemplateWidths.mobile}
+                onSwiperMobileWidthChange={(width: string) => {
                   // S'assurer que width est une chaîne avec 'px' à la fin
                   const normalizedWidth = width.endsWith('px') ? width : `${width}px`;
-                  console.log('🔄 Mise à jour de la largeur mobile du quiz:', normalizedWidth);
+                  console.log('🔄 Mise à jour de la largeur mobile du swiper:', normalizedWidth);
                   
-                  setQuizConfig(prev => ({ ...prev, mobileWidth: normalizedWidth }));
+                  setSwiperConfig(prev => ({ ...prev, mobileWidth: normalizedWidth }));
                   
                   // Mettre à jour campaignConfig
                   setCampaignConfig((current: any) => {
@@ -3910,10 +3937,10 @@ const handleSaveCampaignName = useCallback(async () => {
                       ...current,
                       design: {
                         ...current.design,
-                        quizConfig: {
-                          ...current.design.quizConfig,
+                        swiperConfig: {
+                          ...current.design.swiperConfig,
                           style: {
-                            ...(current.design.quizConfig?.style || {}),
+                            ...(current.design.swiperConfig?.style || {}),
                             mobileWidth: normalizedWidth
                           }
                         }
@@ -3925,12 +3952,12 @@ const handleSaveCampaignName = useCallback(async () => {
                   
                   // Créer et dispatcher l'événement personnalisé
                   try {
-                    const event = new CustomEvent('quizStyleUpdate', {
+                    const event = new CustomEvent('swiperStyleUpdate', {
                       detail: { mobileWidth: width }
                     });
                     
                     const logData = {
-                      type: 'quizStyleUpdate',
+                      type: 'swiperStyleUpdate',
                       detail: { mobileWidth: width },
                       timestamp: new Date().toISOString(),
                       target: 'window',
@@ -3939,20 +3966,20 @@ const handleSaveCampaignName = useCallback(async () => {
                       composed: true
                     };
                     
-                    console.log('📤 [DesignEditorLayout] Émission de l\'événement quizStyleUpdate (mobileWidth):', logData);
+                    console.log('📤 [DesignEditorLayout] Émission de l\'événement swiperStyleUpdate (mobileWidth):', logData);
                     
                     // Émettre l'événement de manière synchrone
-                    const target = document.getElementById('quiz-preview-container') || window;
+                    const target = document.getElementById('swiper-preview-container') || window;
                     const eventDispatched = target.dispatchEvent(event);
                     
-                    console.log('✅ [DesignEditorLayout] Événement quizStyleUpdate (mobileWidth) émis avec succès:', eventDispatched);
+                    console.log('✅ [DesignEditorLayout] Événement swiperStyleUpdate (mobileWidth) émis avec succès:', eventDispatched);
                   } catch (error) {
-                    console.error('❌ Erreur lors de l\'émission de l\'événement quizStyleUpdate (mobileWidth):', error);
+                    console.error('❌ Erreur lors de l\'émission de l\'événement swiperStyleUpdate (mobileWidth):', error);
                   }
                 }}
                 // Gestion des couleurs des boutons
                 onButtonBackgroundColorChange={(color) => {
-                  setQuizConfig(prev => ({
+                  setSwiperConfig(prev => ({
                     ...prev,
                     buttonBackgroundColor: color,
                     // Mettre à jour automatiquement la couleur de survol si elle n'a pas été personnalisée
@@ -3968,10 +3995,10 @@ const handleSaveCampaignName = useCallback(async () => {
                     ...current,
                     design: {
                       ...current.design,
-                      quizConfig: {
-                        ...current.design.quizConfig,
+                      swiperConfig: {
+                        ...current.design.swiperConfig,
                         style: {
-                          ...(current.design.quizConfig?.style || {}),
+                          ...(current.design.swiperConfig?.style || {}),
                           buttonBackgroundColor: color
                         }
                       }
@@ -3979,16 +4006,16 @@ const handleSaveCampaignName = useCallback(async () => {
                   }));
                 }}
                 onButtonTextColorChange={(color) => {
-                  setQuizConfig(prev => ({ ...prev, buttonTextColor: color }));
+                  setSwiperConfig(prev => ({ ...prev, buttonTextColor: color }));
                   // Mettre à jour campaignConfig
                   setCampaignConfig((current: any) => ({
                     ...current,
                     design: {
                       ...current.design,
-                      quizConfig: {
-                        ...current.design.quizConfig,
+                      swiperConfig: {
+                        ...current.design.swiperConfig,
                         style: {
-                          ...(current.design.quizConfig?.style || {}),
+                          ...(current.design.swiperConfig?.style || {}),
                           buttonTextColor: color
                         }
                       }
@@ -3996,7 +4023,7 @@ const handleSaveCampaignName = useCallback(async () => {
                   }));
                 }}
                 onButtonHoverBackgroundColorChange={(color) => {
-                  setQuizConfig(prev => ({
+                  setSwiperConfig(prev => ({
                     ...prev,
                     buttonHoverBackgroundColor: color,
                     // Mettre à jour automatiquement la couleur active si elle n'a pas été personnalisée
@@ -4009,10 +4036,10 @@ const handleSaveCampaignName = useCallback(async () => {
                     ...current,
                     design: {
                       ...current.design,
-                      quizConfig: {
-                        ...current.design.quizConfig,
+                      swiperConfig: {
+                        ...current.design.swiperConfig,
                         style: {
-                          ...(current.design.quizConfig?.style || {}),
+                          ...(current.design.swiperConfig?.style || {}),
                           buttonHoverBackgroundColor: color
                         }
                       }
@@ -4020,16 +4047,16 @@ const handleSaveCampaignName = useCallback(async () => {
                   }));
                 }}
                 onButtonActiveBackgroundColorChange={(color) => {
-                  setQuizConfig(prev => ({ ...prev, buttonActiveBackgroundColor: color }));
+                  setSwiperConfig(prev => ({ ...prev, buttonActiveBackgroundColor: color }));
                   // Mettre à jour campaignConfig
                   setCampaignConfig((current: any) => ({
                     ...current,
                     design: {
                       ...current.design,
-                      quizConfig: {
-                        ...current.design.quizConfig,
+                      swiperConfig: {
+                        ...current.design.swiperConfig,
                         style: {
-                          ...(current.design.quizConfig?.style || {}),
+                          ...(current.design.swiperConfig?.style || {}),
                           buttonActiveBackgroundColor: color
                         }
                       }
@@ -4037,10 +4064,10 @@ const handleSaveCampaignName = useCallback(async () => {
                   }));
                 }}
                 // Passer les couleurs actuelles
-                buttonBackgroundColor={quizConfig.buttonBackgroundColor}
-                buttonTextColor={quizConfig.buttonTextColor}
-                buttonHoverBackgroundColor={quizConfig.buttonHoverBackgroundColor}
-                buttonActiveBackgroundColor={quizConfig.buttonActiveBackgroundColor}
+                buttonBackgroundColor={swiperConfig.buttonBackgroundColor}
+                buttonTextColor={swiperConfig.buttonTextColor}
+                buttonHoverBackgroundColor={swiperConfig.buttonHoverBackgroundColor}
+                buttonActiveBackgroundColor={swiperConfig.buttonActiveBackgroundColor}
                 onForceElementsTab={() => {
                   // Utiliser la référence pour changer l'onglet actif
                   if (sidebarRef.current) {
@@ -4083,10 +4110,10 @@ const handleSaveCampaignName = useCallback(async () => {
                     {editorMode === 'article' && (
                       <PreviewRenderer
                         articleConfig={getArticleConfigWithDefaults(campaignState, campaignData)}
-                        campaignType={(campaignState as any)?.type || 'quiz'}
+                        campaignType={(campaignState as any)?.type || 'swiper'}
                         campaign={campaignData}
-                        wheelModalConfig={quizModalConfig}
-                        gameModalConfig={quizModalConfig}
+                        wheelModalConfig={swiperModalConfig}
+                        gameModalConfig={swiperModalConfig}
                         currentStep={currentStep}
                         editable={true}
                         formFields={(campaignState as any)?.formFields}
@@ -4150,6 +4177,30 @@ const handleSaveCampaignName = useCallback(async () => {
                         onFormSubmit={handleFormSubmit}
                         onGameComplete={handleGameComplete}
                         onStepChange={setCurrentStep}
+                        currentGameResult={currentGameResult}
+                        onGameResultChange={setCurrentGameResult}
+                        onWinnerContentChange={(content) => {
+                          if (campaignState) {
+                            setCampaign({
+                              ...campaignState,
+                              articleConfig: {
+                                ...(campaignState as any).articleConfig,
+                                winnerContent: content,
+                              },
+                            });
+                          }
+                        }}
+                        onLoserContentChange={(content) => {
+                          if (campaignState) {
+                            setCampaign({
+                              ...campaignState,
+                              articleConfig: {
+                                ...(campaignState as any).articleConfig,
+                                loserContent: content,
+                              },
+                            });
+                          }
+                        }}
                       />
                     )}
                   </div>
@@ -4171,11 +4222,11 @@ const handleSaveCampaignName = useCallback(async () => {
                     selectedElements={selectedElements}
                     onSelectedElementsChange={setSelectedElements}
                     onElementUpdate={handleElementUpdate}
-                    // Quiz sync props
+                    // Swiper sync props
                     extractedColors={extractedColors}
-                    quizModalConfig={quizModalConfig}
+                    swiperModalConfig={swiperModalConfig}
                     containerClassName={mode === 'template' ? 'bg-gray-50' : undefined}
-                    hideInlineQuizPreview
+                    hideInlineSwiperPreview
                     elementFilter={(element: any) => {
                       const role = typeof element?.role === 'string' ? element.role.toLowerCase() : '';
                       return !role.includes('exit-message');
@@ -4231,9 +4282,9 @@ const handleSaveCampaignName = useCallback(async () => {
                     onRedo={redo}
                     canUndo={canUndo}
                     canRedo={canRedo}
-                    // Quiz panels
-                    showQuizPanel={showQuizPanel}
-                    onQuizPanelChange={setShowQuizPanel}
+                    // Swiper panels
+                    showSwiperPanel={showSwiperPanel}
+                    onSwiperPanelChange={setShowSwiperPanel}
                     // Modular page (screen1)
                     modularModules={modularPage.screens.screen1}
                     onModuleUpdate={handleUpdateModule}
@@ -4243,10 +4294,112 @@ const handleSaveCampaignName = useCallback(async () => {
                   />
                 </div>
                 
-                {/* Deuxième Canvas - Seulement en mode Fullscreen - VIDE pour ReferenceEditor */}
+                {/* Deuxième Canvas - Seulement en mode Fullscreen */}
                 {editorMode === 'fullscreen' && (
                 <div className="mt-4 relative" data-screen-anchor="screen2">
-                  <EmptyGamePreview />
+                  {/* Background pour éviter la transparence de la bande magenta */}
+                  <div 
+                    className="absolute inset-0 z-0"
+                    style={{
+                      background: canvasBackground.type === 'image'
+                        ? `url(${canvasBackground.value}) center/cover no-repeat`
+                        : canvasBackground.value || 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)'
+                    }}
+                  />
+                  {/* Background supplémentaire pour l'espace entre les canvas */}
+                  <div 
+                    className="absolute -top-4 left-0 right-0 h-4 z-0"
+                    style={{
+                      background: '#ffffff'
+                    }}
+                  />
+                  <div className="relative z-10">
+                    <DesignCanvas
+                      editorMode={editorMode}
+                      screenId="screen2"
+                      selectedDevice={selectedDevice}
+                      elements={canvasElements}
+                      onElementsChange={setCanvasElements}
+                      background={screenBackgrounds.screen2?.devices?.[selectedDevice] || screenBackgrounds.screen2}
+                      campaign={campaignData}
+                      onCampaignChange={handleCampaignConfigChange}
+                      zoom={canvasZoom}
+                      onZoomChange={setCanvasZoom}
+                      enableInternalAutoFit={true}
+                      selectedElement={selectedElement}
+                      onSelectedElementChange={setSelectedElement}
+                      selectedElements={selectedElements}
+                      onSelectedElementsChange={setSelectedElements}
+                      onElementUpdate={handleElementUpdate}
+                      // Swiper sync props
+                      extractedColors={extractedColors}
+                      swiperModalConfig={swiperModalConfig}
+                      containerClassName={mode === 'template' ? 'bg-gray-50' : undefined}
+                      elementFilter={(element: any) => {
+                        const role = typeof element?.role === 'string' ? element.role.toLowerCase() : '';
+                        return !role.includes('exit-message');
+                      }}
+                      // Sidebar panel triggers
+                      onShowEffectsPanel={() => {
+                        if (!isWindowMobile) {
+                          setShowEffectsInSidebar(true);
+                          setShowAnimationsInSidebar(false);
+                          setShowPositionInSidebar(false);
+                        }
+                      }}
+                      onShowAnimationsPanel={() => {
+                        if (!isWindowMobile) {
+                          setShowAnimationsInSidebar(true);
+                          setShowEffectsInSidebar(false);
+                          setShowPositionInSidebar(false);
+                        }
+                      }}
+                      onShowDesignPanel={(context?: 'fill' | 'border' | 'text') => {
+                        // Met à jour le contexte immédiatement même si le panneau est déjà ouvert
+                        if (context) {
+                          setDesignColorContext(context);
+                        }
+                        // Toujours ouvrir/forcer l'onglet Design
+                        setShowDesignInSidebar(true);
+                        setShowEffectsInSidebar(false);
+                        setShowAnimationsInSidebar(false);
+                        setShowPositionInSidebar(false);
+
+                        if (sidebarRef.current) {
+                          sidebarRef.current.setActiveTab('background');
+                        }
+                      }}
+                      onOpenElementsTab={() => {
+                        // Utiliser la même logique que onForceElementsTab
+                        if (sidebarRef.current) {
+                          sidebarRef.current.setActiveTab('elements');
+                        }
+                        // Fermer les autres panneaux
+                        setShowAnimationsInSidebar(false);
+                        setShowPositionInSidebar(false);
+                      }}
+                      // Mobile sidebar integrations
+                      onAddElement={handleAddElement}
+                      onBackgroundChange={handleBackgroundChange}
+                      onExtractedColorsChange={handleExtractedColorsChange}
+                      // Group selection wiring
+                      selectedGroupId={selectedGroupId as any}
+                      onSelectedGroupChange={setSelectedGroupId as any}
+                      onUndo={undo}
+                      onRedo={redo}
+                      canUndo={canUndo}
+                      canRedo={canRedo}
+                      // Swiper panels
+                      showSwiperPanel={showSwiperPanel}
+                      onSwiperPanelChange={setShowSwiperPanel}
+                      // Modular page (screen2)
+                      modularModules={modularPage.screens.screen2}
+                      onModuleUpdate={handleUpdateModule}
+                      onModuleDelete={handleDeleteModule}
+                      onModuleMove={handleMoveModule}
+                      onModuleDuplicate={handleDuplicateModule}
+                    />
+                  </div>
                 </div>
                 )}
 
@@ -4287,9 +4440,9 @@ const handleSaveCampaignName = useCallback(async () => {
                       selectedElements={selectedElements}
                       onSelectedElementsChange={setSelectedElements}
                       onElementUpdate={handleElementUpdate}
-                      // Quiz sync props
+                      // Swiper sync props
                       extractedColors={extractedColors}
-                      quizModalConfig={quizModalConfig}
+                      swiperModalConfig={swiperModalConfig}
                       containerClassName={mode === 'template' ? 'bg-gray-50' : undefined}
                       elementFilter={(element: any) => {
                         const role = typeof element?.role === 'string' ? element.role.toLowerCase() : '';
@@ -4354,9 +4507,9 @@ const handleSaveCampaignName = useCallback(async () => {
                       onRedo={redo}
                       canUndo={canUndo}
                       canRedo={canRedo}
-                      // Quiz panels
-                      showQuizPanel={showQuizPanel}
-                      onQuizPanelChange={setShowQuizPanel}
+                      // Swiper panels
+                      showSwiperPanel={showSwiperPanel}
+                      onSwiperPanelChange={setShowSwiperPanel}
                       // Modular page (screen3)
                       modularModules={modularPage.screens.screen3}
                       onModuleUpdate={handleUpdateModule}
@@ -4438,7 +4591,7 @@ const handleSaveCampaignName = useCallback(async () => {
                 type="text"
                 value={newCampaignName}
                 onChange={(e) => setNewCampaignName(e.target.value)}
-                placeholder="Ex: Quiz Black Friday"
+                placeholder="Ex: Swiper Black Friday"
                 className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#44444d]"
                 autoFocus
               />
@@ -4470,7 +4623,11 @@ const handleSaveCampaignName = useCallback(async () => {
         onDeviceChange={setFullScreenPreviewDevice}
       >
         <div className="w-full h-full overflow-hidden bg-white">
-          <EmptyGamePreview />
+          <GameCanvasPreview
+            campaign={campaignData}
+            previewDevice={fullScreenPreviewDevice}
+            key={`canvas-preview-${fullScreenPreviewDevice}-${(campaignData as any)?.type}`}
+          />
         </div>
       </FullScreenPreviewModal>
     </MobileStableEditor>
@@ -4478,4 +4635,4 @@ const handleSaveCampaignName = useCallback(async () => {
 );
 };
 /* ... */
-export default QuizEditorLayout;
+export default SwiperEditorLayout;
