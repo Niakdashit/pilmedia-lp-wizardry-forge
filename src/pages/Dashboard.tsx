@@ -64,9 +64,9 @@ const Dashboard: React.FC = () => {
         </div>
 
         {/* Contenu des onglets */}
-        <div className="px-6 sm:px-8 lg:px-10 py-6">
+        <div className="px-6 sm:px-8 lg:px-10 py-6 overflow-hidden">
           {activeTab === 'campaigns' && (
-            <div className="space-y-8">
+            <div className="space-y-8 overflow-hidden">
               <RecentCampaigns />
             </div>
           )}

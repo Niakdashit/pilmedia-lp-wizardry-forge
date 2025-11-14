@@ -14,6 +14,110 @@ export type Database = {
   }
   public: {
     Tables: {
+      attribution_history: {
+        Row: {
+          campaign_id: string
+          created_at: string
+          device_fingerprint: string | null
+          id: string
+          ip_address: unknown
+          participant_email: string | null
+          participant_id: string | null
+          prize_id: string
+          result: Json
+          user_agent: string | null
+        }
+        Insert: {
+          campaign_id: string
+          created_at?: string
+          device_fingerprint?: string | null
+          id?: string
+          ip_address?: unknown
+          participant_email?: string | null
+          participant_id?: string | null
+          prize_id: string
+          result: Json
+          user_agent?: string | null
+        }
+        Update: {
+          campaign_id?: string
+          created_at?: string
+          device_fingerprint?: string | null
+          id?: string
+          ip_address?: unknown
+          participant_email?: string | null
+          participant_id?: string | null
+          prize_id?: string
+          result?: Json
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attribution_history_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      brand_kits: {
+        Row: {
+          animations: Json
+          assets: Json
+          buttons: Json
+          colors: Json
+          created_at: string | null
+          description: string | null
+          id: string
+          industry: string
+          metadata: Json
+          name: string
+          organization_id: string | null
+          shadows: Json
+          spacing: Json
+          typography: Json
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          animations?: Json
+          assets?: Json
+          buttons?: Json
+          colors?: Json
+          created_at?: string | null
+          description?: string | null
+          id: string
+          industry: string
+          metadata?: Json
+          name: string
+          organization_id?: string | null
+          shadows?: Json
+          spacing?: Json
+          typography?: Json
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          animations?: Json
+          assets?: Json
+          buttons?: Json
+          colors?: Json
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          industry?: string
+          metadata?: Json
+          name?: string
+          organization_id?: string | null
+          shadows?: Json
+          spacing?: Json
+          typography?: Json
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       campaign_audit_logs: {
         Row: {
           action: string
@@ -159,6 +263,7 @@ export type Database = {
           campaign_url: string | null
           created_at: string | null
           data_push: Json | null
+          dotation: Json | null
           email_verification: Json | null
           end_date: string | null
           end_time: string | null
@@ -186,6 +291,7 @@ export type Database = {
           campaign_url?: string | null
           created_at?: string | null
           data_push?: Json | null
+          dotation?: Json | null
           email_verification?: Json | null
           end_date?: string | null
           end_time?: string | null
@@ -213,6 +319,7 @@ export type Database = {
           campaign_url?: string | null
           created_at?: string | null
           data_push?: Json | null
+          dotation?: Json | null
           email_verification?: Json | null
           end_date?: string | null
           end_time?: string | null
@@ -389,6 +496,7 @@ export type Database = {
         Row: {
           article_config: Json | null
           banner_url: string | null
+          brand_kit_id: string | null
           config: Json
           created_at: string | null
           created_by: string | null
@@ -405,6 +513,7 @@ export type Database = {
           slug: string
           start_date: string | null
           status: Database["public"]["Enums"]["campaign_status"]
+          template_id: string | null
           thumbnail_url: string | null
           total_participants: number | null
           total_views: number | null
@@ -414,6 +523,7 @@ export type Database = {
         Insert: {
           article_config?: Json | null
           banner_url?: string | null
+          brand_kit_id?: string | null
           config?: Json
           created_at?: string | null
           created_by?: string | null
@@ -430,6 +540,7 @@ export type Database = {
           slug: string
           start_date?: string | null
           status?: Database["public"]["Enums"]["campaign_status"]
+          template_id?: string | null
           thumbnail_url?: string | null
           total_participants?: number | null
           total_views?: number | null
@@ -439,6 +550,7 @@ export type Database = {
         Update: {
           article_config?: Json | null
           banner_url?: string | null
+          brand_kit_id?: string | null
           config?: Json
           created_at?: string | null
           created_by?: string | null
@@ -455,6 +567,7 @@ export type Database = {
           slug?: string
           start_date?: string | null
           status?: Database["public"]["Enums"]["campaign_status"]
+          template_id?: string | null
           thumbnail_url?: string | null
           total_participants?: number | null
           total_views?: number | null
@@ -463,10 +576,118 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "campaigns_brand_kit_id_fkey"
+            columns: ["brand_kit_id"]
+            isOneToOne: false
+            referencedRelation: "brand_kits"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "campaigns_created_by_fkey"
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaigns_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dotation_configs: {
+        Row: {
+          anti_fraud: Json | null
+          campaign_id: string
+          created_at: string
+          global_strategy: Json | null
+          id: string
+          notifications: Json | null
+          prizes: Json
+          updated_at: string
+        }
+        Insert: {
+          anti_fraud?: Json | null
+          campaign_id: string
+          created_at?: string
+          global_strategy?: Json | null
+          id?: string
+          notifications?: Json | null
+          prizes?: Json
+          updated_at?: string
+        }
+        Update: {
+          anti_fraud?: Json | null
+          campaign_id?: string
+          created_at?: string
+          global_strategy?: Json | null
+          id?: string
+          notifications?: Json | null
+          prizes?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dotation_configs_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: true
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dotation_stats: {
+        Row: {
+          attribution_rate: number
+          campaign_id: string
+          id: string
+          last_updated: string
+          prize_stats: Json
+          total_awarded: number
+          total_participants: number
+          total_prizes: number
+          total_quantity: number
+          total_remaining: number
+          total_winners: number
+          win_rate: number
+        }
+        Insert: {
+          attribution_rate?: number
+          campaign_id: string
+          id?: string
+          last_updated?: string
+          prize_stats?: Json
+          total_awarded?: number
+          total_participants?: number
+          total_prizes?: number
+          total_quantity?: number
+          total_remaining?: number
+          total_winners?: number
+          win_rate?: number
+        }
+        Update: {
+          attribution_rate?: number
+          campaign_id?: string
+          id?: string
+          last_updated?: string
+          prize_stats?: Json
+          total_awarded?: number
+          total_participants?: number
+          total_prizes?: number
+          total_quantity?: number
+          total_remaining?: number
+          total_winners?: number
+          win_rate?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dotation_stats_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: true
+            referencedRelation: "campaigns"
             referencedColumns: ["id"]
           },
         ]
@@ -511,6 +732,248 @@ export type Database = {
             columns: ["campaign_id"]
             isOneToOne: false
             referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      media_ad_placements: {
+        Row: {
+          available_slots: number | null
+          created_at: string | null
+          description: string | null
+          estimated_visibility: number | null
+          format: string | null
+          id: string
+          media_id: string | null
+          name: string
+          position: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          available_slots?: number | null
+          created_at?: string | null
+          description?: string | null
+          estimated_visibility?: number | null
+          format?: string | null
+          id?: string
+          media_id?: string | null
+          name: string
+          position?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          available_slots?: number | null
+          created_at?: string | null
+          description?: string | null
+          estimated_visibility?: number | null
+          format?: string | null
+          id?: string
+          media_id?: string | null
+          name?: string
+          position?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "media_ad_placements_media_id_fkey"
+            columns: ["media_id"]
+            isOneToOne: false
+            referencedRelation: "media_partners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      media_campaigns: {
+        Row: {
+          campaign_id: string | null
+          clicks: number | null
+          conversions: number | null
+          created_at: string | null
+          end_date: string | null
+          id: string
+          media_id: string | null
+          partnership_request_id: string | null
+          revenue: number | null
+          start_date: string | null
+          status: string | null
+          updated_at: string | null
+          views: number | null
+        }
+        Insert: {
+          campaign_id?: string | null
+          clicks?: number | null
+          conversions?: number | null
+          created_at?: string | null
+          end_date?: string | null
+          id?: string
+          media_id?: string | null
+          partnership_request_id?: string | null
+          revenue?: number | null
+          start_date?: string | null
+          status?: string | null
+          updated_at?: string | null
+          views?: number | null
+        }
+        Update: {
+          campaign_id?: string | null
+          clicks?: number | null
+          conversions?: number | null
+          created_at?: string | null
+          end_date?: string | null
+          id?: string
+          media_id?: string | null
+          partnership_request_id?: string | null
+          revenue?: number | null
+          start_date?: string | null
+          status?: string | null
+          updated_at?: string | null
+          views?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "media_campaigns_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "media_campaigns_media_id_fkey"
+            columns: ["media_id"]
+            isOneToOne: false
+            referencedRelation: "media_partners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "media_campaigns_partnership_request_id_fkey"
+            columns: ["partnership_request_id"]
+            isOneToOne: false
+            referencedRelation: "partnership_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      media_partners: {
+        Row: {
+          age_range: string | null
+          audience_size: number | null
+          category: string | null
+          contact_address: string | null
+          contact_email: string | null
+          contact_phone: string | null
+          created_at: string | null
+          description: string | null
+          gender_distribution: Json | null
+          id: string
+          interests: Json | null
+          location: string | null
+          logo_url: string | null
+          member_since: string | null
+          monthly_visitors: number | null
+          name: string
+          partnerships_count: number | null
+          rating: number | null
+          status: string | null
+          updated_at: string | null
+          user_id: string | null
+          website: string | null
+        }
+        Insert: {
+          age_range?: string | null
+          audience_size?: number | null
+          category?: string | null
+          contact_address?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string | null
+          description?: string | null
+          gender_distribution?: Json | null
+          id?: string
+          interests?: Json | null
+          location?: string | null
+          logo_url?: string | null
+          member_since?: string | null
+          monthly_visitors?: number | null
+          name: string
+          partnerships_count?: number | null
+          rating?: number | null
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          website?: string | null
+        }
+        Update: {
+          age_range?: string | null
+          audience_size?: number | null
+          category?: string | null
+          contact_address?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string | null
+          description?: string | null
+          gender_distribution?: Json | null
+          id?: string
+          interests?: Json | null
+          location?: string | null
+          logo_url?: string | null
+          member_since?: string | null
+          monthly_visitors?: number | null
+          name?: string
+          partnerships_count?: number | null
+          rating?: number | null
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          website?: string | null
+        }
+        Relationships: []
+      }
+      media_partnership_conditions: {
+        Row: {
+          created_at: string | null
+          dotation_types: Json | null
+          duration_max: number | null
+          duration_min: number | null
+          id: string
+          max_dotation_value: number | null
+          media_id: string | null
+          min_dotation_value: number | null
+          specific_conditions: Json | null
+          updated_at: string | null
+          validation_delay: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          dotation_types?: Json | null
+          duration_max?: number | null
+          duration_min?: number | null
+          id?: string
+          max_dotation_value?: number | null
+          media_id?: string | null
+          min_dotation_value?: number | null
+          specific_conditions?: Json | null
+          updated_at?: string | null
+          validation_delay?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          dotation_types?: Json | null
+          duration_max?: number | null
+          duration_min?: number | null
+          id?: string
+          max_dotation_value?: number | null
+          media_id?: string | null
+          min_dotation_value?: number | null
+          specific_conditions?: Json | null
+          updated_at?: string | null
+          validation_delay?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "media_partnership_conditions_media_id_fkey"
+            columns: ["media_id"]
+            isOneToOne: false
+            referencedRelation: "media_partners"
             referencedColumns: ["id"]
           },
         ]
@@ -568,6 +1031,63 @@ export type Database = {
           },
         ]
       }
+      partnership_requests: {
+        Row: {
+          campaign_id: string | null
+          created_at: string | null
+          id: string
+          media_id: string | null
+          message: string | null
+          requested_at: string | null
+          requester_id: string | null
+          responded_at: string | null
+          response_message: string | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          campaign_id?: string | null
+          created_at?: string | null
+          id?: string
+          media_id?: string | null
+          message?: string | null
+          requested_at?: string | null
+          requester_id?: string | null
+          responded_at?: string | null
+          response_message?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          campaign_id?: string | null
+          created_at?: string | null
+          id?: string
+          media_id?: string | null
+          message?: string | null
+          requested_at?: string | null
+          requester_id?: string | null
+          responded_at?: string | null
+          response_message?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partnership_requests_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partnership_requests_media_id_fkey"
+            columns: ["media_id"]
+            isOneToOne: false
+            referencedRelation: "media_partners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -600,6 +1120,131 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      template_collections: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          description: string
+          id: string
+          industry: string | null
+          metadata: Json
+          name: string
+          template_ids: string[] | null
+          thumbnail: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          description: string
+          id: string
+          industry?: string | null
+          metadata?: Json
+          name: string
+          template_ids?: string[] | null
+          thumbnail?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          description?: string
+          id?: string
+          industry?: string | null
+          metadata?: Json
+          name?: string
+          template_ids?: string[] | null
+          thumbnail?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      templates: {
+        Row: {
+          background: Json
+          brand_kit_id: string | null
+          category: string
+          complexity: string
+          created_at: string | null
+          default_colors: Json
+          description: string
+          elements: Json
+          game_config: Json
+          game_type: string
+          id: string
+          industry: string
+          long_description: string | null
+          metadata: Json
+          name: string
+          organization_id: string | null
+          preview: Json
+          recommended_brand_kit: Json | null
+          stats: Json
+          tags: string[] | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          background?: Json
+          brand_kit_id?: string | null
+          category: string
+          complexity?: string
+          created_at?: string | null
+          default_colors?: Json
+          description: string
+          elements?: Json
+          game_config?: Json
+          game_type: string
+          id: string
+          industry: string
+          long_description?: string | null
+          metadata?: Json
+          name: string
+          organization_id?: string | null
+          preview?: Json
+          recommended_brand_kit?: Json | null
+          stats?: Json
+          tags?: string[] | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          background?: Json
+          brand_kit_id?: string | null
+          category?: string
+          complexity?: string
+          created_at?: string | null
+          default_colors?: Json
+          description?: string
+          elements?: Json
+          game_config?: Json
+          game_type?: string
+          id?: string
+          industry?: string
+          long_description?: string | null
+          metadata?: Json
+          name?: string
+          organization_id?: string | null
+          preview?: Json
+          recommended_brand_kit?: Json | null
+          stats?: Json
+          tags?: string[] | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "templates_brand_kit_id_fkey"
+            columns: ["brand_kit_id"]
+            isOneToOne: false
+            referencedRelation: "brand_kits"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
