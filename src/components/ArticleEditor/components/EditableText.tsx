@@ -38,6 +38,9 @@ const EditableText: React.FC<EditableTextProps> = ({
   const [showImageEditModal, setShowImageEditModal] = useState(false);
   const [showColorPalette, setShowColorPalette] = useState(false);
   const [showCustomColorPicker, setShowCustomColorPicker] = useState(false);
+  const [showSizeMenu, setShowSizeMenu] = useState(false);
+  const [showSourceModal, setShowSourceModal] = useState(false);
+  const [sourceDraft, setSourceDraft] = useState('');
   const [customColor, setCustomColor] = useState('#000000');
   const [customColorHex, setCustomColorHex] = useState('#000000');
   const [customColorHsl, setCustomColorHsl] = useState({ h: 0, s: 0, l: 0 });
@@ -113,6 +116,141 @@ const EditableText: React.FC<EditableTextProps> = ({
     });
     
     return indented.join('\n');
+  };
+
+  // Ensure a Google Font stylesheet is loaded for a given family (idempotent)
+  const ensureGoogleFontLoaded = useCallback((family: string) => {
+    try {
+      const slug = family.trim().replace(/\s+/g, '+');
+      const linkId = `gf-${slug.toLowerCase()}`;
+      if (document.getElementById(linkId)) return; // already loaded
+      const href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(family).replace(/%20/g, '+')}&display=swap`;
+      const link = document.createElement('link');
+      link.id = linkId;
+      link.rel = 'stylesheet';
+      link.href = href;
+      document.head.appendChild(link);
+    } catch {}
+  }, []);
+
+  const applyFontFamily = (family: string) => {
+    if (!editorRef.current) return;
+
+    const editor = editorRef.current;
+    const sel = window.getSelection();
+
+    let range: Range | null = null;
+    if (savedRangeRef.current) {
+      range = savedRangeRef.current;
+    } else if (sel && sel.rangeCount > 0) {
+      range = sel.getRangeAt(0);
+    }
+    if (!range) return;
+    if (!editor.contains(range.commonAncestorContainer)) return;
+
+    const selectedText = range.toString();
+    try {
+      if (selectedText && selectedText.trim().length > 0) {
+        const span = document.createElement('span');
+        span.style.fontFamily = `'${family}', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif`;
+        const fragment = range.extractContents();
+        span.appendChild(fragment);
+        range.insertNode(span);
+
+        const newRange = document.createRange();
+        newRange.setStartAfter(span);
+        newRange.collapse(true);
+        if (sel) {
+          sel.removeAllRanges();
+          sel.addRange(newRange);
+        }
+      } else {
+        let container: Node | null = range.commonAncestorContainer;
+        if (container.nodeType === Node.TEXT_NODE) container = container.parentElement;
+        let blockEl: HTMLElement | null = null;
+        while (container && editor.contains(container)) {
+          if (container instanceof HTMLElement) {
+            const tag = container.tagName;
+            const display = window.getComputedStyle(container).display;
+            if (['P','H1','H2','H3','H4','H5','H6','DIV','LI'].includes(tag) || display === 'block' || display === 'list-item') {
+              blockEl = container;
+              break;
+            }
+          }
+          container = container.parentNode;
+        }
+        if (blockEl) {
+          (blockEl as HTMLElement).style.fontFamily = `'${family}', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif`;
+        }
+      }
+
+      savedRangeRef.current = null;
+      updateContent();
+    } catch (e) {
+      console.error('❌ [applyFontFamily] Error:', e);
+    }
+  };
+
+  const applyFontSize = (px: string) => {
+    if (!editorRef.current) return;
+
+    const editor = editorRef.current;
+    const sel = window.getSelection();
+
+    // Récupérer le range (priorité à la sélection sauvegardée)
+    let range: Range | null = null;
+    if (savedRangeRef.current) {
+      range = savedRangeRef.current;
+    } else if (sel && sel.rangeCount > 0) {
+      range = sel.getRangeAt(0);
+    }
+    if (!range) return;
+    if (!editor.contains(range.commonAncestorContainer)) return;
+
+    const selectedText = range.toString();
+    try {
+      if (selectedText && selectedText.trim().length > 0) {
+        // Appliquer sur la sélection via un span inline
+        const span = document.createElement('span');
+        span.style.fontSize = px;
+        const fragment = range.extractContents();
+        span.appendChild(fragment);
+        range.insertNode(span);
+
+        // Placer le curseur après
+        const newRange = document.createRange();
+        newRange.setStartAfter(span);
+        newRange.collapse(true);
+        if (sel) {
+          sel.removeAllRanges();
+          sel.addRange(newRange);
+        }
+      } else {
+        // Pas de sélection: appliquer sur le bloc courant
+        let container: Node | null = range.commonAncestorContainer;
+        if (container.nodeType === Node.TEXT_NODE) container = container.parentElement;
+        let blockEl: HTMLElement | null = null;
+        while (container && editor.contains(container)) {
+          if (container instanceof HTMLElement) {
+            const tag = container.tagName;
+            const display = window.getComputedStyle(container).display;
+            if (['P','H1','H2','H3','H4','H5','H6','DIV','LI'].includes(tag) || display === 'block' || display === 'list-item') {
+              blockEl = container;
+              break;
+            }
+          }
+          container = container.parentNode;
+        }
+        if (blockEl) {
+          (blockEl as HTMLElement).style.fontSize = px;
+        }
+      }
+
+      savedRangeRef.current = null;
+      updateContent();
+    } catch (e) {
+      console.error('❌ [applyFontSize] Error:', e);
+    }
   };
   const updateColorFromPosition = useCallback((clientX: number, clientY: number, element: HTMLElement) => {
     const rect = element.getBoundingClientRect();
@@ -222,6 +360,27 @@ const EditableText: React.FC<EditableTextProps> = ({
     }
   }, []);
 
+  // Bridge: apply font family from the ArticleTextPanel sidebar without losing selection
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail as { family?: string } | undefined;
+      if (!detail?.family) return;
+      // Load the font stylesheet first (non-blocking)
+      ensureGoogleFontLoaded(detail.family);
+      // Try to restore the last saved selection if present
+      if (savedRangeRef.current) {
+        const sel = window.getSelection();
+        if (sel) {
+          sel.removeAllRanges();
+          sel.addRange(savedRangeRef.current);
+        }
+      }
+      applyFontFamily(detail.family);
+    };
+    window.addEventListener('article:applyFontFamily', handler as EventListener);
+    return () => window.removeEventListener('article:applyFontFamily', handler as EventListener);
+  }, [ensureGoogleFontLoaded]);
+
   useEffect(() => {
     const editor = editorRef.current;
     if (editor && !isSourceMode) {
@@ -229,6 +388,29 @@ const EditableText: React.FC<EditableTextProps> = ({
       return () => editor.removeEventListener('dblclick', handleImageDoubleClick);
     }
   }, [handleImageDoubleClick, isSourceMode]);
+
+  // Mémoriser la dernière sélection non vide dans l’éditeur
+  useEffect(() => {
+    const editor = editorRef.current;
+    if (!editor) return;
+
+    const handleSelectionUpdate = () => {
+      const sel = window.getSelection();
+      if (!sel || sel.rangeCount === 0) return;
+      const range = sel.getRangeAt(0);
+      if (!range.collapsed && editor.contains(range.commonAncestorContainer)) {
+        savedRangeRef.current = range.cloneRange();
+      }
+    };
+
+    editor.addEventListener('mouseup', handleSelectionUpdate);
+    editor.addEventListener('keyup', handleSelectionUpdate);
+
+    return () => {
+      editor.removeEventListener('mouseup', handleSelectionUpdate);
+      editor.removeEventListener('keyup', handleSelectionUpdate);
+    };
+  }, []);
 
   // Initialize and sync htmlContent with props
   useEffect(() => {
@@ -474,43 +656,84 @@ const EditableText: React.FC<EditableTextProps> = ({
 
   const applyFormat = (tag: string) => {
     if (!editorRef.current) return;
+
+    const editor = editorRef.current;
     
-    editorRef.current.focus();
-    
-    // Restore saved selection if it exists
+    console.log('🔍 [applyFormat] Called with tag:', tag);
+    console.log('🔍 [applyFormat] savedRangeRef.current:', savedRangeRef.current);
+
+    // Récupérer le range à partir de la sélection sauvegardée ou courante
+    let range: Range | null = null;
     if (savedRangeRef.current) {
-      const sel = window.getSelection();
-      if (sel) {
-        try {
-          sel.removeAllRanges();
-          sel.addRange(savedRangeRef.current);
-          
-          const selectedText = sel.toString();
-          if (selectedText) {
-            document.execCommand('removeFormat', false);
-            const html = `<${tag}>${selectedText}</${tag}>`;
-            document.execCommand('insertHTML', false, html);
-          }
-          
-          savedRangeRef.current = null;
-          updateContent();
-        } catch (e) {
-          console.error('Error applying format:', e);
-          savedRangeRef.current = null;
-        }
-      }
+      range = savedRangeRef.current;
+      console.log('✅ [applyFormat] Using savedRangeRef');
     } else {
-      // No saved range, try to work with current selection
       const sel = window.getSelection();
-      if (!sel || sel.rangeCount === 0) return;
-      
-      const selectedText = sel.toString();
-      if (selectedText) {
-        document.execCommand('removeFormat', false);
-        const html = `<${tag}>${selectedText}</${tag}>`;
-        document.execCommand('insertHTML', false, html);
-        updateContent();
+      if (sel && sel.rangeCount > 0) {
+        range = sel.getRangeAt(0);
+        console.log('⚠️ [applyFormat] Using current selection');
       }
+    }
+
+    if (!range) {
+      console.error('❌ [applyFormat] No range available');
+      return;
+    }
+
+    console.log('🔍 [applyFormat] Range:', {
+      collapsed: range.collapsed,
+      text: range.toString(),
+      startContainer: range.startContainer.nodeName,
+      endContainer: range.endContainer.nodeName
+    });
+
+    // S'assurer que le range est bien dans l'éditeur
+    if (!editor.contains(range.commonAncestorContainer)) {
+      console.error('❌ [applyFormat] Range not in editor');
+      return;
+    }
+
+    try {
+      const selectedText = range.toString();
+      console.log('🔍 [applyFormat] Selected text:', selectedText);
+
+      if (selectedText && selectedText.trim().length > 0) {
+        // 🔹 Cas A : du texte est sélectionné → on enveloppe exactement cette sélection
+        console.log('✅ [applyFormat] Applying format to selection');
+        
+        // Restaurer la sélection visuelle d'abord
+        const sel = window.getSelection();
+        if (sel) {
+          sel.removeAllRanges();
+          sel.addRange(range);
+        }
+        
+        const wrapper = document.createElement(tag);
+        const fragment = range.extractContents();
+        wrapper.appendChild(fragment);
+        range.insertNode(wrapper);
+
+        // Placer le curseur après le bloc inséré
+        const newRange = document.createRange();
+        newRange.setStartAfter(wrapper);
+        newRange.collapse(true);
+        if (sel) {
+          sel.removeAllRanges();
+          sel.addRange(newRange);
+        }
+        
+        console.log('✅ [applyFormat] Format applied successfully');
+      } else {
+        console.warn('⚠️ [applyFormat] No text selected, skipping');
+        return;
+      }
+
+      // Clear saved range after use
+      savedRangeRef.current = null;
+      
+      updateContent();
+    } catch (e) {
+      console.error('❌ [applyFormat] Error:', e);
     }
   };
 
@@ -526,35 +749,62 @@ const EditableText: React.FC<EditableTextProps> = ({
       {/* Toolbar - Uniquement visible en mode édition */}
       {editable && (
         <div 
-          className="mb-3 flex items-center gap-0.5 bg-white border border-gray-300 rounded p-1.5 flex-wrap"
+          className="mb-3 flex items-center gap-0.5 bg-white border border-gray-300 rounded p-1 whitespace-nowrap flex-nowrap"
           onMouseDown={(e) => {
             // Capture selection BEFORE any button click to prevent loss
             const sel = window.getSelection();
             if (sel && sel.rangeCount > 0) {
               const range = sel.getRangeAt(0);
-              // Only save if selection is within the editor AND not collapsed (has actual selection)
-              if (editorRef.current?.contains(range.commonAncestorContainer) && !range.collapsed) {
+              // Save if selection/caret is within the editor (even when collapsed)
+              if (editorRef.current?.contains(range.commonAncestorContainer)) {
                 savedRangeRef.current = range.cloneRange();
               }
             }
           }}
           style={{ userSelect: 'none' }}
         >
-        <select className="px-3 py-1.5 text-sm bg-white border-r border-gray-300 hover:bg-gray-50 focus:outline-none" onFocus={(e) => {
-          const sel = window.getSelection();
-          if (sel && sel.rangeCount > 0) {
-            savedRangeRef.current = sel.getRangeAt(0).cloneRange();
-          }
-        }} onChange={(e) => {
-          const tag = e.target.value;
-          if (tag) applyFormat(tag);
-        }}>
-          <option value="">Format</option>
-          <option value="p">Paragraphe</option>
-          <option value="h1">Titre 1</option>
-          <option value="h2">Titre 2</option>
-          <option value="h3">Titre 3</option>
-        </select>
+        <div className="relative inline-block">
+          <button
+            className="px-2.5 py-1 text-sm bg-white border-r border-gray-300 hover:bg-gray-50"
+            onMouseDown={(e) => {
+              const sel = window.getSelection();
+              if (sel && sel.rangeCount > 0) {
+                const range = sel.getRangeAt(0);
+                if (editorRef.current?.contains(range.commonAncestorContainer)) {
+                  savedRangeRef.current = range.cloneRange();
+                }
+              }
+              e.preventDefault();
+            }}
+            onClick={() => setShowSizeMenu((v) => !v)}
+          >
+            Taille ▾
+          </button>
+          {showSizeMenu && (
+            <div className="absolute top-full left-0 mt-1 bg-white border border-gray-300 rounded shadow-lg z-[200] min-w-[120px] p-1 whitespace-normal flex flex-col">
+              {['12','14','16','18','20','24','28','32'].map((s) => (
+                <button
+                  key={s}
+                  className="block w-full text-left px-3 py-1 text-sm hover:bg-gray-100"
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    const sel = window.getSelection();
+                    if (sel && sel.rangeCount > 0) {
+                      const range = sel.getRangeAt(0);
+                      if (editorRef.current?.contains(range.commonAncestorContainer)) {
+                        savedRangeRef.current = range.cloneRange();
+                      }
+                    }
+                    applyFontSize(`${s}px`);
+                    setShowSizeMenu(false);
+                  }}
+                >
+                  {s} px
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
         
         <div className="relative">
           <input 
@@ -595,6 +845,24 @@ const EditableText: React.FC<EditableTextProps> = ({
                 }}
               >
                 <div className="grid grid-cols-6 gap-1 mb-2">
+                  {/* Couleurs personnalisées (ouvre le color picker) */}
+                  <button
+                    className="w-6 h-6 rounded-full border-2 border-white ring-2 ring-gray-300 hover:scale-110 transition-transform relative overflow-hidden"
+                    onClick={() => {
+                      setShowColorPalette(false);
+                      setShowCustomColorPicker(true);
+                    }}
+                    title="Couleurs personnalisées"
+                  >
+                    <span
+                      className="absolute inset-0"
+                      style={{
+                        background:
+                          'conic-gradient(red, yellow, lime, aqua, blue, magenta, red)'
+                      }}
+                    />
+                    <span className="relative block w-full h-full rounded-full border border-white/70" />
+                  </button>
                   {/* Couleurs prédéfinies */}
                   {[
                     '#000000', '#374151', '#6B7280', '#9CA3AF', // Gris
@@ -604,7 +872,7 @@ const EditableText: React.FC<EditableTextProps> = ({
                   ].map(color => (
                     <button
                       key={color}
-                      className="w-6 h-6 rounded border border-gray-300 hover:scale-110 transition-transform"
+                      className="w-6 h-6 rounded-full border border-gray-300 hover:scale-110 transition-transform"
                       style={{ backgroundColor: color }}
                       onClick={() => {
                         exec('foreColor', color);
@@ -929,15 +1197,15 @@ const EditableText: React.FC<EditableTextProps> = ({
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 20 20" strokeWidth="1.5"><rect x="2" y="2" width="16" height="16" rx="1"/><line x1="2" y1="8" x2="18" y2="8"/><line x1="2" y1="14" x2="18" y2="14"/><line x1="10" y1="2" x2="10" y2="18"/></svg>
         </button>
         
-        <button 
-          className="px-3 py-1.5 text-sm hover:bg-gray-50 ml-auto" 
+        {/* Source (safe modal) */}
+        <button
+          className="px-3 py-1.5 text-sm hover:bg-gray-50 ml-auto"
+          onMouseDown={e => e.preventDefault()}
           onClick={() => {
-            if (!isSourceMode && editorRef.current) {
-              // Capture le HTML actuel et le formate avec sauts de lignes
-              const currentHtml = editorRef.current.innerHTML;
-              setHtmlContent(formatHTML(currentHtml));
-            }
-            setIsSourceMode(!isSourceMode);
+            // Open modal with current HTML formatted
+            const currentHtml = editorRef.current ? editorRef.current.innerHTML : (htmlContent || '');
+            setSourceDraft(formatHTML(currentHtml));
+            setShowSourceModal(true);
           }}
         >
           Source
@@ -945,24 +1213,7 @@ const EditableText: React.FC<EditableTextProps> = ({
       </div>
       )}
       
-      {isSourceMode ? (
-        <textarea 
-          value={htmlContent} 
-          onChange={e => { 
-            const newValue = e.target.value;
-            setHtmlContent(newValue); 
-            // Garde les sauts de lignes tels quels dans le HTML
-            const div = document.createElement('div'); 
-            div.innerHTML = newValue; 
-            const h2 = div.querySelector('h2'); 
-            const titleText = h2?.textContent || ''; 
-            h2?.remove(); 
-            onTitleChange?.(titleText); 
-            onDescriptionChange?.(div.innerHTML); 
-          }}
-          className="w-full min-h-[300px] p-3 border-2 border-purple-500 rounded-lg font-mono text-sm"
-        />
-      ) : editable ? (
+      {editable ? (
         <div
           ref={editorRef}
           contentEditable
@@ -976,7 +1227,7 @@ const EditableText: React.FC<EditableTextProps> = ({
             // Update parent on blur
             updateContent();
           }}
-          className={`w-full min-h-[300px] p-3 focus:outline-none prose prose-lg max-w-none transition-colors duration-200 ${
+          className={`w-full min-h-[150px] pt-3 px-3 pb-0 focus:outline-none prose prose-lg max-w-none transition-colors duration-200 ${
             isFocused ? 'bg-gray-50' : ''
           }`}
           style={{ 
@@ -986,13 +1237,52 @@ const EditableText: React.FC<EditableTextProps> = ({
         />
       ) : (
         <div
-          className="w-full min-h-[300px] p-3 prose prose-lg max-w-none"
+          className="w-full min-h-[150px] pt-3 px-3 pb-0 prose prose-lg max-w-none"
           dangerouslySetInnerHTML={{ __html: htmlContent }}
           style={{ 
             direction: 'ltr', 
-            textAlign: 'left'
+            textAlign: 'left',
+            wordWrap: 'break-word',
+            overflowWrap: 'break-word',
+            whiteSpace: 'normal'
           }}
         />
+      )}
+
+      {/* Source Modal */}
+      {showSourceModal && (
+        <div className="fixed inset-0 z-[9999] bg-black/40 flex items-center justify-center" onMouseDown={() => setShowSourceModal(false)}>
+          <div className="bg-white rounded-lg shadow-xl w-[min(900px,95vw)] max-h-[85vh] flex flex-col" onMouseDown={e => e.stopPropagation()}>
+            <div className="px-4 py-3 border-b flex items-center justify-between">
+              <h3 className="text-sm font-semibold">Édition du HTML</h3>
+              <button className="text-gray-500 hover:text-gray-700" onClick={() => setShowSourceModal(false)}>✕</button>
+            </div>
+            <textarea
+              className="flex-1 m-4 border rounded p-3 font-mono text-xs leading-5 resize-none"
+              style={{ minHeight: '300px' }}
+              value={sourceDraft}
+              onChange={(e) => setSourceDraft(e.target.value)}
+            />
+            <div className="px-4 py-3 border-t flex justify-end gap-2">
+              <button className="px-3 py-1.5 text-sm bg-gray-100 hover:bg-gray-200 rounded" onClick={() => setShowSourceModal(false)}>Annuler</button>
+              <button
+                className="px-3 py-1.5 text-sm text-white rounded"
+                style={{ background: '#841b60' }}
+                onClick={() => {
+                  // Apply edited HTML safely
+                  setHtmlContent(sourceDraft);
+                  if (editorRef.current) {
+                    editorRef.current.innerHTML = sourceDraft || '';
+                  }
+                  updateContent();
+                  setShowSourceModal(false);
+                }}
+              >
+                Appliquer
+              </button>
+            </div>
+          </div>
+        </div>
       )}
       
       <style>{`

@@ -23,7 +23,7 @@ const ArticleBanner: React.FC<ArticleBannerProps> = ({
   onImageChange,
   onImageRemove,
   editable = true,
-  aspectRatio = '2215/1536',
+  aspectRatio = '1500/744',
   maxWidth = 810,
 }) => {
   // Calcul du ratio en pourcentage pour padding-bottom

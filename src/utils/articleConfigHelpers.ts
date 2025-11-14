@@ -6,7 +6,7 @@ import type { ArticleConfig } from '@/components/ArticleEditor/types/ArticleType
 export const DEFAULT_ARTICLE_CONFIG: ArticleConfig = {
   banner: {
     imageUrl: undefined,
-    aspectRatio: '2215/1536'
+    aspectRatio: '1500/744'
   },
   content: {
     title: 'Titre de votre article',
@@ -19,6 +19,19 @@ export const DEFAULT_ARTICLE_CONFIG: ArticleConfig = {
       lineHeight: '1.4'
     }
   },
+  // Couleurs et fond par défaut (nécessaires pour que "Couleurs unies" fonctionne)
+  brandColors: {
+    primary: '#f3f4f6'
+  },
+  pageBackground: {
+    imageUrl: undefined
+  },
+  frameColor: '#ffffff',
+  frameBorderWidth: 0,
+  frameBorderColor: '#e5e7eb',
+  frameBorderRadius: 0,
+  header: { imageUrl: undefined, mode: 'cover' },
+  footer: { imageUrl: undefined, mode: 'cover' },
   cta: {
     text: 'Participer maintenant',
     variant: 'primary',
@@ -72,6 +85,31 @@ export const parseArticleConfig = (
         ...parsed.content?.titleStyle
       }
     },
+    // Fusionner brandColors et pageBackground
+    brandColors: {
+      ...DEFAULT_ARTICLE_CONFIG.brandColors,
+      ...(fallback as any)?.brandColors,
+      ...(parsed as any)?.brandColors,
+    },
+    pageBackground: {
+      ...DEFAULT_ARTICLE_CONFIG.pageBackground,
+      ...(fallback as any)?.pageBackground,
+      ...(parsed as any)?.pageBackground,
+    },
+    header: {
+      ...DEFAULT_ARTICLE_CONFIG.header,
+      ...(fallback as any)?.header,
+      ...(parsed as any)?.header,
+    },
+    footer: {
+      ...DEFAULT_ARTICLE_CONFIG.footer,
+      ...(fallback as any)?.footer,
+      ...(parsed as any)?.footer,
+    },
+    frameColor: (parsed as any)?.frameColor ?? (fallback as any)?.frameColor ?? DEFAULT_ARTICLE_CONFIG.frameColor,
+    frameBorderWidth: (parsed as any)?.frameBorderWidth ?? (fallback as any)?.frameBorderWidth ?? DEFAULT_ARTICLE_CONFIG.frameBorderWidth,
+    frameBorderColor: (parsed as any)?.frameBorderColor ?? (fallback as any)?.frameBorderColor ?? DEFAULT_ARTICLE_CONFIG.frameBorderColor,
+    frameBorderRadius: (parsed as any)?.frameBorderRadius ?? (fallback as any)?.frameBorderRadius ?? DEFAULT_ARTICLE_CONFIG.frameBorderRadius,
     cta: {
       ...DEFAULT_ARTICLE_CONFIG.cta,
       ...fallback.cta,

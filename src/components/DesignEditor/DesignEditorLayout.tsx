@@ -2803,7 +2803,6 @@ useEffect(() => {
                       onGameComplete={handleGameComplete}
                       onStepChange={setCurrentStep}
                       containerClassName="p-0"
-                      containerStyle={{ backgroundColor: 'transparent' }}
                     />
                   ) : (
                     <PreviewRenderer
@@ -2817,7 +2816,7 @@ useEffect(() => {
             ) : (
               /* Desktop/Tablet Preview OU Mobile physique: Fullscreen */
               editorMode === 'article' ? (
-                <div className="w-full h-full flex items-center justify-center overflow-hidden">
+                <div className="w-full h-full flex items-center justify-center overflow-auto">
                   <ArticleFunnelView
                     articleConfig={(campaignState as any)?.articleConfig || {}}
                     campaignType={(campaignState as any)?.type || 'wheel'}
@@ -2953,7 +2952,7 @@ useEffect(() => {
               <div className="min-h-full flex flex-col">
                 {/* Premier Canvas - Screen 1 */}
                 <div data-screen-anchor="screen1" className="relative">
-                  <div className="flex-1 flex flex-col items-center justify-center overflow-hidden relative">
+                  <div className="flex-1 flex flex-col items-center justify-center overflow-auto relative">
                     {editorMode === 'article' && (
                       <ArticleFunnelView
                         articleConfig={(campaignState as any)?.articleConfig || {}}

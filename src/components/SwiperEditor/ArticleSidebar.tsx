@@ -1,5 +1,6 @@
 // @ts-nocheck
-import React, { useState } from 'react';
+import React from 'react';
+import ArticleTextPanel from './panels/ArticleTextPanel';
 import { Image, Type, MousePointer, List, Palette, Plus, FormInput, Gamepad2, MessageSquare } from 'lucide-react';
 import type { ArticleConfig } from '@/components/ArticleEditor/types/ArticleTypes';
 import { BackgroundPanel, CompositeElementsPanel } from '@/components/shared';
@@ -114,122 +115,7 @@ const ArticleSidebar: React.FC<ArticleSidebarProps> = ({
 
   // Panneau Texte
   const renderTextPanel = () => (
-    <div className="space-y-6">
-      <div>
-        <h3 className="text-sm font-semibold text-gray-700 mb-3">Style du titre</h3>
-        
-        <div className="space-y-3">
-          <div>
-            <label className="block text-xs text-gray-600 mb-1">Taille</label>
-            <input
-              type="text"
-              value={articleConfig.content?.titleStyle?.fontSize || '32px'}
-              onChange={(e) => onArticleConfigChange({
-                content: {
-                  ...articleConfig.content,
-                  titleStyle: {
-                    ...articleConfig.content?.titleStyle,
-                    fontSize: e.target.value,
-                  },
-                },
-              })}
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#44444d]"
-              placeholder="2rem"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs text-gray-600 mb-1">Couleur</label>
-            <input
-              type="color"
-              value={articleConfig.content?.titleStyle?.color || '#1f2937'}
-              onChange={(e) => onArticleConfigChange({
-                content: {
-                  ...articleConfig.content,
-                  titleStyle: {
-                    ...articleConfig.content?.titleStyle,
-                    color: e.target.value,
-                  },
-                },
-              })}
-              className="w-full h-10 border border-gray-300 rounded-lg cursor-pointer"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs text-gray-600 mb-1">Alignement</label>
-            <select
-              value={articleConfig.content?.titleStyle?.textAlign || 'center'}
-              onChange={(e) => onArticleConfigChange({
-                content: {
-                  ...articleConfig.content,
-                  titleStyle: {
-                    ...articleConfig.content?.titleStyle,
-                    textAlign: e.target.value as 'left' | 'center' | 'right',
-                  },
-                },
-              })}
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#44444d]"
-            >
-              <option value="left">Gauche</option>
-              <option value="center">Centré</option>
-              <option value="right">Droite</option>
-            </select>
-          </div>
-        </div>
-      </div>
-
-      <div className="h-px bg-gray-200"></div>
-
-      <div>
-        <h3 className="text-sm font-semibold text-gray-700 mb-3">Style de la description</h3>
-        
-        <div className="space-y-3">
-          <div>
-            <label className="block text-xs text-gray-600 mb-1">Taille</label>
-            <input
-              type="text"
-              value={articleConfig.content?.descriptionStyle?.fontSize || '1rem'}
-              onChange={(e) => onArticleConfigChange({
-                content: {
-                  ...articleConfig.content,
-                  descriptionStyle: {
-                    ...articleConfig.content?.descriptionStyle,
-                    fontSize: e.target.value,
-                  },
-                },
-              })}
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#44444d]"
-              placeholder="1rem"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs text-gray-600 mb-1">Couleur</label>
-            <input
-              type="color"
-              value={articleConfig.content?.descriptionStyle?.color || '#4b5563'}
-              onChange={(e) => onArticleConfigChange({
-                content: {
-                  ...articleConfig.content,
-                  descriptionStyle: {
-                    ...articleConfig.content?.descriptionStyle,
-                    color: e.target.value,
-                  },
-                },
-              })}
-              className="w-full h-10 border border-gray-300 rounded-lg cursor-pointer"
-            />
-          </div>
-        </div>
-      </div>
-
-      <div>
-        <p className="text-xs text-gray-500 leading-relaxed">
-          💡 Double-cliquez sur le titre ou la description dans l'aperçu pour les éditer directement.
-        </p>
-      </div>
-    </div>
+    <ArticleTextPanel />
   );
 
   // Panneau Bouton

@@ -12,6 +12,7 @@ const DesignToolbar = lazy(() => import('./DesignToolbar'));
 const FullScreenPreviewModal = lazy(() => import('@/components/shared/modals/FullScreenPreviewModal'));
 import GameCanvasPreview from '@/components/ModernEditor/components/GameCanvasPreview';
 import PreviewRenderer from '@/components/preview/PreviewRenderer';
+import ArticleFunnelView from '@/components/ArticleEditor/ArticleFunnelView';
 import { getArticleConfigWithDefaults } from '@/utils/articleConfigHelpers';
 import type { ModularPage, ScreenId, BlocBouton, Module } from '@/types/modularEditor';
 import { createEmptyModularPage } from '@/types/modularEditor';
@@ -367,7 +368,7 @@ useEffect(() => {
           ...data,
           id: data.id,
           name: data.name || 'Campaign',
-          type: data.type || 'quiz',
+          type: 'quiz', // Force quiz type in QuizEditor regardless of DB value
           // Map DB fields to editor-friendly shape
           editorMode: (data as any).editor_mode || (data as any).editorMode || editorMode,
           articleConfig: (data as any).article_config || (data as any).articleConfig,
@@ -382,6 +383,9 @@ useEffect(() => {
         
         // Update campaign state with loaded data
         setCampaign(campaignData);
+        
+        // Also update the global editor store to ensure type consistency
+        useEditorStore.getState().setCampaign(campaignData);
         
         // Local cache disabled
       }
@@ -1358,6 +1362,7 @@ const handleSaveCampaignName = useCallback(async () => {
         console.log('💾 [QuizEditor] Autosave START for campaign:', id);
         const payload: any = {
           ...(campaignState || {}),
+          type: 'quiz', // Force quiz type in all saves
           editorMode, // Ajouter le mode éditeur (article ou fullscreen)
           editor_mode: editorMode, // Champ DB
           // Inclure explicitement la config Article (depuis l'état global ou local)
@@ -3011,7 +3016,7 @@ const handleSaveCampaignName = useCallback(async () => {
     const transformedCampaign = {
       ...campaignData,
       name: 'Ma Campagne',
-      type: (campaignData.type || 'wheel') as 'wheel' | 'scratch' | 'jackpot' | 'quiz' | 'dice' | 'form' | 'memory' | 'puzzle',
+      type: 'quiz' as 'wheel' | 'scratch' | 'jackpot' | 'quiz' | 'dice' | 'form' | 'memory' | 'puzzle',
       // Important: preserve background as an object for preview so FunnelQuizParticipate
       // can detect image backgrounds (type === 'image'). Do not flatten to string.
       design: {
@@ -3127,6 +3132,7 @@ const handleSaveCampaignName = useCallback(async () => {
       // Build complete payload with modules in all required locations
       const payload = {
         ...updatedCampaign,
+        type: 'quiz', // Force quiz type in all saves
         editorMode, // Ajouter le mode éditeur (article ou fullscreen)
         editor_mode: editorMode, // Champ DB normalisé
         // Save modules at multiple locations for compatibility
@@ -3700,7 +3706,6 @@ const handleSaveCampaignName = useCallback(async () => {
                       onGameComplete={handleGameComplete}
                       onStepChange={setCurrentStep}
                       containerClassName="p-0"
-                      containerStyle={{ backgroundColor: 'transparent' }}
                     />
                   ) : (
                     <PreviewRenderer

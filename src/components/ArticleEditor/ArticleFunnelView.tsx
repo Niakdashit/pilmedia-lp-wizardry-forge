@@ -31,7 +31,7 @@ interface ArticleFunnelViewProps {
   containerStyle?: React.CSSProperties;
 }
 
-const DEFAULT_CONTAINER_CLASS = 'w-full h-full flex items-start justify-center bg-gray-100 overflow-y-auto p-8';
+const DEFAULT_CONTAINER_CLASS = 'w-full min-h-screen flex items-center justify-center overflow-y-auto py-8 px-8';
 
 const ArticleFunnelView: React.FC<ArticleFunnelViewProps> = ({
   articleConfig,
@@ -74,8 +74,33 @@ const ArticleFunnelView: React.FC<ArticleFunnelViewProps> = ({
   const handleWinnerContentChange = (content: string) => onWinnerContentChange?.(content);
   const handleLoserContentChange = (content: string) => onLoserContentChange?.(content);
 
+  // Apply background color or image
+  React.useEffect(() => {
+    const container = document.querySelector('.article-funnel-container');
+    if (!container) return;
+
+    const pageBackground = (articleConfig as any)?.pageBackground;
+    const brandColors = (articleConfig as any)?.brandColors;
+    
+    // 🎯 CORRECTION: Même couleur de fond en mode édition ET preview pour un rendu identique
+    // Le mode preview doit être un mirroring exact du mode édition
+    const defaultColor = '#f3f4f6';
+    
+    if (pageBackground?.imageUrl) {
+      // Image de fond
+      (container as HTMLElement).style.backgroundImage = `url(${pageBackground.imageUrl})`;
+      (container as HTMLElement).style.backgroundSize = 'cover';
+      (container as HTMLElement).style.backgroundPosition = 'center';
+      (container as HTMLElement).style.backgroundColor = '';
+    } else {
+      // Couleur unie (personnalisée ou par défaut)
+      (container as HTMLElement).style.backgroundImage = '';
+      (container as HTMLElement).style.backgroundColor = brandColors?.primary || defaultColor;
+    }
+  }, [(articleConfig as any)?.pageBackground?.imageUrl, (articleConfig as any)?.brandColors?.primary]);
+
   return (
-    <div className={composedClassName} style={containerStyle}>
+    <div className={`${composedClassName} article-funnel-container`} style={containerStyle}>
       <ArticleCanvas
         articleConfig={articleConfig}
         onBannerChange={handleBannerChange}

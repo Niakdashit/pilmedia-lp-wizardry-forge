@@ -1156,6 +1156,22 @@ const handleSaveCampaignName = useCallback(async () => {
     setSelectedElement(element);
   };
   const [selectedElements, setSelectedElements] = useState<any[]>([]);
+
+  // Ensure a Google Font stylesheet is loaded for a given family (idempotent)
+  const ensureGoogleFontLoaded = useCallback((family: string) => {
+    try {
+      const slug = (family || '').trim().replace(/\s+/g, '+');
+      if (!slug) return;
+      const linkId = `gf-${slug.toLowerCase()}`;
+      if (document.getElementById(linkId)) return; // already loaded
+      const href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(family).replace(/%20/g, '+')}&display=swap`;
+      const link = document.createElement('link');
+      link.id = linkId;
+      link.rel = 'stylesheet';
+      link.href = href;
+      document.head.appendChild(link);
+    } catch {}
+  }, []);
   
   // État pour tracker la position de scroll (quel écran est visible)
   const [currentScreen, setCurrentScreen] = useState<'screen1' | 'screen2' | 'screen3'>('screen1');
@@ -2225,13 +2241,21 @@ const handleSaveCampaignName = useCallback(async () => {
       totalElements: canvasElements.length
     });
 
+    // Auto-load Google Font when a new fontFamily is applied
+    if (updates && typeof updates.fontFamily === 'string') {
+      ensureGoogleFontLoaded(updates.fontFamily);
+    }
+
     const isModuleText = (selectedElement as any)?.role === 'module-text' && (selectedElement as any)?.moduleId;
     if (isModuleText) {
       const moduleId = (selectedElement as any).moduleId as string;
 
       // Route ALL updates to the module (including rotation)
       const modulePatch: Partial<Module> & Record<string, any> = {};
-      if (updates.fontFamily) modulePatch.bodyFontFamily = updates.fontFamily;
+      if (updates.fontFamily) {
+        modulePatch.bodyFontFamily = updates.fontFamily;
+        ensureGoogleFontLoaded(updates.fontFamily);
+      }
       if (updates.color) modulePatch.bodyColor = updates.color;
       if (updates.fontSize) modulePatch.bodyFontSize = updates.fontSize;
       if (updates.fontWeight) modulePatch.bodyBold = updates.fontWeight === 'bold';

@@ -17,6 +17,7 @@ import type { ModularPage, ScreenId, BlocBouton, Module } from '@/types/modularE
 import { createEmptyModularPage } from '@/types/modularEditor';
 
 import PreviewRenderer from '@/components/preview/PreviewRenderer';
+import ArticleFunnelView from '@/components/ArticleEditor/ArticleFunnelView';
 import { getArticleConfigWithDefaults } from '@/utils/articleConfigHelpers';
 import ZoomSlider from './components/ZoomSlider';
 import EditorHeader from '@/components/shared/EditorHeader';
@@ -4026,7 +4027,7 @@ useEffect(() => {
                 <div data-screen-anchor="screen1" className="relative">
                   <div className="flex-1 flex flex-col items-center justify-center overflow-hidden relative">
                     {editorMode === 'article' && (
-                      <PreviewRenderer
+                      <ArticleFunnelView
                         articleConfig={getArticleConfigWithDefaults(campaignState, campaignData)}
                         campaignType={(campaignState as any)?.type || 'jackpot'}
                         campaign={(campaignState as any) || campaignData}

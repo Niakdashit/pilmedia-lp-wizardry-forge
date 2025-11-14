@@ -151,12 +151,30 @@ const CanvasToolbar: React.FC<CanvasToolbarProps> = React.memo(({
   };
 
   const fontFamilies = [
+    // Sans-serif common
     { value: 'Open Sans', label: 'Open Sans' },
     { value: 'Roboto', label: 'Roboto' },
     { value: 'Lato', label: 'Lato' },
     { value: 'Montserrat', label: 'Montserrat' },
     { value: 'Poppins', label: 'Poppins' },
-    { value: 'Canva Sans', label: 'Canva Sans' },
+    { value: 'Inter', label: 'Inter' },
+    { value: 'Nunito Sans', label: 'Nunito Sans' },
+    { value: 'Work Sans', label: 'Work Sans' },
+    { value: 'IBM Plex Sans', label: 'IBM Plex Sans' },
+    { value: 'Segoe UI', label: 'Segoe UI' },
+    { value: 'Noto Sans', label: 'Noto Sans' },
+    { value: 'PT Sans', label: 'PT Sans' },
+    { value: 'Mulish', label: 'Mulish' },
+    { value: 'Rubik', label: 'Rubik' },
+    { value: 'Urbanist', label: 'Urbanist' },
+    { value: 'DM Sans', label: 'DM Sans' },
+    // Serif
+    { value: 'Merriweather', label: 'Merriweather' },
+    { value: 'Playfair Display', label: 'Playfair Display' },
+    { value: 'Lora', label: 'Lora' },
+    { value: 'Libre Baskerville', label: 'Libre Baskerville' },
+    { value: 'Crimson Text', label: 'Crimson Text' },
+    // System fallbacks
     { value: 'Arial', label: 'Arial' },
     { value: 'Helvetica', label: 'Helvetica' },
     { value: 'Times New Roman', label: 'Times New Roman' },
@@ -299,7 +317,9 @@ const CanvasToolbar: React.FC<CanvasToolbarProps> = React.memo(({
         title="Changer la police - Ouvre l'onglet Éléments"
       >
         <span className="truncate">
-          {fontFamilies.find(f => f.value === (selectedElement.fontFamily || 'Open Sans'))?.label || 'Open Sans'}
+          {fontFamilies.find(f => f.value === (selectedElement.fontFamily || 'Open Sans'))?.label 
+            || selectedElement.fontFamily 
+            || 'Open Sans'}
         </span>
         <ChevronDown className="w-3 h-3 ml-2 flex-shrink-0" />
       </button>

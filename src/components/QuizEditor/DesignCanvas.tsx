@@ -21,6 +21,7 @@ import CanvasContextMenu from '../DesignEditor/components/CanvasContextMenu';
 import { ScreenLayoutWrapper, useLayoutFromCampaign } from '../Layout/ScreenLayoutWrapper';
 
 import AnimationSettingsPopup from '../DesignEditor/panels/AnimationSettingsPopup';
+import ArticleCanvas from '../ArticleEditor/ArticleCanvas';
 
 import MobileResponsiveLayout from '../DesignEditor/components/MobileResponsiveLayout';
 import type { DeviceType } from '../../utils/deviceDimensions';
@@ -30,6 +31,7 @@ import { QuizModuleRenderer } from './QuizRenderer';
 import type { Module } from '@/types/modularEditor';
 
 // Import pour le mode Article
+import { DEFAULT_ARTICLE_CONFIG } from '@/utils/articleConfigHelpers';
 
 type CanvasScreenId = 'screen1' | 'screen2' | 'screen3' | 'all';
 

@@ -39,9 +39,9 @@ const ArticleCTA: React.FC<ArticleCTAProps> = ({
 }) => {
   // Styles de base selon le variant
   const variantStyles = {
-    primary: 'bg-gradient-to-br from-[#841b60] to-[#b41b60] text-white hover:from-[#841b60] hover:to-[#6d164f] shadow-lg shadow-[#841b60]/20 hover:shadow-xl hover:shadow-[#841b60]/30',
-    secondary: 'bg-white text-[#841b60] border-2 border-[#841b60] hover:bg-[#841b60] hover:text-white',
-    outline: 'bg-transparent text-[#841b60] border-2 border-[#841b60] hover:bg-[#841b60] hover:text-white',
+    primary: 'bg-black text-white hover:bg-gray-800 shadow-lg shadow-black/20 hover:shadow-xl hover:shadow-black/30',
+    secondary: 'bg-white text-black border-2 border-black hover:bg-black hover:text-white',
+    outline: 'bg-transparent text-black border-2 border-black hover:bg-black hover:text-white',
   };
 
   // Tailles de bouton
@@ -65,7 +65,7 @@ const ArticleCTA: React.FC<ArticleCTAProps> = ({
     transition-all duration-300 transform
     hover:-translate-y-0.5
     disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none
-    focus:outline-none focus:ring-2 focus:ring-[#841b60] focus:ring-opacity-50
+    focus:outline-none focus:ring-2 focus:ring-black focus:ring-opacity-50
     ${variantStyles[variant]}
     ${sizeStyles[size]}
     ${fullWidth ? 'w-full' : ''}
@@ -75,7 +75,7 @@ const ArticleCTA: React.FC<ArticleCTAProps> = ({
   const containerClasses = `
     article-cta-container
     flex justify-center items-center
-    py-6
+    mt-3 mb-8
   `;
 
   const handleClick = (e: React.MouseEvent) => {

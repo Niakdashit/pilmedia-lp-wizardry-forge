@@ -137,7 +137,6 @@ const ArticleCanvas: React.FC<ArticleCanvasProps> = ({
               variant={articleConfig.cta?.variant}
               size={articleConfig.cta?.size}
               icon={articleConfig.cta?.icon}
-              mobileVerticalPosition={articleConfig.cta?.mobileVerticalPosition}
               onClick={() => {
                 console.log('🔥 [ArticleCTA] Button clicked!');
                 onCTAClick?.();
@@ -183,6 +182,36 @@ const ArticleCanvas: React.FC<ArticleCanvasProps> = ({
           <div className="w-full h-full flex items-center justify-center" style={{ minHeight: '600px' }}>
             <div className="flex flex-col items-center justify-center w-full">
               {campaignType === 'wheel' && campaign && (
+                <div
+                  style={{
+                    position: 'relative',
+                    width: '100%',
+                    height: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                >
+                  <StandardizedWheel
+                    campaign={campaign}
+                    wheelModalConfig={wheelModalConfig}
+                    shouldCropWheel={false}
+                    className="mx-auto"
+                    onComplete={(prize: string) => {
+                      console.log('🎡 Wheel completed with prize:', prize);
+                      const isWinner = prize && !['Perdu', 'Dommage', 'Rien', 'Vide', ''].includes(prize);
+                      const result: 'winner' | 'loser' = isWinner ? 'winner' : 'loser';
+                      setGameResult(result);
+                      console.log('🎯 Game result detected:', result, 'Prize:', prize);
+                      onGameComplete?.();
+                      if (onStepChange) {
+                        setTimeout(() => onStepChange('result'), 4000);
+                      }
+                    }}
+                  />
+                </div>
+              )}
+              {campaignType === 'jackpot' && campaign && (
                 <div style={{
                   position: 'relative',
                   width: '100%',
@@ -191,47 +220,24 @@ const ArticleCanvas: React.FC<ArticleCanvasProps> = ({
                   alignItems: 'center',
                   justifyContent: 'center'
                 }}>
-                  <div style={{
-                    transform: 'translateY(5%)',
-                    width: '100%'
-                  }}>
-                    <StandardizedWheel
-                      campaign={campaign}
-                      wheelModalConfig={wheelModalConfig}
-                      onComplete={(prize: string) => {
-                        console.log('🎡 Wheel completed with prize:', prize);
-                        // Detect if winner or loser based on prize
-                        const isWinner = prize && !['Perdu', 'Dommage', 'Rien', 'Vide', ''].includes(prize);
-                        const result: 'winner' | 'loser' = isWinner ? 'winner' : 'loser';
-                        setGameResult(result);
-                        console.log('🎯 Game result detected:', result, 'Prize:', prize);
-                        onGameComplete?.();
-                        if (onStepChange) {
-                          setTimeout(() => onStepChange('result'), 4000);
-                        }
-                      }}
-                    />
-                  </div>
+                  <SlotMachine
+                    campaign={campaign}
+                    onWin={(results: string[]) => {
+                      console.log('🎰 Jackpot won:', results);
+                      onGameComplete?.();
+                      if (onStepChange) {
+                        setTimeout(() => onStepChange('result'), 4000);
+                      }
+                    }}
+                    onLose={() => {
+                      console.log('🎰 Jackpot lost');
+                      onGameComplete?.();
+                      if (onStepChange) {
+                        setTimeout(() => onStepChange('result'), 4000);
+                      }
+                    }}
+                  />
                 </div>
-              )}
-              {campaignType === 'jackpot' && campaign && (
-                <SlotMachine
-                  campaign={campaign}
-                  onWin={(results: string[]) => {
-                    console.log('🎰 Jackpot won:', results);
-                    onGameComplete?.();
-                    if (onStepChange) {
-                      setTimeout(() => onStepChange('result'), 4000);
-                    }
-                  }}
-                  onLose={() => {
-                    console.log('🎰 Jackpot lost');
-                    onGameComplete?.();
-                    if (onStepChange) {
-                      setTimeout(() => onStepChange('result'), 4000);
-                    }
-                  }}
-                />
               )}
               {campaignType === 'scratch' && campaign && (
                 <div style={{
@@ -256,8 +262,14 @@ const ArticleCanvas: React.FC<ArticleCanvasProps> = ({
                 </div>
               )}
               {campaignType === 'quiz' && campaign && (
-                <>
-                  {console.log('🎮 [ArticleCanvas] Rendering ArticleQuiz', { campaign: campaign?.id })}
+                <div style={{
+                  position: 'relative',
+                  width: '100%',
+                  height: '100%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
                   <ArticleQuiz
                     campaign={campaign}
                     onComplete={(result: any) => {
@@ -265,7 +277,7 @@ const ArticleCanvas: React.FC<ArticleCanvasProps> = ({
                       onGameComplete?.();
                     }}
                   />
-                </>
+                </div>
               )}
               {campaignType === 'quiz' && !campaign && (
                 <div className="text-center text-red-500 p-8">
@@ -325,14 +337,19 @@ const ArticleCanvas: React.FC<ArticleCanvasProps> = ({
 
   return (
     <div 
-      className="article-canvas mx-auto bg-white relative"
+      className="article-canvas mx-auto relative"
       style={{
         width: `${maxWidth}px`,
-        minHeight: '1200px',
+        minHeight: 'auto',
+        backgroundColor: (articleConfig as any)?.frameColor || '#ffffff',
+        borderStyle: 'solid',
+        borderWidth: `${(articleConfig as any)?.frameBorderWidth ?? 0}px`,
+        borderColor: (articleConfig as any)?.frameBorderColor ?? '#e5e7eb',
+        borderRadius: `${(articleConfig as any)?.frameBorderRadius ?? 0}px`,
       }}
     >
-      {/* Flèches de navigation - Uniquement en mode preview */}
-      {onStepChange && (
+      {/* Flèches de navigation - uniquement en mode édition */}
+      {editable && onStepChange && (
         <>
           {/* Flèche gauche */}
           {canGoBack && (
@@ -361,6 +378,28 @@ const ArticleCanvas: React.FC<ArticleCanvasProps> = ({
           )}
         </>
       )}
+      {/* Wrapper interne qui clippe le contenu selon l'arrondi */}
+      <div
+        className="overflow-hidden"
+        style={{
+          borderRadius: `${(articleConfig as any)?.frameBorderRadius ?? 0}px`,
+          backgroundColor: (articleConfig as any)?.frameColor || '#ffffff',
+        }}
+      >
+        {/* Image d'en-tête (header) */}
+      {(articleConfig as any)?.header?.imageUrl && (
+        <div className="w-full">
+          <img
+            src={(articleConfig as any).header.imageUrl}
+            alt="Header"
+            className="w-full object-cover"
+            style={{
+              maxHeight: `${Math.max(48, Math.round(maxWidth * 0.1))}px`,
+              objectFit: ((articleConfig as any)?.header?.mode || 'cover') as any,
+            }}
+          />
+        </div>
+      )}
 
       {/* Bannière (toujours visible) */}
       <ArticleBanner
@@ -375,6 +414,22 @@ const ArticleCanvas: React.FC<ArticleCanvasProps> = ({
 
       {/* Contenu selon l'étape */}
       {renderStepContent()}
+
+      {/* Image de pied de page (footer) */}
+      {(articleConfig as any)?.footer?.imageUrl && (
+        <div className="w-full">
+          <img
+            src={(articleConfig as any).footer.imageUrl}
+            alt="Footer"
+            className="w-full object-cover"
+            style={{
+              maxHeight: `${Math.max(48, Math.round(maxWidth * 0.1))}px`,
+              objectFit: ((articleConfig as any)?.footer?.mode || 'cover') as any,
+            }}
+          />
+        </div>
+      )}
+      </div>
     </div>
   );
 };

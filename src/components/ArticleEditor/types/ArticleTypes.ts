@@ -16,6 +16,26 @@ export interface ArticleConfig {
   
   // Styles globaux
   theme?: ArticleTheme;
+  brandColors?: ArticleBrandColors;
+  pageBackground?: ArticlePageBackground;
+  frameColor?: string;
+  frameBorderWidth?: number;
+  frameBorderColor?: string;
+  frameBorderRadius?: number;
+  
+  // Header/Footer
+  header?: { imageUrl?: string; mode?: 'cover' | 'contain' };
+  footer?: { imageUrl?: string; mode?: 'cover' | 'contain' };
+}
+
+// Couleurs de marque utilisées par le mode Article
+export interface ArticleBrandColors {
+  primary?: string;
+}
+
+// Arrière-plan de page (image plein écran)
+export interface ArticlePageBackground {
+  imageUrl?: string;
 }
 
 export interface ArticleBanner {
@@ -168,7 +188,7 @@ export interface ArticleSidebarPanelProps {
  */
 export const DEFAULT_ARTICLE_CONFIG: ArticleConfig = {
   banner: {
-    aspectRatio: '2215/1536',
+    aspectRatio: '1500/744',
     alt: 'Bannière article',
   },
   content: {
@@ -219,6 +239,8 @@ export const DEFAULT_ARTICLE_CONFIG: ArticleConfig = {
     borderRadius: '0.75rem',
     backgroundColor: '#ffffff',
   },
+  header: { imageUrl: undefined, mode: 'cover' },
+  footer: { imageUrl: undefined, mode: 'cover' },
 };
 
 /**

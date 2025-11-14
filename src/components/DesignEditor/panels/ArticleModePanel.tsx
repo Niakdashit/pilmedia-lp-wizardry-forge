@@ -1,4 +1,5 @@
 import React from 'react';
+import ArticleTextPanel from '@/components/ArticleEditor/panels/ArticleTextPanel';
 import { Upload, Type, MousePointer } from 'lucide-react';
 import type { OptimizedCampaign } from '../../ModernEditor/types/CampaignTypes';
 
@@ -29,6 +30,13 @@ const ArticleModePanel: React.FC<ArticleModePanelProps> = ({
 }) => {
   const articleConfig = campaign?.articleConfig || {};
   const [groupTab, setGroupTab] = React.useState<'banner' | 'text' | 'button'>('banner');
+  const [bgOpen, setBgOpen] = React.useState(true);
+  const [bannerOpen, setBannerOpen] = React.useState(true);
+  const [headerOpen, setHeaderOpen] = React.useState(false);
+  const [footerOpen, setFooterOpen] = React.useState(false);
+  // Hidden color pickers for the rainbow custom color circle
+  const customBannerColorRef = React.useRef<HTMLInputElement>(null);
+  const customPageColorRef = React.useRef<HTMLInputElement>(null);
   const clampFontSize = React.useCallback((value: number) => {
     return Math.min(120, Math.max(12, Math.round(value)));
   }, []);
@@ -153,6 +161,70 @@ const ArticleModePanel: React.FC<ArticleModePanelProps> = ({
     });
   };
 
+  const handleHeaderImageChange = async (file: File | undefined) => {
+    if (!file) return;
+    const toDataUrl = (f: File) =>
+      new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(f);
+      });
+    try {
+      const dataUrl = await toDataUrl(file);
+      onCampaignChange({
+        articleConfig: {
+          ...articleConfig,
+          header: {
+            ...(articleConfig as any)?.header,
+            imageUrl: dataUrl,
+          },
+        },
+      });
+    } catch {}
+  };
+
+  const handleHeaderImageRemove = () => {
+    onCampaignChange({
+      articleConfig: {
+        ...articleConfig,
+        header: { imageUrl: undefined },
+      },
+    });
+  };
+
+  const handleFooterImageChange = async (file: File | undefined) => {
+    if (!file) return;
+    const toDataUrl = (f: File) =>
+      new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(f);
+      });
+    try {
+      const dataUrl = await toDataUrl(file);
+      onCampaignChange({
+        articleConfig: {
+          ...articleConfig,
+          footer: {
+            ...(articleConfig as any)?.footer,
+            imageUrl: dataUrl,
+          },
+        },
+      });
+    } catch {}
+  };
+
+  const handleFooterImageRemove = () => {
+    onCampaignChange({
+      articleConfig: {
+        ...articleConfig,
+        footer: { imageUrl: undefined },
+      },
+    });
+  };
+
   const handleFunnelChange = (updates: any) => {
     onCampaignChange({
       articleConfig: {
@@ -165,322 +237,485 @@ const ArticleModePanel: React.FC<ArticleModePanelProps> = ({
     });
   };
 
-  // Panneau Bannière
+  // Panneau Bannière (accordéon + palette rapide)
   const renderBannerPanel = () => (
     <div className="space-y-6">
-      <div>
-        <h3 className="font-semibold text-sm text-gray-700 mb-3">Bannière</h3>
-        <label className="w-full p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-[hsl(var(--primary))] hover:bg-[#44444d] hover:text-white transition-colors flex flex-col items-center group cursor-pointer">
-          <Upload className="w-6 h-6 mb-2 text-gray-600 group-hover:text-white" />
-          <span className="text-sm text-gray-600 group-hover:text-white">Télécharger pour Desktop/Tablet</span>
-          <span className="text-xs text-gray-500 group-hover:text-white">PNG, JPG jusqu'à 10MB</span>
-          <input
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={(e) => handleBannerImageChange(e.target.files?.[0])}
-          />
-        </label>
-        {articleConfig.banner?.imageUrl && (
-          <div className="mt-3 flex items-center gap-3">
-            <img
-              src={articleConfig.banner.imageUrl}
-              alt="Bannière"
-              className="h-16 w-auto rounded border border-gray-200"
-            />
-            <button
-              onClick={handleBannerImageRemove}
-              className="px-3 py-2 text-sm rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
-            >
-              Supprimer
-            </button>
+      <div className="border border-gray-200 rounded-lg overflow-hidden">
+        <button
+          type="button"
+          onClick={() => setBannerOpen((v) => !v)}
+          className="w-full flex items-center justify-between px-3 py-2 bg-gray-50 hover:bg-gray-100 text-sm font-semibold text-gray-700"
+        >
+          Bannière + Couleurs (rapide)
+          <span className="text-xs text-gray-500">{bannerOpen ? 'Masquer' : 'Afficher'}</span>
+        </button>
+        {bannerOpen && (
+          <div className="p-3 space-y-4">
+            {/* Uploader bannière */}
+            <div>
+              <h4 className="font-medium text-xs text-gray-700 mb-2">Bannière</h4>
+              <label className="w-full p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-[hsl(var(--primary))] hover:bg-[#44444d] hover:text-white transition-colors flex flex-col items-center group cursor-pointer">
+                <Upload className="w-6 h-6 mb-2 text-gray-600 group-hover:text-white" />
+                <span className="text-sm text-gray-600 group-hover:text-white">Télécharger pour Desktop/Tablet</span>
+                <span className="text-xs text-gray-500 group-hover:text-white">PNG, JPG jusqu'à 10MB</span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => handleBannerImageChange(e.target.files?.[0])}
+                />
+              </label>
+              {articleConfig.banner?.imageUrl && (
+                <div className="mt-3 flex items-center gap-3">
+                  <img
+                    src={articleConfig.banner.imageUrl}
+                    alt="Bannière"
+                    className="h-16 w-auto rounded border border-gray-200"
+                  />
+                  <button
+                    onClick={handleBannerImageRemove}
+                    className="px-3 py-2 text-sm rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
+                  >
+                    Supprimer
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Palette de couleurs rapide (seconde palette) */}
+            <div>
+              <h4 className="text-xs font-medium text-gray-700 mb-2">Couleurs unies (rapide)</h4>
+              <div className="grid grid-cols-5 gap-2">
+                {/* Couleurs personnalisées: cercle arc-en-ciel ouvrant un color picker */}
+                <button
+                  onClick={() => customBannerColorRef.current?.click()}
+                  className="w-10 h-10 rounded-full border-2 border-white ring-2 ring-gray-300 hover:scale-110 transition-transform relative overflow-hidden"
+                  title="Couleurs personnalisées"
+                >
+                  <span
+                    className="absolute inset-0"
+                    style={{ background: 'conic-gradient(red, yellow, lime, aqua, blue, magenta, red)' }}
+                  />
+                  <span className="relative block w-full h-full rounded-full border border-white/70" />
+                </button>
+                {[
+                  '#FFFFFF', '#F8F9FA', '#E9ECEF', '#DEE2E6', '#CED4DA',
+                  '#ADB5BD', '#6C757D', '#495057', '#343A40', '#212529',
+                  '#000000', '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4',
+                  '#FFEAA7', '#DDA0DD', '#FF8C69', '#87CEEB'
+                ].map((color) => (
+                  <button
+                    key={`quick-${color}`}
+                    onClick={() => onCampaignChange({
+                      articleConfig: {
+                        ...articleConfig,
+                        frameColor: color,
+                      },
+                    })}
+                    className="w-10 h-10 rounded-full border-2 border-gray-300 hover:border-[#44444d] transition-colors"
+                    style={{ backgroundColor: color }}
+                    title={color}
+                  />
+                ))}
+              </div>
+              {/* Hidden input for custom banner/frame color */}
+              <input
+                ref={customBannerColorRef}
+                type="color"
+                className="hidden"
+                value={(articleConfig as any)?.frameColor || '#ffffff'}
+                onChange={(e) => onCampaignChange({
+                  articleConfig: {
+                    ...articleConfig,
+                    frameColor: e.target.value,
+                  },
+                })}
+              />
+            </div>
+
+            {/* Cadre: arrondi + bordure */}
+            <div className="pt-2 border-t border-gray-200">
+              <h4 className="text-xs font-medium text-gray-700 mb-3">Cadre (arrondi + bordure)</h4>
+              <div className="grid grid-cols-1 gap-4">
+                {/* Rayon d'arrondi */}
+                <div>
+                  <label className="block text-xs text-gray-600 mb-1">Arrondi du cadre (px)</label>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="range"
+                      min={0}
+                      max={48}
+                      step={1}
+                      value={(articleConfig as any)?.frameBorderRadius ?? 0}
+                      onChange={(e) => onCampaignChange({
+                        articleConfig: {
+                          ...articleConfig,
+                          frameBorderRadius: Number(e.target.value),
+                        },
+                      })}
+                      className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#44444d]"
+                    />
+                    <input
+                      type="number"
+                      min={0}
+                      max={96}
+                      value={(articleConfig as any)?.frameBorderRadius ?? 0}
+                      onChange={(e) => onCampaignChange({
+                        articleConfig: {
+                          ...articleConfig,
+                          frameBorderRadius: Number(e.target.value),
+                        },
+                      })}
+                      className="w-20 px-2 py-1 text-sm border border-gray-300 rounded"
+                    />
+                  </div>
+                </div>
+
+                {/* Épaisseur de bordure */}
+                <div>
+                  <label className="block text-xs text-gray-600 mb-1">Épaisseur de bordure (px)</label>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="range"
+                      min={0}
+                      max={16}
+                      step={1}
+                      value={(articleConfig as any)?.frameBorderWidth ?? 0}
+                      onChange={(e) => onCampaignChange({
+                        articleConfig: {
+                          ...articleConfig,
+                          frameBorderWidth: Number(e.target.value),
+                        },
+                      })}
+                      className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#44444d]"
+                    />
+                    <input
+                      type="number"
+                      min={0}
+                      max={32}
+                      value={(articleConfig as any)?.frameBorderWidth ?? 0}
+                      onChange={(e) => onCampaignChange({
+                        articleConfig: {
+                          ...articleConfig,
+                          frameBorderWidth: Number(e.target.value),
+                        },
+                      })}
+                      className="w-20 px-2 py-1 text-sm border border-gray-300 rounded"
+                    />
+                  </div>
+                </div>
+
+                {/* Couleur de bordure */}
+                <div>
+                  <label className="block text-xs text-gray-600 mb-2">Couleur de bordure</label>
+                  <input
+                    type="color"
+                    value={(articleConfig as any)?.frameBorderColor ?? '#e5e7eb'}
+                    onChange={(e) => onCampaignChange({
+                      articleConfig: {
+                        ...articleConfig,
+                        frameBorderColor: e.target.value,
+                      },
+                    })}
+                    className="w-full h-10 border border-gray-300 rounded-lg cursor-pointer"
+                  />
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </div>
 
-      {/* Fond de page complet */}
-      <div>
-        <h3 className="font-semibold text-sm text-gray-700 mb-3">Fond de page (plein écran)</h3>
-        <label className="w-full p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-[hsl(var(--primary))] hover:bg-[#44444d] hover:text-white transition-colors flex flex-col items-center group cursor-pointer">
-          <Upload className="w-6 h-6 mb-2 text-gray-600 group-hover:text-white" />
-          <span className="text-sm text-gray-600 group-hover:text-white">Télécharger une image de fond</span>
-          <span className="text-xs text-gray-500 group-hover:text-white">PNG, JPG jusqu'à 10MB</span>
-          <input
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={async (e) => {
-              const file = e.target.files?.[0];
-              if (!file) return;
-              const toDataUrl = (f: File) =>
-                new Promise<string>((resolve, reject) => {
-                  const reader = new FileReader();
-                  reader.onload = () => resolve(reader.result as string);
-                  reader.onerror = reject;
-                  reader.readAsDataURL(f);
-                });
-              try {
-                const dataUrl = await toDataUrl(file);
-                onCampaignChange({
+      {/* Apparence de page (Accordion) */}
+      <div className="border border-gray-200 rounded-lg overflow-hidden">
+        <button
+          type="button"
+          onClick={() => setBgOpen((v) => !v)}
+          className="w-full flex items-center justify-between px-3 py-2 bg-gray-50 hover:bg-gray-100 text-sm font-semibold text-gray-700"
+        >
+          Apparence de page (fond + couleurs)
+          <span className="text-xs text-gray-500">{bgOpen ? 'Masquer' : 'Afficher'}</span>
+        </button>
+        {bgOpen && (
+          <div className="p-3 space-y-6">
+            {/* Fond de page complet */}
+            <div>
+              <h4 className="font-medium text-xs text-gray-700 mb-2">Fond de page (plein écran)</h4>
+              <label className="w-full p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-[hsl(var(--primary))] hover:bg-[#44444d] hover:text-white transition-colors flex flex-col items-center group cursor-pointer">
+                <Upload className="w-6 h-6 mb-2 text-gray-600 group-hover:text-white" />
+                <span className="text-sm text-gray-600 group-hover:text-white">Télécharger une image de fond</span>
+                <span className="text-xs text-gray-500 group-hover:text-white">PNG, JPG jusqu'à 10MB</span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    const toDataUrl = (f: File) =>
+                      new Promise<string>((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.onload = () => resolve(reader.result as string);
+                        reader.onerror = reject;
+                        reader.readAsDataURL(f);
+                      });
+                    try {
+                      const dataUrl = await toDataUrl(file);
+                      onCampaignChange({
+                        articleConfig: {
+                          ...articleConfig,
+                          pageBackground: {
+                            ...(articleConfig as any)?.pageBackground,
+                            imageUrl: dataUrl,
+                          },
+                        },
+                      });
+                      try {
+                        const evt = new CustomEvent('applyFullPageBackground', { detail: { url: dataUrl } });
+                        window.dispatchEvent(evt);
+                      } catch {}
+                    } catch {}
+                  }}
+                />
+              </label>
+              {(articleConfig as any)?.pageBackground?.imageUrl && (
+                <div className="mt-3 flex items-center gap-3">
+                  <img
+                    src={(articleConfig as any).pageBackground.imageUrl}
+                    alt="Fond de page"
+                    className="h-16 w-auto rounded border border-gray-200"
+                  />
+                  <button
+                    onClick={() => {
+                      onCampaignChange({
+                        articleConfig: {
+                          ...articleConfig,
+                          pageBackground: { imageUrl: undefined },
+                        },
+                      });
+                      try {
+                        const evt = new CustomEvent('applyFullPageBackground', { detail: { url: undefined } });
+                        window.dispatchEvent(evt);
+                      } catch {}
+                    }}
+                    className="px-3 py-2 text-sm rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
+                  >
+                    Supprimer
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Palette de couleurs */}
+            <div>
+              <h4 className="text-xs font-medium text-gray-700 mb-2">Couleurs unies</h4>
+              <div className="grid grid-cols-5 gap-2">
+                {/* Couleurs personnalisées: cercle arc-en-ciel ouvrant un color picker */}
+                <button
+                  onClick={() => customPageColorRef.current?.click()}
+                  className="w-10 h-10 rounded-full border-2 border-white ring-2 ring-gray-300 hover:scale-110 transition-transform relative overflow-hidden"
+                  title="Couleurs personnalisées"
+                >
+                  <span
+                    className="absolute inset-0"
+                    style={{ background: 'conic-gradient(red, yellow, lime, aqua, blue, magenta, red)' }}
+                  />
+                  <span className="relative block w-full h-full rounded-full border border-white/70" />
+                </button>
+                {[
+                  '#FFFFFF', '#F8F9FA', '#E9ECEF', '#DEE2E6', '#CED4DA',
+                  '#ADB5BD', '#6C757D', '#495057', '#343A40', '#212529',
+                  '#000000', '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4',
+                  '#FFEAA7', '#DDA0DD', '#FF8C69', '#87CEEB'
+                ].map((color) => (
+                  <button
+                    key={color}
+                    onClick={() => onCampaignChange({
+                      articleConfig: {
+                        ...articleConfig,
+                        brandColors: {
+                          ...(articleConfig as any)?.brandColors,
+                          primary: color,
+                        },
+                      },
+                    })}
+                    className="w-10 h-10 rounded-full border-2 border-gray-300 hover:border-[#44444d] transition-colors"
+                    style={{ backgroundColor: color }}
+                    title={color}
+                  />
+                ))}
+              </div>
+              {/* Hidden input for custom page brand primary color */}
+              <input
+                ref={customPageColorRef}
+                type="color"
+                className="hidden"
+                value={(articleConfig as any)?.brandColors?.primary || '#44444d'}
+                onChange={(e) => onCampaignChange({
                   articleConfig: {
                     ...articleConfig,
-                    pageBackground: {
-                      ...(articleConfig as any)?.pageBackground,
-                      imageUrl: dataUrl,
+                    brandColors: {
+                      ...(articleConfig as any)?.brandColors,
+                      primary: e.target.value,
                     },
                   },
-                });
-                try {
-                  const evt = new CustomEvent('applyFullPageBackground', { detail: { url: dataUrl } });
-                  window.dispatchEvent(evt);
-                } catch {}
-              } catch {}
-            }}
-          />
-        </label>
-        { (articleConfig as any)?.pageBackground?.imageUrl && (
-          <div className="mt-3 flex items-center gap-3">
-            <img
-              src={(articleConfig as any).pageBackground.imageUrl}
-              alt="Fond de page"
-              className="h-16 w-auto rounded border border-gray-200"
-            />
-            <button
-              onClick={() => {
-                onCampaignChange({
-                  articleConfig: {
-                    ...articleConfig,
-                    pageBackground: { imageUrl: undefined },
-                  },
-                });
-                try {
-                  const evt = new CustomEvent('applyFullPageBackground', { detail: { url: undefined } });
-                  window.dispatchEvent(evt);
-                } catch {}
-              }}
-              className="px-3 py-2 text-sm rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
-            >
-              Supprimer
-            </button>
+                })}
+              />
+              {/* Removed old visible custom color input in favor of rainbow circle */}
+            </div>
           </div>
         )}
       </div>
 
-      <div>
-        <h3 className="text-sm font-semibold text-gray-700 mb-3">Ratio d'image</h3>
-        <div className="space-y-2">
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="radio"
-              checked={articleConfig.banner?.aspectRatio === '2215/1536'}
-              onChange={() => handleBannerAspectRatio('2215/1536')}
-              className="text-[#44444d] focus:ring-[#44444d]"
-            />
-            <span className="text-sm text-gray-700">2215×1536px (Standard)</span>
-          </label>
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="radio"
-              checked={articleConfig.banner?.aspectRatio === '1500/744'}
-              onChange={() => handleBannerAspectRatio('1500/744')}
-              className="text-[#44444d] focus:ring-[#44444d]"
-            />
-            <span className="text-sm text-gray-700">1500×744px (Panoramique)</span>
-          </label>
-        </div>
+      {/* Header uploader */}
+      <div className="border border-gray-200 rounded-lg overflow-hidden">
+        <button
+          type="button"
+          onClick={() => setHeaderOpen((v) => !v)}
+          className="w-full flex items-center justify-between px-3 py-2 bg-gray-50 hover:bg-gray-100 text-sm font-semibold text-gray-700"
+        >
+          En-tête (header)
+          <span className="text-xs text-gray-500">{headerOpen ? 'Masquer' : 'Afficher'}</span>
+        </button>
+        {headerOpen && (
+          <div className="p-3">
+            <label className="w-full p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-[hsl(var(--primary))] hover:bg-[#44444d] hover:text-white transition-colors flex flex-col items-center group cursor-pointer">
+              <Upload className="w-6 h-6 mb-2 text-gray-600 group-hover:text-white" />
+              <span className="text-sm text-gray-600 group-hover:text-white">Télécharger une image d'en-tête</span>
+              <span className="text-xs text-gray-500 group-hover:text-white">PNG, JPG jusqu'à 10MB</span>
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => handleHeaderImageChange(e.target.files?.[0])}
+              />
+            </label>
+            <div className="mt-3 flex items-center gap-2">
+              <button
+                onClick={() => onCampaignChange({
+                  articleConfig: {
+                    ...articleConfig,
+                    header: {
+                      ...(articleConfig as any)?.header,
+                      mode: 'cover',
+                    },
+                  },
+                })}
+                className={`px-3 py-1 text-xs rounded border ${((articleConfig as any)?.header?.mode || 'cover') === 'cover' ? 'bg-gray-900 text-white border-gray-900' : 'bg-white text-gray-700 border-gray-300'}`}
+              >
+                Remplir
+              </button>
+              <button
+                onClick={() => onCampaignChange({
+                  articleConfig: {
+                    ...articleConfig,
+                    header: {
+                      ...(articleConfig as any)?.header,
+                      mode: 'contain',
+                    },
+                  },
+                })}
+                className={`px-3 py-1 text-xs rounded border ${((articleConfig as any)?.header?.mode || 'cover') === 'contain' ? 'bg-gray-900 text-white border-gray-900' : 'bg-white text-gray-700 border-gray-300'}`}
+              >
+                Adapté
+              </button>
+            </div>
+            {(articleConfig as any)?.header?.imageUrl && (
+              <div className="mt-3 flex items-center gap-3">
+                <img
+                  src={(articleConfig as any).header.imageUrl}
+                  alt="Header"
+                  className="h-16 w-auto rounded border border-gray-200"
+                />
+                <button
+                  onClick={handleHeaderImageRemove}
+                  className="px-3 py-2 text-sm rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
+                >
+                  Supprimer
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
-      {/* Palette de couleurs */}
-      <div>
-        <h3 className="text-sm font-semibold text-gray-700 mb-3">Couleurs unies</h3>
-        <div className="grid grid-cols-5 gap-2">
-          {[
-            '#FFFFFF', '#F8F9FA', '#E9ECEF', '#DEE2E6', '#CED4DA',
-            '#ADB5BD', '#6C757D', '#495057', '#343A40', '#212529',
-            '#000000', '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4',
-            '#FFEAA7', '#DDA0DD', '#FF8C69', '#87CEEB', '#98FB98'
-          ].map((color) => (
-            <button
-              key={color}
-              onClick={() => onCampaignChange({
-                articleConfig: {
-                  ...articleConfig,
-                  brandColors: {
-                    ...(articleConfig as any)?.brandColors,
-                    primary: color,
+      {/* Footer uploader */}
+      <div className="border border-gray-200 rounded-lg overflow-hidden">
+        <button
+          type="button"
+          onClick={() => setFooterOpen((v) => !v)}
+          className="w-full flex items-center justify-between px-3 py-2 bg-gray-50 hover:bg-gray-100 text-sm font-semibold text-gray-700"
+        >
+          Pied de page (footer)
+          <span className="text-xs text-gray-500">{footerOpen ? 'Masquer' : 'Afficher'}</span>
+        </button>
+        {footerOpen && (
+          <div className="p-3">
+            <label className="w-full p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-[hsl(var(--primary))] hover:bg-[#44444d] hover:text-white transition-colors flex flex-col items-center group cursor-pointer">
+              <Upload className="w-6 h-6 mb-2 text-gray-600 group-hover:text-white" />
+              <span className="text-sm text-gray-600 group-hover:text-white">Télécharger une image de pied de page</span>
+              <span className="text-xs text-gray-500 group-hover:text-white">PNG, JPG jusqu'à 10MB</span>
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => handleFooterImageChange(e.target.files?.[0])}
+              />
+            </label>
+            <div className="mt-3 flex items-center gap-2">
+              <button
+                onClick={() => onCampaignChange({
+                  articleConfig: {
+                    ...articleConfig,
+                    footer: {
+                      ...(articleConfig as any)?.footer,
+                      mode: 'cover',
+                    },
                   },
-                },
-              })}
-              className="w-10 h-10 rounded-full border-2 border-gray-300 hover:border-[#44444d] transition-colors"
-              style={{ backgroundColor: color }}
-              title={color}
-            />
-          ))}
-        </div>
-        <div className="mt-3">
-          <label className="block text-xs text-gray-600 mb-2">Couleur personnalisée</label>
-          <input
-            type="color"
-            value={(articleConfig as any)?.brandColors?.primary || '#44444d'}
-            onChange={(e) => onCampaignChange({
-              articleConfig: {
-                ...articleConfig,
-                brandColors: {
-                  ...(articleConfig as any)?.brandColors,
-                  primary: e.target.value,
-                },
-              },
-            })}
-            className="w-full h-10 border border-gray-300 rounded-lg cursor-pointer"
-          />
-        </div>
+                })}
+                className={`px-3 py-1 text-xs rounded border ${((articleConfig as any)?.footer?.mode || 'cover') === 'cover' ? 'bg-gray-900 text-white border-gray-900' : 'bg-white text-gray-700 border-gray-300'}`}
+              >
+                Remplir
+              </button>
+              <button
+                onClick={() => onCampaignChange({
+                  articleConfig: {
+                    ...articleConfig,
+                    footer: {
+                      ...(articleConfig as any)?.footer,
+                      mode: 'contain',
+                    },
+                  },
+                })}
+                className={`px-3 py-1 text-xs rounded border ${((articleConfig as any)?.footer?.mode || 'cover') === 'contain' ? 'bg-gray-900 text-white border-gray-900' : 'bg-white text-gray-700 border-gray-300'}`}
+              >
+                Adapté
+              </button>
+            </div>
+            {(articleConfig as any)?.footer?.imageUrl && (
+              <div className="mt-3 flex items-center gap-3">
+                <img
+                  src={(articleConfig as any).footer.imageUrl}
+                  alt="Footer"
+                  className="h-16 w-auto rounded border border-gray-200"
+                />
+                <button
+                  onClick={handleFooterImageRemove}
+                  className="px-3 py-2 text-sm rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
+                >
+                  Supprimer
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
 
-  // Panneau Texte
+  // Panneau Texte (remplacé par le panel cloné de Full Screen)
   const renderTextPanel = () => (
-    <div className="space-y-6">
-      <div>
-        <h3 className="text-sm font-semibold text-gray-700 mb-3">Style du titre</h3>
-        <div className="space-y-3">
-          <div>
-            <label className="block text-xs text-gray-600 mb-1">Taille (px)</label>
-            <input
-              type="number"
-              min={12}
-              max={120}
-              value={titleFontSize}
-              onChange={(e) => {
-                const value = Number.parseInt(e.target.value, 10);
-                if (!Number.isFinite(value)) return;
-                const safeValue = clampFontSize(value);
-                handleTitleStyle({ fontSize: `${safeValue}px` });
-              }}
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#44444d]"
-              placeholder="32"
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs text-gray-600 mb-1">Alignement</label>
-              <select
-                value={articleConfig.content?.titleStyle?.textAlign || 'center'}
-                onChange={(e) => handleTitleStyle({ textAlign: e.target.value })}
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#44444d]"
-              >
-                <option value="left">Gauche</option>
-                <option value="center">Centré</option>
-                <option value="right">Droite</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs text-gray-600 mb-1">Graisse</label>
-              <select
-                value={articleConfig.content?.titleStyle?.fontWeight || 'bold'}
-                onChange={(e) => handleTitleStyle({ fontWeight: e.target.value })}
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#44444d]"
-              >
-                <option value="normal">Normal</option>
-                <option value="600">Semi-bold</option>
-                <option value="bold">Bold</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs text-gray-600 mb-1">Interlignage</label>
-              <input
-                type="number"
-                step="0.1"
-                min="0.8"
-                value={parseFloat(articleConfig.content?.titleStyle?.lineHeight || '1.4')}
-                onChange={(e) => {
-                  const value = Number.parseFloat(e.target.value || '0');
-                  handleTitleStyle({ lineHeight: Number.isFinite(value) ? value.toString() : '1.4' });
-                }}
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#44444d]"
-              />
-            </div>
-            <div>
-              <label className="block text-xs text-gray-600 mb-1">Couleur</label>
-              <input
-                type="color"
-                value={articleConfig.content?.titleStyle?.color || '#1f2937'}
-                onChange={(e) => handleTitleStyle({ color: e.target.value })}
-                className="w-full h-10 border border-gray-300 rounded-lg cursor-pointer"
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="h-px bg-gray-200" />
-
-      <div>
-        <h3 className="text-sm font-semibold text-gray-700 mb-3">Style de la description</h3>
-        <div className="space-y-3">
-          <div>
-            <label className="block text-xs text-gray-600 mb-1">Taille</label>
-            <input
-              type="text"
-              value={articleConfig.content?.descriptionStyle?.fontSize || '1rem'}
-              onChange={(e) => handleDescriptionStyle({ fontSize: e.target.value })}
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#44444d]"
-              placeholder="1rem"
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs text-gray-600 mb-1">Alignement</label>
-              <select
-                value={articleConfig.content?.descriptionStyle?.textAlign || 'center'}
-                onChange={(e) => handleDescriptionStyle({ textAlign: e.target.value })}
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#44444d]"
-              >
-                <option value="left">Gauche</option>
-                <option value="center">Centré</option>
-                <option value="right">Droite</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs text-gray-600 mb-1">Interlignage</label>
-              <input
-                type="number"
-                step="0.1"
-                min="1"
-                value={parseFloat(articleConfig.content?.descriptionStyle?.lineHeight || '1.75')}
-                onChange={(e) => {
-                  const value = Number.parseFloat(e.target.value || '0');
-                  handleDescriptionStyle({ lineHeight: Number.isFinite(value) ? value.toString() : '1.75' });
-                }}
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#44444d]"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-xs text-gray-600 mb-1">Couleur</label>
-            <input
-              type="color"
-              value={articleConfig.content?.descriptionStyle?.color || '#4b5563'}
-              onChange={(e) => handleDescriptionStyle({ color: e.target.value })}
-              className="w-full h-10 border border-gray-300 rounded-lg cursor-pointer"
-            />
-          </div>
-        </div>
-      </div>
-
-      <div className="p-4 bg-purple-50 border border-purple-200 rounded-lg">
-        <p className="text-xs text-purple-800 leading-relaxed">
-          💡 Double-cliquez sur le titre ou la description dans le canvas pour les éditer directement.
-          Les réglages ci-dessus sont reflétés instantanément sur le canvas Article uniquement.
-        </p>
-      </div>
-    </div>
+    <ArticleTextPanel />
   );
 
   // Panneau Bouton

@@ -3,22 +3,40 @@ import React, { CSSProperties, useMemo, useState } from 'react';
 // Polices organisées par catégories - Export needed by other panels
 export const fontCategories = [{
   name: "Business",
-  fonts: ['Roboto', 'Open Sans', 'Lato', 'Montserrat', 'Source Sans Pro', 'Nunito Sans', 'Inter', 'Poppins', 'Work Sans', 'IBM Plex Sans']
+  fonts: [
+    'Roboto', 'Open Sans', 'Lato', 'Montserrat', 'Source Sans Pro', 'Nunito Sans', 'Inter', 'Poppins',
+    'Work Sans', 'IBM Plex Sans', 'Segoe UI', 'Noto Sans', 'PT Sans', 'Mulish', 'Rubik', 'Urbanist', 'DM Sans'
+  ]
 }, {
   name: "Calm",
-  fonts: ['Libre Baskerville', 'Crimson Text', 'EB Garamond', 'Lora', 'Merriweather', 'Playfair Display']
+  fonts: [
+    'Libre Baskerville', 'Crimson Text', 'EB Garamond', 'Lora', 'Merriweather', 'Playfair Display',
+    'Cormorant Garamond', 'Spectral', 'Source Serif Pro', 'Noto Serif'
+  ]
 }, {
   name: "Cute",
-  fonts: ['Caveat', 'Indie Flower', 'Architects Daughter', 'Shadows Into Light', 'Quicksand', 'Comfortaa']
+  fonts: [
+    'Caveat', 'Indie Flower', 'Architects Daughter', 'Shadows Into Light', 'Quicksand', 'Comfortaa',
+    'Baloo 2', 'Nunito', 'Patrick Hand', 'Grandstander'
+  ]
 }, {
   name: "Fancy",
-  fonts: ['Cinzel', 'Cormorant', 'Abril Fatface', 'Yeseva One', 'Bodoni Moda', 'Italiana']
+  fonts: [
+    'Cinzel', 'Cormorant', 'Abril Fatface', 'Yeseva One', 'Bodoni Moda', 'Italiana',
+    'Playfair Display SC', 'Unna', 'Prata', 'Alice'
+  ]
 }, {
   name: "Playful",
-  fonts: ['Lobster', 'Pacifico', 'Fredoka One', 'Righteous', 'Bungee', 'Chewy']
+  fonts: [
+    'Lobster', 'Pacifico', 'Fredoka One', 'Righteous', 'Bungee', 'Chewy',
+    'Comic Neue', 'Paytone One', 'Amatic SC', 'Bangers', 'Luckiest Guy'
+  ]
 }, {
   name: "Artistic",
-  fonts: ['Dancing Script', 'Great Vibes', 'Allura', 'Satisfy', 'Kaushan Script', 'Tangerine']
+  fonts: [
+    'Dancing Script', 'Great Vibes', 'Allura', 'Satisfy', 'Kaushan Script', 'Tangerine',
+    'Parisienne', 'Sacramento', 'Mr Dafoe', 'Alex Brush'
+  ]
 }];
 
 interface TextPanelProps {
@@ -45,8 +63,25 @@ const TextPanel: React.FC<TextPanelProps> = ({
     }
   };
   
+  // Ensure a Google Font stylesheet is loaded for a given family (idempotent)
+  const ensureGoogleFontLoaded = (family: string) => {
+    try {
+      const slug = (family || '').trim().replace(/\s+/g, '+');
+      if (!slug) return;
+      const linkId = `gf-${slug.toLowerCase()}`;
+      if (document.getElementById(linkId)) return; // already loaded
+      const href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(family).replace(/%20/g, '+')}&display=swap`;
+      const link = document.createElement('link');
+      link.id = linkId;
+      link.rel = 'stylesheet';
+      link.href = href;
+      document.head.appendChild(link);
+    } catch {}
+  };
+
   const handleFontChange = (fontFamily: string) => {
     if (selectedElement && onElementUpdate) {
+      ensureGoogleFontLoaded(fontFamily);
       onElementUpdate({ fontFamily });
     }
   };

@@ -17,6 +17,7 @@ import type { ModularPage, ScreenId, BlocBouton, Module } from '@/types/modularE
 import { createEmptyModularPage } from '@/types/modularEditor';
 
 import PreviewRenderer from '@/components/preview/PreviewRenderer';
+import ArticleFunnelView from '@/components/ArticleEditor/ArticleFunnelView';
 import { getArticleConfigWithDefaults } from '@/utils/articleConfigHelpers';
 import ZoomSlider from './components/ZoomSlider';
 import EditorHeader from '@/components/shared/EditorHeader';

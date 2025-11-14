@@ -192,6 +192,9 @@ const StandardizedWheel: React.FC<StandardizedWheelProps> = ({
     <div 
       className={`${croppingStyles.containerClass} ${className}`}
       style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
         ...((croppingStyles as any).styles || {}),
         ...style
       }}
