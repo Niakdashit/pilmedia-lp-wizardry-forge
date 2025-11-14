@@ -135,7 +135,7 @@ const RecentCampaigns: React.FC = () => {
         return 'shadow-slate-500/30';
     }
   };
-  return <div className="relative">
+  return <div className="relative overflow-hidden">
       <div className="p-0 my-[10px]">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
           <div>
