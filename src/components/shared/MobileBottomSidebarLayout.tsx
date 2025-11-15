@@ -36,7 +36,7 @@ export const MobileBottomSidebarLayout: React.FC<MobileBottomSidebarLayoutProps>
       {/* Panneau de contenu modal au-dessus de la sidebar */}
       {internalActiveTab && (
         <div
-          className="fixed inset-0 z-40 flex flex-col"
+          className="fixed inset-0 z-[60] flex flex-col"
           onClick={onCloseActiveTab}
         >
           {/* Overlay semi-transparent */}
@@ -63,7 +63,10 @@ export const MobileBottomSidebarLayout: React.FC<MobileBottomSidebarLayoutProps>
                       {activeTabData?.label || screenTitle}
                     </h2>
                     <button
-                      onClick={onCloseActiveTab}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onCloseActiveTab();
+                      }}
                       className="p-2 hover:bg-[hsl(var(--sidebar-hover))] rounded-lg transition-colors"
                     >
                       <ChevronLeft className="w-5 h-5 text-[hsl(var(--sidebar-icon))]" />
