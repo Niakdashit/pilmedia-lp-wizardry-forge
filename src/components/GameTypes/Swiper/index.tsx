@@ -11,8 +11,8 @@ interface SwiperProps {
 }
 
 export default function Swiper({ config, campaign, isPreview = false, onComplete }: SwiperProps) {
-  const [liked, setLiked] = useState<CardItem[]>([]);
-  const [passed, setPassed] = useState<CardItem[]>([]);
+  const [liked] = useState<CardItem[]>([]);
+  const [passed] = useState<CardItem[]>([]);
 
   // Get cards from campaign config or config prop or use sample cards
   const cards = (campaign?.gameConfig as any)?.swiper?.cards || config?.cards || [

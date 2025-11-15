@@ -28,11 +28,6 @@ import { QuizModuleRenderer } from './QuizRenderer';
 import type { Module } from '@/types/modularEditor';
 
 // Import pour le mode Article
-
-const DEFAULT_ARTICLE_CONFIG = {
-  banner: { imageUrl: '' },
-  title: '',
-  description: '',
   cta: { text: 'PARTICIPER', style: {} },
   layout: { maxWidth: 810 }
 };

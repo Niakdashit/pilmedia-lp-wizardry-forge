@@ -31,13 +31,6 @@ const WheelButton: React.FC<WheelButtonProps> = ({
 }) => {
   // Style global des boutons (synchronisé avec le mode Article)
   const globalButtonStyle = useButtonStyleCSS();
-  const getButtonSizeClasses = () => {
-    switch (buttonConfig.size) {
-      case 'small':
-        return 'px-2 py-1 text-xs';
-      case 'large':
-        return 'px-6 py-3 text-base';
-      default:
         return 'px-4 py-2 text-sm';
     }
   };

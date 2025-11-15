@@ -48,7 +48,6 @@ const ScratchPreview: React.FC<ScratchPreviewProps> = ({
   const [showResult, setShowResult] = useState(false);
   // 🎯 Résultat du système de dotation
   const [dotationResult, setDotationResult] = useState<any>(null);
-  const [dotationLoading, setDotationLoading] = useState(false);
 
   // Clear any previous session data on component mount to ensure fresh start
   useEffect(() => {
