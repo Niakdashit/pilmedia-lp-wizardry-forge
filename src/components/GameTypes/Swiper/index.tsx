@@ -22,14 +22,5 @@ export default function Swiper({ config, campaign, isPreview = false, onComplete
     { id: "4", title: "Daily Glow", image: "https://images.unsplash.com/photo-1598515213691-84b2c46a1a1c?q=80&w=1600&auto=format&fit=crop" },
   ];
 
-  const handleComplete = useCallback(() => {
-    const result: SwiperResult = {
-      liked,
-      passed,
-      completed: true,
-    };
-    onComplete?.(result);
-  }, [liked, passed, onComplete]);
-
   return <HealthySkinSwiper cards={cards} />;
 }

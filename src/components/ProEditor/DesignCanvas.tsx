@@ -27,11 +27,6 @@ import ModularCanvas from './modules/ModularCanvas';
 import { QuizModuleRenderer } from './QuizRenderer';
 import type { Module } from '@/types/modularEditor';
 
-// Import pour le mode Article
-  cta: { text: 'PARTICIPER', style: {} },
-  layout: { maxWidth: 810 }
-};
-
 type CanvasScreenId = 'screen1' | 'screen2' | 'screen3' | 'all';
 
 const SAFE_ZONE_PADDING: Record<DeviceType, number> = {

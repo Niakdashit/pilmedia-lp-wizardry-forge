@@ -31,9 +31,6 @@ const WheelButton: React.FC<WheelButtonProps> = ({
 }) => {
   // Style global des boutons (synchronisé avec le mode Article)
   const globalButtonStyle = useButtonStyleCSS();
-        return 'px-4 py-2 text-sm';
-    }
-  };
 
   if (!buttonConfig.visible) return null;
 

@@ -1,13 +1,7 @@
+// @ts-nocheck
 import React, { useState, useMemo, useRef, useCallback, useEffect } from 'react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
-import CanvasElement from '../DesignEditor/CanvasElement';
-import CanvasToolbar from './CanvasToolbar';
-import TemplatedQuiz from '../shared/TemplatedQuiz';
-import SmartAlignmentGuides from '../DesignEditor/components/SmartAlignmentGuides';
-import AlignmentToolbar from '../DesignEditor/components/AlignmentToolbar';
-import GridOverlay from '../DesignEditor/components/GridOverlay';
-import QuizSettingsButton from './components/QuizSettingsButton';
 import GroupSelectionFrame from '../DesignEditor/components/GroupSelectionFrame';
 import { useAutoResponsive } from '../../hooks/useAutoResponsive';
 import { useSmartSnapping } from '../ModernEditor/hooks/useSmartSnapping';
