@@ -543,7 +543,8 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
     const isTransientQuiz = internalActiveTab === 'quiz' && showQuizPanel;
     const isTransientWheel = internalActiveTab === 'wheel' && showWheelPanel;
 
-    if (!activeIsVisible && !isTransientQuiz && !isTransientWheel) {
+    // Ne réactive pas automatiquement un onglet quand l'utilisateur l'a explicitement fermé (internalActiveTab === null)
+    if (internalActiveTab !== null && !activeIsVisible && !isTransientQuiz && !isTransientWheel) {
       setInternalActiveTab(backgroundVisible ? 'background' : (tabs[0]?.id ?? null));
     }
   }, [tabs, internalActiveTab, showQuizPanel, showWheelPanel]);
