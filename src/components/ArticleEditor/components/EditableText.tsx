@@ -33,7 +33,6 @@ const EditableText: React.FC<EditableTextProps> = ({
 }) => {
   const editorRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [isSourceMode, setIsSourceMode] = useState(false);
   const [htmlContent, setHtmlContent] = useState(propHtmlContent || '');
   const colorInputRef = useRef<HTMLInputElement>(null);
   const [isFocused, setIsFocused] = useState(false);
@@ -387,11 +386,11 @@ const EditableText: React.FC<EditableTextProps> = ({
 
   useEffect(() => {
     const editor = editorRef.current;
-    if (editor && !isSourceMode) {
+    if (editor) {
       editor.addEventListener('dblclick', handleImageDoubleClick);
       return () => editor.removeEventListener('dblclick', handleImageDoubleClick);
     }
-  }, [handleImageDoubleClick, isSourceMode]);
+  }, [handleImageDoubleClick]);
 
   // Mémoriser la dernière sélection non vide dans l’éditeur
   useEffect(() => {
@@ -658,89 +657,6 @@ const EditableText: React.FC<EditableTextProps> = ({
     // Clean up and update
     savedRangeRef.current = null;
     updateContent();
-  };
-
-  const applyFormat = (tag: string) => {
-    if (!editorRef.current) return;
-
-    const editor = editorRef.current;
-    
-    console.log('🔍 [applyFormat] Called with tag:', tag);
-    console.log('🔍 [applyFormat] savedRangeRef.current:', savedRangeRef.current);
-
-    // Récupérer le range à partir de la sélection sauvegardée ou courante
-    let range: Range | null = null;
-    if (savedRangeRef.current) {
-      range = savedRangeRef.current;
-      console.log('✅ [applyFormat] Using savedRangeRef');
-    } else {
-      const sel = window.getSelection();
-      if (sel && sel.rangeCount > 0) {
-        range = sel.getRangeAt(0);
-        console.log('⚠️ [applyFormat] Using current selection');
-      }
-    }
-
-    if (!range) {
-      console.error('❌ [applyFormat] No range available');
-      return;
-    }
-
-    console.log('🔍 [applyFormat] Range:', {
-      collapsed: range.collapsed,
-      text: range.toString(),
-      startContainer: range.startContainer.nodeName,
-      endContainer: range.endContainer.nodeName
-    });
-
-    // S'assurer que le range est bien dans l'éditeur
-    if (!editor.contains(range.commonAncestorContainer)) {
-      console.error('❌ [applyFormat] Range not in editor');
-      return;
-    }
-
-    try {
-      const selectedText = range.toString();
-      console.log('🔍 [applyFormat] Selected text:', selectedText);
-
-      if (selectedText && selectedText.trim().length > 0) {
-        // 🔹 Cas A : du texte est sélectionné → on enveloppe exactement cette sélection
-        console.log('✅ [applyFormat] Applying format to selection');
-        
-        // Restaurer la sélection visuelle d'abord
-        const sel = window.getSelection();
-        if (sel) {
-          sel.removeAllRanges();
-          sel.addRange(range);
-        }
-        
-        const wrapper = document.createElement(tag);
-        const fragment = range.extractContents();
-        wrapper.appendChild(fragment);
-        range.insertNode(wrapper);
-
-        // Placer le curseur après le bloc inséré
-        const newRange = document.createRange();
-        newRange.setStartAfter(wrapper);
-        newRange.collapse(true);
-        if (sel) {
-          sel.removeAllRanges();
-          sel.addRange(newRange);
-        }
-        
-        console.log('✅ [applyFormat] Format applied successfully');
-      } else {
-        console.warn('⚠️ [applyFormat] No text selected, skipping');
-        return;
-      }
-
-      // Clear saved range after use
-      savedRangeRef.current = null;
-      
-      updateContent();
-    } catch (e) {
-      console.error('❌ [applyFormat] Error:', e);
-    }
   };
 
   return (

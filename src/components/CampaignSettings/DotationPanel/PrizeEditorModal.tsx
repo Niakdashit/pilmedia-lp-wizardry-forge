@@ -23,7 +23,6 @@ interface PrizeEditorModalProps {
 export const PrizeEditorModal: React.FC<PrizeEditorModalProps> = ({ prize, onSave, onCancel, campaignType = 'wheel' }) => {
   const [editedPrize, setEditedPrize] = useState<Prize>(prize);
   const [activeTab, setActiveTab] = useState<'general' | 'attribution' | 'segments' | 'images'>('general');
-  const campaignData = useEditorStore((state) => state.campaignData);
   const campaign = useEditorStore((state) => state.campaign);
   const setCampaign = useEditorStore((state) => state.setCampaign);
   const [wheelSegments, setWheelSegments] = useState<WheelSegment[]>([]);
@@ -45,28 +44,8 @@ export const PrizeEditorModal: React.FC<PrizeEditorModalProps> = ({ prize, onSav
     
     console.log('🔍 [PrizeEditorModal] Searching for wheel segments');
     console.log('🔍 [PrizeEditorModal] campaign:', campaign);
-    console.log('🔍 [PrizeEditorModal] campaignData:', campaignData);
     
-    // Essayer plusieurs chemins possibles
-    const paths = {
-      'campaign.wheelConfig.segments': campaign?.wheelConfig?.segments,
-      'campaignData.segments': campaignData?.segments,
-      'campaignData.gameConfig.wheel.segments': campaignData?.gameConfig?.wheel?.segments,
-      'campaignData.gameConfig.segments': campaignData?.gameConfig?.segments,
-      'campaignData.config.roulette.segments': campaignData?.config?.roulette?.segments,
-      'campaignData.config.segments': campaignData?.config?.segments,
-    };
-    
-    console.log('🔍 [PrizeEditorModal] Checking paths:', paths);
-    
-    const segments = 
-      campaign?.wheelConfig?.segments ||  // GameManagementPanel format (PRIORITAIRE)
-      campaignData?.segments ||  // Chemin direct
-      campaignData?.gameConfig?.wheel?.segments ||  // Wheel editor
-      campaignData?.gameConfig?.segments ||  // Design editor
-      campaignData?.config?.roulette?.segments ||  // Ancien format
-      campaignData?.config?.segments ||  // Autre format
-      [];
+    const segments = (campaign as any)?.gameConfig?.wheel?.segments || (campaign as any)?.config?.segments || [];
     
     console.log('✅ [PrizeEditorModal] Found segments:', segments);
     console.log('✅ [PrizeEditorModal] Segments count:', Array.isArray(segments) ? segments.length : 0);
@@ -85,7 +64,7 @@ export const PrizeEditorModal: React.FC<PrizeEditorModalProps> = ({ prize, onSav
     
     console.log('📊 [PrizeEditorModal] Formatted segments:', formattedSegments);
     setWheelSegments(formattedSegments);
-  }, [campaign, campaignData, campaignType]);
+  }, [campaign, campaignType]);
 
   const updateWinningImage = (imageId: string, updates: Partial<WinningImage>) => {
     const updatedImages = winningImages.map(img => 
@@ -176,27 +155,23 @@ export const PrizeEditorModal: React.FC<PrizeEditorModalProps> = ({ prize, onSav
         });
         
         // Mettre à jour tous les emplacements
-        setCampaign({
-          ...campaign,
-          wheelConfig: {
-            ...(campaign as any).wheelConfig,
-            segments: updatedSegments
-          },
+        setCampaign((prev: any) => ({
+          ...prev,
           gameConfig: {
-            ...(campaign as any).gameConfig,
+            ...prev?.gameConfig,
             wheel: {
-              ...(campaign as any).gameConfig?.wheel,
+              ...prev?.gameConfig?.wheel,
               segments: updatedSegments
             }
           },
           config: {
-            ...(campaign as any).config,
+            ...prev?.config,
             roulette: {
-              ...(campaign as any).config?.roulette,
+              ...prev?.config?.roulette,
               segments: updatedSegments
             }
           }
-        });
+        }));
         
         console.log('✅ [PrizeEditorModal] Synchronized segments with prize', {
           prizeId: editedPrize.id,

@@ -31,8 +31,6 @@ const ArticleBanner: React.FC<ArticleBannerProps> = ({
     ? `${(1536 / 2215) * 100}%`  // ~69.3%
     : `${(744 / 1500) * 100}%`;   // ~49.6%
 
-  const noImage = !imageUrl;
-
   return (
     <div 
       className="article-banner relative w-full"
