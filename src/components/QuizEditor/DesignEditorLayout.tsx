@@ -260,19 +260,37 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
 
   // Initialize articleConfig with defaults when in article mode
   useEffect(() => {
-    if (editorMode === 'article' && campaignState && !(campaignState as any)?.articleConfig?.content) {
-      console.log('📝 [QuizEditorLayout] Initializing articleConfig with defaults', {
-        currentArticleConfig: (campaignState as any)?.articleConfig,
-        DEFAULT_ARTICLE_CONFIG_content: DEFAULT_ARTICLE_CONFIG.content
+    if (editorMode === 'article' && campaignState) {
+      const articleConfig = (campaignState as any)?.articleConfig;
+      const content = articleConfig?.content;
+      
+      console.log('🔍 [QuizEditorLayout] Checking articleConfig:', {
+        hasArticleConfig: !!articleConfig,
+        hasContent: !!content,
+        contentDescription: content?.description,
+        needsInit: !articleConfig || !content || (!content.description && !content.title)
       });
-      setCampaign((prev: any) => {
-        const updated = {
-          ...prev,
-          articleConfig: DEFAULT_ARTICLE_CONFIG
-        };
-        console.log('✅ [QuizEditorLayout] articleConfig set to:', updated.articleConfig?.content);
-        return updated;
-      });
+      
+      // Initialize if articleConfig doesn't exist OR if content is missing/empty
+      const needsInit = !articleConfig || !content || (!content.description && !content.title);
+      
+      if (needsInit) {
+        console.log('📝 [QuizEditorLayout] Initializing articleConfig with defaults', {
+          currentArticleConfig: articleConfig,
+          currentContent: content,
+          DEFAULT_ARTICLE_CONFIG_content: DEFAULT_ARTICLE_CONFIG.content
+        });
+        setCampaign((prev: any) => {
+          const updated = {
+            ...prev,
+            articleConfig: DEFAULT_ARTICLE_CONFIG
+          };
+          console.log('✅ [QuizEditorLayout] articleConfig set to:', updated.articleConfig?.content);
+          return updated;
+        });
+      } else {
+        console.log('✅ [QuizEditorLayout] articleConfig already initialized');
+      }
     }
   }, [editorMode, campaignState, setCampaign]);
 
@@ -1167,51 +1185,55 @@ const handleSaveCampaignName = useCallback(async () => {
     if (!id || !isTempCampaignId(id)) return;
     if (showFunnel) return; // skip cleanup during preview to avoid flicker/back-to-screen1
 
-    console.log('🧹 [QuizEditor] Cleaning temp campaign:', id);
+    // ⚠️ DISABLED: Do not clean temp campaigns automatically to preserve user modifications
+    console.log('ℹ️ [QuizEditor] Temp campaign detected but NOT cleaning to preserve modifications:', id);
+    return;
 
-    // Clear localStorage
-    clearTempCampaignData(id);
-
-    // Reset background images
-    setCampaign((prev: any) => {
-      if (!prev) return prev;
-      return {
-        ...prev,
-        design: {
-          ...(prev.design || {}),
-          backgroundImage: undefined,
-          mobileBackgroundImage: undefined
-        }
-      };
-    });
-
-    // Reset backgrounds to color only
-    const defaultBg = { type: 'color' as const, value: '' };
-    setCanvasBackground(defaultBg);
-    setScreenBackgrounds({
-      screen1: defaultBg,
-      screen2: defaultBg,
-      screen3: defaultBg
-    });
-
-    // Filter modularPage to keep only Participer and Rejouer
-    setModularPage((prev: ModularPage) => {
-      const participerButton = prev.screens.screen1?.find((m: Module) =>
-        m.type === 'BlocBouton' && m.label?.toLowerCase().includes('participer')
-      );
-      const rejouerButton = prev.screens.screen3?.find((m: Module) =>
-        m.type === 'BlocBouton' && m.label?.toLowerCase().includes('rejouer')
-      );
-
-      return {
-        ...prev,
-        screens: {
-          screen1: participerButton ? [participerButton] : [],
-          screen2: [],
-          screen3: rejouerButton ? [rejouerButton] : []
-        }
-      };
-    });
+    // console.log('🧹 [QuizEditor] Cleaning temp campaign:', id);
+    //
+    // // Clear localStorage
+    // clearTempCampaignData(id);
+    //
+    // // Reset background images
+    // setCampaign((prev: any) => {
+    //   if (!prev) return prev;
+    //   return {
+    //     ...prev,
+    //     design: {
+    //       ...(prev.design || {}),
+    //       backgroundImage: undefined,
+    //       mobileBackgroundImage: undefined
+    //     }
+    //   };
+    // });
+    //
+    // // Reset backgrounds to color only
+    // const defaultBg = { type: 'color' as const, value: '' };
+    // setCanvasBackground(defaultBg);
+    // setScreenBackgrounds({
+    //   screen1: defaultBg,
+    //   screen2: defaultBg,
+    //   screen3: defaultBg
+    // });
+    //
+    // // Filter modularPage to keep only Participer and Rejouer
+    // setModularPage((prev: ModularPage) => {
+    //   const participerButton = prev.screens.screen1?.find((m: Module) =>
+    //     m.type === 'BlocBouton' && m.label?.toLowerCase().includes('participer')
+    //   );
+    //   const rejouerButton = prev.screens.screen3?.find((m: Module) =>
+    //     m.type === 'BlocBouton' && m.label?.toLowerCase().includes('rejouer')
+    //   );
+    //
+    //   return {
+    //     ...prev,
+    //     screens: {
+    //       screen1: participerButton ? [participerButton] : [],
+    //       screen2: [],
+    //       screen3: rejouerButton ? [rejouerButton] : []
+    //     }
+    //   };
+    // });
   }, [location.search, showFunnel]);
 
   // Handlers pour le funnel article
@@ -3208,13 +3230,15 @@ const handleSaveCampaignName = useCallback(async () => {
     const nextShowFunnel = !showFunnel;
     setShowFunnel(nextShowFunnel);
 
-    if (nextShowFunnel) {
-      // Reset to article step when entering preview
-      setCurrentStep('article');
-    } else if (editorMode === 'article') {
+    if (editorMode === 'article') {
+      // ALWAYS reset to 'article' when toggling preview to ensure clean state
+      // This prevents the funnel from staying on 'result' after game completion
       setCurrentStep('article');
     } else {
-      setCurrentScreen('screen1');
+      // Fullscreen flow: reset to screen1 equivalent when entering preview
+      if (nextShowFunnel) {
+        setCurrentScreen('screen1');
+      }
     }
   };
 
@@ -4147,6 +4171,7 @@ const handleSaveCampaignName = useCallback(async () => {
                       />
                     )}
                   </div>
+                  {editorMode === 'fullscreen' && (
                   <DesignCanvas
                     editorMode={editorMode}
                     screenId="screen1"
@@ -4235,6 +4260,7 @@ const handleSaveCampaignName = useCallback(async () => {
                     onModuleMove={handleMoveModule}
                     onModuleDuplicate={handleDuplicateModule}
                   />
+                  )}
                 </div>
                 
                 {/* Deuxième Canvas - Seulement en mode Fullscreen */}

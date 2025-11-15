@@ -40,56 +40,61 @@ export const useEditorUnmountSave = (
 
   useEffect(() => {
     return () => {
-      console.log(`🧹 [${campaignType}Editor] Unmounting - saving before reset`);
+      console.log(`🧹 [${campaignType}Editor] Unmounting - checking if save needed`);
       
       try {
         const id = (campaignState as any)?.id;
         const isUuid = (v?: string) => 
           !!v && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v);
         
-        if (isUuid(id)) {
-          const currentStates = statesRef.current;
-          
-          // 1. Sync local → store
-          syncAllStatesRef.current({
-            canvasElements: currentStates.canvasElements,
-            modularPage: currentStates.modularPage,
-            screenBackgrounds: currentStates.screenBackgrounds,
-            extractedColors: currentStates.extractedColors,
-            selectedDevice: currentStates.selectedDevice,
-            canvasZoom: currentStates.canvasZoom
-          });
-
-          // 2. Build complete payload
-          const base = useEditorStore.getState().campaign || {};
-          const payload: any = {
-            ...base,
-            // Do NOT override type here; preserve existing DB type
-            extractedColors: currentStates.extractedColors,
-            modularPage: currentStates.modularPage,
-            canvasElements: currentStates.canvasElements,
-            screenBackgrounds: currentStates.screenBackgrounds,
-            selectedDevice: currentStates.selectedDevice,
-            canvasZoom: currentStates.canvasZoom,
-            canvasConfig: {
-              ...(base as any)?.canvasConfig,
-              elements: currentStates.canvasElements,
-              screenBackgrounds: currentStates.screenBackgrounds,
-              device: currentStates.selectedDevice,
-              zoom: currentStates.canvasZoom
-            }
-          };
-
-          // Add game-specific config
-          if (currentStates.gameConfig) {
-            const configKey = `${campaignType}Config`;
-            payload[configKey] = currentStates.gameConfig;
-          }
-
-          // 3. Save then reset
-          console.log(`💾 [${campaignType}Editor] Saving complete state before unmount`);
-          void saveCampaignToDB(payload, saveCampaignRef.current);
+        // 🚫 CRITICAL: Only save if campaign has a real UUID (not temp ID)
+        if (!isUuid(id)) {
+          console.log(`⏭️ [${campaignType}Editor] Skipping unmount save - campaign is temporary or not persisted (id: ${id})`);
+          resetCampaign();
+          return;
         }
+        
+        console.log(`💾 [${campaignType}Editor] Saving persisted campaign before unmount (id: ${id})`);
+        const currentStates = statesRef.current;
+        
+        // 1. Sync local → store
+        syncAllStatesRef.current({
+          canvasElements: currentStates.canvasElements,
+          modularPage: currentStates.modularPage,
+          screenBackgrounds: currentStates.screenBackgrounds,
+          extractedColors: currentStates.extractedColors,
+          selectedDevice: currentStates.selectedDevice,
+          canvasZoom: currentStates.canvasZoom
+        });
+
+        // 2. Build complete payload
+        const base = useEditorStore.getState().campaign || {};
+        const payload: any = {
+          ...base,
+          // Do NOT override type here; preserve existing DB type
+          extractedColors: currentStates.extractedColors,
+          modularPage: currentStates.modularPage,
+          canvasElements: currentStates.canvasElements,
+          screenBackgrounds: currentStates.screenBackgrounds,
+          selectedDevice: currentStates.selectedDevice,
+          canvasZoom: currentStates.canvasZoom,
+          canvasConfig: {
+            ...(base as any)?.canvasConfig,
+            elements: currentStates.canvasElements,
+            screenBackgrounds: currentStates.screenBackgrounds,
+            device: currentStates.selectedDevice,
+            zoom: currentStates.canvasZoom
+          }
+        };
+
+        // Add game-specific config
+        if (currentStates.gameConfig) {
+          const configKey = `${campaignType}Config`;
+          payload[configKey] = currentStates.gameConfig;
+        }
+
+        // 3. Save then reset
+        void saveCampaignToDB(payload, saveCampaignRef.current);
       } catch (e) {
         console.error(`❌ [${campaignType}Editor] Failed to save on unmount:`, e);
       }

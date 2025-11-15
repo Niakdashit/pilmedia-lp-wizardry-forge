@@ -428,51 +428,55 @@ useEffect(() => {
   const id = params.get('campaign');
   if (!id || !isTempCampaignId(id)) return;
   
-  console.log('🧹 [DesignEditor] Cleaning temp campaign:', id);
+  // ⚠️ DISABLED: Do not clean temp campaigns automatically to preserve user modifications
+  console.log('ℹ️ [DesignEditor] Temp campaign detected but NOT cleaning to preserve modifications:', id);
+  return;
   
-  // Clear localStorage
-  clearTempCampaignData(id);
-  
-  // Reset background images
-  setCampaign((prev: any) => {
-    if (!prev) return prev;
-    return {
-      ...prev,
-      design: {
-        ...(prev.design || {}),
-        backgroundImage: undefined,
-        mobileBackgroundImage: undefined
-      }
-    };
-  });
-  
-  // Reset backgrounds to color only
-  const defaultBg = { type: 'color' as const, value: '' };
-  setCanvasBackground(defaultBg);
-  setScreenBackgrounds({
-    screen1: defaultBg,
-    screen2: defaultBg,
-    screen3: defaultBg
-  });
-  
-  // Filter modularPage to keep only Participer and Rejouer
-  setModularPage((prev: ModularPage) => {
-    const participerButton = prev.screens.screen1?.find((m: Module) => 
-      m.type === 'BlocBouton' && m.label?.toLowerCase().includes('participer')
-    );
-    const rejouerButton = prev.screens.screen3?.find((m: Module) => 
-      m.type === 'BlocBouton' && m.label?.toLowerCase().includes('rejouer')
-    );
-    
-    return {
-      ...prev,
-      screens: {
-        screen1: participerButton ? [participerButton] : [],
-        screen2: [],
-        screen3: rejouerButton ? [rejouerButton] : []
-      }
-    };
-  });
+  // console.log('🧹 [DesignEditor] Cleaning temp campaign:', id);
+  // 
+  // // Clear localStorage
+  // clearTempCampaignData(id);
+  // 
+  // // Reset background images
+  // setCampaign((prev: any) => {
+  //   if (!prev) return prev;
+  //   return {
+  //     ...prev,
+  //     design: {
+  //       ...(prev.design || {}),
+  //       backgroundImage: undefined,
+  //       mobileBackgroundImage: undefined
+  //     }
+  //   };
+  // });
+  // 
+  // // Reset backgrounds to color only
+  // const defaultBg = { type: 'color' as const, value: '' };
+  // setCanvasBackground(defaultBg);
+  // setScreenBackgrounds({
+  //   screen1: defaultBg,
+  //   screen2: defaultBg,
+  //   screen3: defaultBg
+  // });
+  // 
+  // // Filter modularPage to keep only Participer and Rejouer
+  // setModularPage((prev: ModularPage) => {
+  //   const participerButton = prev.screens.screen1?.find((m: Module) => 
+  //     m.type === 'BlocBouton' && m.label?.toLowerCase().includes('participer')
+  //   );
+  //   const rejouerButton = prev.screens.screen3?.find((m: Module) => 
+  //     m.type === 'BlocBouton' && m.label?.toLowerCase().includes('rejouer')
+  //   );
+  //   
+  //   return {
+  //     ...prev,
+  //     screens: {
+  //       screen1: participerButton ? [participerButton] : [],
+  //       screen2: [],
+  //       screen3: rejouerButton ? [rejouerButton] : []
+  //     }
+  //   };
+  // });
 }, [location.search]);
 
   
@@ -2310,10 +2314,9 @@ useEffect(() => {
     setShowFunnel(nextShowFunnel);
 
     if (editorMode === 'article') {
-      // Article flow: stay on current step to mirror edition exactly
-      if (!nextShowFunnel) {
-        setCurrentStep((campaignState as any)?.articleConfig?.funnelFlow?.steps?.[0] || 'article');
-      }
+      // ALWAYS reset to 'article' when toggling preview to ensure clean state
+      // This prevents the funnel from staying on 'result' after game completion
+      setCurrentStep((campaignState as any)?.articleConfig?.funnelFlow?.steps?.[0] || 'article');
     } else {
       // Fullscreen flow: reset to screen1 equivalent when entering preview
       if (nextShowFunnel) {

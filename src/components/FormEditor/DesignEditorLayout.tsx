@@ -442,31 +442,36 @@ useEffect(() => {
   const id = params.get('campaign');
   if (!id || !isTempCampaignId(id)) return;
   
-  console.log('🧹 [FormEditor] Cleaning temp campaign:', id);
+  // ⚠️ DISABLED: Do not clean temp campaigns automatically to preserve user modifications
+  // This was causing loss of articleConfig.winnerContent and other modifications
+  console.log('ℹ️ [FormEditor] Temp campaign detected but NOT cleaning to preserve modifications:', id);
+  return;
   
-  // Clear localStorage
-  clearTempCampaignData(id);
-  
-  // Reset background images
-  setCampaign((prev: any) => {
-    if (!prev) return prev;
-    return {
-      ...prev,
-      design: {
-        ...(prev.design || {}),
-        backgroundImage: undefined,
-        mobileBackgroundImage: undefined
-      }
-    };
-  });
-  
-  // Reset backgrounds to color only
-  const defaultBg = { type: 'color' as const, value: '' };
-  setCanvasBackground(defaultBg);
-  setScreenBackgrounds({
-    screen1: defaultBg,
-    screen2: defaultBg
-  });
+  // console.log('🧹 [FormEditor] Cleaning temp campaign:', id);
+  // 
+  // // Clear localStorage
+  // clearTempCampaignData(id);
+  // 
+  // // Reset background images
+  // setCampaign((prev: any) => {
+  //   if (!prev) return prev;
+  //   return {
+  //     ...prev,
+  //     design: {
+  //       ...(prev.design || {}),
+  //       backgroundImage: undefined,
+  //       mobileBackgroundImage: undefined
+  //     }
+  //   };
+  // });
+  // 
+  // // Reset backgrounds to color only
+  // const defaultBg = { type: 'color' as const, value: '' };
+  // setCanvasBackground(defaultBg);
+  // setScreenBackgrounds({
+  //   screen1: defaultBg,
+  //   screen2: defaultBg
+  // });
 }, [location.search]);
 
   // État local pour la compatibilité existante
@@ -1673,8 +1678,8 @@ useEffect(() => {
     () => getElementFilterForScreen(currentScreen),
     [currentScreen, getElementFilterForScreen]
   );
-  // For form campaigns, start directly with the form (no article step)
-  const [currentStep, setCurrentStep] = useState<'article' | 'form' | 'game' | 'result'>(editorMode === 'article' ? 'form' : 'article');
+  // For form campaigns, ALWAYS start directly with the form (no article step)
+  const [currentStep, setCurrentStep] = useState<'article' | 'form' | 'game' | 'result'>('form');
   const [previewButtonSide, setPreviewButtonSide] = useState<'left' | 'right'>(() =>
     (typeof window !== 'undefined' && localStorage.getItem('previewButtonSide') === 'left') ? 'left' : 'right'
   );
@@ -2962,7 +2967,14 @@ useEffect(() => {
 
   const handlePreview = () => {
     // Forcer la synchronisation du store vers le preview
-    console.log('🔄 [DesignEditorLayout] Preview toggled, syncing store to preview');
+    console.log('🔄 [FormEditor] Preview toggled, syncing store to preview');
+    console.log('📊 [FormEditor] Current articleConfig:', {
+      hasArticleConfig: !!(campaignState as any)?.articleConfig,
+      hasContent: !!(campaignState as any)?.articleConfig?.content,
+      title: (campaignState as any)?.articleConfig?.content?.title,
+      description: (campaignState as any)?.articleConfig?.content?.description,
+      htmlContent: (campaignState as any)?.articleConfig?.content?.htmlContent?.substring(0, 100)
+    });
     
     // Mettre à jour le store avec les dernières données
     setCampaign(campaignState);
@@ -2971,15 +2983,15 @@ useEffect(() => {
     window.dispatchEvent(new CustomEvent('editor-force-sync', {
       detail: {
         timestamp: Date.now(),
-        modularPage: (campaignState as any)?.modularPage
+        modularPage: (campaignState as any)?.modularPage,
+        articleConfig: (campaignState as any)?.articleConfig
       }
     }));
     
     setShowFunnel(!showFunnel);
-    // For form campaigns, keep the form step (don't reset to article)
-    if (!showFunnel) {
-      setCurrentStep('form');
-    }
+    // ALWAYS reset to 'form' when toggling preview to ensure clean state
+    // Form campaigns always start directly with the form (no article step)
+    setCurrentStep('form');
   };
 
   // Funnel progression handlers for Form
@@ -3657,9 +3669,18 @@ useEffect(() => {
                   -ms-user-select: auto !important;
                 }
               `}</style>
-              {editorMode === 'article' && (
-                <PreviewRenderer
-                  articleConfig={getArticleConfigWithDefaults(campaignState, memoCampaignData)}
+              {editorMode === 'article' ? (
+                <ArticleFunnelView
+                  articleConfig={(() => {
+                    const config = getArticleConfigWithDefaults(campaignState, memoCampaignData);
+                    console.log('🔍 [FormEditor] ArticleFunnelView articleConfig (preview mode):', {
+                      hasWinnerContent: !!(config as any)?.winnerContent,
+                      winnerContent: (config as any)?.winnerContent?.substring(0, 100),
+                      hasLoserContent: !!(config as any)?.loserContent,
+                      campaignStateWinnerContent: (campaignState as any)?.articleConfig?.winnerContent?.substring(0, 100)
+                    });
+                    return config;
+                  })()}
                   campaignType={(campaignState as any)?.type || 'form'}
                   campaign={memoCampaignData}
                   wheelModalConfig={undefined}
@@ -3675,9 +3696,36 @@ useEffect(() => {
                   onFormSubmit={handleFormSubmit}
                   onGameComplete={handleGameComplete}
                   onStepChange={setCurrentStep}
+                  onWinnerContentChange={(content) => {
+                    setCampaign((currentCampaign: any) => {
+                      if (!currentCampaign) return currentCampaign;
+                      const existingArticleConfig = (currentCampaign as any).articleConfig || {};
+                      return {
+                        ...currentCampaign,
+                        articleConfig: {
+                          ...existingArticleConfig,
+                          winnerContent: content,
+                        },
+                      };
+                    });
+                  }}
+                  onLoserContentChange={(content) => {
+                    setCampaign((currentCampaign: any) => {
+                      if (!currentCampaign) return currentCampaign;
+                      const existingArticleConfig = (currentCampaign as any).articleConfig || {};
+                      return {
+                        ...currentCampaign,
+                        articleConfig: {
+                          ...existingArticleConfig,
+                          loserContent: content,
+                        },
+                      };
+                    });
+                  }}
+                  availableSteps={['form', 'result']}
                 />
-              )}
-              <DesignCanvas
+              ) : (
+                <DesignCanvas
                 editorMode={editorMode}
                 screenId={currentScreen}
                 selectedDevice={selectedDevice}
@@ -3711,6 +3759,7 @@ useEffect(() => {
                 onModuleDuplicate={() => {}}
                 onFormSubmit={() => handleFormSubmit({})}
               />
+              )}
             </div>
           </div>
         ) : (
@@ -4053,7 +4102,16 @@ useEffect(() => {
                   <div className="flex-1 flex flex-col items-center justify-center overflow-hidden relative">
                     {editorMode === 'article' && (
                       <ArticleFunnelView
-                        articleConfig={getArticleConfigWithDefaults(campaignState, memoCampaignData)}
+                        articleConfig={(() => {
+                          const config = getArticleConfigWithDefaults(campaignState, memoCampaignData);
+                          console.log('🔍 [FormEditor] ArticleFunnelView articleConfig (edit mode):', {
+                            hasWinnerContent: !!(config as any)?.winnerContent,
+                            winnerContent: (config as any)?.winnerContent?.substring(0, 100),
+                            hasLoserContent: !!(config as any)?.loserContent,
+                            campaignStateWinnerContent: (campaignState as any)?.articleConfig?.winnerContent?.substring(0, 100)
+                          });
+                          return config;
+                        })()}
                         campaignType={(campaignState as any)?.type || 'form'}
                         campaign={memoCampaignData}
                         wheelModalConfig={undefined}
@@ -4121,9 +4179,61 @@ useEffect(() => {
                         onFormSubmit={handleFormSubmit}
                         onGameComplete={handleGameComplete}
                         onStepChange={setCurrentStep}
+                        onWinnerContentChange={(content) => {
+                          console.log('🎯 [FormEditor] onWinnerContentChange called:', {
+                            content: content?.substring(0, 100),
+                            contentLength: content?.length,
+                            hasCampaignState: !!campaignState,
+                            currentWinnerContent: (campaignState as any)?.articleConfig?.winnerContent?.substring(0, 100)
+                          });
+                          // Use setCampaign with updater function to get fresh state
+                          setCampaign((currentCampaign: any) => {
+                            console.log('🎯 [FormEditor] setCampaign updater - currentCampaign:', {
+                              hasCampaign: !!currentCampaign,
+                              campaignKeys: currentCampaign ? Object.keys(currentCampaign) : [],
+                              campaignId: currentCampaign?.id,
+                              currentWinnerContent: currentCampaign?.articleConfig?.winnerContent?.substring(0, 100),
+                              fullCampaign: currentCampaign
+                            });
+                            if (!currentCampaign || !currentCampaign.id) {
+                              console.warn('⚠️ [FormEditor] No campaign or campaign without ID in store, cannot update winnerContent');
+                              return currentCampaign;
+                            }
+                            
+                            // Create articleConfig if it doesn't exist
+                            const existingArticleConfig = (currentCampaign as any).articleConfig || {};
+                            
+                            const updatedCampaign = {
+                              ...currentCampaign,
+                              articleConfig: {
+                                ...existingArticleConfig,
+                                winnerContent: content,
+                              },
+                            };
+                            console.log('🎯 [FormEditor] Returning updated campaign with new winnerContent:', {
+                              newWinnerContent: updatedCampaign.articleConfig.winnerContent?.substring(0, 100)
+                            });
+                            return updatedCampaign;
+                          });
+                        }}
+                        onLoserContentChange={(content) => {
+                          setCampaign((currentCampaign: any) => {
+                            if (!currentCampaign) return currentCampaign;
+                            const existingArticleConfig = (currentCampaign as any).articleConfig || {};
+                            return {
+                              ...currentCampaign,
+                              articleConfig: {
+                                ...existingArticleConfig,
+                                loserContent: content,
+                              },
+                            };
+                          });
+                        }}
+                        availableSteps={['form', 'result']}
                       />
                     )}
                   </div>
+                  {editorMode === 'fullscreen' && (
                   <DesignCanvas
                     editorMode={editorMode}
                     screenId="screen1"
@@ -4209,6 +4319,7 @@ useEffect(() => {
                     onModuleMove={handleMoveModule}
                     onModuleDuplicate={handleDuplicateModule}
                   />
+                  )}
                 </div>
 
                 {/* Écran 2 (Sortie) - réintroduit uniquement en mode fullscreen */}

@@ -2842,10 +2842,9 @@ const handleSaveCampaignName = useCallback(async () => {
 
   const handlePreview = () => {
     setShowFunnel(!showFunnel);
-    // Reset to article step when entering preview
-    if (!showFunnel) {
-      setCurrentStep('article');
-    }
+    // ALWAYS reset to 'article' when toggling preview to ensure clean state
+    // This prevents the funnel from staying on 'result' after game completion
+    setCurrentStep('article');
   };
 
   // Funnel progression handlers

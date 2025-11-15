@@ -525,39 +525,43 @@ useEffect(() => {
   const id = params.get('campaign');
   if (!id || !isTempCampaignId(id)) return;
   
-  // ✅ GUARD: Skip if already cleaned this campaign ID
-  if (didTempCleanupRef.current.has(id)) {
-    console.log('⏭️ [JackpotEditor] Already cleaned temp campaign:', id);
-    return;
-  }
+  // ⚠️ DISABLED: Do not clean temp campaigns automatically to preserve user modifications
+  console.log('ℹ️ [JackpotEditor] Temp campaign detected but NOT cleaning to preserve modifications:', id);
+  return;
   
-  console.log('🧹 [JackpotEditor] Cleaning temp campaign (first time):', id);
-  didTempCleanupRef.current.add(id);
-  
-  // Clear localStorage namespaced temp data
-  clearTempCampaignData(id);
-  
-  // Reset background images in global campaign state
-  setCampaign((prev: any) => {
-    if (!prev) return prev;
-    return {
-      ...prev,
-      design: {
-        ...(prev.design || {}),
-        backgroundImage: undefined,
-        mobileBackgroundImage: undefined
-      }
-    };
-  });
-  
-  // Reset editor backgrounds to empty color for all screens
-  const defaultBg = { type: 'color' as const, value: '' };
-  setCanvasBackground(defaultBg);
-  setScreenBackgrounds({
-    screen1: defaultBg,
-    screen2: defaultBg,
-    screen3: defaultBg
-  });
+  // // ✅ GUARD: Skip if already cleaned this campaign ID
+  // if (didTempCleanupRef.current.has(id)) {
+  //   console.log('⏭️ [JackpotEditor] Already cleaned temp campaign:', id);
+  //   return;
+  // }
+  // 
+  // console.log('🧹 [JackpotEditor] Cleaning temp campaign (first time):', id);
+  // didTempCleanupRef.current.add(id);
+  // 
+  // // Clear localStorage namespaced temp data
+  // clearTempCampaignData(id);
+  // 
+  // // Reset background images in global campaign state
+  // setCampaign((prev: any) => {
+  //   if (!prev) return prev;
+  //   return {
+  //     ...prev,
+  //     design: {
+  //       ...(prev.design || {}),
+  //       backgroundImage: undefined,
+  //       mobileBackgroundImage: undefined
+  //     }
+  //   };
+  // });
+  // 
+  // // Reset editor backgrounds to empty color for all screens
+  // const defaultBg = { type: 'color' as const, value: '' };
+  // setCanvasBackground(defaultBg);
+  // setScreenBackgrounds({
+  //   screen1: defaultBg,
+  //   screen2: defaultBg,
+  //   screen3: defaultBg
+  // });
 }, [location.search]);
   
   // Gestionnaire de changement d'appareil avec ajustement automatique du zoom
@@ -2966,10 +2970,9 @@ useEffect(() => {
     }
     
     setShowFunnel(!showFunnel);
-    // Reset to article step when entering preview
-    if (!showFunnel) {
-      setCurrentStep('article');
-    }
+    // ALWAYS reset to 'article' when toggling preview to ensure clean state
+    // This prevents the funnel from staying on 'result' after game completion
+    setCurrentStep('article');
   };
 
   // Funnel progression handlers

@@ -34,9 +34,20 @@ const EditableText: React.FC<EditableTextProps> = ({
   const editorRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isSourceMode, setIsSourceMode] = useState(false);
-  const [htmlContent, setHtmlContent] = useState(propHtmlContent || '');
   const colorInputRef = useRef<HTMLInputElement>(null);
   const [isFocused, setIsFocused] = useState(false);
+  const isInitializedRef = useRef(false);
+  
+  // Initialize htmlContent ONCE with proper default
+  const getInitialContent = useCallback(() => {
+    if (propHtmlContent) return propHtmlContent;
+    const contentTitle = title || '';
+    const contentDescription = description || 'Décrivez votre contenu ici...';
+    const align = defaultAlign || 'center';
+    return `<h2>${contentTitle}</h2><p style="font-weight:500; text-align:${align}">${contentDescription.replace(/\n/g, `</p><p style=\"font-weight:500; text-align:${align}\">`)}</p>`;
+  }, [propHtmlContent, title, description, defaultAlign]);
+  
+  const [htmlContent, setHtmlContent] = useState(getInitialContent);
   const [showLinkModal, setShowLinkModal] = useState(false);
   const [showImageModal, setShowImageModal] = useState(false);
   const [showImageEditModal, setShowImageEditModal] = useState(false);
@@ -416,47 +427,36 @@ const EditableText: React.FC<EditableTextProps> = ({
     };
   }, []);
 
-  // Initialize and sync htmlContent with props
+  // Initialize editor content ONCE on mount
   useEffect(() => {
-    // If propHtmlContent is provided, use it
-    if (propHtmlContent) {
-      if (htmlContent !== propHtmlContent) {
-        setHtmlContent(propHtmlContent);
-        
-        // Also set it in the editor if it exists and we're in edit mode
-        if (editable && editorRef.current) {
-          setTimeout(() => {
-            if (editorRef.current && editorRef.current.innerHTML !== propHtmlContent) {
-              editorRef.current.innerHTML = propHtmlContent;
-            }
-          }, 100);
-        }
-      }
-    } else {
-      // Otherwise, build from title/description
-      const contentTitle = title || '';
-      const contentDescription = description || 'Décrivez votre contenu ici...';
-      
-      // Create HTML content from title and description
-      // Description par défaut en semi-gras (font-weight 500) avec alignement configurable
-      const align = defaultAlign || 'center';
-      const newContent = `<h2>${contentTitle}</h2><p style="font-weight:500; text-align:${align}">${contentDescription.replace(/\n/g, `</p><p style=\\"font-weight:500; text-align:${align}\\">`)}</p>`;
-      
-      // Only update if content has changed to avoid infinite loops
-      if (htmlContent !== newContent) {
-        setHtmlContent(newContent);
-        
-        // Also set it in the editor if it exists and we're in edit mode
-        if (editable && editorRef.current) {
-          setTimeout(() => {
-            if (editorRef.current && editorRef.current.innerHTML !== newContent) {
-              editorRef.current.innerHTML = newContent;
-            }
-          }, 100);
-        }
-      }
+    if (!editorRef.current || isInitializedRef.current) return;
+    
+    // Set initial content only once
+    const initialContent = getInitialContent();
+    editorRef.current.innerHTML = initialContent;
+    isInitializedRef.current = true;
+    
+    console.log('✅ [EditableText] Initialized with content:', initialContent.substring(0, 100));
+  }, [getInitialContent]);
+  
+  // Sync propHtmlContent changes ONLY when not focused and content actually changed
+  useEffect(() => {
+    if (!propHtmlContent || isFocused || !editorRef.current) return;
+    
+    // Only update if propHtmlContent is different from current DOM content
+    const currentContent = editorRef.current.innerHTML;
+    if (currentContent !== propHtmlContent) {
+      console.log('🔄 [EditableText] Syncing external content change:', {
+        currentLength: currentContent.length,
+        newLength: propHtmlContent.length,
+        preview: propHtmlContent.substring(0, 100)
+      });
+      setHtmlContent(propHtmlContent);
+      editorRef.current.innerHTML = propHtmlContent;
     }
-  }, [propHtmlContent, title, description, editable]);
+  }, [propHtmlContent, isFocused, htmlContent]);
+
+  // No need for constant sync - removed to prevent reinitialization
 
   const updateContent = () => {
     setTimeout(() => {
@@ -1223,14 +1223,29 @@ const EditableText: React.FC<EditableTextProps> = ({
         <div
           ref={editorRef}
           contentEditable
+          suppressContentEditableWarning
           onInput={() => {
-            // Ne pas mettre à jour htmlContent à chaque frappe pour éviter la perte du caret
-            // La mise à jour se fait seulement lors du blur
+            // Ne PAS mettre à jour htmlContent pendant l'édition
+            // Cela évite la perte du caret et la réinitialisation des couleurs
+            // La mise à jour se fait uniquement lors du blur
           }}
-          onFocus={() => setIsFocused(true)}
+          onFocus={() => {
+            console.log('📝 [EditableText] Focus gained');
+            setIsFocused(true);
+          }}
           onBlur={() => {
+            console.log('📝 [EditableText] Focus lost, updating parent');
             setIsFocused(false);
-            // Update parent on blur
+            // Update htmlContent and parent on blur
+            if (editorRef.current) {
+              const content = editorRef.current.innerHTML;
+              console.log('💾 [EditableText] Saving content on blur:', {
+                length: content.length,
+                preview: content.substring(0, 150),
+                hasColorStyles: content.includes('style="color')
+              });
+              setHtmlContent(content);
+            }
             updateContent();
           }}
           className={`w-full ${compact ? 'min-h-[40px]' : 'min-h-[150px]'} pt-3 px-3 pb-0 focus:outline-none prose prose-lg max-w-none transition-colors duration-200 ${
@@ -1242,17 +1257,63 @@ const EditableText: React.FC<EditableTextProps> = ({
           }}
         />
       ) : (
-        <div
-          className={`w-full ${compact ? 'min-h-[40px]' : 'min-h-[150px]'} pt-3 px-3 pb-0 prose prose-lg max-w-none`}
-          dangerouslySetInnerHTML={{ __html: htmlContent }}
-          style={{ 
-            direction: 'ltr', 
-            textAlign: 'left',
-            wordWrap: 'break-word',
-            overflowWrap: 'break-word',
-            whiteSpace: 'normal'
-          }}
-        />
+        <>
+          <style>{`
+            .article-preview-content h1 {
+              font-size: 2.25rem;
+              font-weight: 800;
+              line-height: 2.5rem;
+              margin-top: 0;
+              margin-bottom: 0.875rem;
+            }
+            .article-preview-content h2 {
+              font-size: 1.875rem;
+              font-weight: 700;
+              line-height: 2.25rem;
+              margin-top: 0;
+              margin-bottom: 0.75rem;
+            }
+            .article-preview-content h3 {
+              font-size: 1.5rem;
+              font-weight: 600;
+              line-height: 2rem;
+              margin-top: 0;
+              margin-bottom: 0.625rem;
+            }
+            .article-preview-content p {
+              margin-top: 0;
+              margin-bottom: 1rem;
+              line-height: 1.75rem;
+            }
+            .article-preview-content ul, .article-preview-content ol {
+              margin-top: 0;
+              margin-bottom: 1rem;
+              padding-left: 1.625rem;
+            }
+            .article-preview-content li {
+              margin-top: 0.5rem;
+              margin-bottom: 0.5rem;
+            }
+            .article-preview-content strong {
+              font-weight: 600;
+            }
+            .article-preview-content a {
+              color: #3b82f6;
+              text-decoration: underline;
+            }
+          `}</style>
+          <div
+            className={`article-preview-content w-full ${compact ? 'min-h-[40px]' : 'min-h-[150px]'} pt-3 px-3 pb-0`}
+            dangerouslySetInnerHTML={{ __html: htmlContent }}
+            style={{ 
+              direction: 'ltr', 
+              textAlign: 'left',
+              wordWrap: 'break-word',
+              overflowWrap: 'break-word',
+              whiteSpace: 'normal'
+            }}
+          />
+        </>
       )}
 
       {/* Source Modal */}

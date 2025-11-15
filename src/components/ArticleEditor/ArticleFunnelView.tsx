@@ -29,6 +29,7 @@ interface ArticleFunnelViewProps {
   onStepChange?: (step: ArticleFunnelStep) => void;
   containerClassName?: string;
   containerStyle?: React.CSSProperties;
+  availableSteps?: ArticleFunnelStep[]; // Custom steps for different campaign types (e.g., form campaigns skip 'article')
 }
 
 const DEFAULT_CONTAINER_CLASS = 'w-full min-h-screen flex items-center justify-center overflow-y-auto py-8 px-8';
@@ -56,7 +57,8 @@ const ArticleFunnelView: React.FC<ArticleFunnelViewProps> = ({
   onGameComplete,
   onStepChange,
   containerClassName,
-  containerStyle
+  containerStyle,
+  availableSteps
 }) => {
   const composedClassName = containerClassName
     ? `${DEFAULT_CONTAINER_CLASS} ${containerClassName}`.trim()
@@ -123,6 +125,7 @@ const ArticleFunnelView: React.FC<ArticleFunnelViewProps> = ({
         onGameResultChange={handleGameResultChange}
         onWinnerContentChange={handleWinnerContentChange}
         onLoserContentChange={handleLoserContentChange}
+        availableSteps={availableSteps}
       />
     </div>
   );

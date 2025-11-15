@@ -10,8 +10,8 @@ export const DEFAULT_ARTICLE_CONFIG: ArticleConfig = {
   },
   content: {
     title: 'Titre de votre article',
-    description: 'Ajoutez une description captivante pour engager vos visiteurs...',
-    htmlContent: '<p>Ajoutez une description captivante pour engager vos visiteurs...</p>',
+    description: 'Décrivez votre contenu ici...',
+    htmlContent: '<p>Décrivez votre contenu ici...</p>',
     titleStyle: {
       fontSize: '32px',
       color: '#1f2937',
@@ -114,7 +114,10 @@ export const parseArticleConfig = (
       ...DEFAULT_ARTICLE_CONFIG.cta,
       ...fallback.cta,
       ...parsed.cta
-    }
+    },
+    // Ajouter winnerContent et loserContent s'ils existent
+    ...(parsed as any).winnerContent && { winnerContent: (parsed as any).winnerContent },
+    ...(parsed as any).loserContent && { loserContent: (parsed as any).loserContent },
   };
 
   return result;

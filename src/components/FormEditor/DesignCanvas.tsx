@@ -440,7 +440,21 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
 
   // MODE ARTICLE
   if (editorMode === 'article') {
-    const articleConfig = campaign?.articleConfig || DEFAULT_ARTICLE_CONFIG;
+    let articleConfig = campaign?.articleConfig as any;
+
+    if (!articleConfig) {
+      // New FormEditor campaign in article mode: start with a clean articleConfig
+      // tailored for the contact form step.
+      articleConfig = {
+        ...DEFAULT_ARTICLE_CONFIG,
+        content: {
+          ...DEFAULT_ARTICLE_CONFIG.content,
+          title: '',
+          description: 'Merci de compléter ce formulaire afin de valider votre participation :',
+          htmlContent: undefined,
+        },
+      } as any;
+    }
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-100 p-8">
         <ArticleCanvas
@@ -466,7 +480,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
             }
           }}
           onCTAClick={() => console.log('🎯 Article CTA clicked')}
-          currentStep="article"
+          currentStep="form"
           editable={!readOnly}
           maxWidth={810}
           campaignType={campaign?.type || 'form'}

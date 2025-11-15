@@ -32,6 +32,7 @@ interface ArticleCanvasProps {
   onGameResultChange?: (result: 'winner' | 'loser') => void;
   onWinnerContentChange?: (content: string) => void;
   onLoserContentChange?: (content: string) => void;
+  availableSteps?: Array<'article' | 'form' | 'game' | 'result'>; // Custom steps for different campaign types
 }
 
 /**
@@ -67,14 +68,45 @@ const ArticleCanvas: React.FC<ArticleCanvasProps> = ({
   onGameResultChange,
   onWinnerContentChange,
   onLoserContentChange,
+  availableSteps,
 }) => {
   // Separate states for winner and loser result content
   const [winnerHtmlContent, setWinnerHtmlContent] = React.useState<string>(
-    (articleConfig as any)?.winnerContent || '<h2>🎉 Félicitations !</h2><p>Vous avez gagné ! Vous recevrez un email de confirmation avec les détails de votre lot.</p>'
+    (articleConfig as any)?.winnerContent ||
+    ((campaignType === 'form' || campaignType === 'quiz')
+      ? "<h2>Votre participation est validée !</h2><p>Merci d'avoir complété le formulaire. Un email de confirmation vient de vous être envoyé avec tous les détails.</p>"
+      : '<h2>🎉 Félicitations !</h2><p>Vous avez gagné ! Vous recevrez un email de confirmation avec les détails de votre lot.</p>')
   );
   const [loserHtmlContent, setLoserHtmlContent] = React.useState<string>(
     (articleConfig as any)?.loserContent || '<h2>Merci d\'avoir participé !</h2><p>Vous n\'avez pas gagné cette fois-ci, mais vous recevrez un email de confirmation.</p>'
   );
+  
+  console.log('🎨 [ArticleCanvas] Initial state:', {
+    winnerHtmlContent: winnerHtmlContent?.substring(0, 100),
+    loserHtmlContent: loserHtmlContent?.substring(0, 100),
+    articleConfigWinnerContent: (articleConfig as any)?.winnerContent?.substring(0, 100),
+    articleConfigLoserContent: (articleConfig as any)?.loserContent?.substring(0, 100)
+  });
+  
+  // Sync local state with articleConfig when it changes
+  React.useEffect(() => {
+    console.log('🔄 [ArticleCanvas] articleConfig changed, syncing state:', {
+      newWinnerContent: (articleConfig as any)?.winnerContent?.substring(0, 100),
+      newLoserContent: (articleConfig as any)?.loserContent?.substring(0, 100),
+      currentWinnerHtmlContent: winnerHtmlContent?.substring(0, 100),
+      currentLoserHtmlContent: loserHtmlContent?.substring(0, 100)
+    });
+    
+    if ((articleConfig as any)?.winnerContent && (articleConfig as any).winnerContent !== winnerHtmlContent) {
+      console.log('🔄 [ArticleCanvas] Updating winnerHtmlContent from articleConfig');
+      setWinnerHtmlContent((articleConfig as any).winnerContent);
+    }
+    if ((articleConfig as any)?.loserContent && (articleConfig as any).loserContent !== loserHtmlContent) {
+      console.log('🔄 [ArticleCanvas] Updating loserHtmlContent from articleConfig');
+      setLoserHtmlContent((articleConfig as any).loserContent);
+    }
+  }, [(articleConfig as any)?.winnerContent, (articleConfig as any)?.loserContent]);
+  
   // Track game result (winner/loser)
   const [gameResult, setGameResult] = React.useState<'winner' | 'loser' | null>(null);
   console.log('🎨 [ArticleCanvas] Render with articleConfig:', {
@@ -90,8 +122,8 @@ const ArticleCanvas: React.FC<ArticleCanvasProps> = ({
     fullContent: articleConfig.content
   });
 
-  // Navigation entre les étapes
-  const steps: Array<'article' | 'form' | 'game' | 'result'> = ['article', 'form', 'game', 'result'];
+  // Navigation entre les étapes - use custom steps if provided (e.g., form campaigns skip 'article')
+  const steps: Array<'article' | 'form' | 'game' | 'result'> = availableSteps || ['article', 'form', 'game', 'result'];
   const currentStepIndex = steps.indexOf(currentStep);
   const canGoBack = currentStepIndex > 0;
   const canGoForward = currentStepIndex < steps.length - 1;
@@ -119,11 +151,22 @@ const ArticleCanvas: React.FC<ArticleCanvasProps> = ({
     
     switch (currentStep) {
       case 'article':
+        const finalDescription = articleConfig.content?.description && articleConfig.content.description.trim().length > 0
+          ? articleConfig.content.description
+          : 'Décrivez votre contenu ici...';
+        
+        console.log('🎬 [ArticleCanvas] Final description passed to EditableText:', {
+          originalDescription: articleConfig.content?.description,
+          finalDescription,
+          hasOriginal: !!articleConfig.content?.description,
+          originalLength: articleConfig.content?.description?.length
+        });
+        
         return (
           <>
             <EditableText
               title={articleConfig.content?.title}
-              description={articleConfig.content?.description}
+              description={finalDescription}
               htmlContent={articleConfig.content?.htmlContent}
               onTitleChange={onTitleChange}
               onDescriptionChange={onDescriptionChange}
@@ -158,17 +201,32 @@ const ArticleCanvas: React.FC<ArticleCanvasProps> = ({
         );
       
       case 'form':
+        // For the contact form step, we want a more specific default message for all campaign types
+        const isUsingGenericArticleDescription = !articleConfig.content?.description
+          || articleConfig.content.description === 'Décrivez votre contenu ici...';
+
+        const formDescription = isUsingGenericArticleDescription
+          ? 'Merci de compléter ce formulaire afin de valider votre participation :'
+          : (
+              articleConfig.content?.description
+              || 'Merci de compléter ce formulaire afin de valider votre participation :'
+            );
+
+        // If we're still on the generic article content, don't reuse its HTML for the form step,
+        // so that EditableText can rebuild HTML from the form-specific description.
+        const shouldIgnoreHtmlForForm =
+          isUsingGenericArticleDescription &&
+          (!articleConfig.content?.htmlContent ||
+            articleConfig.content.htmlContent.includes('Décrivez votre contenu ici...'));
+
         return (
           <div className="py-8 px-6" style={{ maxWidth: `${maxWidth}px`, margin: '0 auto' }}>
-            {/* Titre + texte du formulaire : réutilise le même contenu que l’étape Article */}
+            {/* Texte du formulaire : réutilise le même contenu que l'étape Article SANS le titre */}
             <div className="mb-4">
               <EditableText
-                title={articleConfig.content?.title}
-                description={
-                  articleConfig.content?.description ||
-                  'Merci de compléter ce formulaire afin de valider votre participation :'
-                }
-                htmlContent={articleConfig.content?.htmlContent}
+                title=""
+                description={formDescription}
+                htmlContent={shouldIgnoreHtmlForForm ? undefined : articleConfig.content?.htmlContent}
                 onTitleChange={onTitleChange}
                 onDescriptionChange={onDescriptionChange}
                 onHtmlContentChange={(html) => {
@@ -335,6 +393,14 @@ const ArticleCanvas: React.FC<ArticleCanvasProps> = ({
             ? setWinnerHtmlContent
             : setLoserHtmlContent;
         
+        console.log('🎬 [ArticleCanvas] Result step - displayContent:', {
+          isQuizOrForm,
+          effectiveGameResult,
+          displayContent: displayContent?.substring(0, 200),
+          hasDisplayContent: !!displayContent,
+          displayContentLength: displayContent?.length
+        });
+        
         return (
           <div className="space-y-4">
             {/* Bandeau d'information uniquement pour les jeux avec gagnant/perdant (wheel, jackpot, scratch...) */}
@@ -351,22 +417,36 @@ const ArticleCanvas: React.FC<ArticleCanvasProps> = ({
               description=""
               htmlContent={displayContent}
               onHtmlContentChange={(html) => {
+                console.log('📝 [ArticleCanvas] onHtmlContentChange called:', {
+                  html: html?.substring(0, 100),
+                  htmlLength: html?.length,
+                  isQuizOrForm,
+                  effectiveGameResult,
+                  hasOnWinnerContentChange: !!onWinnerContentChange,
+                  hasOnLoserContentChange: !!onLoserContentChange
+                });
+                
                 // Stocker le contenu dans l'état approprié
                 setDisplayContent(html);
+                
                 // Sauvegarder vers la campagne
                 if (isQuizOrForm) {
                   // Message unique pour Quiz/Form : on le mappe sur le contenu gagnant
+                  console.log('📝 [ArticleCanvas] Calling onWinnerContentChange (Quiz/Form)');
                   if (onWinnerContentChange) {
                     onWinnerContentChange(html);
                   }
                 } else if (effectiveGameResult === 'winner' && onWinnerContentChange) {
+                  console.log('📝 [ArticleCanvas] Calling onWinnerContentChange (Winner)');
                   onWinnerContentChange(html);
                 } else if (effectiveGameResult === 'loser' && onLoserContentChange) {
+                  console.log('📝 [ArticleCanvas] Calling onLoserContentChange (Loser)');
                   onLoserContentChange(html);
                 }
               }}
               editable={editable}
               maxWidth={maxWidth}
+              defaultAlign="left"
             />
           </div>
         );
@@ -421,13 +501,7 @@ const ArticleCanvas: React.FC<ArticleCanvasProps> = ({
         </>
       )}
       {/* Wrapper interne qui clippe le contenu selon l'arrondi */}
-      <div
-        className="overflow-hidden"
-        style={{
-          borderRadius: `${(articleConfig as any)?.frameBorderRadius ?? 0}px`,
-          backgroundColor: (articleConfig as any)?.frameColor || '#ffffff',
-        }}
-      >
+      <div className="overflow-hidden">
         {/* Image d'en-tête (header) */}
       {(articleConfig as any)?.header?.imageUrl && (
         <div className="w-full">
