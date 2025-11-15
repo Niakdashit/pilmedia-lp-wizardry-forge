@@ -3,11 +3,25 @@ export type EditorDeviceOverride = 'desktop';
 const STORAGE_KEY = 'allowMobileEditorUI';
 
 /**
- * Centralises the logic controlling whether the editors should behave as if they were
- * running on a desktop device. By default we now force the desktop experience for all
- * devices so that phones/tablets simply use the responsive desktop UI instead of the
- * legacy mobile-only layouts. Setting localStorage["allowMobileEditorUI"] to "true"
- * opt-in to the previous behaviour for debugging purposes.
+ * Détecte si l'appareil est un vrai mobile (téléphone)
+ */
+const isRealMobilePhone = (): boolean => {
+  if (typeof window === 'undefined') return false;
+  
+  const userAgent = navigator.userAgent;
+  const width = window.innerWidth;
+  
+  // Détection basée sur user agent ET largeur d'écran
+  const isMobileUA = /Android|webOS|iPhone|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
+  const isPhone = width < 768; // Téléphones < 768px
+  
+  return isMobileUA && isPhone;
+};
+
+/**
+ * Centralise la logique de forçage du mode desktop.
+ * Les vrais téléphones mobiles utilisent l'UI mobile par défaut.
+ * Les tablettes et desktop utilisent l'UI desktop.
  */
 export const getEditorDeviceOverride = (): EditorDeviceOverride | null => {
   if (typeof window === 'undefined') {
@@ -16,14 +30,24 @@ export const getEditorDeviceOverride = (): EditorDeviceOverride | null => {
 
   try {
     const allowMobile = window.localStorage.getItem(STORAGE_KEY);
+    // Si l'utilisateur force l'UI mobile via localStorage
     if (allowMobile && allowMobile.toLowerCase() === 'true') {
       return null;
     }
+    // Si l'utilisateur force l'UI desktop via localStorage
+    if (allowMobile && allowMobile.toLowerCase() === 'false') {
+      return 'desktop';
+    }
   } catch {
-    // Swallow storage access errors (private mode, disabled cookies, etc.) and
-    // keep forcing the desktop UI.
+    // En cas d'erreur d'accès au storage, continuer avec la détection auto
   }
 
+  // Si c'est un vrai téléphone mobile, ne pas forcer le desktop
+  if (isRealMobilePhone()) {
+    return null;
+  }
+
+  // Pour les tablettes et desktop, forcer le mode desktop
   return 'desktop';
 };
 
