@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Plus, Save, Eye, EyeOff, AlertCircle } from 'lucide-react';
+import { Save, Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { DotationConfig } from '@/types/dotation';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -88,13 +88,13 @@ export const DotationPanel: React.FC<DotationPanelProps> = ({ campaignId, campai
       }
 
       if (data) {
-        console.log('✅ [DotationPanel] Config loaded:', data.prizes?.length || 0, 'prizes');
+        console.log('✅ [DotationPanel] Config loaded:', (data.prizes as any)?.length || 0, 'prizes');
         setConfig({
           campaignId: data.campaign_id,
-          prizes: data.prizes || [],
-          globalStrategy: data.global_strategy,
-          antiFraud: data.anti_fraud,
-          notifications: data.notifications
+          prizes: (data.prizes as any) || [],
+          globalStrategy: (data.global_strategy as any),
+          antiFraud: (data.anti_fraud as any),
+          notifications: (data.notifications as any)
         });
       } else {
         console.log('ℹ️ [DotationPanel] No config found, creating default');
@@ -151,12 +151,12 @@ export const DotationPanel: React.FC<DotationPanelProps> = ({ campaignId, campai
         .from('dotation_configs')
         .upsert({
           campaign_id: campaignId,
-          prizes: config.prizes,
-          global_strategy: config.globalStrategy,
-          anti_fraud: config.antiFraud,
-          notifications: config.notifications,
+          prizes: config.prizes as any,
+          global_strategy: config.globalStrategy as any,
+          anti_fraud: config.antiFraud as any,
+          notifications: config.notifications as any,
           updated_at: new Date().toISOString()
-        }, {
+        } as any, {
           onConflict: 'campaign_id'
         })
         .select();
@@ -234,12 +234,12 @@ export const DotationPanel: React.FC<DotationPanelProps> = ({ campaignId, campai
         .from('dotation_configs')
         .upsert({
           campaign_id: campaignId,
-          prizes: newPrizes,
-          global_strategy: config.globalStrategy,
-          anti_fraud: config.antiFraud,
-          notifications: config.notifications,
+          prizes: newPrizes as any,
+          global_strategy: config.globalStrategy as any,
+          anti_fraud: config.antiFraud as any,
+          notifications: config.notifications as any,
           updated_at: new Date().toISOString()
-        }, {
+        } as any, {
           onConflict: 'campaign_id'
         })
         .select();
@@ -281,12 +281,12 @@ export const DotationPanel: React.FC<DotationPanelProps> = ({ campaignId, campai
         .from('dotation_configs')
         .upsert({
           campaign_id: campaignId,
-          prizes: newPrizes,
-          global_strategy: config.globalStrategy,
-          anti_fraud: config.antiFraud,
-          notifications: config.notifications,
+          prizes: newPrizes as any,
+          global_strategy: config.globalStrategy as any,
+          anti_fraud: config.antiFraud as any,
+          notifications: config.notifications as any,
           updated_at: new Date().toISOString()
-        }, {
+        } as any, {
           onConflict: 'campaign_id'
         })
         .select();

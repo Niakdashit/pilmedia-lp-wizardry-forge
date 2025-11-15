@@ -210,13 +210,12 @@ export const DEFAULT_ARTICLE_CONFIG: ArticleConfig = {
       textAlign: 'center',
       lineHeight: '1.4',
     },
-    descriptionStyle: {
-      fontSize: '1rem',
-      color: '#4b5563',
-      fontWeight: '500',
-      textAlign: 'center',
-      lineHeight: '1.75',
-    },
+  descriptionStyle: {
+    fontSize: '1rem',
+    color: '#4b5563',
+    textAlign: 'center',
+    lineHeight: '1.75',
+  },
   },
   cta: {
     text: 'PARTICIPER !',
