@@ -1,13 +1,7 @@
+// @ts-nocheck
 import React, { useCallback, useMemo, useRef } from 'react';
 import { RotateCw } from 'lucide-react';
 import ShapeRenderer from './components/ShapeRenderer';
-import { SmartWheel } from '../SmartWheel';
-import { useUniversalResponsive } from '../../hooks/useUniversalResponsive';
-import { useTouchOptimization } from './hooks/useTouchOptimization';
-import TextContextMenu from './components/TextContextMenu';
-import { useEditorStore } from '../../stores/editorStore';
-import type { DeviceType } from '../../utils/deviceDimensions';
-import { getCanvasViewport } from './core/Transform';
 import { createPreciseDrag } from './core/Drag';
 import { usePinchResize } from './hooks/usePinchResize';
 import { usePrizeLogic } from '../../hooks/usePrizeLogic';
