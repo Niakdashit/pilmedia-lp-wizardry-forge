@@ -130,63 +130,185 @@ const ArticleSidebar: React.FC<ArticleSidebarProps> = ({
   // Panneau Bouton
   const renderButtonPanel = () => (
     <div className="space-y-6">
+      {/* Texte du bouton */}
       <div>
         <label className="block text-sm font-semibold text-gray-700 mb-2">Texte du bouton</label>
         <input
           type="text"
           value={articleConfig.cta?.text || 'PARTICIPER !'}
-          onChange={(e) => onArticleConfigChange({
-            cta: { ...articleConfig.cta, text: e.target.value },
-          })}
+          onChange={(e) =>
+            onArticleConfigChange({
+              cta: { ...articleConfig.cta, text: e.target.value },
+            })
+          }
           className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60]"
           placeholder="PARTICIPER !"
         />
       </div>
 
-      <div>
-        <label className="block text-sm font-semibold text-gray-700 mb-2">Taille</label>
-        <select
-          value={articleConfig.cta?.size || 'large'}
-          onChange={(e) => onArticleConfigChange({
-            cta: { ...articleConfig.cta, size: e.target.value as 'small' | 'medium' | 'large' },
-          })}
-          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60]"
-        >
-          <option value="small">Petit</option>
-          <option value="medium">Moyen</option>
-          <option value="large">Grand</option>
-        </select>
+      {/* Couleurs de fond / texte */}
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Couleur de fond</label>
+          <div className="space-y-2">
+            <input
+              type="color"
+              className="w-full h-10 rounded border border-gray-300 cursor-pointer"
+              value={articleConfig.cta?.backgroundColor || '#000000'}
+              onChange={(e) =>
+                onArticleConfigChange({
+                  cta: { ...articleConfig.cta, backgroundColor: e.target.value },
+                })
+              }
+            />
+            <input
+              type="text"
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#44444d] focus:ring-[#44444d]"
+              value={articleConfig.cta?.backgroundColor || '#000000'}
+              onChange={(e) =>
+                onArticleConfigChange({
+                  cta: { ...articleConfig.cta, backgroundColor: e.target.value },
+                })
+              }
+              placeholder="#000000"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Couleur du texte</label>
+          <div className="space-y-2">
+            <input
+              type="color"
+              className="w-full h-10 rounded border border-gray-300 cursor-pointer"
+              value={articleConfig.cta?.textColor || '#ffffff'}
+              onChange={(e) =>
+                onArticleConfigChange({
+                  cta: { ...articleConfig.cta, textColor: e.target.value },
+                })
+              }
+            />
+            <input
+              type="text"
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#44444d] focus:ring-[#44444d]"
+              value={articleConfig.cta?.textColor || '#ffffff'}
+              onChange={(e) =>
+                onArticleConfigChange({
+                  cta: { ...articleConfig.cta, textColor: e.target.value },
+                })
+              }
+              placeholder="#ffffff"
+            />
+          </div>
+        </div>
       </div>
 
+      {/* Arrondi des angles */}
       <div>
-        <label className="block text-sm font-semibold text-gray-700 mb-2">Style</label>
-        <select
-          value={articleConfig.cta?.variant || 'primary'}
-          onChange={(e) => onArticleConfigChange({
-            cta: { ...articleConfig.cta, variant: e.target.value as 'primary' | 'secondary' | 'outline' },
-          })}
-          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60]"
-        >
-          <option value="primary">Principal</option>
-          <option value="secondary">Secondaire</option>
-          <option value="outline">Contour</option>
-        </select>
+        <div className="flex items-center justify-between mb-1">
+          <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide">Arrondi des angles</label>
+          <span className="text-[11px] text-gray-600">{articleConfig.cta?.borderRadius ?? 9999}px</span>
+        </div>
+        <input
+          type="range"
+          min={0}
+          max={9999}
+          value={articleConfig.cta?.borderRadius ?? 9999}
+          onChange={(e) =>
+            onArticleConfigChange({
+              cta: { ...articleConfig.cta, borderRadius: Number(e.target.value) },
+            })
+          }
+          className="w-full"
+        />
       </div>
 
+      {/* Épaisseur de bordure */}
       <div>
-        <label className="block text-sm font-semibold text-gray-700 mb-2">Icône</label>
-        <select
-          value={articleConfig.cta?.icon || 'arrow'}
-          onChange={(e) => onArticleConfigChange({
-            cta: { ...articleConfig.cta, icon: e.target.value as 'arrow' | 'external' | 'play' | 'none' },
-          })}
-          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60]"
+        <div className="flex items-center justify-between mb-1">
+          <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide">Épaisseur de bordure</label>
+          <span className="text-[11px] text-gray-600">{articleConfig.cta?.borderWidth ?? 0}px</span>
+        </div>
+        <input
+          type="range"
+          min={0}
+          max={20}
+          value={articleConfig.cta?.borderWidth ?? 0}
+          onChange={(e) =>
+            onArticleConfigChange({
+              cta: { ...articleConfig.cta, borderWidth: Number(e.target.value) },
+            })
+          }
+          className="w-full"
+        />
+      </div>
+
+      {/* Couleur de bordure */}
+      <div>
+        <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Couleur de bordure</label>
+        <div className="space-y-2">
+          <input
+            type="color"
+            className="w-full h-10 rounded border border-gray-300 cursor-pointer"
+            value={articleConfig.cta?.borderColor || '#000000'}
+            onChange={(e) =>
+              onArticleConfigChange({
+                cta: { ...articleConfig.cta, borderColor: e.target.value },
+              })
+            }
+          />
+          <input
+            type="text"
+            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#44444d] focus:ring-[#44444d]"
+            value={articleConfig.cta?.borderColor || '#000000'}
+            onChange={(e) =>
+              onArticleConfigChange({
+                cta: { ...articleConfig.cta, borderColor: e.target.value },
+              })
+            }
+            placeholder="#000000"
+          />
+        </div>
+      </div>
+
+      {/* Majuscules / Gras / Ombre */}
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={() =>
+            onArticleConfigChange({
+              cta: { ...articleConfig.cta, uppercase: !articleConfig.cta?.uppercase },
+            })
+          }
+          className={`px-3 py-1.5 rounded text-xs ${articleConfig.cta?.uppercase ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-700'}`}
         >
-          <option value="arrow">Flèche →</option>
-          <option value="external">Lien externe ↗</option>
-          <option value="play">Play ▶</option>
-          <option value="none">Aucune</option>
-        </select>
+          Majuscules
+        </button>
+        <button
+          type="button"
+          onClick={() =>
+            onArticleConfigChange({
+              cta: { ...articleConfig.cta, bold: !articleConfig.cta?.bold },
+            })
+          }
+          className={`px-3 py-1.5 rounded text-xs ${articleConfig.cta?.bold ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-700'}`}
+        >
+          Gras
+        </button>
+        <button
+          type="button"
+          onClick={() =>
+            onArticleConfigChange({
+              cta: {
+                ...articleConfig.cta,
+                boxShadow: articleConfig.cta?.boxShadow ? '' : '0 12px 30px rgba(132,27,96,0.35)',
+              },
+            })
+          }
+          className={`px-3 py-1.5 rounded text-xs ${articleConfig.cta?.boxShadow ? 'bg-rose-100 text-rose-700' : 'bg-gray-100 text-gray-700'}`}
+        >
+          Ombre
+        </button>
       </div>
     </div>
   );

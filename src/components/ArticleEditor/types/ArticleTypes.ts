@@ -76,6 +76,11 @@ export interface ArticleCTA {
   variant?: 'primary' | 'secondary' | 'outline';
   size?: 'small' | 'medium' | 'large';
   icon?: 'arrow' | 'external' | 'play' | 'none';
+
+  // Largeur du bouton dans la mise en page (1/1, 1/2, 2/3, 1/3)
+  layoutWidth?: 'full' | 'half' | 'twoThirds' | 'third';
+  // Facteur de zoom global du bouton (1 = taille normale)
+  scale?: number;
   
   // Action
   action?: 'next-step' | 'external-link' | 'custom';
@@ -84,8 +89,12 @@ export interface ArticleCTA {
   // Styles personnalisés
   backgroundColor?: string;
   textColor?: string;
-  borderRadius?: string;
+  borderRadius?: number;
+  borderWidth?: number;
   borderColor?: string;
+  uppercase?: boolean;
+  bold?: boolean;
+  boxShadow?: string;
 }
 
 export interface ArticleFunnelFlow {
@@ -204,6 +213,7 @@ export const DEFAULT_ARTICLE_CONFIG: ArticleConfig = {
     descriptionStyle: {
       fontSize: '1rem',
       color: '#4b5563',
+      fontWeight: '500',
       textAlign: 'center',
       lineHeight: '1.75',
     },

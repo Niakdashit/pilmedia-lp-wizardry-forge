@@ -78,11 +78,16 @@ const ArticleCanvas: React.FC<ArticleCanvasProps> = ({
   // Track game result (winner/loser)
   const [gameResult, setGameResult] = React.useState<'winner' | 'loser' | null>(null);
   console.log('🎨 [ArticleCanvas] Render with articleConfig:', {
-    hasBanner: !!articleConfig?.banner,
-    bannerImageUrl: articleConfig?.banner?.imageUrl,
-    bannerImageUrlLength: articleConfig?.banner?.imageUrl?.length,
+    hasBanner: !!articleConfig.banner,
+    bannerImageUrl: articleConfig.banner?.imageUrl,
+    bannerImageUrlLength: articleConfig.banner?.imageUrl?.length,
     currentStep,
     hasOnCTAClick: !!onCTAClick,
+    hasContent: !!articleConfig.content,
+    contentTitle: articleConfig.content?.title,
+    contentDescription: articleConfig.content?.description,
+    contentHtmlContent: articleConfig.content?.htmlContent?.substring(0, 100),
+    fullContent: articleConfig.content
   });
 
   // Navigation entre les étapes
@@ -130,40 +135,52 @@ const ArticleCanvas: React.FC<ArticleCanvasProps> = ({
               }}
               editable={editable}
               maxWidth={maxWidth}
+              defaultAlign="left"
             />
             
-            <ArticleCTA
-              text={articleConfig.cta?.text}
-              variant={articleConfig.cta?.variant}
-              size={articleConfig.cta?.size}
-              icon={articleConfig.cta?.icon}
-              onClick={() => {
-                console.log('🔥 [ArticleCTA] Button clicked!');
-                onCTAClick?.();
-              }}
-              maxWidth={maxWidth}
-            />
+            <div className="max-w-md mx-auto">
+              <ArticleCTA
+                text={articleConfig.cta?.text}
+                variant={articleConfig.cta?.variant}
+                size={articleConfig.cta?.size}
+                icon="none"
+                fullWidth={false}
+                style={{ width: 'auto' }}
+                className={`${articleConfig.cta?.uppercase ? ' uppercase' : ''}${articleConfig.cta?.bold ? ' font-bold' : ''}`}
+                onClick={() => {
+                  console.log('🔥 [ArticleCTA] Button clicked!');
+                  onCTAClick?.();
+                }}
+                maxWidth={maxWidth}
+              />
+            </div>
           </>
         );
       
       case 'form':
         return (
           <div className="py-8 px-6" style={{ maxWidth: `${maxWidth}px`, margin: '0 auto' }}>
-            <div className="mb-8" style={{ textAlign: articleConfig.content?.titleStyle?.textAlign || 'center' }}>
-              <h2 
-                className="font-bold mb-4"
-                style={{
-                  fontSize: articleConfig.content?.titleStyle?.fontSize || '32px',
-                  color: articleConfig.content?.titleStyle?.color || '#1f2937',
-                  textAlign: articleConfig.content?.titleStyle?.textAlign || 'center',
-                  lineHeight: articleConfig.content?.titleStyle?.lineHeight || '1.4',
+            {/* Titre + texte du formulaire : réutilise le même contenu que l’étape Article */}
+            <div className="mb-4">
+              <EditableText
+                title={articleConfig.content?.title}
+                description={
+                  articleConfig.content?.description ||
+                  'Merci de compléter ce formulaire afin de valider votre participation :'
+                }
+                htmlContent={articleConfig.content?.htmlContent}
+                onTitleChange={onTitleChange}
+                onDescriptionChange={onDescriptionChange}
+                onHtmlContentChange={(html) => {
+                  if (articleConfig.content) {
+                    onDescriptionChange(html);
+                  }
                 }}
-              >
-                Contactez-nous
-              </h2>
-              <p className="text-lg text-gray-600 max-w-2xl" style={{ margin: '0 auto' }}>
-                Remplissez ce formulaire pour être recontacté(e) et recevoir plus d'informations.
-              </p>
+                editable={editable}
+                maxWidth={maxWidth}
+                defaultAlign="center"
+                compact
+              />
             </div>
             <DynamicContactForm
               fields={formFields}
@@ -173,6 +190,8 @@ const ArticleCanvas: React.FC<ArticleCanvasProps> = ({
               }}
               submitLabel={campaignType === 'form' ? 'Envoyer' : 'Valider'}
               className="max-w-md mx-auto"
+              buttonAlign="center"
+              launchButtonStyles={{ width: 'auto' }}
             />
           </div>
         );
@@ -293,16 +312,33 @@ const ArticleCanvas: React.FC<ArticleCanvasProps> = ({
           </div>
         );
       
-      case 'result':
+      case 'result': {
+        // Pour les campagnes Quiz et Formulaire, on ne gère pas de gagnant/perdant :
+        // un seul message de sortie générique, sans bandeau d'information.
+        const isQuizOrForm = campaignType === 'quiz' || campaignType === 'form';
+
         // Use external game result for display (from parent) or fallback to internal state
         const effectiveGameResult = externalGameResult || gameResult || 'winner';
-        // Display winner or loser message based on game result
-        const displayContent = effectiveGameResult === 'winner' ? winnerHtmlContent : loserHtmlContent;
-        const setDisplayContent = effectiveGameResult === 'winner' ? setWinnerHtmlContent : setLoserHtmlContent;
+
+        // Contenu affiché :
+        // - Quiz/Form: toujours winnerHtmlContent comme message unique
+        // - Autres types: winner ou loser selon effectiveGameResult
+        const displayContent = isQuizOrForm
+          ? winnerHtmlContent
+          : effectiveGameResult === 'winner'
+            ? winnerHtmlContent
+            : loserHtmlContent;
+
+        const setDisplayContent = isQuizOrForm
+          ? setWinnerHtmlContent
+          : effectiveGameResult === 'winner'
+            ? setWinnerHtmlContent
+            : setLoserHtmlContent;
         
         return (
           <div className="space-y-4">
-            {editable && (
+            {/* Bandeau d'information uniquement pour les jeux avec gagnant/perdant (wheel, jackpot, scratch...) */}
+            {editable && !isQuizOrForm && (
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
                 <p className="text-sm text-blue-800">
                   <strong>Mode édition :</strong> Vous éditez actuellement le message {effectiveGameResult === 'winner' ? 'GAGNANT' : 'PERDANT'}. 
@@ -315,10 +351,15 @@ const ArticleCanvas: React.FC<ArticleCanvasProps> = ({
               description=""
               htmlContent={displayContent}
               onHtmlContentChange={(html) => {
-                // Store content in the appropriate state
+                // Stocker le contenu dans l'état approprié
                 setDisplayContent(html);
-                // Save to campaign
-                if (effectiveGameResult === 'winner' && onWinnerContentChange) {
+                // Sauvegarder vers la campagne
+                if (isQuizOrForm) {
+                  // Message unique pour Quiz/Form : on le mappe sur le contenu gagnant
+                  if (onWinnerContentChange) {
+                    onWinnerContentChange(html);
+                  }
+                } else if (effectiveGameResult === 'winner' && onWinnerContentChange) {
                   onWinnerContentChange(html);
                 } else if (effectiveGameResult === 'loser' && onLoserContentChange) {
                   onLoserContentChange(html);
@@ -329,6 +370,7 @@ const ArticleCanvas: React.FC<ArticleCanvasProps> = ({
             />
           </div>
         );
+      }
       
       default:
         return null;

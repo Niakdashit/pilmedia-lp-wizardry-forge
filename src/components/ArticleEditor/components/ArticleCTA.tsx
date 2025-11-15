@@ -1,5 +1,6 @@
 import React from 'react';
 import { ArrowRight, ExternalLink, Play } from 'lucide-react';
+import { useButtonStyleCSS } from '@/stores/buttonStore';
 
 interface ArticleCTAProps {
   text?: string;
@@ -37,19 +38,8 @@ const ArticleCTA: React.FC<ArticleCTAProps> = ({
   fullWidth = false,
   maxWidth = 810,
 }) => {
-  // Styles de base selon le variant
-  const variantStyles = {
-    primary: 'bg-black text-white hover:bg-gray-800 shadow-lg shadow-black/20 hover:shadow-xl hover:shadow-black/30',
-    secondary: 'bg-white text-black border-2 border-black hover:bg-black hover:text-white',
-    outline: 'bg-transparent text-black border-2 border-black hover:bg-black hover:text-white',
-  };
-
-  // Tailles de bouton
-  const sizeStyles = {
-    small: 'px-6 py-2 text-sm',
-    medium: 'px-8 py-3 text-base',
-    large: 'px-12 py-4 text-lg',
-  };
+  // Style global unifié des boutons (fond, bordure, arrondi, zoom, padding…)
+  const globalButtonStyle = useButtonStyleCSS();
 
   // Icône selon le type
   const IconComponent = {
@@ -59,16 +49,13 @@ const ArticleCTA: React.FC<ArticleCTAProps> = ({
     none: null,
   }[icon];
 
+  const widthClass = fullWidth === false ? '' : 'w-full';
+
   const buttonClasses = `
-    inline-flex items-center justify-center gap-2
-    font-bold rounded-xl
-    transition-all duration-300 transform
-    hover:-translate-y-0.5
-    disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none
-    focus:outline-none focus:ring-2 focus:ring-black focus:ring-opacity-50
-    ${variantStyles[variant]}
-    ${sizeStyles[size]}
-    ${fullWidth ? 'w-full' : ''}
+    ${widthClass} px-6 py-3
+    font-medium
+    transition-colors duration-200 hover:opacity-90
+    disabled:opacity-50 disabled:cursor-not-allowed
     ${className}
   `;
 
@@ -96,7 +83,10 @@ const ArticleCTA: React.FC<ArticleCTAProps> = ({
           href={href}
           onClick={handleClick}
           className={buttonClasses}
-          style={style}
+          style={{
+            ...globalButtonStyle,
+            ...(style || {}),
+          }}
           target={href.startsWith('http') ? '_blank' : undefined}
           rel={href.startsWith('http') ? 'noopener noreferrer' : undefined}
         >
@@ -114,7 +104,10 @@ const ArticleCTA: React.FC<ArticleCTAProps> = ({
         onClick={handleClick}
         disabled={disabled}
         className={buttonClasses}
-        style={style}
+        style={{
+          ...globalButtonStyle,
+          ...(style || {}),
+        }}
         type="button"
       >
         <span>{text}</span>

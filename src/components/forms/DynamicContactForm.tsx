@@ -25,6 +25,7 @@ interface DynamicContactFormProps {
   inputFocusColor?: string;
   inputBorderRadius?: number | string;
   launchButtonStyles?: React.CSSProperties;
+  buttonAlign?: 'left' | 'center';
 }
 
 const DynamicContactForm: React.FC<DynamicContactFormProps> = ({
@@ -37,7 +38,8 @@ const DynamicContactForm: React.FC<DynamicContactFormProps> = ({
   inputBorderColor = "#E5E7EB",
   inputFocusColor = "#000000",
   inputBorderRadius = "2px",
-  launchButtonStyles
+  launchButtonStyles,
+  buttonAlign = 'left'
 }) => {
   // Utiliser le style global du bouton de lancement
   const globalButtonStyle = useButtonStyleCSS();
@@ -203,23 +205,25 @@ const DynamicContactForm: React.FC<DynamicContactFormProps> = ({
         </div>
       ))}
 
-      <button
-        type="submit"
-        className="w-full px-6 py-3 font-medium transition-colors duration-200 hover:opacity-90"
-        style={{
-          // Ordre de priorité:
-          // 1) Style global par défaut (store)
-          // 2) Styles de lancement (preview/campagnes)
-          // 3) Styles spécifiques du formulaire (doivent l'emporter dans le FormEditor)
-          ...globalButtonStyle,
-          ...launchButtonStyles,
-          ...(textStyles?.button || {}),
-          // Force borderRadius from textStyles to override everything
-          ...(textStyles?.button?.borderRadius !== undefined ? { borderRadius: textStyles.button.borderRadius } : {})
-        }}
-      >
-        {submitLabel}
-      </button>
+      <div className={buttonAlign === 'center' ? 'flex justify-center' : ''}>
+        <button
+          type="submit"
+          className={`${buttonAlign === 'center' ? '' : 'w-full'} px-6 py-3 font-medium transition-colors duration-200 hover:opacity-90`}
+          style={{
+            // Ordre de priorité:
+            // 1) Style global par défaut (store)
+            // 2) Styles de lancement (preview/campagnes)
+            // 3) Styles spécifiques du formulaire (doivent l'emporter dans le FormEditor)
+            ...globalButtonStyle,
+            ...launchButtonStyles,
+            ...(textStyles?.button || {}),
+            // Force borderRadius from textStyles to override everything
+            ...(textStyles?.button?.borderRadius !== undefined ? { borderRadius: textStyles.button.borderRadius } : {})
+          }}
+        >
+          {submitLabel}
+        </button>
+      </div>
     </form>
   );
 };

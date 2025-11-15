@@ -63,6 +63,9 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
   // Détection de la taille de fenêtre pour la responsivité
   const [windowSize, setWindowSize] = useState({ width: 0, height: 0 });
   const isWindowMobile = windowSize.height > windowSize.width && windowSize.width < 768;
+  
+  // Détection du format portrait (9:16) pour la sidebar horizontale
+  const isPortraitFormat = windowSize.height > windowSize.width;
 
   // Zoom par défaut selon l'appareil, avec restauration depuis localStorage
   const getDefaultZoom = (device: 'desktop' | 'tablet' | 'mobile'): number => {
@@ -1633,7 +1636,7 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
       )}
       
       {/* Main Content */}
-      <div className="flex-1 flex overflow-hidden relative rounded-br-[18px]">
+      <div className={`flex-1 flex overflow-hidden relative rounded-br-[18px] ${isPortraitFormat ? 'pb-16' : ''}`}>
           {/* Overlay Preview: full live funnel (matches other editors) */}
           {showFunnel && (() => {
             const previewCampaign = {

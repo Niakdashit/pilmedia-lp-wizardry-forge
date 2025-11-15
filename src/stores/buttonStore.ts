@@ -11,6 +11,7 @@ export interface ButtonStyle {
   fontSize: number;
   fontWeight: string;
   padding: string;
+  scale?: number;
 }
 
 export interface ButtonState {
@@ -29,7 +30,8 @@ const defaultButtonStyle: ButtonStyle = {
   width: '100%',
   fontSize: 16,
   fontWeight: '600',
-  padding: '12px 24px'
+  padding: '12px 24px',
+  scale: 1,
 };
 
 /**
@@ -79,6 +81,8 @@ export const useButtonStyleCSS = () => {
     fontSize: `${buttonStyle.fontSize}px`,
     fontWeight: buttonStyle.fontWeight,
     padding: buttonStyle.padding,
+    transform: `scale(${buttonStyle.scale ?? 1})`,
+    transformOrigin: 'center center',
     transition: 'all 0.2s ease',
     cursor: 'pointer'
   };

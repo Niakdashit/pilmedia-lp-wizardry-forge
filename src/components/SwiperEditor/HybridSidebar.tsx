@@ -15,6 +15,7 @@ import {
   Code2
 } from 'lucide-react';
 import { BackgroundPanel, CompositeElementsPanel, TextEffectsPanel } from '@/components/shared';
+import { MobileBottomSidebarLayout } from '@/components/shared/MobileBottomSidebarLayout';
 import ImageModulePanel from '../SwiperEditor/modules/ImageModulePanel';
 import LogoModulePanel from '../SwiperEditor/modules/LogoModulePanel';
 import FooterModulePanel from '../SwiperEditor/modules/FooterModulePanel';
@@ -245,6 +246,9 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
   const [windowSize, setWindowSize] = useState({ width: 0, height: 0 });
   const isWindowMobile = windowSize.height > windowSize.width && windowSize.width < 768;
   
+  // Détection du format portrait (9:16) pour afficher la sidebar en bas
+  const isPortraitFormat = windowSize.height > windowSize.width;
+  
   // Détecter si on est sur mobile avec un hook React pour éviter les erreurs hydration
   const [isCollapsed, setIsCollapsed] = useState(selectedDevice === 'mobile' || isWindowMobile);
   // Centralized campaign state (Zustand)
@@ -254,7 +258,9 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
   // Détection de la taille de fenêtre
   useEffect(() => {
     const updateWindowSize = () => {
-      setWindowSize({ width: window.innerWidth, height: window.innerHeight });
+      const newSize = { width: window.innerWidth, height: window.innerHeight };
+      setWindowSize(newSize);
+      console.log('📱 [HybridSidebar] Window size:', newSize, 'Portrait:', newSize.height > newSize.width);
     };
     
     updateWindowSize();
@@ -299,15 +305,38 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
 
   React.useEffect(() => {
     if (activeTab !== undefined && activeTab !== internalActiveTab) {
+      // En mode portrait (sidebar mobile), on n'autorise les ouvertures d'onglet
+      // que si elles sont déclenchées par l'utilisateur. En revanche, on laisse
+      // toujours passer tab = null pour fermer la sidebar.
+      if (isPortraitFormat && activeTab && !isUserTabSwitchingRef.current) {
+        return;
+      }
       setInternalActiveTab(activeTab);
     }
-  }, [activeTab, internalActiveTab]);
-  
+  }, [activeTab, internalActiveTab, isPortraitFormat]);
+
+  // En mode portrait, on force l'état initial de la sidebar mobile à "fermée"
+  // et on ignore l'onglet par défaut issu du layout.
+  React.useEffect(() => {
+    if (isPortraitFormat && internalActiveTab !== null) {
+      setInternalActiveTab(null);
+      onActiveTabChange?.(null);
+    }
+  }, [isPortraitFormat]);
+
   // Exposer setActiveTab via ref
   useImperativeHandle(ref, () => ({
     setActiveTab: (tab: string) => {
+      // En mode portrait (sidebar mobile), on n'autorise pas les ouvertures
+      // programmatiques d'onglet : seule la barre mobile peut ouvrir un tab.
+      // On laisse cependant passer les fermetures (tab vide) qui sont signalées
+      // via onActiveTabChange(null) côté parent.
+      if (isPortraitFormat && tab) {
+        return;
+      }
+
       // Always allow external calls to open the Elements tab (e.g., after selecting a module)
-      // and make sure the sidebar is expanded on mobile.
+      // and make sure the sidebar is expanded on mobile (desktop / paysage seulement).
       if (tab === 'elements') {
         setIsCollapsed(false);
       }
@@ -334,7 +363,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
         onWheelPanelChange?.(true);
       }
     }
-  }), [onDesignPanelChange, onEffectsPanelChange, onAnimationsPanelChange, onPositionPanelChange, onSwiperPanelChange, onWheelPanelChange, setIsCollapsed]);
+  }), [onDesignPanelChange, onEffectsPanelChange, onAnimationsPanelChange, onPositionPanelChange, onSwiperPanelChange, onWheelPanelChange, setIsCollapsed, isPortraitFormat]);
 
   // Removed event-based auto-switching to avoid flicker and unintended returns to Elements.
 
@@ -366,6 +395,12 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
 
   // Fonction interne pour gérer le changement d'onglet
   const setActiveTab = (tab: string | null) => {
+    // En mode portrait, ignorer les ouvertures automatiques (tab non null)
+    // qui ne viennent pas d'un clic explicite sur la barre mobile.
+    if (isPortraitFormat && tab && !isUserTabSwitchingRef.current) {
+      return;
+    }
+
     setInternalActiveTab(tab);
     onActiveTabChange?.(tab);
   };
@@ -450,44 +485,15 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
       }
     }
   }, [
-    showEffectsPanel, 
-    showAnimationsPanel, 
-    showPositionPanel, 
+    showEffectsPanel,
+    showAnimationsPanel,
+    showPositionPanel,
     showSwiperPanel,
     showWheelPanel,
     showDesignPanel,
-    activeTab,
+    internalActiveTab,
     onDesignPanelChange
   ]);
-
-  // Fermer automatiquement le panneau d'effets si aucun élément texte n'est sélectionné
-  React.useEffect(() => {
-    if (internalActiveTab === 'effects' && (!selectedElement || selectedElement.type !== 'text')) {
-      onEffectsPanelChange?.(false);
-      setActiveTab('elements');
-    }
-  }, [selectedElement, internalActiveTab, onEffectsPanelChange]);
-
-  // Idle prefetch heavy panels to smooth first open without blocking initial render
-  React.useEffect(() => {
-    const win: any = typeof window !== 'undefined' ? window : undefined;
-    const schedule = (cb: () => void) =>
-      win && typeof win.requestIdleCallback === 'function'
-        ? win.requestIdleCallback(cb, { timeout: 2000 })
-        : setTimeout(cb, 1200);
-    const cancel = (id: any) =>
-      win && typeof win.cancelIdleCallback === 'function' ? win.cancelIdleCallback(id) : clearTimeout(id);
-
-    const id = schedule(() => {
-      try {
-        // Position panel can be opened via toggles; prefetch proactively
-        loadPositionPanel();
-      } catch (e) {
-        // no-op: prefetch is best-effort
-      }
-    });
-    return () => cancel(id);
-  }, [activeTab]);
 
   // Onglets différents selon le mode (Article vs Fullscreen)
   const allTabs = editorMode === 'article' 
@@ -907,7 +913,27 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
     }
   };
 
-  if (isCollapsed) {
+  // Sidebar horizontale en bas pour format portrait (9:16)
+  console.log('🔍 [SwiperEditor HybridSidebar] Render check - isPortraitFormat:', isPortraitFormat, 'windowSize:', windowSize);
+  
+  if (isPortraitFormat) {
+    console.log('✅ [SwiperEditor HybridSidebar] Rendering HORIZONTAL sidebar (portrait mode)');
+    return (
+      <MobileBottomSidebarLayout
+        themeVars={themeVars}
+        tabs={tabs}
+        internalActiveTab={internalActiveTab}
+        handleTabClick={handleTabClick}
+        prefetchTab={prefetchTab}
+        renderPanel={renderPanel}
+        currentScreen={currentScreen}
+        onCloseActiveTab={() => setActiveTab(null)}
+        debugNamespace="SwiperEditor"
+      />
+    );
+  }
+
+  if (isCollapsed && !isPortraitFormat) {
     return (
       <div data-hybrid-sidebar="collapsed" className="w-16 bg-[hsl(var(--sidebar-bg))] border-r border-[hsl(var(--sidebar-border))] flex flex-col" style={themeVars}>
         <button

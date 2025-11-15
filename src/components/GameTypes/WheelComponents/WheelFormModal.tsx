@@ -55,6 +55,7 @@ const WheelFormModal: React.FC<WheelFormModalProps> = ({
         }}
         inputBorderColor={borderColor}
         inputFocusColor={focusColor}
+        buttonAlign="center"
       />
     </Modal>
   );

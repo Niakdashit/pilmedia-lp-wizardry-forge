@@ -19,6 +19,7 @@ import {
   CompositeElementsPanel, 
   TextEffectsPanel 
 } from '@/components/shared';
+import { MobileBottomSidebarLayout } from '@/components/shared/MobileBottomSidebarLayout';
 import CodePanel from '../DesignEditor/panels/CodePanel';
 import ImageModulePanel from '../QuizEditor/modules/ImageModulePanel';
 import LogoModulePanel from '../QuizEditor/modules/LogoModulePanel';
@@ -255,6 +256,9 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
   // Détection du format 9:16 (fenêtre portrait)
   const [windowSize, setWindowSize] = useState({ width: 0, height: 0 });
   const isWindowMobile = windowSize.height > windowSize.width && windowSize.width < 768;
+  
+  // Détection du format portrait (9:16) pour la sidebar horizontale
+  const isPortraitFormat = windowSize.height > windowSize.width;
   
   // Détecter si on est sur mobile avec un hook React pour éviter les erreurs hydration
   const [isCollapsed, setIsCollapsed] = useState(selectedDevice === 'mobile' || isWindowMobile);
@@ -1036,7 +1040,24 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
     }
   };
 
-  if (isCollapsed) {
+  // Sidebar horizontale en bas pour format portrait (9:16)
+  if (isPortraitFormat) {
+    return (
+      <MobileBottomSidebarLayout
+        themeVars={themeVars}
+        tabs={tabs}
+        internalActiveTab={internalActiveTab}
+        handleTabClick={handleTabClick}
+        prefetchTab={prefetchTab}
+        renderPanel={renderPanel}
+        currentScreen={currentScreen}
+        onCloseActiveTab={() => setActiveTab(null)}
+        debugNamespace="JackpotEditor"
+      />
+    );
+  }
+
+  if (isCollapsed && !isPortraitFormat) {
     return (
       <div data-hybrid-sidebar="collapsed" className="w-16 bg-[hsl(var(--sidebar-bg))] border-r border-[hsl(var(--sidebar-border))] flex flex-col" style={themeVars}>
         <button

@@ -18,6 +18,8 @@ import PreviewRenderer from '@/components/preview/PreviewRenderer';
 import ZoomSlider from './components/ZoomSlider';
 import EditorHeader from '@/components/shared/EditorHeader';
 import DesignCanvas from './DesignCanvas';
+import ArticleCanvas from '../ArticleEditor/ArticleCanvas';
+import { DEFAULT_ARTICLE_CONFIG } from '../ArticleEditor/types/ArticleTypes';
 import { useEditorStore } from '../../stores/editorStore';
 import { useKeyboardShortcuts } from '../ModernEditor/hooks/useKeyboardShortcuts';
 import { useUndoRedo, useUndoRedoShortcuts } from '../../hooks/useUndoRedo';
@@ -179,6 +181,9 @@ const ProEditorLayout: React.FC<ProEditorLayoutProps> = ({ mode = 'campaign', hi
   const [windowSize, setWindowSize] = useState({ width: 0, height: 0 });
   const isWindowMobile = windowSize.height > windowSize.width && windowSize.width < 768;
   
+  // Détection du format portrait (9:16) pour la sidebar horizontale
+  const isPortraitFormat = windowSize.height > windowSize.width;
+
   // Détection du ratio 9:16 ou moins pour padding adaptatif, ou appareil mobile
   const isNarrowRatio = windowSize.width > 0 && windowSize.height > 0 
     ? (windowSize.height / windowSize.width) >= (16 / 9) 
@@ -226,6 +231,17 @@ const ProEditorLayout: React.FC<ProEditorLayoutProps> = ({ mode = 'campaign', hi
   const selectedCampaignId = useEditorStore((s) => s.selectedCampaignId);
   // Campagne centralisée (source de vérité pour les champs de contact)
   const campaignState = useEditorStore((s) => s.campaign);
+
+  // Initialize articleConfig with defaults when in article mode
+  useEffect(() => {
+    if (editorMode === 'article' && campaignState && !(campaignState as any)?.articleConfig?.content) {
+      console.log('📝 [ProEditorLayout] Initializing articleConfig with defaults');
+      setCampaign((prev: any) => ({
+        ...prev,
+        articleConfig: DEFAULT_ARTICLE_CONFIG
+      }));
+    }
+  }, [editorMode, campaignState, setCampaign]);
 
   // Supabase campaigns API
   const { saveCampaign } = useCampaigns();
@@ -3379,7 +3395,7 @@ useEffect(() => {
       )}
       
       {/* Main Content */}
-      <div className="flex-1 flex overflow-hidden relative rounded-br-[18px]">
+      <div className={`flex-1 flex overflow-hidden relative rounded-br-[18px] ${isPortraitFormat ? 'pb-16' : ''}`}>
         {showFunnel ? (
           /* Funnel Preview Mode */
           <div className="group fixed inset-0 z-40 w-full h-[100dvh] min-h-[100dvh] overflow-hidden flex items-center justify-center" style={{ backgroundColor: '#3a3a42' }}>
@@ -3395,7 +3411,7 @@ useEffect(() => {
               <div className="w-full h-full overflow-auto">
                   {editorMode === 'article' ? (
                     <ArticleCanvas
-                      articleConfig={(campaignState as any)?.articleConfig || {}}
+                      articleConfig={(campaignState as any)?.articleConfig || DEFAULT_ARTICLE_CONFIG}
                       onBannerChange={() => {}}
                       onBannerRemove={() => {}}
                       onTitleChange={(title) => {
@@ -3457,7 +3473,7 @@ useEffect(() => {
               editorMode === 'article' ? (
                 <div className="w-full h-full flex items-start justify-center bg-gray-100 overflow-y-auto py-8" style={{ backgroundColor: '#3a3a42' }}>
                   <ArticleCanvas
-                    articleConfig={(campaignState as any)?.articleConfig || {}}
+                    articleConfig={(campaignState as any)?.articleConfig || DEFAULT_ARTICLE_CONFIG}
                     onBannerChange={() => {}}
                     onBannerRemove={() => {}}
                     onTitleChange={(title) => {

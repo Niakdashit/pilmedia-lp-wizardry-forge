@@ -6,7 +6,6 @@ import CampaignValidationModal from '@/components/shared/CampaignValidationModal
 import { useCampaignValidation } from '@/hooks/useCampaignValidation';
 import { useLocation, useNavigate } from '@/lib/router-adapter';
 import { Save, X } from 'lucide-react';
-import { MobileToolbar } from '@/components/shared/MobileToolbar';
 
 const HybridSidebar = lazy(() => import('./HybridSidebar'));
 const DesignToolbar = lazy(() => import('./DesignToolbar'));
@@ -15,6 +14,7 @@ import GameCanvasPreview from '@/components/ModernEditor/components/GameCanvasPr
 import PreviewRenderer from '@/components/preview/PreviewRenderer';
 import ArticleFunnelView from '@/components/ArticleEditor/ArticleFunnelView';
 import { getArticleConfigWithDefaults } from '@/utils/articleConfigHelpers';
+import { DEFAULT_ARTICLE_CONFIG } from '../ArticleEditor/types/ArticleTypes';
 import type { ModularPage, ScreenId, BlocBouton, Module } from '@/types/modularEditor';
 import { createEmptyModularPage } from '@/types/modularEditor';
 
@@ -131,6 +131,7 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
   const editorMode: 'article' | 'fullscreen' = searchParams.get('mode') === 'article' ? 'article' : 'fullscreen';
   
   console.log('🎨 [QuizEditorLayout] Editor Mode:', editorMode);
+
   const getTemplateBaseWidths = useCallback((templateId?: string) => {
     const template = quizTemplates.find((tpl) => tpl.id === templateId) || quizTemplates[0];
     const width = template?.style?.containerWidth ?? 450;
@@ -207,6 +208,9 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
   // Détection de la taille de fenêtre pour la responsivité
   const [windowSize, setWindowSize] = useState({ width: 0, height: 0 });
   const isWindowMobile = windowSize.height > windowSize.width && windowSize.width < 768;
+  
+  // Détection du format portrait (9:16) pour la sidebar horizontale
+  const isPortraitFormat = windowSize.height > windowSize.width;
 
   // Zoom par défaut selon l'appareil, avec restauration depuis localStorage
   const getDefaultZoom = (device: 'desktop' | 'tablet' | 'mobile'): number => {
@@ -253,6 +257,24 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
   const { syncBackground } = useEditorPreviewSync();
   // Campagne centralisée (source de vérité pour les champs de contact)
   const campaignState = useEditorStore((s) => s.campaign);
+
+  // Initialize articleConfig with defaults when in article mode
+  useEffect(() => {
+    if (editorMode === 'article' && campaignState && !(campaignState as any)?.articleConfig?.content) {
+      console.log('📝 [QuizEditorLayout] Initializing articleConfig with defaults', {
+        currentArticleConfig: (campaignState as any)?.articleConfig,
+        DEFAULT_ARTICLE_CONFIG_content: DEFAULT_ARTICLE_CONFIG.content
+      });
+      setCampaign((prev: any) => {
+        const updated = {
+          ...prev,
+          articleConfig: DEFAULT_ARTICLE_CONFIG
+        };
+        console.log('✅ [QuizEditorLayout] articleConfig set to:', updated.articleConfig?.content);
+        return updated;
+      });
+    }
+  }, [editorMode, campaignState, setCampaign]);
 
 // Supabase campaigns API
 const { saveCampaign, duplicateCampaign } = useCampaigns();
@@ -3621,48 +3643,32 @@ const handleSaveCampaignName = useCallback(async () => {
       {/* Top Toolbar - Hidden only in preview mode */}
       {!showFunnel && (
         <>
-          {(isWindowMobile || actualDevice === 'mobile') ? (
-            <MobileToolbar
-              isMobile={true}
-              selectedDevice={selectedDevice}
-              onDeviceChange={handleDeviceChange}
-              onPreview={handlePreview}
-              onUndo={undo}
-              onRedo={redo}
-              canUndo={canUndo}
-              canRedo={canRedo}
-              onSave={handleSaveAndQuit}
-            />
-          ) : (
-            <>
-              <DesignToolbar
-                selectedDevice={selectedDevice}
-                onDeviceChange={handleDeviceChange}
-                onPreviewToggle={handlePreview}
-                isPreviewMode={showFunnel}
-                onUndo={undo}
-                onRedo={redo}
-                canUndo={canUndo}
-                canRedo={canRedo}
-                previewButtonSide={previewButtonSide}
-                onPreviewButtonSideChange={setPreviewButtonSide}
-                mode={mode}
-                onSave={handleSaveAndQuit}
-                showSaveCloseButtons={false}
-                campaignId={(campaignState as any)?.id || new URLSearchParams(location.search).get('campaign') || undefined}
-              />
+          <DesignToolbar
+            selectedDevice={selectedDevice}
+            onDeviceChange={handleDeviceChange}
+            onPreviewToggle={handlePreview}
+            isPreviewMode={showFunnel}
+            onUndo={undo}
+            onRedo={redo}
+            canUndo={canUndo}
+            canRedo={canRedo}
+            previewButtonSide={previewButtonSide}
+            onPreviewButtonSideChange={setPreviewButtonSide}
+            mode={mode}
+            onSave={handleSaveAndQuit}
+            showSaveCloseButtons={false}
+            campaignId={(campaignState as any)?.id || new URLSearchParams(location.search).get('campaign') || undefined}
+          />
 
-              {/* Bouton d'aide des raccourcis clavier */}
-              <div className="absolute top-4 right-4 z-10">
-                <KeyboardShortcutsHelp shortcuts={shortcuts} />
-              </div>
-            </>
-          )}
+          {/* Bouton d'aide des raccourcis clavier */}
+          <div className="absolute top-4 right-4 z-10">
+            <KeyboardShortcutsHelp shortcuts={shortcuts} />
+          </div>
         </>
       )}
       
       {/* Main Content */}
-      <div className="flex-1 flex overflow-hidden relative">
+      <div className={`flex-1 flex overflow-hidden relative ${isPortraitFormat ? 'pb-16' : ''}`}>
         {showFunnel ? (
           /* Funnel Preview Mode */
           <div className="group fixed inset-0 z-40 w-full h-[100dvh] min-h-[100dvh] overflow-visible flex items-center justify-center" style={{ backgroundColor: '#3a3a42' }}>

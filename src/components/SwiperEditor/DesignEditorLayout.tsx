@@ -239,6 +239,9 @@ const SwiperEditorLayout: React.FC<SwiperEditorLayoutProps> = ({ mode = 'campaig
   // Détection de la taille de fenêtre pour la responsivité
   const [windowSize, setWindowSize] = useState({ width: 0, height: 0 });
   const isWindowMobile = windowSize.height > windowSize.width && windowSize.width < 768;
+  
+  // Détection du format portrait (9:16) pour la sidebar horizontale
+  const isPortraitFormat = windowSize.height > windowSize.width;
 
   // Zoom par défaut selon l'appareil, avec restauration depuis localStorage
   const getDefaultZoom = (device: 'desktop' | 'tablet' | 'mobile'): number => {
@@ -3698,7 +3701,7 @@ const handleSaveCampaignName = useCallback(async () => {
       )}
       
       {/* Main Content */}
-      <div className="flex-1 flex overflow-hidden relative">
+      <div className={`flex-1 flex overflow-hidden relative ${isPortraitFormat ? 'pb-16' : ''}`}>
         {showFunnel ? (
           /* Funnel Preview Mode */
           <div className="group fixed inset-0 z-40 w-full h-[100dvh] min-h-[100dvh] overflow-visible flex items-center justify-center" style={{ backgroundColor: '#3a3a42' }}>

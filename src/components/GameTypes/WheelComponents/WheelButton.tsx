@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { getAccessibleTextColor } from '../../../utils/BrandStyleAnalyzer';
+import { useButtonStyleCSS } from '@/stores/buttonStore';
 
 interface ButtonConfig {
   color: string;
@@ -28,6 +29,8 @@ const WheelButton: React.FC<WheelButtonProps> = ({
   formValidated,
   onClick
 }) => {
+  // Style global des boutons (synchronisé avec le mode Article)
+  const globalButtonStyle = useButtonStyleCSS();
   const getButtonSizeClasses = () => {
     switch (buttonConfig.size) {
       case 'small':
@@ -49,25 +52,15 @@ const WheelButton: React.FC<WheelButtonProps> = ({
       onClick={onClick} 
       disabled={spinning || disabled} 
       style={{
-        background: `linear-gradient(45deg, ${buttonConfig.color}, ${buttonConfig.color}dd)`,
-        borderColor: buttonConfig.borderColor,
-        borderWidth: `${buttonConfig.borderWidth}px`,
-        borderRadius: `${buttonConfig.borderRadius}px`,
-        borderStyle: 'solid',
-        boxShadow: `0 2px 8px ${buttonConfig.borderColor}30, inset 0 1px 0 rgba(255, 255, 255, 0.2)`,
-        color: textColor
+        // Style global unifié (fond, texte, bordure, arrondi, zoom, etc.)
+        ...globalButtonStyle,
+        // Uniformiser la couleur de texte calculée si différente
+        color: textColor,
+        width: '100%',
       }} 
-      className={`${getButtonSizeClasses()} font-medium disabled:opacity-50 hover:opacity-90 transition-all duration-200 relative overflow-hidden`}
+      className={`w-full px-6 py-3 font-medium transition-colors duration-200 hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed`}
     >
-      <span className="relative z-10">
-        {spinning ? 'Tourne...' : formValidated ? 'Lancer la roue' : buttonConfig.text || 'Remplir le formulaire'}
-      </span>
-      <div 
-        style={{
-          transform: 'skewX(-15deg)'
-        }} 
-        className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300 mx-0 px-0" 
-      />
+      {spinning ? 'Tourne...' : formValidated ? 'Lancer la roue' : buttonConfig.text || 'Remplir le formulaire'}
     </button>
   );
 };

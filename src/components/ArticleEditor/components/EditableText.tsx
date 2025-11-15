@@ -12,6 +12,8 @@ interface EditableTextProps {
   titleClassName?: string;
   descriptionClassName?: string;
   maxWidth?: number;
+  compact?: boolean;
+  defaultAlign?: 'left' | 'center' | 'right';
 }
 
 const EditableText: React.FC<EditableTextProps> = ({
@@ -26,6 +28,8 @@ const EditableText: React.FC<EditableTextProps> = ({
   titleClassName = '',
   descriptionClassName = '',
   maxWidth = 810,
+  compact = false,
+  defaultAlign = 'center',
 }) => {
   const editorRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -434,7 +438,9 @@ const EditableText: React.FC<EditableTextProps> = ({
       const contentDescription = description || 'Décrivez votre contenu ici...';
       
       // Create HTML content from title and description
-      const newContent = `<h2>${contentTitle}</h2><p>${contentDescription.replace(/\n/g, '</p><p>')}</p>`;
+      // Description par défaut en semi-gras (font-weight 500) avec alignement configurable
+      const align = defaultAlign || 'center';
+      const newContent = `<h2>${contentTitle}</h2><p style="font-weight:500; text-align:${align}">${contentDescription.replace(/\n/g, `</p><p style=\\"font-weight:500; text-align:${align}\\">`)}</p>`;
       
       // Only update if content has changed to avoid infinite loops
       if (htmlContent !== newContent) {
@@ -742,8 +748,8 @@ const EditableText: React.FC<EditableTextProps> = ({
       className={`article-text-content px-6 relative ${className}`} 
       style={{ 
         maxWidth: `${maxWidth}px`,
-        paddingTop: editable ? '2rem' : '1rem',
-        paddingBottom: editable ? '2rem' : '1rem'
+        paddingTop: editable ? (compact ? '0.25rem' : '2rem') : (compact ? '0.125rem' : '1rem'),
+        paddingBottom: editable ? (compact ? '0.25rem' : '2rem') : (compact ? '0.125rem' : '1rem')
       }}
     >
       {/* Toolbar - Uniquement visible en mode édition */}
@@ -1227,7 +1233,7 @@ const EditableText: React.FC<EditableTextProps> = ({
             // Update parent on blur
             updateContent();
           }}
-          className={`w-full min-h-[150px] pt-3 px-3 pb-0 focus:outline-none prose prose-lg max-w-none transition-colors duration-200 ${
+          className={`w-full ${compact ? 'min-h-[40px]' : 'min-h-[150px]'} pt-3 px-3 pb-0 focus:outline-none prose prose-lg max-w-none transition-colors duration-200 ${
             isFocused ? 'bg-gray-50' : ''
           }`}
           style={{ 
@@ -1237,7 +1243,7 @@ const EditableText: React.FC<EditableTextProps> = ({
         />
       ) : (
         <div
-          className="w-full min-h-[150px] pt-3 px-3 pb-0 prose prose-lg max-w-none"
+          className={`w-full ${compact ? 'min-h-[40px]' : 'min-h-[150px]'} pt-3 px-3 pb-0 prose prose-lg max-w-none`}
           dangerouslySetInnerHTML={{ __html: htmlContent }}
           style={{ 
             direction: 'ltr', 

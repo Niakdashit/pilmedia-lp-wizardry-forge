@@ -2,6 +2,7 @@ import React from 'react';
 import ArticleTextPanel from '@/components/ArticleEditor/panels/ArticleTextPanel';
 import { Upload, Type, MousePointer } from 'lucide-react';
 import type { OptimizedCampaign } from '../../ModernEditor/types/CampaignTypes';
+import { useButtonStore } from '@/stores/buttonStore';
 
 interface ArticleModePanelProps {
   campaign: OptimizedCampaign | null;
@@ -109,15 +110,32 @@ const ArticleModePanel: React.FC<ArticleModePanelProps> = ({
   };
 
   const handleCTAChange = (updates: any) => {
+    const prevCta = articleConfig.cta || {};
+    const nextCta = {
+      ...prevCta,
+      ...updates,
+    } as any;
+
     onCampaignChange({
       articleConfig: {
         ...articleConfig,
-        cta: {
-          ...articleConfig.cta,
-          ...updates,
-        },
+        cta: nextCta,
       },
     });
+
+    try {
+      const { updateButtonStyle } = useButtonStore.getState();
+      updateButtonStyle({
+        bgColor: nextCta.backgroundColor || '#000000',
+        textColor: nextCta.textColor || '#ffffff',
+        borderColor: nextCta.borderColor || '#000000',
+        borderRadius: typeof nextCta.borderRadius === 'number' ? nextCta.borderRadius : 9999,
+        borderWidth: typeof nextCta.borderWidth === 'number' ? nextCta.borderWidth : 0,
+        scale: typeof nextCta.scale === 'number' ? nextCta.scale : 1,
+      });
+    } catch (e) {
+      console.warn('[ArticleModePanel] Failed to sync CTA to button store', e);
+    }
   };
 
   const handleBannerImageChange = async (file: File | undefined) => {
@@ -721,6 +739,7 @@ const ArticleModePanel: React.FC<ArticleModePanelProps> = ({
   // Panneau Bouton
   const renderButtonPanel = () => (
     <div className="space-y-6">
+      {/* Texte du bouton */}
       <div>
         <label className="block text-sm font-semibold text-gray-700 mb-2">Texte du bouton</label>
         <input
@@ -732,79 +751,150 @@ const ArticleModePanel: React.FC<ArticleModePanelProps> = ({
         />
       </div>
 
-      <div>
-        <label className="block text-sm font-semibold text-gray-700 mb-2">Taille</label>
-        <select
-          value={articleConfig.cta?.size || 'large'}
-          onChange={(e) => handleCTAChange({ size: e.target.value })}
-          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#44444d]"
-        >
-          <option value="small">Petit</option>
-          <option value="medium">Moyen</option>
-          <option value="large">Grand</option>
-        </select>
+      {/* Couleurs de fond / texte */}
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Couleur de fond</label>
+          <div className="space-y-2">
+            <input
+              type="color"
+              className="w-full h-10 rounded border border-gray-300 cursor-pointer"
+              value={articleConfig.cta?.backgroundColor || '#000000'}
+              onChange={(e) => handleCTAChange({ backgroundColor: e.target.value })}
+            />
+            <input
+              type="text"
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#44444d] focus:ring-[#44444d]"
+              value={articleConfig.cta?.backgroundColor || '#000000'}
+              onChange={(e) => handleCTAChange({ backgroundColor: e.target.value })}
+              placeholder="#000000"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Couleur du texte</label>
+          <div className="space-y-2">
+            <input
+              type="color"
+              className="w-full h-10 rounded border border-gray-300 cursor-pointer"
+              value={articleConfig.cta?.textColor || '#ffffff'}
+              onChange={(e) => handleCTAChange({ textColor: e.target.value })}
+            />
+            <input
+              type="text"
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#44444d] focus:ring-[#44444d]"
+              value={articleConfig.cta?.textColor || '#ffffff'}
+              onChange={(e) => handleCTAChange({ textColor: e.target.value })}
+              placeholder="#ffffff"
+            />
+          </div>
+        </div>
       </div>
 
+      {/* Arrondi des angles */}
       <div>
-        <label className="block text-sm font-semibold text-gray-700 mb-2">Style</label>
-        <select
-          value={articleConfig.cta?.variant || 'primary'}
-          onChange={(e) => handleCTAChange({ variant: e.target.value })}
-          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#44444d]"
-        >
-          <option value="primary">Principal</option>
-          <option value="secondary">Secondaire</option>
-          <option value="outline">Contour</option>
-        </select>
+        <div className="flex items-center justify-between mb-1">
+          <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide">Arrondi des angles</label>
+          <span className="text-[11px] text-gray-600">{articleConfig.cta?.borderRadius ?? 9999}px</span>
+        </div>
+        <input
+          type="range"
+          min={0}
+          max={9999}
+          value={articleConfig.cta?.borderRadius ?? 9999}
+          onChange={(e) => handleCTAChange({ borderRadius: Number(e.target.value) })}
+          className="w-full"
+        />
       </div>
 
+      {/* Épaisseur de bordure */}
       <div>
-        <label className="block text-sm font-semibold text-gray-700 mb-2">Icône</label>
-        <select
-          value={articleConfig.cta?.icon || 'arrow'}
-          onChange={(e) => handleCTAChange({ icon: e.target.value })}
-          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#44444d]"
+        <div className="flex items-center justify-between mb-1">
+          <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide">Épaisseur de bordure</label>
+          <span className="text-[11px] text-gray-600">{articleConfig.cta?.borderWidth ?? 0}px</span>
+        </div>
+        <input
+          type="range"
+          min={0}
+          max={20}
+          value={articleConfig.cta?.borderWidth ?? 0}
+          onChange={(e) => handleCTAChange({ borderWidth: Number(e.target.value) })}
+          className="w-full"
+        />
+      </div>
+
+      {/* Couleur de bordure */}
+      <div>
+        <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Couleur de bordure</label>
+        <div className="space-y-2">
+          <input
+            type="color"
+            className="w-full h-10 rounded border border-gray-300 cursor-pointer"
+            value={articleConfig.cta?.borderColor || '#000000'}
+            onChange={(e) => handleCTAChange({ borderColor: e.target.value })}
+          />
+          <input
+            type="text"
+            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#44444d] focus:ring-[#44444d]"
+            value={articleConfig.cta?.borderColor || '#000000'}
+            onChange={(e) => handleCTAChange({ borderColor: e.target.value })}
+            placeholder="#000000"
+          />
+        </div>
+      </div>
+
+      {/* Majuscules / Gras / Ombre */}
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={() => handleCTAChange({ uppercase: !articleConfig.cta?.uppercase })}
+          className={`px-3 py-1.5 rounded text-xs ${articleConfig.cta?.uppercase ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-700'}`}
         >
-          <option value="arrow">Flèche →</option>
-          <option value="external">Lien externe ↗</option>
-          <option value="play">Play ▶</option>
-          <option value="none">Aucune</option>
-        </select>
+          Majuscules
+        </button>
+        <button
+          type="button"
+          onClick={() => handleCTAChange({ bold: !articleConfig.cta?.bold })}
+          className={`px-3 py-1.5 rounded text-xs ${articleConfig.cta?.bold ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-700'}`}
+        >
+          Gras
+        </button>
+        <button
+          type="button"
+          onClick={() => handleCTAChange({ boxShadow: articleConfig.cta?.boxShadow ? '' : '0 12px 30px rgba(132,27,96,0.35)' })}
+          className={`px-3 py-1.5 rounded text-xs ${articleConfig.cta?.boxShadow ? 'bg-rose-100 text-rose-700' : 'bg-gray-100 text-gray-700'}`}
+        >
+          Ombre
+        </button>
       </div>
 
       <div className="h-px bg-gray-200" />
 
-      <div>
-        <label className="block text-sm font-semibold text-gray-700 mb-2">
-          Position verticale (Mobile uniquement)
-        </label>
-        <p className="text-xs text-gray-500 mb-3">
-          Ajustez la position du bouton sur l'écran mobile. 0% = en haut, 100% = en bas.
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide">
+            Taille du bouton
+          </label>
+          <span className="text-[11px] text-gray-600">
+            {Math.round((articleConfig.cta?.scale ?? 1) * 100)}%
+          </span>
+        </div>
+        <input
+          type="range"
+          min={50}
+          max={150}
+          step={5}
+          value={Math.round((articleConfig.cta?.scale ?? 1) * 100)}
+          onChange={(e) => {
+            const value = Number(e.target.value) / 100;
+            handleCTAChange({ scale: value });
+          }}
+          className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#44444d]"
+        />
+        <p className="text-[11px] text-gray-500">
+          Ajuste la taille globale du bouton (hauteur + largeur) sur tout le funnel.
         </p>
-        <div className="space-y-2">
-          <input
-            type="range"
-            min="0"
-            max="100"
-            step="5"
-            value={articleConfig.cta?.mobileVerticalPosition ?? 85}
-            onChange={(e) => handleCTAChange({ mobileVerticalPosition: Number(e.target.value) })}
-            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#44444d]"
-          />
-          <div className="flex justify-between items-center">
-            <span className="text-xs text-gray-500">Haut</span>
-            <span className="text-sm font-medium text-[#44444d]">
-              {articleConfig.cta?.mobileVerticalPosition ?? 85}%
-            </span>
-            <span className="text-xs text-gray-500">Bas</span>
-          </div>
-        </div>
-        <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-          <p className="text-xs text-blue-800">
-            📱 Cette option n'affecte que l'affichage sur mobile (écrans &lt; 768px). 
-            Sur desktop, le bouton reste sous le texte.
-          </p>
-        </div>
       </div>
     </div>
   );
