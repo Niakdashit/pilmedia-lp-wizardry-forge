@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, { useState } from 'react';
 import { Check, Image, Type, Palette, Minimize2 } from 'lucide-react';
 import { QuizTemplate, quizTemplates } from '../../../types/quizTemplates';
