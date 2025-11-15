@@ -1,6 +1,7 @@
 'use client';
 
 // @ts-nocheck
+// @ts-nocheck
 import React, { useState, useMemo, useEffect, useRef, useCallback, lazy } from 'react';
 import CampaignValidationModal from '@/components/shared/CampaignValidationModal';
 import { useCampaignValidation } from '@/hooks/useCampaignValidation';
