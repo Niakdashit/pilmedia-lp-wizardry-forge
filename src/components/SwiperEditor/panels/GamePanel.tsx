@@ -21,15 +21,17 @@ const GamePanel: React.FC = () => {
 
   const handleCardsChange = (newCards: CardItem[]) => {
     console.log('💾 [GamePanel] Saving cards:', newCards);
+    if (!campaign) return;
+    
     const updatedCampaign = {
       ...campaign,
       gameConfig: {
-        ...campaign?.gameConfig,
+        ...campaign.gameConfig,
         swiper: {
-          ...(campaign?.gameConfig as any)?.swiper,
+          ...(campaign.gameConfig as any)?.swiper,
           cards: newCards
         }
-      } as any
+      }
     };
     console.log('💾 [GamePanel] Updated campaign:', updatedCampaign);
     setCampaign(updatedCampaign);

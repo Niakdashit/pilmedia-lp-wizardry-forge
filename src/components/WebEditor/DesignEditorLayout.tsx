@@ -1307,7 +1307,11 @@ const handleSaveCampaignName = useCallback(async () => {
         }
       });
 
-      setCurrentScreen((prev) => (prev === closestId ? prev : closestId));
+      // Note: setCurrentScreen is not defined in this component
+      // This code is currently non-functional and needs refactoring
+      // if (typeof setCurrentScreen === 'function') {
+      //   setCurrentScreen((prev) => (prev === closestId ? prev : closestId));
+      // }
     };
 
     // Calcule initial après montage
@@ -3222,7 +3226,7 @@ const handleSaveCampaignName = useCallback(async () => {
     } else if (editorMode === 'article') {
       setCurrentStep('article');
     } else {
-      setCurrentScreen('screen1');
+      // setCurrentScreen('screen1'); // Note: not defined in this component
     }
   };
 

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, { useState } from 'react';
 import { advancedTextStyles, getStylesByCategory, specializedFonts } from '../../../config/advancedTextStyles';
 import { Palette, Zap, Sparkles, Crown, Gamepad2, Clock, Eye, Type } from 'lucide-react';

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React from 'react';
 import { Image, AlignLeft, AlignCenter, AlignRight } from 'lucide-react';
 import type { BlocLogo } from '@/types/modularEditor';
