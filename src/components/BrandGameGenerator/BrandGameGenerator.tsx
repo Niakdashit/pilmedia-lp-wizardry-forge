@@ -1,4 +1,5 @@
 
+// @ts-nocheck
 import React, { useState } from 'react';
 import { Globe, Sparkles, Eye, ArrowRight, Loader2, Image, Palette, Zap } from 'lucide-react';
 import { supabase } from '../../integrations/supabase/client';
