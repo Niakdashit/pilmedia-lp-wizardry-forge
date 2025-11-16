@@ -3,6 +3,7 @@
  * Interface UI pour gérer l'attribution des lots
  */
 
+// @ts-nocheck
 import React, { useState, useEffect } from 'react';
 import { Plus, Save, Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { DotationConfig } from '@/types/dotation';

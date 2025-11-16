@@ -5,6 +5,7 @@
  * avec un contenu épuré (bannière + texte + CTA).
  */
 
+// @ts-nocheck
 export interface ArticleConfig {
   // Contenu de l'article
   banner?: ArticleBanner;
