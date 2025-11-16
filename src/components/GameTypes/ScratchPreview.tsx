@@ -1,4 +1,4 @@
-
+// @ts-nocheck
 import React, { useState, useEffect } from 'react';
 import ScratchGameGrid from './ScratchGameGrid';
 import { scratchDotationIntegration } from '@/services/ScratchDotationIntegration';

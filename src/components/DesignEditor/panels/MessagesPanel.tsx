@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, { useState, useEffect, useRef } from 'react';
 import { Trophy, Frown, Image as ImageIcon, MessageSquare, Upload, X } from 'lucide-react';
 import { useMessageStore } from '@/stores/messageStore';

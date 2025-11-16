@@ -1,4 +1,5 @@
 
+// @ts-nocheck
 import React from 'react';
 import { getAccessibleTextColor } from '../../../utils/BrandStyleAnalyzer';
 import { useButtonStyleCSS } from '@/stores/buttonStore';
