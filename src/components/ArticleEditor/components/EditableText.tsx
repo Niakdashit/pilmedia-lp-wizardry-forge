@@ -1262,7 +1262,7 @@ const EditableText: React.FC<EditableTextProps> = ({
           onBlur={() => {
             console.log('📝 [EditableText] Focus lost, updating parent');
             setIsFocused(false);
-            // Update htmlContent and parent on blur
+            // Update htmlContent and parent on blur (synchronously to avoid losing changes on unmount)
             if (editorRef.current) {
               const content = editorRef.current.innerHTML;
               console.log('💾 [EditableText] Saving content on blur:', {
@@ -1271,7 +1271,17 @@ const EditableText: React.FC<EditableTextProps> = ({
                 hasColorStyles: content.includes('style="color')
               });
               setHtmlContent(content);
+              // Immediate propagate to parent to avoid reset when toggling preview
+              if (onHtmlContentChange) {
+                try {
+                  onHtmlContentChange(content);
+                  lastSyncedPropHtmlRef.current = content;
+                } catch (e) {
+                  console.warn('⚠️ [EditableText] onHtmlContentChange failed:', e);
+                }
+              }
             }
+            // Fallback async update (kept for backward compatibility)
             updateContent();
           }}
           className={`w-full ${compact ? 'min-h-[40px]' : 'min-h-[150px]'} pt-3 px-3 pb-0 focus:outline-none prose prose-lg max-w-none transition-colors duration-200 ${
