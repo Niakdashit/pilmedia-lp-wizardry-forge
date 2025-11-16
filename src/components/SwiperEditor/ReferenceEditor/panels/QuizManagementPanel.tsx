@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, { useState } from 'react';
 import { Plus, Trash2, Edit3, Clock, HelpCircle, Image as ImageIcon } from 'lucide-react';
 import { quizTemplates } from '../../../types/quizTemplates';

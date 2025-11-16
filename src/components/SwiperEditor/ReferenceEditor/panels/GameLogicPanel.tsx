@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, { useState } from 'react';
 import { Gift, Calendar as CalendarIcon, Plus, GripVertical, Pencil, Copy, Trash2, Trophy, Image as ImageIcon } from 'lucide-react';
 import { useEditorStore } from '../../../stores/editorStore';

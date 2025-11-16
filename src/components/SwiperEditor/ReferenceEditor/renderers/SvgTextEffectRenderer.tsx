@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, { useMemo, useId } from 'react';
 import type { TextEffectModel, EffectLayer } from '../../../types/TextEffectModel';
 

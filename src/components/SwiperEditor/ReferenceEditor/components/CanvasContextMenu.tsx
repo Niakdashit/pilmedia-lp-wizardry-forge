@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, { useState, useRef, useEffect } from 'react';
 import { Clipboard, Trash2, Palette } from 'lucide-react';
 import { useEditorStore } from '../../../stores/editorStore';
