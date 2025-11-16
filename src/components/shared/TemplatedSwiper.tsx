@@ -83,7 +83,7 @@ const TemplatedSwiper: React.FC<TemplatedSwiperProps> = ({
     device,
     dimensions,
     cardsKey,
-    cards: cards.map(c => ({ id: c.id, title: c.title, image: c.image.substring(0, 50) }))
+    cards: cards.map((c: any) => ({ id: c.id, title: c.title, image: c.image.substring(0, 50) }))
   });
 
   const handleSwipe = () => {
@@ -155,7 +155,7 @@ function SwipeContainer({
       dragConstraints={{ left: 0, right: 0 }}
       dragElastic={0.6}
       onDragEnd={handleDragEnd}
-      style={{ x, rotate, opacity }}
+      style={{ x, rotate, opacity, width: `${dimensions.cardWidth}px`, height: 'auto' }}
       initial={{ opacity: 0, scale: 0.9, y: 40 }}
       animate={{ 
         rotate: randomAngle, 
@@ -168,10 +168,6 @@ function SwipeContainer({
       exit={{ opacity: 0, scale: 0.9, x: x.get() > 0 ? 400 : -400, transition: { duration: 0.3 } }}
       transition={{ type: "spring", stiffness: 140, damping: 20 }}
       className="absolute"
-      style={{
-        width: `${dimensions.cardWidth}px`,
-        height: 'auto'
-      }}
     >
       <div 
         className={`bg-white shadow-xl rounded-2xl flex flex-col items-center justify-center ${dimensions.padding}`} 

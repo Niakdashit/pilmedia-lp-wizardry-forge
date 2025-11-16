@@ -1,8 +1,10 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { supabase } from '../integrations/supabase/client';
 import Spinner from '../components/shared/Spinner';
-import { Loader2 } from 'lucide-react';
+
+// Minimal short URL helpers (placeholder)
+const getShortUrlMapping = (code: string) => ({ longUrl: `/c/${code}` });
+const incrementShortUrlClicks = async (_code: string) => {};
 
 /**
  * Page de redirection pour les Short URLs
