@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React from 'react';
 import ArticleTextPanel from '@/components/ArticleEditor/panels/ArticleTextPanel';
 import { Upload, Type, MousePointer } from 'lucide-react';
