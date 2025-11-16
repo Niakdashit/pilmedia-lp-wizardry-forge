@@ -2986,6 +2986,20 @@ useEffect(() => {
                             });
                           }
                         }}
+                        onArticleHtmlContentChange={(html) => {
+                          if (campaignState) {
+                            setCampaign({
+                              ...campaignState,
+                              articleConfig: {
+                                ...(campaignState as any).articleConfig,
+                                content: {
+                                  ...(campaignState as any).articleConfig?.content,
+                                  htmlContent: html,
+                                },
+                              },
+                            });
+                          }
+                        }}
                         onCTAClick={handleCTAClick}
                         onFormSubmit={handleFormSubmit}
                         onGameComplete={handleGameComplete}
