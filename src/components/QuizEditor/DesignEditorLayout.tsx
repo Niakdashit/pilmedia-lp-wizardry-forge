@@ -14,7 +14,7 @@ import GameCanvasPreview from '@/components/ModernEditor/components/GameCanvasPr
 import PreviewRenderer from '@/components/preview/PreviewRenderer';
 import ArticleFunnelView from '@/components/ArticleEditor/ArticleFunnelView';
 import { getArticleConfigWithDefaults } from '@/utils/articleConfigHelpers';
-import { DEFAULT_ARTICLE_CONFIG } from '../ArticleEditor/types/ArticleTypes';
+
 import type { ModularPage, ScreenId, BlocBouton, Module } from '@/types/modularEditor';
 import { createEmptyModularPage } from '@/types/modularEditor';
 
