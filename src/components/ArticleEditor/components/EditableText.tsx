@@ -438,8 +438,9 @@ const EditableText: React.FC<EditableTextProps> = ({
   useEffect(() => {
     if (!editorRef.current) return;
     
-    // Only initialize if not already initialized OR if propHtmlContent changed
-    const shouldInitialize = !isInitializedRef.current;
+    // Only initialize if editor is empty (prevents reinit on remount)
+    const editorIsEmpty = !editorRef.current.innerHTML || editorRef.current.innerHTML.trim() === '';
+    const shouldInitialize = !isInitializedRef.current && editorIsEmpty;
     
     if (shouldInitialize) {
       const initialContent = getInitialContent();
@@ -449,7 +450,7 @@ const EditableText: React.FC<EditableTextProps> = ({
       
       console.log('✅ [EditableText] Initialized with content:', initialContent.substring(0, 100));
     }
-  }, [getInitialContent, propHtmlContent]);
+  }, []);
   
   // Sync propHtmlContent changes ONLY when it actually changes externally
   useEffect(() => {
