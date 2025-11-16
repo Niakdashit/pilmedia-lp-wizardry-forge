@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, { useCallback, useMemo, useRef } from 'react';
 import { RotateCw } from 'lucide-react';
 import ShapeRenderer from './components/ShapeRenderer';

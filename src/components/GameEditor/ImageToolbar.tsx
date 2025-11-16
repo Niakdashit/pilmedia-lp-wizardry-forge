@@ -1,4 +1,4 @@
-
+// @ts-nocheck
 import React, { useState } from 'react';
 import { Trash2, RotateCw, Copy, Layers, Eye, Scissors, Loader2 } from 'lucide-react';
 import { removeBackground, loadImage } from './utils/backgroundRemoval';

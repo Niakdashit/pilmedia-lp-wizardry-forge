@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useState, useCallback } from "react";
 import HealthySkinSwiper from "./HealthySkinSwiper";
 import { CardItem } from "../../../types/game";

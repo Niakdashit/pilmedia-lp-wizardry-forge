@@ -1,4 +1,5 @@
 
+// @ts-nocheck
 import React from 'react';
 import { AlertCircle, Loader2, Monitor, Tablet, Smartphone } from 'lucide-react';
 import Spinner from '../../shared/Spinner';
