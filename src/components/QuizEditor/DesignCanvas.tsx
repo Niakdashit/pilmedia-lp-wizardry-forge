@@ -2323,6 +2323,31 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
               });
             }
           }}
+          onArticleHtmlContentChange={(html) => {
+            if (onCampaignChange && campaign) {
+              onCampaignChange({
+                ...campaign,
+                articleConfig: {
+                  ...articleConfig,
+                  content: {
+                    ...articleConfig.content,
+                    htmlContent: html,
+                  },
+                },
+              });
+            }
+          }}
+          onFormContentChange={(html) => {
+            if (onCampaignChange && campaign) {
+              onCampaignChange({
+                ...campaign,
+                articleConfig: {
+                  ...articleConfig,
+                  formHtmlContent: html,
+                },
+              });
+            }
+          }}
           onCTAClick={() => {
             console.log('🎯 Article CTA clicked - Navigation vers étape suivante');
           }}

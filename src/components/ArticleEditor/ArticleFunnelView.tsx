@@ -19,6 +19,9 @@ interface ArticleFunnelViewProps {
   onBannerRemove?: () => void;
   onTitleChange?: (title: string) => void;
   onDescriptionChange?: (description: string) => void;
+  // Rich HTML callbacks for article + form steps (forwarded to ArticleCanvas/EditableText)
+  onArticleHtmlContentChange?: (html: string) => void;
+  onFormContentChange?: (html: string) => void;
   onCTAClick?: () => void;
   onFormSubmit?: (data: Record<string, string>) => void;
   onGameComplete?: () => void;
@@ -52,6 +55,8 @@ const ArticleFunnelView: React.FC<ArticleFunnelViewProps> = ({
   onBannerRemove,
   onTitleChange,
   onDescriptionChange,
+   onArticleHtmlContentChange,
+   onFormContentChange,
   onCTAClick,
   onFormSubmit,
   onGameComplete,
@@ -109,6 +114,8 @@ const ArticleFunnelView: React.FC<ArticleFunnelViewProps> = ({
         onBannerRemove={handleBannerRemove}
         onTitleChange={handleTitleChange}
         onDescriptionChange={handleDescriptionChange}
+        onArticleHtmlContentChange={onArticleHtmlContentChange}
+        onFormContentChange={onFormContentChange}
         onCTAClick={handleCTAClick}
         onFormSubmit={handleFormSubmit}
         onGameComplete={handleGameComplete}

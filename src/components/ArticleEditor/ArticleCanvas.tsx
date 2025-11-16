@@ -33,6 +33,10 @@ interface ArticleCanvasProps {
   onWinnerContentChange?: (content: string) => void;
   onLoserContentChange?: (content: string) => void;
   availableSteps?: Array<'article' | 'form' | 'game' | 'result'>; // Custom steps for different campaign types
+  // Dedicated callback for article step rich HTML content
+  onArticleHtmlContentChange?: (html: string) => void;
+  // Dedicated callback for form step rich text so it doesn't overwrite article step
+  onFormContentChange?: (html: string) => void;
 }
 
 /**
@@ -151,28 +155,33 @@ const ArticleCanvas: React.FC<ArticleCanvasProps> = ({
     
     switch (currentStep) {
       case 'article':
-        const finalDescription = articleConfig.content?.description && articleConfig.content.description.trim().length > 0
-          ? articleConfig.content.description
-          : 'Décrivez votre contenu ici...';
-        
-        console.log('🎬 [ArticleCanvas] Final description passed to EditableText:', {
-          originalDescription: articleConfig.content?.description,
-          finalDescription,
-          hasOriginal: !!articleConfig.content?.description,
-          originalLength: articleConfig.content?.description?.length
-        });
+        // CRITICAL: Generate default HTML only if no rich content exists
+        // 1) Prefer htmlContent when present (rich HTML from EditableText)
+        // 2) Fallback to description (which may also contain styled HTML)
+        // 3) Final fallback: static default paragraph
+        const defaultArticleHtml =
+          (articleConfig.content?.htmlContent && articleConfig.content.htmlContent.trim().length > 0)
+            ? articleConfig.content.htmlContent
+            : (articleConfig.content?.description && articleConfig.content.description.trim().length > 0
+                ? articleConfig.content.description
+                : '<p style="font-weight:500; text-align:left">Décrivez votre contenu ici...</p>');
         
         return (
           <>
             <EditableText
               title={articleConfig.content?.title}
-              description={finalDescription}
-              htmlContent={articleConfig.content?.htmlContent}
+              description=""
+              // CRITICAL: Always prioritize htmlContent to preserve styles (colors, formatting, etc.)
+              // Never pass description prop when htmlContent exists, otherwise EditableText will regenerate HTML and lose styles
+              htmlContent={defaultArticleHtml}
               onTitleChange={onTitleChange}
               onDescriptionChange={onDescriptionChange}
               onHtmlContentChange={(html) => {
-                // Store the full HTML content
-                if (articleConfig.content) {
+                // CRITICAL: Always use onArticleHtmlContentChange for article step to preserve styles
+                if (typeof onArticleHtmlContentChange === 'function') {
+                  onArticleHtmlContentChange(html);
+                } else if (articleConfig.content) {
+                  // Backward compat: if onArticleHtmlContentChange is not wired yet, fall back to legacy behavior
                   onDescriptionChange(html);
                 }
               }}
@@ -201,36 +210,35 @@ const ArticleCanvas: React.FC<ArticleCanvasProps> = ({
         );
       
       case 'form':
-        // For the contact form step, we want a more specific default message for all campaign types
-        const isUsingGenericArticleDescription = !articleConfig.content?.description
-          || articleConfig.content.description === 'Décrivez votre contenu ici...';
-
-        const formDescription = isUsingGenericArticleDescription
-          ? 'Merci de compléter ce formulaire afin de valider votre participation :'
-          : (
-              articleConfig.content?.description
-              || 'Merci de compléter ce formulaire afin de valider votre participation :'
-            );
-
-        // If we're still on the generic article content, don't reuse its HTML for the form step,
-        // so that EditableText can rebuild HTML from the form-specific description.
-        const shouldIgnoreHtmlForForm =
-          isUsingGenericArticleDescription &&
-          (!articleConfig.content?.htmlContent ||
-            articleConfig.content.htmlContent.includes('Décrivez votre contenu ici...'));
-
         return (
           <div className="py-8 px-6" style={{ maxWidth: `${maxWidth}px`, margin: '0 auto' }}>
             {/* Texte du formulaire : réutilise le même contenu que l'étape Article SANS le titre */}
             <div className="mb-4">
               <EditableText
                 title=""
-                description={formDescription}
-                htmlContent={shouldIgnoreHtmlForForm ? undefined : articleConfig.content?.htmlContent}
+                description=""
+                // CRITICAL: Always prioritize formHtmlContent to preserve styles (colors, formatting, etc.)
+                // Never pass description prop when htmlContent exists, otherwise EditableText will regenerate HTML and lose styles
+                htmlContent={
+                  (articleConfig as any)?.formHtmlContent &&
+                  (articleConfig as any).formHtmlContent.trim().length > 0
+                    ? (articleConfig as any).formHtmlContent
+                    : (
+                        articleConfig.content?.htmlContent &&
+                        articleConfig.content.htmlContent.trim().length > 0 &&
+                        !articleConfig.content.htmlContent.includes('Décrivez votre contenu ici...')
+                          ? articleConfig.content.htmlContent
+                          : '<p style="font-weight:600; text-align:center">Merci de compléter ce formulaire afin de valider votre participation :</p>'
+                      )
+                }
                 onTitleChange={onTitleChange}
                 onDescriptionChange={onDescriptionChange}
                 onHtmlContentChange={(html) => {
-                  if (articleConfig.content) {
+                  // CRITICAL: Always use onFormContentChange for form step to avoid overwriting article content
+                  if (typeof onFormContentChange === 'function') {
+                    onFormContentChange(html);
+                  } else if (articleConfig.content) {
+                    // Backward compat: if onFormContentChange is not wired yet, fall back to legacy behavior
                     onDescriptionChange(html);
                   }
                 }}

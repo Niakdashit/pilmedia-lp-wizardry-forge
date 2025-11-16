@@ -129,11 +129,13 @@ export const parseArticleConfig = (
 export const isArticleConfigEmpty = (config: any): boolean => {
   if (!config) return true;
   
-  const hasContent = config.content?.title || config.content?.description;
+  const hasTitleOrDescription = !!(config.content?.title || config.content?.description);
+  const hasHtmlContent = typeof config.content?.htmlContent === 'string' && config.content.htmlContent.trim().length > 0;
   const hasBanner = !!config.banner?.imageUrl;
   const hasCTA = !!config.cta?.text;
   
-  return !hasContent && !hasBanner && !hasCTA;
+  // Considérer la config NON vide dès qu'il y a du HTML riche, un titre/description, une bannière ou un CTA
+  return !hasTitleOrDescription && !hasHtmlContent && !hasBanner && !hasCTA;
 };
 
 /**
@@ -151,7 +153,9 @@ export const getArticleConfigWithDefaults = (
   campaignData: any
 ): ArticleConfig => {
   // Priorité 1: campaignState (en mémoire, plus récent)
-  if (campaignState?.articleConfig && !isArticleConfigEmpty(campaignState.articleConfig)) {
+  const stateConfig = campaignState?.articleConfig;
+  const stateHasHtml = typeof stateConfig?.content?.htmlContent === 'string' && stateConfig.content.htmlContent.trim().length > 0;
+  if (stateConfig && (!isArticleConfigEmpty(stateConfig) || stateHasHtml)) {
     return parseArticleConfig(campaignState);
   }
   

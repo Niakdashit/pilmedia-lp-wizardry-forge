@@ -242,31 +242,6 @@ const ScratchToolbar: React.FC<ScratchToolbarProps> = React.memo(({
           <Layers className="w-4 h-4 mr-1" />
           Modèles
         </button>
-        {/* Position du bouton d'aperçu */}
-        <div className="flex items-center bg-[hsl(var(--sidebar-surface))] rounded-lg p-0.5 border border-[hsl(var(--sidebar-border))] mr-2">
-          <button
-            onClick={() => onPreviewButtonSideChange && onPreviewButtonSideChange('left')}
-            className={`px-2 py-1 text-xs rounded-md transition-all duration-200 ${
-              previewButtonSide === 'left'
-                ? 'bg-white shadow-sm text-[hsl(var(--sidebar-icon-active))] ring-1 ring-[hsl(var(--sidebar-glow))]'
-                : 'text-[hsl(var(--sidebar-icon))] hover:text-[hsl(var(--sidebar-icon-active))] hover:bg-[hsl(var(--sidebar-hover))]'
-            }`}
-            title="Bouton Aperçu à gauche"
-          >
-            Gauche
-          </button>
-          <button
-            onClick={() => onPreviewButtonSideChange && onPreviewButtonSideChange('right')}
-            className={`px-2 py-1 text-xs rounded-md transition-all duration-200 ${
-              previewButtonSide === 'right'
-                ? 'bg-white shadow-sm text-[hsl(var(--sidebar-icon-active))] ring-1 ring-[hsl(var(--sidebar-glow))]'
-                : 'text-[hsl(var(--sidebar-icon))] hover:text-[hsl(var(--sidebar-icon-active))] hover:bg-[hsl(var(--sidebar-hover))]'
-            }`}
-            title="Bouton Aperçu à droite"
-          >
-            Droite
-          </button>
-        </div>
         <button 
           onClick={onPreviewToggle}
           className={`flex items-center px-2.5 py-1.5 text-xs sm:text-sm border rounded-lg transition-colors shadow-none focus:shadow-none ring-0 focus:ring-0 drop-shadow-none filter-none backdrop-blur-0 ${

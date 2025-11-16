@@ -10,6 +10,9 @@ export interface ArticleConfig {
   banner?: ArticleBanner;
   content?: ArticleContent;
   cta?: ArticleCTA;
+  // Contenu spécifique à l'étape formulaire (étape 2)
+  formDescription?: string;
+  formHtmlContent?: string;
   
   // Configuration du funnel
   funnelFlow?: ArticleFunnelFlow;

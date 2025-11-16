@@ -258,42 +258,6 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
   // Campagne centralisée (source de vérité pour les champs de contact)
   const campaignState = useEditorStore((s) => s.campaign);
 
-  // Initialize articleConfig with defaults when in article mode
-  useEffect(() => {
-    if (editorMode === 'article' && campaignState) {
-      const articleConfig = (campaignState as any)?.articleConfig;
-      const content = articleConfig?.content;
-      
-      console.log('🔍 [QuizEditorLayout] Checking articleConfig:', {
-        hasArticleConfig: !!articleConfig,
-        hasContent: !!content,
-        contentDescription: content?.description,
-        needsInit: !articleConfig || !content || (!content.description && !content.title)
-      });
-      
-      // Initialize if articleConfig doesn't exist OR if content is missing/empty
-      const needsInit = !articleConfig || !content || (!content.description && !content.title);
-      
-      if (needsInit) {
-        console.log('📝 [QuizEditorLayout] Initializing articleConfig with defaults', {
-          currentArticleConfig: articleConfig,
-          currentContent: content,
-          DEFAULT_ARTICLE_CONFIG_content: DEFAULT_ARTICLE_CONFIG.content
-        });
-        setCampaign((prev: any) => {
-          const updated = {
-            ...prev,
-            articleConfig: DEFAULT_ARTICLE_CONFIG
-          };
-          console.log('✅ [QuizEditorLayout] articleConfig set to:', updated.articleConfig?.content);
-          return updated;
-        });
-      } else {
-        console.log('✅ [QuizEditorLayout] articleConfig already initialized');
-      }
-    }
-  }, [editorMode, campaignState, setCampaign]);
-
 // Supabase campaigns API
 const { saveCampaign, duplicateCampaign } = useCampaigns();
 
@@ -3708,7 +3672,14 @@ const handleSaveCampaignName = useCallback(async () => {
               <div className="w-full h-full overflow-auto">
                   {editorMode === 'article' ? (
                     <ArticleFunnelView
-                      articleConfig={getArticleConfigWithDefaults(campaignState, campaignData)}
+                      articleConfig={
+                        (campaignState as any)?.articleConfig
+                          ? {
+                              ...getArticleConfigWithDefaults(undefined, undefined),
+                              ...(campaignState as any).articleConfig,
+                            }
+                          : getArticleConfigWithDefaults(campaignState, campaignData)
+                      }
                       campaignType={(campaignState as any)?.type || 'quiz'}
                       campaign={campaignData}
                       wheelModalConfig={wheelModalConfig}
@@ -3735,7 +3706,14 @@ const handleSaveCampaignName = useCallback(async () => {
               /* Desktop/Tablet Preview OU Mobile physique: Fullscreen sans cadre */
               editorMode === 'article' ? (
                 <ArticleFunnelView
-                  articleConfig={getArticleConfigWithDefaults(campaignState, campaignData)}
+                  articleConfig={
+                    (campaignState as any)?.articleConfig
+                      ? {
+                          ...getArticleConfigWithDefaults(undefined, undefined),
+                          ...(campaignState as any).articleConfig,
+                        }
+                      : getArticleConfigWithDefaults(campaignState, campaignData)
+                  }
                   campaignType={(campaignState as any)?.type || 'quiz'}
                   campaign={campaignData}
                   wheelModalConfig={wheelModalConfig}
@@ -4159,6 +4137,20 @@ const handleSaveCampaignName = useCallback(async () => {
                                 content: {
                                   ...(campaignState as any).articleConfig?.content,
                                   description,
+                                },
+                              },
+                            });
+                          }
+                        }}
+                        onArticleHtmlContentChange={(html) => {
+                          if (campaignState) {
+                            setCampaign({
+                              ...campaignState,
+                              articleConfig: {
+                                ...(campaignState as any).articleConfig,
+                                content: {
+                                  ...(campaignState as any).articleConfig?.content,
+                                  htmlContent: html,
                                 },
                               },
                             });

@@ -3442,6 +3442,31 @@ useEffect(() => {
                           });
                         }
                       }}
+                      onArticleHtmlContentChange={(html) => {
+                        if (campaignState) {
+                          setCampaign({
+                            ...campaignState,
+                            articleConfig: {
+                              ...(campaignState as any).articleConfig,
+                              content: {
+                                ...(campaignState as any).articleConfig?.content,
+                                htmlContent: html,
+                              },
+                            },
+                          });
+                        }
+                      }}
+                      onFormContentChange={(html) => {
+                        if (campaignState) {
+                          setCampaign({
+                            ...campaignState,
+                            articleConfig: {
+                              ...(campaignState as any).articleConfig,
+                              formHtmlContent: html,
+                            },
+                          });
+                        }
+                      }}
                       onCTAClick={handleCTAClick}
                       onFormSubmit={handleFormSubmit}
                       onGameComplete={handleGameComplete}
@@ -3500,6 +3525,31 @@ useEffect(() => {
                               ...(campaignState as any).articleConfig?.content,
                               description,
                             },
+                          },
+                        });
+                      }
+                    }}
+                    onArticleHtmlContentChange={(html) => {
+                      if (campaignState) {
+                        setCampaign({
+                          ...campaignState,
+                          articleConfig: {
+                            ...(campaignState as any).articleConfig,
+                            content: {
+                              ...(campaignState as any).articleConfig?.content,
+                              htmlContent: html,
+                            },
+                          },
+                        });
+                      }
+                    }}
+                    onFormContentChange={(html) => {
+                      if (campaignState) {
+                        setCampaign({
+                          ...campaignState,
+                          articleConfig: {
+                            ...(campaignState as any).articleConfig,
+                            formHtmlContent: html,
                           },
                         });
                       }
@@ -3924,6 +3974,31 @@ useEffect(() => {
                                     ...(campaignState as any).articleConfig?.content,
                                     description,
                                   },
+                                },
+                              });
+                            }
+                          }}
+                          onArticleHtmlContentChange={(html) => {
+                            if (campaignState) {
+                              setCampaign({
+                                ...campaignState,
+                                articleConfig: {
+                                  ...(campaignState as any).articleConfig,
+                                  content: {
+                                    ...(campaignState as any).articleConfig?.content,
+                                    htmlContent: html,
+                                  },
+                                },
+                              });
+                            }
+                          }}
+                          onFormContentChange={(html) => {
+                            if (campaignState) {
+                              setCampaign({
+                                ...campaignState,
+                                articleConfig: {
+                                  ...(campaignState as any).articleConfig,
+                                  formHtmlContent: html,
                                 },
                               });
                             }

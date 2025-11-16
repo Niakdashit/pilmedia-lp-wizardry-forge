@@ -2919,53 +2919,63 @@ useEffect(() => {
   const handlePreview = async () => {
     // 💾 CRITICAL: Save campaign before preview to ensure all changes (including prize assignments) are persisted
     if (!showFunnel) {
-      console.log('💾 [JackpotEditor] Saving campaign before preview...');
-      try {
-        // Try to sync states, but don't fail if it errors
+      const currentId = (campaignState as any)?.id as string | undefined;
+      const isUuid = (v?: string) => !!v && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v);
+      const isTemp = !currentId || isTempCampaignId(currentId) || !isUuid(currentId);
+
+      if (isTemp) {
+        // ⏭️ New / temporary campaigns: do NOT persist to Supabase when just toggling preview.
+        // This prevents creating a new Jackpot draft each time the user clicks preview in Article mode.
+        console.log('⏭️ [JackpotEditor] Skipping DB save before preview for temporary campaign:', currentId);
+      } else {
+        console.log('💾 [JackpotEditor] Saving campaign before preview...');
         try {
-          await syncAllStates();
-        } catch (syncError) {
-          console.warn('⚠️ [JackpotEditor] syncAllStates failed, continuing anyway:', syncError);
-        }
-        
-        const payload = {
-          ...campaignState,
-          canvasElements,
-          modularPage,
-          screenBackgrounds,
-          extractedColors,
-          selectedDevice,
-          canvasZoom,
-          jackpotConfig: (campaignState as any)?.jackpotConfig,
-          gameConfig: (campaignState as any)?.gameConfig
-        };
-        
-        const saved = await saveCampaignToDB(payload, saveCampaign);
-        console.log('✅ [JackpotEditor] Campaign saved before preview');
-        
-        // 🔄 CRITICAL: Reload campaign from Supabase to ensure preview uses latest data
-        if (saved?.id && getCampaign) {
-          console.log('🔄 [JackpotEditor] Reloading campaign from Supabase...');
-          const reloaded = await getCampaign(saved.id);
-          if (reloaded) {
-            console.log('✅ [JackpotEditor] Campaign reloaded:', {
-              hasJackpotConfig: !!reloaded.jackpotConfig,
-              hasGameConfig: !!reloaded.game_config,
-              jackpotSymbols: reloaded.jackpotConfig?.symbols?.length || reloaded.game_config?.jackpot?.symbols?.length || 0
-            });
-            // Update store with reloaded data
-            setCampaign((prev: any) => ({
-              ...prev,
-              jackpotConfig: reloaded.game_config?.jackpot || reloaded.jackpotConfig || prev.jackpotConfig,
-              gameConfig: {
-                ...(prev.gameConfig || {}),
-                jackpot: reloaded.game_config?.jackpot || reloaded.jackpotConfig || prev.gameConfig?.jackpot
-              }
-            }));
+          // Try to sync states, but don't fail if it errors
+          try {
+            await syncAllStates();
+          } catch (syncError) {
+            console.warn('⚠️ [JackpotEditor] syncAllStates failed, continuing anyway:', syncError);
           }
+          
+          const payload = {
+            ...campaignState,
+            canvasElements,
+            modularPage,
+            screenBackgrounds,
+            extractedColors,
+            selectedDevice,
+            canvasZoom,
+            jackpotConfig: (campaignState as any)?.jackpotConfig,
+            gameConfig: (campaignState as any)?.gameConfig
+          };
+          
+          const saved = await saveCampaignToDB(payload, saveCampaign);
+          console.log('✅ [JackpotEditor] Campaign saved before preview');
+          
+          // 🔄 CRITICAL: Reload campaign from Supabase to ensure preview uses latest data
+          if (saved?.id && getCampaign) {
+            console.log('🔄 [JackpotEditor] Reloading campaign from Supabase...');
+            const reloaded = await getCampaign(saved.id);
+            if (reloaded) {
+              console.log('✅ [JackpotEditor] Campaign reloaded:', {
+                hasJackpotConfig: !!reloaded.jackpotConfig,
+                hasGameConfig: !!reloaded.game_config,
+                jackpotSymbols: reloaded.jackpotConfig?.symbols?.length || reloaded.game_config?.jackpot?.symbols?.length || 0
+              });
+              // Update store with reloaded data
+              setCampaign((prev: any) => ({
+                ...prev,
+                jackpotConfig: reloaded.game_config?.jackpot || reloaded.jackpotConfig || prev.jackpotConfig,
+                gameConfig: {
+                  ...(prev.gameConfig || {}),
+                  jackpot: reloaded.game_config?.jackpot || reloaded.jackpotConfig || prev.gameConfig?.jackpot
+                }
+              }));
+            }
+          }
+        } catch (e) {
+          console.error('❌ [JackpotEditor] Failed to save/reload before preview:', e);
         }
-      } catch (e) {
-        console.error('❌ [JackpotEditor] Failed to save/reload before preview:', e);
       }
     }
     
@@ -3614,6 +3624,31 @@ useEffect(() => {
                           });
                         }
                       }}
+                      onArticleHtmlContentChange={(html) => {
+                        if (campaignState) {
+                          setCampaign({
+                            ...campaignState,
+                            articleConfig: {
+                              ...(campaignState as any).articleConfig,
+                              content: {
+                                ...(campaignState as any).articleConfig?.content,
+                                htmlContent: html,
+                              },
+                            },
+                          });
+                        }
+                      }}
+                      onFormContentChange={(html) => {
+                        if (campaignState) {
+                          setCampaign({
+                            ...campaignState,
+                            articleConfig: {
+                              ...(campaignState as any).articleConfig,
+                              formHtmlContent: html,
+                            },
+                          });
+                        }
+                      }}
                       onCTAClick={handleCTAClick}
                       onFormSubmit={handleFormSubmit}
                       onGameComplete={handleGameComplete}
@@ -3646,7 +3681,7 @@ useEffect(() => {
             ) : (
               /* Desktop/Tablet Preview OU Mobile physique: Fullscreen */
               editorMode === 'article' ? (
-                <div className="w-full h-full flex items-start justify-center bg-gray-100 overflow-y-auto py-8" style={{ backgroundColor: '#3a3a42' }}>
+                <div className="w-full h-full flex items-center justify-center bg-gray-100 overflow-y-auto py-8" style={{ backgroundColor: '#3a3a42' }}>
                   <ArticleCanvas
                     articleConfig={(campaignState as any)?.articleConfig || DEFAULT_ARTICLE_CONFIG}
                     onBannerChange={() => {}}
@@ -3675,6 +3710,31 @@ useEffect(() => {
                               ...(campaignState as any).articleConfig?.content,
                               description,
                             },
+                          },
+                        });
+                      }
+                    }}
+                    onArticleHtmlContentChange={(html) => {
+                      if (campaignState) {
+                        setCampaign({
+                          ...campaignState,
+                          articleConfig: {
+                            ...(campaignState as any).articleConfig,
+                            content: {
+                              ...(campaignState as any).articleConfig?.content,
+                              htmlContent: html,
+                            },
+                          },
+                        });
+                      }
+                    }}
+                    onFormContentChange={(html) => {
+                      if (campaignState) {
+                        setCampaign({
+                          ...campaignState,
+                          articleConfig: {
+                            ...(campaignState as any).articleConfig,
+                            formHtmlContent: html,
                           },
                         });
                       }

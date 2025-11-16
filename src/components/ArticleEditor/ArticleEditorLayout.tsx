@@ -148,6 +148,23 @@ const ArticleEditorLayout: React.FC<ArticleEditorLayoutProps> = ({
     setIsModified(true);
   };
 
+  // Store rich HTML content (colors, styles, etc.) coming from EditableText
+  const handleArticleHtmlContentChange = (html: string) => {
+    if (!campaign) return;
+
+    setCampaign({
+      ...campaign,
+      articleConfig: {
+        ...articleConfig,
+        content: {
+          ...articleConfig.content,
+          htmlContent: html,
+        },
+      },
+    });
+    setIsModified(true);
+  };
+
   // Handler pour le bouton CTA
   const handleCTAClick = () => {
     console.log('🎯 CTA clicked, moving to next step');
@@ -357,6 +374,7 @@ const ArticleEditorLayout: React.FC<ArticleEditorLayoutProps> = ({
             onBannerRemove={handleBannerRemove}
             onTitleChange={handleTitleChange}
             onDescriptionChange={handleDescriptionChange}
+            onArticleHtmlContentChange={handleArticleHtmlContentChange}
             onCTAClick={handleCTAClick}
             onFormSubmit={handleFormSubmit}
             onGameComplete={handleGameComplete}

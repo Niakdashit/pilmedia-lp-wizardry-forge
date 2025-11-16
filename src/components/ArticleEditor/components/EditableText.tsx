@@ -37,17 +37,24 @@ const EditableText: React.FC<EditableTextProps> = ({
   const colorInputRef = useRef<HTMLInputElement>(null);
   const [isFocused, setIsFocused] = useState(false);
   const isInitializedRef = useRef(false);
+  // Track the last propHtmlContent value that has been applied to the editor
+  const lastSyncedPropHtmlRef = useRef<string | undefined>(undefined);
   
   // Initialize htmlContent ONCE with proper default
+  // CRITICAL: Only depend on propHtmlContent to avoid regenerating HTML when description changes
   const getInitialContent = useCallback(() => {
-    if (propHtmlContent) return propHtmlContent;
+    // ALWAYS prioritize propHtmlContent if it exists
+    if (propHtmlContent && propHtmlContent.trim().length > 0) {
+      return propHtmlContent;
+    }
+    // Only generate HTML from description on first mount when no propHtmlContent exists
     const contentTitle = title || '';
     const contentDescription = description || 'Décrivez votre contenu ici...';
     const align = defaultAlign || 'center';
     return `<h2>${contentTitle}</h2><p style="font-weight:500; text-align:${align}">${contentDescription.replace(/\n/g, `</p><p style=\"font-weight:500; text-align:${align}\">`)}</p>`;
   }, [propHtmlContent, title, description, defaultAlign]);
   
-  const [htmlContent, setHtmlContent] = useState(getInitialContent);
+  const [htmlContent, setHtmlContent] = useState(() => getInitialContent());
   const [showLinkModal, setShowLinkModal] = useState(false);
   const [showImageModal, setShowImageModal] = useState(false);
   const [showImageEditModal, setShowImageEditModal] = useState(false);
@@ -429,22 +436,38 @@ const EditableText: React.FC<EditableTextProps> = ({
 
   // Initialize editor content ONCE on mount
   useEffect(() => {
-    if (!editorRef.current || isInitializedRef.current) return;
+    if (!editorRef.current) return;
     
-    // Set initial content only once
-    const initialContent = getInitialContent();
-    editorRef.current.innerHTML = initialContent;
-    isInitializedRef.current = true;
+    // Only initialize if not already initialized OR if propHtmlContent changed
+    const shouldInitialize = !isInitializedRef.current;
     
-    console.log('✅ [EditableText] Initialized with content:', initialContent.substring(0, 100));
-  }, [getInitialContent]);
+    if (shouldInitialize) {
+      const initialContent = getInitialContent();
+      editorRef.current.innerHTML = initialContent;
+      isInitializedRef.current = true;
+      lastSyncedPropHtmlRef.current = propHtmlContent || initialContent;
+      
+      console.log('✅ [EditableText] Initialized with content:', initialContent.substring(0, 100));
+    }
+  }, [getInitialContent, propHtmlContent]);
   
-  // Sync propHtmlContent changes ONLY when not focused and content actually changed
+  // Sync propHtmlContent changes ONLY when it actually changes externally
   useEffect(() => {
-    if (!propHtmlContent || isFocused || !editorRef.current) return;
+    if (!editorRef.current) return;
     
-    // Only update if propHtmlContent is different from current DOM content
+    // Skip if focused (user is editing)
+    if (isFocused) return;
+    
+    // Skip if no propHtmlContent provided
+    if (!propHtmlContent || propHtmlContent.trim().length === 0) return;
+
+    // If the prop value hasn't changed since last sync, do nothing
+    if (lastSyncedPropHtmlRef.current === propHtmlContent) {
+      return;
+    }
+    
     const currentContent = editorRef.current.innerHTML;
+    // Only sync if content is actually different
     if (currentContent !== propHtmlContent) {
       console.log('🔄 [EditableText] Syncing external content change:', {
         currentLength: currentContent.length,
@@ -453,8 +476,9 @@ const EditableText: React.FC<EditableTextProps> = ({
       });
       setHtmlContent(propHtmlContent);
       editorRef.current.innerHTML = propHtmlContent;
+      lastSyncedPropHtmlRef.current = propHtmlContent;
     }
-  }, [propHtmlContent, isFocused, htmlContent]);
+  }, [propHtmlContent, isFocused]);
 
   // No need for constant sync - removed to prevent reinitialization
 
