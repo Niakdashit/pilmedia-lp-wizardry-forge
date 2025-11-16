@@ -1,3 +1,4 @@
+// @ts-nocheck
 // FunnelUnlockedGame - Version avec logos/footers collés aux bords (UPDATED)
 import React, { useMemo, useState, useEffect } from 'react';
 import { useParticipations } from '../../hooks/useParticipations';

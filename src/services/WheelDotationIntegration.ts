@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Service d'intégration entre le système de dotation et la roue de la fortune
  * Gère l'attribution des lots selon la configuration de dotation

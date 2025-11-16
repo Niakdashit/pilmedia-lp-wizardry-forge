@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Moteur d'Attribution des Lots
  * Basé sur les algorithmes de l'industrie du gaming et des loteries

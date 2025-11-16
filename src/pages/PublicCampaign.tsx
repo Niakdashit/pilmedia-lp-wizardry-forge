@@ -76,29 +76,13 @@ const PublicCampaign: React.FC = () => {
 
   // Choix du rendu public: mode article => ArticleFunnelView, sinon PreviewRenderer (desktop)
   const editorMode = (campaign as any)?.editorMode || (campaign as any)?.editor_mode || 'fullscreen';
-  const campaignType = (campaign as any)?.type || 'wheel';
-  const formFields = (campaign as any)?.formFields || (campaign as any)?.design?.formFields || [];
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: editorMode === 'article' ? '#2c2c35' : undefined }}>
-      {editorMode === 'article' ? (
-        <div className="w-full h-full min-h-screen flex items-start justify-center overflow-y-auto p-0 md:p-8">
-          <ArticleFunnelView
-            articleConfig={(campaign as any)?.articleConfig || {}}
-            campaignType={campaignType}
-            campaign={campaign}
-            currentStep={'article'}
-            editable={false}
-            formFields={formFields}
-            maxWidth={810}
-          />
-        </div>
-      ) : (
-        // Fullscreen campaigns: use unified PreviewRenderer
+        {/* Unified public rendering using PreviewRenderer for all modes */}
         <div className="w-full min-h-screen">
           <PreviewRenderer campaign={campaign} previewMode="desktop" />
         </div>
-      )}
     </div>
   );
 };
