@@ -3596,34 +3596,8 @@ useEffect(() => {
                       articleConfig={(campaignState as any)?.articleConfig || DEFAULT_ARTICLE_CONFIG}
                       onBannerChange={() => {}}
                       onBannerRemove={() => {}}
-                      onTitleChange={(title) => {
-                        if (campaignState) {
-                          setCampaign({
-                            ...campaignState,
-                            articleConfig: {
-                              ...(campaignState as any).articleConfig,
-                              content: {
-                                ...(campaignState as any).articleConfig?.content,
-                                title,
-                              },
-                            },
-                          });
-                        }
-                      }}
-                      onDescriptionChange={(description) => {
-                        if (campaignState) {
-                          setCampaign({
-                            ...campaignState,
-                            articleConfig: {
-                              ...(campaignState as any).articleConfig,
-                              content: {
-                                ...(campaignState as any).articleConfig?.content,
-                                description,
-                              },
-                            },
-                          });
-                        }
-                      }}
+                      onTitleChange={() => {}}
+                      onDescriptionChange={() => {}}
                       onArticleHtmlContentChange={(html) => {
                         if (campaignState) {
                           setCampaign({
@@ -3686,34 +3660,8 @@ useEffect(() => {
                     articleConfig={(campaignState as any)?.articleConfig || DEFAULT_ARTICLE_CONFIG}
                     onBannerChange={() => {}}
                     onBannerRemove={() => {}}
-                    onTitleChange={(title) => {
-                      if (campaignState) {
-                        setCampaign({
-                          ...campaignState,
-                          articleConfig: {
-                            ...(campaignState as any).articleConfig,
-                            content: {
-                              ...(campaignState as any).articleConfig?.content,
-                              title,
-                            },
-                          },
-                        });
-                      }
-                    }}
-                    onDescriptionChange={(description) => {
-                      if (campaignState) {
-                        setCampaign({
-                          ...campaignState,
-                          articleConfig: {
-                            ...(campaignState as any).articleConfig,
-                            content: {
-                              ...(campaignState as any).articleConfig?.content,
-                              description,
-                            },
-                          },
-                        });
-                      }
-                    }}
+                    onTitleChange={() => {}}
+                    onDescriptionChange={() => {}}
                     onArticleHtmlContentChange={(html) => {
                       if (campaignState) {
                         setCampaign({
