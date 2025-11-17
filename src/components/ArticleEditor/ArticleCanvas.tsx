@@ -162,9 +162,11 @@ const ArticleCanvas: React.FC<ArticleCanvasProps> = ({
         // 1) Prefer htmlContent when present (rich HTML from EditableText)
         // 2) Fallback to description (which may also contain styled HTML)
         // 3) Final fallback: static default paragraph
+        const html = (articleConfig.content?.htmlContent || '').trim();
+        const isPlaceholder = html.includes('Décrivez votre contenu ici');
         const defaultArticleHtml =
-          (articleConfig.content?.htmlContent && articleConfig.content.htmlContent.trim().length > 0)
-            ? articleConfig.content.htmlContent
+          html && !isPlaceholder
+            ? html
             : (articleConfig.content?.description && articleConfig.content.description.trim().length > 0
                 ? articleConfig.content.description
                 : '<p style="font-weight:500; text-align:left">Décrivez votre contenu ici...</p>');
