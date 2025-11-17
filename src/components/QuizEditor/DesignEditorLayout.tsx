@@ -3672,14 +3672,7 @@ const handleSaveCampaignName = useCallback(async () => {
               <div className="w-full h-full overflow-auto">
                   {editorMode === 'article' ? (
                     <ArticleFunnelView
-                      articleConfig={
-                        (campaignState as any)?.articleConfig
-                          ? {
-                              ...getArticleConfigWithDefaults(undefined, undefined),
-                              ...(campaignState as any).articleConfig,
-                            }
-                          : getArticleConfigWithDefaults(campaignState, campaignData)
-                      }
+                      articleConfig={getArticleConfigWithDefaults(campaignState, campaignData)}
                       campaignType={(campaignState as any)?.type || 'quiz'}
                       campaign={campaignData}
                       wheelModalConfig={wheelModalConfig}
@@ -3687,6 +3680,24 @@ const handleSaveCampaignName = useCallback(async () => {
                       currentStep={currentStep}
                       editable={false}
                       formFields={(campaignState as any)?.formFields}
+                      onBannerChange={() => {}}
+                      onBannerRemove={() => {}}
+                      onTitleChange={() => {}}
+                      onDescriptionChange={() => {}}
+                      onArticleHtmlContentChange={(html) => {
+                        if (campaignState) {
+                          setCampaign({
+                            ...campaignState,
+                            articleConfig: {
+                              ...(campaignState as any).articleConfig,
+                              content: {
+                                ...(campaignState as any).articleConfig?.content,
+                                htmlContent: html,
+                              },
+                            },
+                          });
+                        }
+                      }}
                       onCTAClick={handleCTAClick}
                       onFormSubmit={handleFormSubmit}
                       onGameComplete={handleGameComplete}
@@ -3706,14 +3717,7 @@ const handleSaveCampaignName = useCallback(async () => {
               /* Desktop/Tablet Preview OU Mobile physique: Fullscreen sans cadre */
               editorMode === 'article' ? (
                 <ArticleFunnelView
-                  articleConfig={
-                    (campaignState as any)?.articleConfig
-                      ? {
-                          ...getArticleConfigWithDefaults(undefined, undefined),
-                          ...(campaignState as any).articleConfig,
-                        }
-                      : getArticleConfigWithDefaults(campaignState, campaignData)
-                  }
+                  articleConfig={getArticleConfigWithDefaults(campaignState, campaignData)}
                   campaignType={(campaignState as any)?.type || 'quiz'}
                   campaign={campaignData}
                   wheelModalConfig={wheelModalConfig}
@@ -3721,6 +3725,24 @@ const handleSaveCampaignName = useCallback(async () => {
                   currentStep={currentStep}
                   editable={false}
                   formFields={(campaignState as any)?.formFields}
+                  onBannerChange={() => {}}
+                  onBannerRemove={() => {}}
+                  onTitleChange={() => {}}
+                  onDescriptionChange={() => {}}
+                  onArticleHtmlContentChange={(html) => {
+                    if (campaignState) {
+                      setCampaign({
+                        ...campaignState,
+                        articleConfig: {
+                          ...(campaignState as any).articleConfig,
+                          content: {
+                            ...(campaignState as any).articleConfig?.content,
+                            htmlContent: html,
+                          },
+                        },
+                      });
+                    }
+                  }}
                   onCTAClick={handleCTAClick}
                   onFormSubmit={handleFormSubmit}
                   onGameComplete={handleGameComplete}
