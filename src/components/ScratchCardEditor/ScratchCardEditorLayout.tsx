@@ -3963,9 +3963,23 @@ const handleSaveCampaignName = useCallback(async () => {
                               });
                             }
                           }}
-                        onCTAClick={handleCTAClick}
-                        onFormSubmit={handleFormSubmit}
-                        onGameComplete={handleGameComplete}
+                          onArticleHtmlContentChange={(html) => {
+                            if (campaignState) {
+                              setCampaign({
+                                ...campaignState,
+                                articleConfig: {
+                                  ...(campaignState as any).articleConfig,
+                                  content: {
+                                    ...(campaignState as any).articleConfig?.content,
+                                    htmlContent: html,
+                                  },
+                                },
+                              });
+                            }
+                          }}
+                          onCTAClick={handleCTAClick}
+                          onFormSubmit={handleFormSubmit}
+                          onGameComplete={handleGameComplete}
                         onStepChange={setCurrentStep}
                         currentGameResult={currentGameResult}
                         onGameResultChange={setCurrentGameResult}
