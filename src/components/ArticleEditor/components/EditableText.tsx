@@ -460,25 +460,33 @@ const EditableText: React.FC<EditableTextProps> = ({
     // Skip if focused (user is editing)
     if (isFocused) return;
     
-    // Skip if no propHtmlContent provided
-    if (!propHtmlContent || propHtmlContent.trim().length === 0) return;
+    const incoming = propHtmlContent?.trim() || '';
+    if (incoming.length === 0) return;
+
+    // Guard against placeholder flicker: never overwrite non-empty editor content
+    // with the default placeholder coming from parent during transient re-renders
+    const isPlaceholder = (s: string) => s.includes('Décrivez votre contenu ici');
+    const current = editorRef.current.innerHTML || '';
+    if (isPlaceholder(incoming) && current && !isPlaceholder(current)) {
+      // Ignore placeholder sync as we already have meaningful content locally
+      return;
+    }
 
     // If the prop value hasn't changed since last sync, do nothing
-    if (lastSyncedPropHtmlRef.current === propHtmlContent) {
+    if (lastSyncedPropHtmlRef.current === incoming) {
       return;
     }
     
-    const currentContent = editorRef.current.innerHTML;
     // Only sync if content is actually different
-    if (currentContent !== propHtmlContent) {
+    if (current !== incoming) {
       console.log('🔄 [EditableText] Syncing external content change:', {
-        currentLength: currentContent.length,
-        newLength: propHtmlContent.length,
-        preview: propHtmlContent.substring(0, 100)
+        currentLength: current.length,
+        newLength: incoming.length,
+        preview: incoming.substring(0, 100)
       });
-      setHtmlContent(propHtmlContent);
-      editorRef.current.innerHTML = propHtmlContent;
-      lastSyncedPropHtmlRef.current = propHtmlContent;
+      setHtmlContent(incoming);
+      editorRef.current.innerHTML = incoming;
+      lastSyncedPropHtmlRef.current = incoming;
     }
   }, [propHtmlContent, isFocused]);
 
