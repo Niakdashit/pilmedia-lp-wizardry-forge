@@ -3899,7 +3899,7 @@ const handleSaveCampaignName = useCallback(async () => {
                   <div className="flex-1 flex flex-col items-center justify-center overflow-hidden relative">
                     {editorMode === 'article' && (
                       <ArticleFunnelView
-                        articleConfig={getArticleConfigWithDefaults(campaignState, campaignData)}
+                        articleConfig={(campaignState as any)?.articleConfig || {}}
                         campaignType={(campaignState as any)?.type || 'scratch'}
                         campaign={(campaignState as any) || campaignData}
                         wheelModalConfig={wheelModalConfig}
@@ -3973,6 +3973,17 @@ const handleSaveCampaignName = useCallback(async () => {
                                     ...(campaignState as any).articleConfig?.content,
                                     htmlContent: html,
                                   },
+                                },
+                              });
+                            }
+                          }}
+                          onFormContentChange={(html) => {
+                            if (campaignState) {
+                              setCampaign({
+                                ...campaignState,
+                                articleConfig: {
+                                  ...(campaignState as any).articleConfig,
+                                  formHtmlContent: html,
                                 },
                               });
                             }

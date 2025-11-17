@@ -6,6 +6,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import { ProtectedRoute } from './components/Auth/ProtectedRoute';
 import Layout from './components/Layout/Layout';
 import { LoadingBoundary, EditorLoader, MinimalLoader } from './components/shared/LoadingBoundary';
+import DebugConsoleFloatButton from './components/DebugConsoleFloatButton';
 import { routePrefetcher, ROUTE_LOADERS, ROUTE_NEIGHBORS } from './utils/routePrefetch';
 import CampaignStatisticsFull from './pages/CampaignStatisticsFull';
 
@@ -44,6 +45,7 @@ const PublicCampaign = lazy(() => import('./pages/PublicCampaign'));
 const OEmbed = lazy(() => import('./pages/OEmbed'));
 const IntegrationsTest = lazy(() => import('./pages/IntegrationsTest'));
 const ShortUrlRedirect = lazy(() => import('./pages/ShortUrlRedirect'));
+const DebugConsoleErrorPage = lazy(() => import('./pages/DebugConsoleErrorPage'));
 
 function App() {
   // Enregistrement des routes pour le prefetching intelligent
@@ -76,6 +78,7 @@ function App() {
         <BrandThemeProvider>
           <Router>
             <LoadingBoundary fallback={<MinimalLoader />}>
+              <DebugConsoleFloatButton />
               <Routes>
                 {/* Route d'authentification */}
                 <Route path="/auth" element={
@@ -206,6 +209,13 @@ function App() {
               <Route path="/s/:code" element={
                 <LoadingBoundary>
                   <ShortUrlRedirect />
+                </LoadingBoundary>
+              } />
+
+              {/* Debug console error page */}
+              <Route path="/debug-console-error" element={
+                <LoadingBoundary>
+                  <DebugConsoleErrorPage />
                 </LoadingBoundary>
               } />
               </Routes>

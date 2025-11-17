@@ -139,13 +139,13 @@ interface HybridSidebarProps extends React.HTMLAttributes<HTMLDivElement> {
   wheelBorderWidth?: number;
   wheelScale?: number;
   wheelShowBulbs?: boolean;
-  wheelPosition?: 'left' | 'right' | 'center';
+  wheelPosition?: 'left' | 'right' | 'center' | 'centerTop';
   onWheelBorderStyleChange?: (style: string) => void;
   onWheelBorderColorChange?: (color: string) => void;
   onWheelBorderWidthChange?: (width: number) => void;
   onWheelScaleChange?: (scale: number) => void;
   onWheelShowBulbsChange?: (show: boolean) => void;
-  onWheelPositionChange?: (position: 'left' | 'right' | 'center') => void;
+  onWheelPositionChange?: (position: 'left' | 'right' | 'center' | 'centerTop') => void;
 }
 
 const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({

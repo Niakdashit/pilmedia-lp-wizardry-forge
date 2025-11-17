@@ -8,14 +8,14 @@ interface WheelConfigSettingsProps {
   wheelBorderWidth: number;
   wheelScale: number;
   wheelShowBulbs?: boolean;
-  wheelPosition?: 'left' | 'right' | 'center';
+  wheelPosition?: 'left' | 'right' | 'center' | 'centerTop';
   selectedDevice: 'desktop' | 'tablet' | 'mobile';
   onBorderStyleChange: (style: string) => void;
   onBorderColorChange: (color: string) => void;
   onBorderWidthChange: (width: number) => void;
   onScaleChange: (scale: number) => void;
   onShowBulbsChange?: (show: boolean) => void;
-  onPositionChange?: (position: 'left' | 'right' | 'center') => void;
+  onPositionChange?: (position: 'left' | 'right' | 'center' | 'centerTop') => void;
 }
 
 const COLOR_PALETTE = [
@@ -132,7 +132,7 @@ const WheelConfigSettings: React.FC<WheelConfigSettingsProps> = ({
     onShowBulbsChange?.(show);
   }, [onShowBulbsChange, setCampaign]);
 
-  const handlePositionChange = useCallback((position: 'left' | 'right' | 'center') => {
+  const handlePositionChange = useCallback((position: 'left' | 'right' | 'center' | 'centerTop') => {
     console.log('🎨 [WheelConfigSettings] Position changed:', position);
     
     // Mise à jour directe de la campagne
@@ -392,6 +392,17 @@ const WheelConfigSettings: React.FC<WheelConfigSettingsProps> = ({
               className={`px-3 py-2 text-sm transition-colors border-l border-r border-[hsl(var(--sidebar-border))] disabled:opacity-50 disabled:cursor-not-allowed ${wheelPosition === 'center' ? 'bg-[hsl(var(--sidebar-active))] text-white' : 'bg-[hsl(var(--sidebar-surface))] text-[hsl(var(--sidebar-text-primary))] hover:bg-[hsl(var(--sidebar-hover))]'}`}
             >
               Centre
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                console.log('🖱️ [WheelConfigSettings] Position button clicked: centerTop');
+                handlePositionChange('centerTop');
+              }}
+              disabled={selectedDevice !== 'desktop'}
+              className={`px-3 py-2 text-sm transition-colors border-r border-[hsl(var(--sidebar-border))] disabled:opacity-50 disabled:cursor-not-allowed ${wheelPosition === 'centerTop' ? 'bg-[hsl(var(--sidebar-active))] text-white' : 'bg-[hsl(var(--sidebar-surface))] text-[hsl(var(--sidebar-text-primary))] hover:bg-[hsl(var(--sidebar-hover))]'}`}
+            >
+              Centre haut
             </button>
             <button
               type="button"

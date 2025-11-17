@@ -492,7 +492,6 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
         { id: 'design', label: 'Design', icon: Palette },
         { id: 'form', label: 'Formulaire', icon: FormInput },
         { id: 'game', label: 'Jeu', icon: Gamepad2 },
-        { id: 'messages', label: 'Sortie', icon: MessageSquare },
         { id: 'code', label: 'Code', icon: Code2 }
       ]
     : [

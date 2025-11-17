@@ -170,7 +170,11 @@ const DynamicContactForm: React.FC<DynamicContactFormProps> = ({
                 ['--tw-ring-color' as any]: inputFocusColor || '#44444d',
               }}
             />
-            <label htmlFor={field.id} className="text-sm text-gray-700">
+            <label
+              htmlFor={field.id}
+              className="text-sm text-gray-700"
+              style={textStyles?.label}
+            >
               {field.label}
             </label>
           </div>

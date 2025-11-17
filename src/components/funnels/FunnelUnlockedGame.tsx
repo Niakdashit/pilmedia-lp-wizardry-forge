@@ -217,6 +217,15 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
   
   // Mettre à jour la campagne en temps réel quand le store change
   useEffect(() => {
+    // Ne pas resynchroniser la campagne pendant un spin jackpot pour éviter les resets/clignotements
+    try {
+      if (typeof window !== 'undefined' && (window as any).__jackpotSpinLock) {
+        return;
+      }
+    } catch {
+      // ignore
+    }
+
     if ((campaign.type === 'form' || campaign.type === 'jackpot' || campaign.type === 'scratch') && storeCampaign) {
       const storeBackground =
         storeCampaign.canvasConfig?.background ?? storeCampaign.design?.background;

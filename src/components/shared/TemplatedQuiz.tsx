@@ -348,7 +348,13 @@ const TemplatedQuiz: React.FC<TemplatedQuizProps> = ({
     
     // Extraire la valeur numérique de la largeur cible
     const targetWidthValue = parseInt(targetWidth.replace(/px|%/, ''));
-    const scale = isNaN(targetWidthValue) ? 1 : targetWidthValue / baseWidth;
+    let scale = isNaN(targetWidthValue) ? 1 : targetWidthValue / baseWidth;
+
+    // Pour le template "This or That" en mode mobile, appliquer un zoom supplémentaire
+    // pour que la carte occupe plus de largeur dans le téléphone, mais légèrement réduit (~+30%).
+    if (device === 'mobile' && template.id === 'this-or-that') {
+      scale = scale * 1.3;
+    }
     
     console.log('🔍 Scale calculation:', {
       device,
@@ -637,7 +643,127 @@ const TemplatedQuiz: React.FC<TemplatedQuizProps> = ({
   // Render standard options layout
   const renderStandardOptions = () => {
     if (template.hasGrid) return null;
-    
+
+    // Custom fullscreen layout for "This or That" template
+    if (template.id === 'this-or-that') {
+      const splitAnswers = answers.slice(0, 2);
+
+      return (
+        <div style={{ position: 'relative', marginTop: '8px' }}>
+          {/* OU circle */}
+          {splitAnswers.length >= 2 && (
+            <div
+              style={{
+                position: 'absolute',
+                left: '50%',
+                top: '50%',
+                transform: 'translate(-50%, -50%)',
+                zIndex: 20
+              }}
+            >
+              <div
+                style={{
+                  width: 64,
+                  height: 64,
+                  borderRadius: '9999px',
+                  backgroundColor: '#ffffff',
+                  border: '4px solid #f3f4f6',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  boxShadow: '0 10px 25px rgba(15,23,42,0.18)'
+                }}
+              >
+                <span
+                  style={{
+                    fontSize: 16,
+                    fontWeight: 800,
+                    letterSpacing: '0.08em',
+                    color: '#111827'
+                  }}
+                >
+                  OU
+                </span>
+              </div>
+            </div>
+          )}
+
+          {splitAnswers.map((answer: any, index: number) => {
+            const defaultColors = ['#8BC34A', '#FFC107', '#03A9F4', '#E91E63'];
+            const bgColor = (answer as any).color || defaultColors[index % defaultColors.length];
+            const answerImage = (answer as any).image;
+
+            const handleClick = () => handleAnswerClick(!!answer.isCorrect);
+
+            const baseMinHeight = 260;
+            // Sur mobile, hauteur très légèrement étirée (~+5% vs base)
+            const minHeight = device === 'mobile' ? Math.round(baseMinHeight * 1.05) : baseMinHeight;
+
+            return (
+              <button
+                key={index}
+                onClick={handleClick}
+                disabled={disabled}
+                style={{
+                  width: '100%',
+                  // Hauteur étirée, avec +25% uniquement sur le sélecteur mobile
+                  minHeight,
+                  border: 'none',
+                  borderRadius: index === 0 ? '24px 24px 0 0' : '0 0 24px 24px',
+                  padding: 0,
+                  margin: 0,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  position: 'relative',
+                  overflow: 'hidden',
+                  backgroundColor: bgColor,
+                  cursor: disabled ? 'default' : 'pointer',
+                  transition: 'transform 0.15s ease',
+                  transform: disabled ? 'none' : undefined
+                }}
+              >
+                {answerImage ? (
+                  // Image en plein centre avec marges internes
+                  <div
+                    style={{
+                      position: 'absolute',
+                      // Marges réduites pour que l'image occupe plus de hauteur
+                      top: '6%',
+                      bottom: '6%',
+                      left: '8%',
+                      right: '8%',
+                      backgroundImage: `url(${answerImage})`,
+                      backgroundRepeat: 'no-repeat',
+                      backgroundPosition: 'center',
+                      backgroundSize: 'contain'
+                    }}
+                  />
+                ) : (
+                  // Fallback texte si aucune image
+                  <div
+                    style={{
+                      position: 'relative',
+                      zIndex: 1,
+                      color: '#ffffff',
+                      textTransform: 'uppercase',
+                      fontWeight: 900,
+                      letterSpacing: '0.16em',
+                      textAlign: 'center'
+                    }}
+                  >
+                    <div style={{ fontSize: 32, marginBottom: 4 }}>{answer.text?.split(' ')[0] || `Réponse ${index + 1}`}</div>
+                    <div style={{ fontSize: 18 }}>{answer.text?.split(' ').slice(1).join(' ')}</div>
+                  </div>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      );
+    }
+
+    // Default: normal button list
     return (
       <div>
         {answers.map((answer: any, index: number) => {
@@ -719,7 +845,10 @@ const TemplatedQuiz: React.FC<TemplatedQuizProps> = ({
   };
 
   return (
-    <div className="w-full h-full flex items-center justify-center p-4">
+    <div
+      className="w-full h-full flex justify-center p-4"
+      style={{ alignItems: template.id === 'this-or-that' ? 'flex-start' : 'center' }}
+    >
       <div id="quiz-preview-container" style={containerStyle}>
         {/* Progress indicator */}
         {questions.length > 1 && (

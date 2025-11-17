@@ -19,7 +19,7 @@ interface WheelModalConfig {
   wheelBorderWidth?: number;
   wheelScale?: number;
   wheelShowBulbs?: boolean;
-  wheelPosition?: 'left' | 'right' | 'center';
+  wheelPosition?: 'left' | 'right' | 'center' | 'centerTop';
 
 }
 
@@ -29,7 +29,7 @@ export interface WheelConfig {
   borderWidth: number;
   scale: number;
   showBulbs?: boolean;
-  position?: 'left' | 'right' | 'center';
+  position?: 'left' | 'right' | 'center' | 'centerTop';
 
   customColors?: {
     primary?: string;
@@ -163,7 +163,7 @@ export class WheelConfigService {
     };
 
     // Priorité 1: Configuration de la modal roue (modifications en cours)
-    const modalConfig: Partial<{ borderStyle: string; borderColor: string; borderWidth: number; scale: number; showBulbs: boolean; position: 'left' | 'right' | 'center' }> = {
+    const modalConfig: Partial<{ borderStyle: string; borderColor: string; borderWidth: number; scale: number; showBulbs: boolean; position: 'left' | 'right' | 'center' | 'centerTop' }> = {
       borderStyle: wheelModalConfig?.wheelBorderStyle,
       borderColor: wheelModalConfig?.wheelBorderColor,
       borderWidth: wheelModalConfig?.wheelBorderWidth,
@@ -173,7 +173,7 @@ export class WheelConfigService {
     };
 
     // Priorité 2: Configuration de design existante
-    const designConfig: Partial<{ borderStyle: string; borderColor: string; borderWidth: number; scale: number; showBulbs: boolean; position?: 'left' | 'right' | 'center' }> = {
+    const designConfig: Partial<{ borderStyle: string; borderColor: string; borderWidth: number; scale: number; showBulbs: boolean; position?: 'left' | 'right' | 'center' | 'centerTop' }> = {
       borderStyle: campaign?.design?.wheelBorderStyle || campaign?.design?.wheelConfig?.borderStyle,
       borderColor: campaign?.design?.wheelConfig?.borderColor,
       borderWidth: campaign?.design?.wheelConfig?.borderWidth,
@@ -298,7 +298,6 @@ export class WheelConfigService {
     // Choix de la couleur de texte lisible (noir/blanc) selon luminance
     const getReadableTextColor = (bgHex: string) => (WheelConfigService.luminanceFromHex(bgHex) > 0.5 ? '#000000' : '#ffffff');
 
-    // Toujours imposer l'alternance (même si seg.color est défini) pour respecter la règle globale
     // Si le nombre de segments est impair, ajouter un "spacer" neutre pour obtenir un compte pair
     let cfgSegments = (config.segments || []) as WheelSegment[];
     if (cfgSegments.length % 2 === 1) {
@@ -313,7 +312,18 @@ export class WheelConfigService {
     }
     if (cfgSegments.length > 0) {
       const out = cfgSegments.map((seg, idx) => {
-        const bg = idx % 2 === 0 ? normPrimary : secondaryColor;
+        // 1) Si une couleur de segment est définie, la respecter
+        let bg: string | undefined;
+        if (seg.color) {
+          const parsed = WheelConfigService.parseToHex(seg.color);
+          bg = parsed || seg.color;
+        }
+
+        // 2) Sinon, fallback sur l'alternance primaire / secondaire
+        if (!bg) {
+          bg = idx % 2 === 0 ? normPrimary : secondaryColor;
+        }
+
         // Conserver les champs additionnels (ex: prizeId, image, etc.) pour la logique de gain
         return {
           ...(seg as any),
@@ -354,7 +364,7 @@ export class WheelConfigService {
    */
   static getWheelCroppingStyles(
     shouldCrop: boolean = true,
-    position: 'center' | 'left' | 'right' = 'center',
+    position: 'center' | 'left' | 'right' | 'centerTop' = 'center',
     device: 'desktop' | 'tablet' | 'mobile' = 'desktop'
   ) {
     console.log('🎯 [WheelConfigService] getWheelCroppingStyles INPUT:', { shouldCrop, position, device });
@@ -370,7 +380,7 @@ export class WheelConfigService {
     }
 
     // Cas 1: Position "center" => conserver l'ancien découpage (croppé en bas) pour tous les devices
-    if (position === 'center' || device !== 'desktop') {
+    if ((position === 'center' || position === undefined) || device !== 'desktop') {
       const base = 'absolute bottom-0 transform translate-y-1/3 overflow-hidden pointer-events-none';
       const centerClass = 'left-1/2 -translate-x-1/2';
       const result = {
@@ -385,7 +395,20 @@ export class WheelConfigService {
       return result;
     }
 
-    // Cas 2: Desktop + (left|right) => visible entièrement et centré verticalement
+    // Cas 2: Desktop + position "centerTop" => roue centrée verticalement et horizontalement (pleine hauteur visible)
+    if (position === 'centerTop') {
+      const base = 'absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2';
+      const result = {
+        containerClass: `${base} z-40`,
+        wheelClass: 'cursor-pointer pointer-events-auto transition-all duration-200 hover:brightness-105',
+        transform: '-translate-y-1/2',
+        styles: {}
+      };
+      console.log('🎯 [WheelConfigService] getWheelCroppingStyles OUTPUT (centerTop):', result);
+      return result;
+    }
+
+    // Cas 3: Desktop + (left|right) => visible entièrement et centré verticalement
     const base = 'absolute top-1/2 transform -translate-y-1/2';
     const positionClass = position === 'left' ? 'left-0' : 'right-0';
     const insetStyles = position === 'left' ? { left: '150px' } : { right: '150px' };

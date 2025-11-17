@@ -164,12 +164,14 @@ const ArticleCanvas: React.FC<ArticleCanvasProps> = ({
         // 3) Final fallback: static default paragraph
         const html = (articleConfig.content?.htmlContent || '').trim();
         const isPlaceholder = html.includes('Décrivez votre contenu ici');
-        const defaultArticleHtml =
-          html && !isPlaceholder
-            ? html
-            : (articleConfig.content?.description && articleConfig.content.description.trim().length > 0
-                ? articleConfig.content.description
-                : '<p style="font-weight:500; text-align:left">Décrivez votre contenu ici...</p>');
+        
+        // CRITICAL: Always use htmlContent if it exists, even if it contains placeholder text
+        // This preserves user edits and prevents reset to default
+        const defaultArticleHtml = html.length > 0
+          ? html
+          : (articleConfig.content?.description && articleConfig.content.description.trim().length > 0
+              ? articleConfig.content.description
+              : '<p style="font-weight:500; text-align:left">Décrivez votre contenu ici...</p>');
         
         return (
           <>
@@ -214,44 +216,21 @@ const ArticleCanvas: React.FC<ArticleCanvasProps> = ({
           </>
         );
       
-      case 'form':
+      case 'form': {
+        const formTextColor = (articleConfig as any)?.formTextColor || '#000000';
         return (
-          <div className="py-8 px-6" style={{ maxWidth: `${maxWidth}px`, margin: '0 auto' }}>
-            {/* Texte du formulaire : réutilise le même contenu que l'étape Article SANS le titre */}
-            <div className="mb-4">
-              <EditableText
-                title=""
-                description=""
-                // CRITICAL: Always prioritize formHtmlContent to preserve styles (colors, formatting, etc.)
-                // Never pass description prop when htmlContent exists, otherwise EditableText will regenerate HTML and lose styles
-                htmlContent={
-                  (articleConfig as any)?.formHtmlContent &&
-                  (articleConfig as any).formHtmlContent.trim().length > 0
-                    ? (articleConfig as any).formHtmlContent
-                    : (
-                        articleConfig.content?.htmlContent &&
-                        articleConfig.content.htmlContent.trim().length > 0 &&
-                        !articleConfig.content.htmlContent.includes('Décrivez votre contenu ici...')
-                          ? articleConfig.content.htmlContent
-                          : '<p style="font-weight:600; text-align:center">Merci de compléter ce formulaire afin de valider votre participation :</p>'
-                      )
-                }
-                onTitleChange={onTitleChange}
-                onDescriptionChange={onDescriptionChange}
-                onHtmlContentChange={(html) => {
-                  // CRITICAL: Always use onFormContentChange for form step to avoid overwriting article content
-                  if (typeof onFormContentChange === 'function') {
-                    onFormContentChange(html);
-                  } else if (articleConfig.content) {
-                    // Backward compat: if onFormContentChange is not wired yet, fall back to legacy behavior
-                    onDescriptionChange(html);
-                  }
-                }}
-                editable={editable}
-                maxWidth={maxWidth}
-                defaultAlign="center"
-                compact
-              />
+          <div
+            className="py-8 px-6"
+            style={{ maxWidth: `${maxWidth}px`, margin: '0 auto', color: formTextColor }}
+          >
+            {/* Titre du formulaire - personnalisable depuis l'onglet Formulaire */}
+            <div className="mb-6">
+              <p
+                className="text-center font-semibold text-lg"
+                style={{ color: formTextColor }}
+              >
+                {(articleConfig as any)?.formTitle || 'Merci de compléter ce formulaire afin de valider votre participation :'}
+              </p>
             </div>
             <DynamicContactForm
               fields={formFields}
@@ -262,10 +241,18 @@ const ArticleCanvas: React.FC<ArticleCanvasProps> = ({
               submitLabel={campaignType === 'form' ? 'Envoyer' : 'Valider'}
               className="max-w-md mx-auto"
               buttonAlign="center"
-              launchButtonStyles={{ width: 'auto' }}
+              launchButtonStyles={{
+                width: 'auto'
+              }}
+              textStyles={{
+                label: {
+                  color: formTextColor
+                }
+              }}
             />
           </div>
         );
+      }
       
       case 'game':
         return (

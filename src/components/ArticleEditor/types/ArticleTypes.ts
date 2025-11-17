@@ -14,6 +14,7 @@ export interface ArticleConfig {
   // Contenu spécifique à l'étape formulaire (étape 2)
   formDescription?: string;
   formHtmlContent?: string;
+  formTitle?: string; // Titre personnalisable du formulaire
   
   // Configuration du funnel
   funnelFlow?: ArticleFunnelFlow;

@@ -148,3 +148,45 @@ npm run dev
 ---
 
 **Prochaine étape** : Envoyez-moi les logs de la console et je pourrai identifier le problème exact.
+
+## Bug connu : modules quiz décalés entre Éditeur et Aperçu
+
+### Symptôme
+- Bouton `Participer` (ou autres modules quiz) en **mode libre (absolute)** n’a pas la même position verticale entre :
+  - l’écran d’édition (`DesignCanvas` + `ModularCanvas`)
+  - la modale / plein écran de preview (`PreviewRenderer`)
+- Le problème apparaît sur **tous les écrans (screen1/screen2)** et **tous les devices**.
+
+### Cause
+- Dans l’éditeur, les modules absolus sont positionnés dans `ModularCanvas` avec :
+  - origine verticale `top: 0` puis application de `y`.
+- Dans `PreviewRenderer`, les overlays absolus utilisaient :
+  - `top: safeZonePadding` + `transform: translate(-50%, y)`.
+- Résultat : un **offset vertical fixe** (= `safeZonePadding`) était ajouté par la preview.
+
+### Fichiers impliqués
+- `src/components/QuizEditor/DesignCanvas.tsx`
+  - Référence : conteneur des modules quiz (`ModularCanvas`) avec `safeZonePadding`.
+- `src/components/QuizEditor/modules/ModularCanvas.tsx`
+  - Référence : logique de positionnement des modules (y depuis `top: 0`).
+- `src/components/preview/PreviewRenderer.tsx`
+  - **Point de correction** pour le mirroring.
+
+### Solution
+1. **Séparer les modules de screen2 comme dans l’éditeur** :
+   - `logoModules2` : `BlocLogo`
+   - `footerModules2` : `BlocPiedDePage`
+   - `absoluteModules2` : modules avec `absolute === true` (hors logo/footer)
+   - `modules2` : modules réguliers (non absolus)
+
+2. **Rendre les modules réguliers en arrière-plan** derrière le jeu :
+   - Overlay `absolute inset-0` centré avec `max-w-[1500px]` (comme le canvas).
+
+3. **Corriger l’origine des modules absolus (screen1 & screen2)** dans `PreviewRenderer.tsx` :
+   - `top` passé de `top: safeZonePadding` à **`top: 0`**.
+   - Conserver : `left: '50%'` + `transform: translate(-50%, y)`.
+
+### Résultat attendu
+- La position des modules quiz (dont le bouton `Participer` en mode libre) est **pixel-perfect** entre :
+  - le canvas d’édition (`DesignCanvas` / `ModularCanvas`)
+  - la preview (`PreviewRenderer`, écran 1 et 2, desktop & mobile).

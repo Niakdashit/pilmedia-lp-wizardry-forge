@@ -5,6 +5,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import StandardizedWheel from '../shared/StandardizedWheel';
 import TemplatedSwiper from '../shared/TemplatedSwiper';
+import TemplatedQuiz from '../shared/TemplatedQuiz';
 import DynamicContactForm, { type FieldConfig } from '../forms/DynamicContactForm';
 import Modal from '../common/Modal';
 import { useMessageStore } from '@/stores/messageStore';
@@ -317,7 +318,8 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
   
   const logoModules2 = allModules2.filter((m: any) => m?.type === 'BlocLogo');
   const footerModules2 = allModules2.filter((m: any) => m?.type === 'BlocPiedDePage');
-  const modules2 = allModules2.filter((m: any) => m?.type !== 'BlocLogo' && m?.type !== 'BlocPiedDePage');
+  const absoluteModules2 = allModules2.filter((m: any) => m?.absolute === true && m?.type !== 'BlocLogo' && m?.type !== 'BlocPiedDePage');
+  const modules2 = allModules2.filter((m: any) => !m?.absolute && m?.type !== 'BlocLogo' && m?.type !== 'BlocPiedDePage');
   
   const logoModules3 = allModules3.filter((m: any) => m?.type === 'BlocLogo');
   const footerModules3 = allModules3.filter((m: any) => m?.type === 'BlocPiedDePage');
@@ -712,7 +714,10 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
                 {/* Form card is rendered in the fallback branch below for form campaigns (to avoid duplicates) */}
                 
                 {campaign?.design?.customTexts && campaign.design.customTexts.length > 0 && (
-                  <div className="absolute inset-0 pointer-events-none" style={{ padding: safeZonePadding }}>
+                  <div
+                    className="absolute inset-0 pointer-events-none"
+                    style={{ padding: safeZonePadding, zIndex: 1 }}
+                  >
                     {campaign.design.customTexts.map((txt: any) => (
                       <div
                         key={txt.id}
@@ -795,7 +800,7 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
                         className="absolute"
                         style={{ 
                           left: '50%', 
-                          top: `${safeZonePadding}px`, 
+                          top: 0, 
                           transform: `translate(-50%, ${y}px)`, 
                           pointerEvents: 'auto' 
                         }}
@@ -897,27 +902,63 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
                   </div>
                 )}
 
-                {/* Modules de l'écran 2 */}
-                {modules2.length > 0 && (
-                  <section 
-                    className="space-y-6" 
-                    data-screen="screen2"
-                    style={{ padding: safeZonePadding, boxSizing: 'border-box' }}
-                  >
-                    <ModuleRenderer
-                      modules={modules2 as any}
-                      previewMode={true}
-                      device={previewMode}
-                      onButtonClick={handleParticipate}
-                    />
-                  </section>
-                )}
-
-                {/* Jeu (Roue, Scratch, etc.) - Centré - TOUJOURS AFFICHER */}
-                <div 
-                  className="flex items-center justify-center"
-                  style={{ padding: safeZonePadding, boxSizing: 'border-box', minHeight: modules2.length > 0 ? '400px' : '100vh' }}
+                {/* Zone centrale: jeu centré; modules écran 2 rendus en arrière-plan pour ne pas pousser le jeu */}
+                <div
+                  className="flex flex-col items-center justify-center"
+                  style={{ padding: safeZonePadding, boxSizing: 'border-box', minHeight: '100vh', position: 'relative', zIndex: 5 }}
                 >
+                  {/* Modules réguliers de l'écran 2 en overlay absolu derrière le quiz */}
+                  {modules2.length > 0 && (
+                    <div
+                      className="absolute inset-0 flex items-start justify-center"
+                      data-screen="screen2"
+                      style={{ zIndex: 1, pointerEvents: 'none' }}
+                    >
+                      <div className="w-full max-w-[1500px]">
+                        <ModuleRenderer
+                          modules={modules2 as any}
+                          previewMode={true}
+                          device={previewMode}
+                          onButtonClick={handleParticipate}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Modules en position libre (absolute) de l'écran 2, mirror du canvas éditeur */}
+                  {absoluteModules2.length > 0 && (
+                    <div className="absolute inset-0" style={{ pointerEvents: 'none', zIndex: 2 }}>
+                      {absoluteModules2.map((m: any) => {
+                        const y = (m.y ?? 0) as number;
+                        const modulePaddingClass = previewMode === 'mobile' ? 'p-0' : 'p-4';
+                        return (
+                          <div
+                            key={m.id}
+                            className="absolute"
+                            style={{
+                              left: '50%',
+                              top: 0,
+                              transform: `translate(-50%, ${y}px)`,
+                              pointerEvents: 'auto'
+                            }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                            }}
+                          >
+                            <div className={modulePaddingClass}>
+                              <ModuleRenderer
+                                modules={[m] as any}
+                                previewMode={true}
+                                device={previewMode}
+                                onButtonClick={handleParticipate}
+                              />
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
                   {campaign.type === 'wheel' && (
                     <>
                       {console.log('🔍 [PreviewRenderer] Campaign segments debug:', {
@@ -958,24 +999,39 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
                     </>
                   )}
 
-                  {/* Swiper */}
-                  {(campaign.type === 'quiz' || (campaign.type === 'form' && derivedQuizConfig?.templateId)) && (
-                    <TemplatedSwiper
-                      campaign={previewQuizCampaign}
-                      device={previewMode}
-                      disabled={false}
-                      onClick={() => {
-                        console.log('🎯 Swiper completed');
-                        setTimeout(() => {
-                          handleGameFinish('win');
-                        }, 1000);
-                      }}
-                    />
-                  )}
+                  {/* Quiz / Swiper game */}
+                  {campaign.type === 'quiz'
+                    ? (
+                      <TemplatedQuiz
+                        campaign={previewQuizCampaign}
+                        device={previewMode}
+                        disabled={false}
+                        templateId={derivedQuizConfig?.templateId || 'image-quiz'}
+                        onClick={() => {
+                          console.log('🎯 [PreviewRenderer] Quiz completed');
+                          setTimeout(() => {
+                            handleGameFinish('win');
+                          }, 1000);
+                        }}
+                      />
+                    )
+                    : ((campaign.type === 'form' && derivedQuizConfig?.templateId) && (
+                      <TemplatedSwiper
+                        campaign={previewQuizCampaign}
+                        device={previewMode}
+                        disabled={false}
+                        onClick={() => {
+                          console.log('🎯 Swiper completed');
+                          setTimeout(() => {
+                            handleGameFinish('win');
+                          }, 1000);
+                        }}
+                      />
+                    ))}
 
                   {/* Fallback si aucun jeu configuré */}
                   {!campaign.type && modules2.length === 0 && (
-                    <div className="text-center p-8 bg-white/10 backdrop-blur rounded-xl">
+                    <div className="mt-6 text-center p-8 bg-white/10 backdrop-blur rounded-xl">
                       <p className="text-white text-lg font-semibold mb-2">Jeu non configuré</p>
                       <p className="text-white/70 text-sm">Veuillez configurer un type de jeu dans l'éditeur</p>
                     </div>

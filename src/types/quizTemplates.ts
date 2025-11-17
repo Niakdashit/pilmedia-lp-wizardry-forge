@@ -347,5 +347,51 @@ export const quizTemplates: QuizTemplate[] = [
       marginRight: 0,
       fontWeight: 'normal'
     }
+  },
+  {
+    id: 'this-or-that',
+    name: 'This or That',
+    description: 'Deux grandes zones avec "OU" au centre',
+    preview: '/templates/this-or-that-preview.png',
+    hasImage: true,
+    style: {
+      containerWidth: 420,
+      backgroundColor: '#ffffff',
+      borderRadius: 24,
+      padding: 16,
+      boxShadow: '0 4px 10px rgba(0,0,0,0.12)',
+      fontFamily: 'Inter, system-ui, sans-serif'
+    },
+    questionStyle: {
+      textAlign: 'center',
+      fontSize: 18,
+      fontWeight: 500,
+      marginBottom: 16,
+      color: '#111827'
+    },
+    optionStyle: {
+      display: 'flex',
+      alignItems: 'center',
+      border: 'none',
+      borderRadius: 0,
+      padding: 0,
+      margin: 0,
+      fontSize: 16,
+      fontWeight: 600,
+      cursor: 'pointer',
+      transition: '0.2s ease',
+      background: 'transparent'
+    },
+    letterStyle: {
+      border: 'none',
+      borderRadius: '0',
+      width: 0,
+      height: 0,
+      display: 'none',
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginRight: 0,
+      fontWeight: 'normal'
+    }
   }
 ];

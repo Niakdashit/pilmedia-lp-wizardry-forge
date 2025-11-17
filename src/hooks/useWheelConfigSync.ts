@@ -106,7 +106,7 @@ export const useWheelConfigSync = ({
     setWheelBorderWidth: (width: number) => updateWheelConfig({ borderWidth: width }),
     setWheelScale: (scale: number) => updateWheelConfig({ scale }),
     setShowBulbs: (show: boolean) => updateWheelConfig({ showBulbs: show }),
-    setWheelPosition: (position: 'left' | 'right' | 'center') => updateWheelConfig({ position }),
+    setWheelPosition: (position: 'left' | 'right' | 'center' | 'centerTop') => updateWheelConfig({ position }),
 
   };
 };

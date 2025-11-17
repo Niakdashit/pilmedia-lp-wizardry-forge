@@ -313,41 +313,39 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
     }
 
     if (campaign.type === 'jackpot') {
-      // Fusionner campagne fournie et store réactif (le store gagne si la campagne est vide)
+      // Utiliser uniquement la configuration portée par la campagne pour le preview jackpot
       const campaignJackpot = campaign?.gameConfig?.jackpot || {};
       const jackpotConfig = campaign?.jackpotConfig || {};
-      
-      const effectiveTemplate = campaignJackpot?.template ?? jackpotConfig?.template ?? storeJackpotCfg?.template;
-      
-      // 🎰 CRITICAL: Priority order for symbols: slotMachineSymbols > symbols > store
-      const effectiveSymbols = 
-        jackpotConfig?.slotMachineSymbols || 
-        campaignJackpot?.slotMachineSymbols || 
-        jackpotConfig?.symbols || 
-        campaignJackpot?.symbols || 
-        storeJackpotCfg?.slotMachineSymbols || 
-        storeJackpotCfg?.symbols;
-      
-      const effectiveCustomUrl = campaignJackpot?.customTemplateUrl ?? jackpotConfig?.customTemplateUrl ?? storeJackpotCfg?.customTemplateUrl;
-      
-      // Récupérer toutes les configurations pour assurer la parité avec le mode édition
-      const effectiveBorderColor = campaignJackpot?.borderColor ?? jackpotConfig?.borderColor ?? storeJackpotCfg?.borderColor;
-      const effectiveBackgroundColor = campaignJackpot?.backgroundColor ?? jackpotConfig?.backgroundColor ?? storeJackpotCfg?.backgroundColor;
-      const effectiveTextColor = campaignJackpot?.textColor ?? jackpotConfig?.textColor ?? storeJackpotCfg?.textColor;
-      const effectiveCustomFrame = campaignJackpot?.customFrame ?? jackpotConfig?.customFrame ?? storeJackpotCfg?.customFrame;
-      const effectiveButton = campaignJackpot?.button ?? jackpotConfig?.button ?? storeJackpotCfg?.button;
-      void effectiveCustomFrame; // Reserved for future functionality
-      void effectiveButton; // Reserved for future functionality
-      
+
+      const effectiveTemplate = campaignJackpot?.template ?? jackpotConfig?.template;
+
+      // 🎰 Priority order for symbols: slotMachineSymbols > symbols
+      const rawSymbols =
+        jackpotConfig?.slotMachineSymbols ||
+        campaignJackpot?.slotMachineSymbols ||
+        jackpotConfig?.symbols ||
+        campaignJackpot?.symbols;
+
+      const effectiveSymbols = React.useMemo(() => {
+        if (!rawSymbols) return rawSymbols;
+        if (Array.isArray(rawSymbols)) {
+          return rawSymbols;
+        }
+        return rawSymbols;
+      }, [rawSymbols]);
+
+      const effectiveCustomUrl = campaignJackpot?.customTemplateUrl ?? jackpotConfig?.customTemplateUrl;
+
+      // Récupérer les couleurs principales uniquement depuis la campagne
+      const effectiveBorderColor = campaignJackpot?.borderColor ?? jackpotConfig?.borderColor;
+      const effectiveBackgroundColor = campaignJackpot?.backgroundColor ?? jackpotConfig?.backgroundColor;
+      const effectiveTextColor = campaignJackpot?.textColor ?? jackpotConfig?.textColor;
+
       console.log('🎰 [CanvasGameRenderer] Rendering Jackpot component (SlotJackpot)', {
         template: effectiveTemplate,
         hasJackpotConfig: !!jackpotConfig,
         hasSlotMachineSymbols: !!jackpotConfig?.slotMachineSymbols,
-        slotMachineSymbols: jackpotConfig?.slotMachineSymbols,
-        hasSymbols: !!jackpotConfig?.symbols,
-        symbolsCount: jackpotConfig?.symbols?.length || 0,
-        effectiveSymbols,
-        effectiveSymbolsCount: Array.isArray(effectiveSymbols) ? effectiveSymbols.length : 0,
+        symbolsCount: Array.isArray(effectiveSymbols) ? effectiveSymbols.length : 0,
         borderColor: effectiveBorderColor,
         backgroundColor: effectiveBackgroundColor,
         textColor: effectiveTextColor
@@ -361,6 +359,10 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
             symbols={effectiveSymbols}
             onWin={handleWin}
             onLose={handleLose}
+            campaign={campaign}
+            participantEmail={participantEmail}
+            participantId={participantId}
+            useDotationSystem={useDotationSystem}
           />
         );
       }

@@ -318,6 +318,8 @@ const ModernFormTab: React.FC<ModernFormTabProps> = ({
     }
   };
 
+  const currentFormTextColor = campaign?.articleConfig?.formTextColor || '#000000';
+
   return (
     <div className="space-y-6">
       {/* Toggle pour activer/désactiver le formulaire après le quiz */}
@@ -338,13 +340,82 @@ const ModernFormTab: React.FC<ModernFormTabProps> = ({
           />
           <div className="flex-1">
             <label htmlFor="show-form-toggle" className="block text-sm font-semibold text-gray-900 cursor-pointer">
-              Afficher le formulaire après le quiz
+              Afficher le formulaire
             </label>
-            <p className="text-xs text-gray-600 mt-1">
-              Si activé, le formulaire de participation s'affichera entre la dernière question du quiz et l'écran de résultat.
-            </p>
           </div>
         </div>
+      </div>
+
+      {/* Titre du formulaire */}
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-gray-700">
+          Titre du formulaire
+        </label>
+        <input
+          type="text"
+          value={campaign?.articleConfig?.formTitle || 'Merci de compléter ce formulaire afin de valider votre participation :'}
+          onChange={(e) => {
+            setCampaign((prev: any) => ({
+              ...(prev || {}),
+              articleConfig: {
+                ...(prev?.articleConfig || {}),
+                formTitle: e.target.value,
+              },
+              _lastUpdate: Date.now(),
+            }));
+          }}
+          placeholder="Titre affiché au-dessus du formulaire"
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#44444d]"
+        />
+        <p className="text-xs text-gray-500">
+          Ce texte s'affichera au-dessus des champs du formulaire
+        </p>
+      </div>
+
+      {/* Couleur des textes du formulaire */}
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-gray-700">
+          Couleur des textes du formulaire
+        </label>
+        <div className="flex items-center gap-3">
+          <input
+            type="color"
+            value={currentFormTextColor}
+            onChange={(e) => {
+              const value = e.target.value || '#ffffff';
+              setCampaign((prev: any) => ({
+                ...(prev || {}),
+                articleConfig: {
+                  ...(prev?.articleConfig || {}),
+                  formTextColor: value,
+                },
+                _lastUpdate: Date.now(),
+              }));
+            }}
+            className="w-10 h-10 rounded border border-gray-300 bg-white p-0 cursor-pointer"
+            aria-label="Couleur des textes du formulaire"
+          />
+          <input
+            type="text"
+            value={currentFormTextColor}
+            onChange={(e) => {
+              const value = e.target.value || '#ffffff';
+              setCampaign((prev: any) => ({
+                ...(prev || {}),
+                articleConfig: {
+                  ...(prev?.articleConfig || {}),
+                  formTextColor: value,
+                },
+                _lastUpdate: Date.now(),
+              }));
+            }}
+            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm font-mono"
+            placeholder="#ffffff"
+          />
+        </div>
+        <p className="text-xs text-gray-500">
+          S'applique au titre et aux textes du formulaire dans le mode article.
+        </p>
       </div>
 
       {/* Saved forms searchable dropdown */}

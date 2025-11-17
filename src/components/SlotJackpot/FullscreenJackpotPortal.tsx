@@ -7,6 +7,10 @@ interface FullscreenJackpotPortalProps {
   symbols?: string[];
   onWin?: (finals: string[]) => void;
   onLose?: () => void;
+  campaign?: any;
+  participantEmail?: string;
+  participantId?: string;
+  useDotationSystem?: boolean;
 }
 
 // Module-level singleton portal container
@@ -31,9 +35,12 @@ const FullscreenJackpotPortal: React.FC<FullscreenJackpotPortalProps> = ({
   templateOverride,
   symbols,
   onWin,
-  onLose
+  onLose,
+  campaign,
+  participantEmail,
+  participantId,
+  useDotationSystem = true
 }) => {
-  const elRef = React.useRef<JSX.Element | null>(null);
   const containerRef = React.useRef<HTMLDivElement | null>(null);
 
   // Create container once
@@ -44,22 +51,24 @@ const FullscreenJackpotPortal: React.FC<FullscreenJackpotPortalProps> = ({
     };
   }, []);
 
-  // Keep a stable SlotJackpot instance across all rerenders while fullscreen is active
-  if (!elRef.current) {
-    elRef.current = (
-      <SlotJackpot
-        key="slotjackpot-fullscreen-stable"
-        templateOverride={templateOverride}
-        symbols={symbols}
-        onWin={onWin}
-        onLose={onLose}
-        disabled={false}
-      />
-    );
-  }
-
   if (!containerRef.current) return null;
-  return createPortal(elRef.current, containerRef.current);
+
+  // Always render SlotJackpot with latest props so dotation + config stay in sync
+  return createPortal(
+    <SlotJackpot
+      key="slotjackpot-fullscreen-stable"
+      templateOverride={templateOverride}
+      symbols={symbols}
+      onWin={onWin}
+      onLose={onLose}
+      disabled={false}
+      campaign={campaign}
+      participantEmail={participantEmail}
+      participantId={participantId}
+      useDotationSystem={useDotationSystem}
+    />,
+    containerRef.current
+  );
 };
 
 export default FullscreenJackpotPortal;

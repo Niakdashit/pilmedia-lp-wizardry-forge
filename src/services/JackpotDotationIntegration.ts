@@ -30,17 +30,27 @@ class JackpotDotationIntegration {
 
       console.log('🎲 [JackpotDotation] Spin result:', spinResult);
 
-      if (spinResult.shouldWin && spinResult.prize) {
+      // ⚠️ IMPORTANT
+      // Pour la roue, on exige des segments assignés, donc WheelDotationIntegration
+      // peut renvoyer shouldWin=false si le lot n'a pas de segments (raison PRIZE_NO_SEGMENTS)
+      // même si le moteur d'attribution a effectivement accordé un lot.
+      // Pour le jackpot, on ne dépend PAS des segments : on se base directement
+      // sur le résultat d'attribution.
+      const attribution = spinResult.attributionResult;
+      const effectivePrize = attribution?.prize || spinResult.prize;
+      const isWinner = !!(attribution?.isWinner && effectivePrize);
+
+      if (isWinner && effectivePrize) {
         // GAGNANT : 3 symboles identiques
-        const winningSymbol = this.selectWinningSymbol(spinResult.prize, availableSymbols, symbolToPrizeMap);
+        const winningSymbol = this.selectWinningSymbol(effectivePrize, availableSymbols, symbolToPrizeMap);
         
-        console.log('✅ [JackpotDotation] Winner! Symbol:', winningSymbol, 'Prize ID:', spinResult.prize.id);
+        console.log('✅ [JackpotDotation] Winner! Symbol:', winningSymbol, 'Prize ID:', effectivePrize.id, 'reason:', spinResult.reason, 'attributionReason:', attribution?.reason);
 
         return {
           shouldWin: true,
           symbols: [winningSymbol, winningSymbol, winningSymbol],
-          prize: spinResult.prize,
-          reason: spinResult.reason
+          prize: effectivePrize,
+          reason: attribution?.reason || spinResult.reason
         };
       } else {
         // PERDANT : 3 symboles différents

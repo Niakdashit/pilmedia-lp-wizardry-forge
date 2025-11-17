@@ -14,6 +14,17 @@ import { PrizeEditorModal } from './PrizeEditorModal';
 import { AdvancedSettings } from './AdvancedSettings';
 import type { Prize } from '@/types/dotation';
 
+// Détecter les IDs de campagne temporaires / mode preview qui ne doivent pas être utilisés côté base (uuid invalide)
+const isTemporaryCampaignId = (id: string | undefined) => {
+  if (!id) return true;
+  if (id === 'new' || id === 'preview') return true;
+  // Cas des éditeurs design: "wheel-design-preview" ou similaires
+  if (id.endsWith('-preview')) return true;
+  // Cas des campagnes générées temporairement: "temp-jackpot-...", "temp-wheel-...", etc.
+  if (id.startsWith('temp-')) return true;
+  return false;
+};
+
 interface DotationPanelProps {
   campaignId: string;
   campaignType: 'wheel' | 'jackpot' | 'scratch';
@@ -36,9 +47,9 @@ export const DotationPanel: React.FC<DotationPanelProps> = ({ campaignId, campai
       setLoading(true);
       console.log('📥 [DotationPanel] Loading config for campaign:', campaignId);
       
-      // Si pas d'ID valide, créer une config par défaut
-      if (!campaignId || campaignId === 'new' || campaignId === 'preview') {
-        console.log('ℹ️ [DotationPanel] No valid campaign ID, creating default config');
+      // Si pas d'ID persisté (mode preview / nouveau brouillon), créer une config locale par défaut
+      if (isTemporaryCampaignId(campaignId)) {
+        console.log('ℹ️ [DotationPanel] Temporary or preview campaign ID, creating local default config');
         setConfig({
           campaignId: campaignId || 'temp',
           prizes: [],
@@ -146,6 +157,13 @@ export const DotationPanel: React.FC<DotationPanelProps> = ({ campaignId, campai
     try {
       setSaving(true);
       console.log('💾 [DotationPanel] Saving config:', config);
+
+      // En mode preview / ID temporaire, ne pas tenter d'écrire en base (évite 22P02 sur UUID)
+      if (isTemporaryCampaignId(campaignId)) {
+        console.log('ℹ️ [DotationPanel] Skipping remote save for temporary campaign ID:', campaignId);
+        toast.error("Vous devez d'abord sauvegarder la campagne avant d'enregistrer la dotation.");
+        return;
+      }
       
       // @ts-ignore - Table créée par migration, types à régénérer
       const { data, error } = await supabase
@@ -221,8 +239,13 @@ export const DotationPanel: React.FC<DotationPanelProps> = ({ campaignId, campai
     setConfig(updatedConfig);
     setEditingPrize(null);
     
-    // Sauvegarder automatiquement en base de données
+    // Sauvegarder automatiquement en base de données (si ID de campagne persistant)
     try {
+      if (isTemporaryCampaignId(campaignId)) {
+        console.log('ℹ️ [DotationPanel] Skipping prize autosave for temporary campaign ID:', campaignId);
+        toast.error("Les lots sont modifiables, mais ne seront enregistrés en base qu'après sauvegarde de la campagne.");
+        return;
+      }
       console.log('💾 [DotationPanel] Auto-saving after prize add/edit');
       console.log('📦 [DotationPanel] Data to save:', {
         campaign_id: campaignId,
@@ -274,8 +297,13 @@ export const DotationPanel: React.FC<DotationPanelProps> = ({ campaignId, campai
       prizes: newPrizes
     });
     
-    // Sauvegarder automatiquement en base de données
+    // Sauvegarder automatiquement en base de données (si ID de campagne persistant)
     try {
+      if (isTemporaryCampaignId(campaignId)) {
+        console.log('ℹ️ [DotationPanel] Skipping prize delete autosave for temporary campaign ID:', campaignId);
+        toast.error("Les suppressions de lots seront définitivement enregistrées après sauvegarde de la campagne.");
+        return;
+      }
       console.log('💾 [DotationPanel] Auto-saving after prize delete');
       // @ts-ignore
       const { data, error } = await supabase

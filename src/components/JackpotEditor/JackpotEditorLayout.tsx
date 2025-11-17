@@ -3596,8 +3596,34 @@ useEffect(() => {
                       articleConfig={(campaignState as any)?.articleConfig || DEFAULT_ARTICLE_CONFIG}
                       onBannerChange={() => {}}
                       onBannerRemove={() => {}}
-                      onTitleChange={() => {}}
-                      onDescriptionChange={() => {}}
+                      onTitleChange={(title) => {
+                        if (campaignState) {
+                          setCampaign({
+                            ...campaignState,
+                            articleConfig: {
+                              ...(campaignState as any).articleConfig,
+                              content: {
+                                ...(campaignState as any).articleConfig?.content,
+                                title,
+                              },
+                            },
+                          });
+                        }
+                      }}
+                      onDescriptionChange={(description) => {
+                        if (campaignState) {
+                          setCampaign({
+                            ...campaignState,
+                            articleConfig: {
+                              ...(campaignState as any).articleConfig,
+                              content: {
+                                ...(campaignState as any).articleConfig?.content,
+                                description,
+                              },
+                            },
+                          });
+                        }
+                      }}
                       onArticleHtmlContentChange={(html) => {
                         if (campaignState) {
                           setCampaign({
@@ -3660,8 +3686,34 @@ useEffect(() => {
                     articleConfig={(campaignState as any)?.articleConfig || DEFAULT_ARTICLE_CONFIG}
                     onBannerChange={() => {}}
                     onBannerRemove={() => {}}
-                    onTitleChange={() => {}}
-                    onDescriptionChange={() => {}}
+                    onTitleChange={(title) => {
+                      if (campaignState) {
+                        setCampaign({
+                          ...campaignState,
+                          articleConfig: {
+                            ...(campaignState as any).articleConfig,
+                            content: {
+                              ...(campaignState as any).articleConfig?.content,
+                              title,
+                            },
+                          },
+                        });
+                      }
+                    }}
+                    onDescriptionChange={(description) => {
+                      if (campaignState) {
+                        setCampaign({
+                          ...campaignState,
+                          articleConfig: {
+                            ...(campaignState as any).articleConfig,
+                            content: {
+                              ...(campaignState as any).articleConfig?.content,
+                              description,
+                            },
+                          },
+                        });
+                      }
+                    }}
                     onArticleHtmlContentChange={(html) => {
                       if (campaignState) {
                         setCampaign({
@@ -3717,6 +3769,9 @@ useEffect(() => {
                       onFormSubmit={handleFormSubmit}
                       onGameComplete={handleGameComplete}
                       currentStep={currentStep}
+                      // Désactiver la dotation réelle dans la preview éditeur jackpot
+                      // pour éviter les effets de bord Supabase / participations
+                      useDotationSystem={false}
                     />
                   )}
                 </div>
@@ -4057,7 +4112,7 @@ useEffect(() => {
                   <div className="flex-1 flex flex-col items-center justify-center overflow-hidden relative">
                     {editorMode === 'article' && (
                       <ArticleFunnelView
-                        articleConfig={getArticleConfigWithDefaults(campaignState, campaignData)}
+                        articleConfig={(campaignState as any)?.articleConfig || {}}
                         campaignType={(campaignState as any)?.type || 'jackpot'}
                         campaign={(campaignState as any) || campaignData}
                         wheelModalConfig={wheelModalConfig}

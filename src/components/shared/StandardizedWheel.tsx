@@ -186,6 +186,13 @@ const StandardizedWheel: React.FC<StandardizedWheelProps> = ({
   
   console.log('🎡 StandardizedWheel - Cropping styles:', croppingStyles);
 
+  // Couleur du bouton: prendre la couleur du premier segment si disponible
+  const buttonColor = useMemo(() => {
+    const first = segments && segments.length > 0 ? segments[0] : null;
+    const segColor = (first as any)?.color;
+    return segColor || wheelConfig.borderColor;
+  }, [segments, wheelConfig.borderColor]);
+
   // Décalage géré via WheelConfigService.getWheelCroppingStyles (inset 150px)
 
   return (
@@ -227,10 +234,10 @@ const StandardizedWheel: React.FC<StandardizedWheelProps> = ({
           }}
           customButton={{
             text: 'LANCER',
-            color: wheelConfig.borderColor,
+            color: buttonColor,
             textColor: '#ffffff'
           }}
-          buttonPosition="bottom"
+          buttonPosition={wheelPosition === 'center' ? 'top' : 'bottom'}
           disabled={disabled}
           disablePointerAnimation={true}
           onSpin={onSpin}

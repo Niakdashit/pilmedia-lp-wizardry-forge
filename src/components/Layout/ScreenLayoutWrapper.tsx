@@ -31,6 +31,7 @@ export const ScreenLayoutWrapper: React.FC<ScreenLayoutWrapperProps> = ({
   style = {}
 }) => {
   // Convertir align en justifyContent (pour l'axe vertical avec flexDirection: column)
+  // Par défaut: centré, mais permet "top" et "bottom" si explicitement configurés
   const justifyContent =
     layout.align === 'top'
       ? 'flex-start'
@@ -58,7 +59,9 @@ export const ScreenLayoutWrapper: React.FC<ScreenLayoutWrapperProps> = ({
     flexDirection: 'column',
     justifyContent,
     alignItems,
-    height: '100vh',
+    // Utiliser 100% pour se caler sur la hauteur réelle de l'écran simulé,
+    // plutôt que 100vh qui utilise toute la fenêtre et fausse le centrage.
+    height: '100%',
     width: '100%',
     position: 'relative',
     paddingTop: typeof paddingTop === 'number' ? `${paddingTop}px` : paddingTop,

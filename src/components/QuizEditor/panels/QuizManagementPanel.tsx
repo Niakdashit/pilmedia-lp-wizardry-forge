@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Trash2, Edit3, Clock, HelpCircle, Image as ImageIcon } from 'lucide-react';
+import { Plus, Trash2, Edit3, HelpCircle, Image as ImageIcon, Palette } from 'lucide-react';
 import { quizTemplates } from '../../../types/quizTemplates';
 
 interface Question {
@@ -16,6 +16,7 @@ interface Answer {
   text: string;
   isCorrect: boolean;
   image?: string; // optional answer image for grid/image-option templates
+  color?: string; // optional custom color for This or That style
 }
 
 interface QuizManagementPanelProps {
@@ -27,7 +28,7 @@ const QuizManagementPanel: React.FC<QuizManagementPanelProps> = ({
   campaign,
   setCampaign
 }) => {
-  const [activeTab, setActiveTab] = useState<'questions' | 'settings'>('questions');
+  const [activeTab, setActiveTab] = useState<'questions' | 'styles'>('questions');
   const [editingQuestion, setEditingQuestion] = useState<string | null>(null);
   
   // Detect selected quiz template to decide if we show image uploaders
@@ -239,16 +240,16 @@ const QuizManagementPanel: React.FC<QuizManagementPanelProps> = ({
           Questions
         </button>
         <button
-          onClick={() => setActiveTab('settings')}
+          onClick={() => setActiveTab('styles')}
           className={`flex-1 px-4 py-3 text-sm font-medium transition-all duration-200 ${
-            activeTab === 'settings'
+            activeTab === 'styles'
               ? 'border-b-2 bg-white'
               : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
           }`}
-          style={activeTab === 'settings' ? { color: '#44444d', borderBottomColor: '#44444d' } : {}}
+          style={activeTab === 'styles' ? { color: '#44444d', borderBottomColor: '#44444d' } : {}}
         >
-          <Clock className="w-4 h-4 inline mr-2" />
-          Paramètres
+          <Palette className="w-4 h-4 inline mr-2" />
+          Styles
         </button>
       </div>
 
@@ -361,11 +362,21 @@ const QuizManagementPanel: React.FC<QuizManagementPanelProps> = ({
                         />
                       </label>
                       {question.image && (
-                        <img
-                          src={question.image}
-                          alt="Question"
-                          className="h-10 w-16 object-cover rounded-lg border border-gray-200"
-                        />
+                        <div className="relative h-10 w-16">
+                          <img
+                            src={question.image}
+                            alt="Question"
+                            className="h-10 w-16 object-cover rounded-lg border border-gray-200"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => updateQuestion(question.id, { image: undefined })}
+                            className="absolute -top-2 -right-2 h-5 w-5 rounded-full bg-white border border-gray-300 flex items-center justify-center text-[10px] leading-none text-gray-500 shadow-sm hover:bg-red-50 hover:text-red-500 hover:border-red-300 transition-colors"
+                            title="Supprimer l'image"
+                          >
+                            ×
+                          </button>
+                        </div>
                       )}
                     </div>
                   )}
@@ -414,32 +425,101 @@ const QuizManagementPanel: React.FC<QuizManagementPanelProps> = ({
                           <Trash2 className="w-4 h-4 text-gray-400 group-hover:text-red-400 disabled:opacity-50 disabled:cursor-not-allowed" />
                         </button>
                       </div>
-                      {showAnswerImageUploader && (
-                        <div className="mt-3 flex justify-start">
-                          <label className="inline-flex items-center px-3 py-2 text-xs rounded-lg bg-white border border-gray-300 cursor-pointer hover:bg-gray-100 transition-all duration-200"
-                            onMouseEnter={(e) => e.currentTarget.style.borderColor = '#44444d'}
-                            onMouseLeave={(e) => e.currentTarget.style.borderColor = 'rgb(209 213 219)'}>
-                            <ImageIcon className="w-3 h-3 mr-1" />
-                            Ajouter image
-                            <input
-                              type="file"
-                              accept="image/*"
-                              className="hidden"
-                              onChange={(e) => {
-                                const file = e.target.files?.[0];
-                                if (file) handleAnswerImageUpload(question.id, answer.id, file);
-                              }}
-                            />
-                          </label>
-                          {answer.image && (
+                      
+                      {/* Image & Color customization for This or That style */}
+                      <div className="mt-3 flex items-center gap-3">
+                        {/* Image upload - Always visible */}
+                        <label className="inline-flex items-center px-3 py-2 text-xs rounded-lg bg-white border border-gray-300 cursor-pointer hover:bg-gray-100 transition-all duration-200"
+                          onMouseEnter={(e) => e.currentTarget.style.borderColor = '#44444d'}
+                          onMouseLeave={(e) => e.currentTarget.style.borderColor = 'rgb(209 213 219)'}>
+                          <ImageIcon className="w-3 h-3 mr-1" />
+                          Image
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) handleAnswerImageUpload(question.id, answer.id, file);
+                            }}
+                          />
+                        </label>
+                        {answer.image && (
+                          <div className="relative">
                             <img
                               src={answer.image}
                               alt="Answer"
-                              className="ml-3 h-8 w-12 object-cover rounded border border-gray-200"
+                              className="h-8 w-12 object-cover rounded border border-gray-200"
                             />
-                          )}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const updatedQuestions = quizConfig.questions.map((q: Question) => {
+                                  if (q.id === question.id) {
+                                    return {
+                                      ...q,
+                                      answers: q.answers.map((a: Answer) =>
+                                        a.id === answer.id ? { ...a, image: undefined } : a
+                                      )
+                                    };
+                                  }
+                                  return q;
+                                });
+                                const updatedCampaign = {
+                                  ...campaign,
+                                  gameConfig: {
+                                    ...campaign.gameConfig,
+                                    quiz: {
+                                      ...quizConfig,
+                                      questions: updatedQuestions
+                                    }
+                                  }
+                                };
+                                setCampaign(updatedCampaign);
+                              }}
+                              className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-white border border-gray-300 flex items-center justify-center text-[10px] leading-none text-gray-500 shadow-sm hover:bg-red-50 hover:text-red-500 hover:border-red-300 transition-colors"
+                              title="Supprimer l'image"
+                            >
+                              ×
+                            </button>
+                          </div>
+                        )}
+                        
+                        {/* Color picker */}
+                        <div className="flex items-center gap-2">
+                          <label className="text-xs text-gray-600">Couleur:</label>
+                          <input
+                            type="color"
+                            value={(answer as any).color || '#8BC34A'}
+                            onChange={(e) => {
+                              const updatedQuestions = quizConfig.questions.map((q: Question) => {
+                                if (q.id === question.id) {
+                                  return {
+                                    ...q,
+                                    answers: q.answers.map((a: Answer) =>
+                                      a.id === answer.id ? { ...a, color: e.target.value } : a
+                                    )
+                                  };
+                                }
+                                return q;
+                              });
+                              const updatedCampaign = {
+                                ...campaign,
+                                gameConfig: {
+                                  ...campaign.gameConfig,
+                                  quiz: {
+                                    ...quizConfig,
+                                    questions: updatedQuestions
+                                  }
+                                }
+                              };
+                              setCampaign(updatedCampaign);
+                            }}
+                            className="w-10 h-8 rounded border border-gray-300 cursor-pointer"
+                            title="Choisir une couleur"
+                          />
                         </div>
-                      )}
+                      </div>
                     </div>
                   ))}
                   
@@ -477,158 +557,374 @@ const QuizManagementPanel: React.FC<QuizManagementPanelProps> = ({
             )}
           </div>
         ) : (
-        <div className="p-6 space-y-8">
-          {/* Global Time Limit */}
+        <div className="p-6 space-y-6">
+          {/* Button Style Selection */}
           <div className="space-y-4">
             <div className="flex items-center space-x-2">
-              <Clock className="w-4 h-4 text-fuchsia-400" />
+              <Palette className="w-4 h-4" style={{ color: '#44444d' }} />
               <label className="block text-sm font-semibold text-gray-900">
-                Temps limite global
+                Style des boutons de réponse
               </label>
             </div>
-            <div className="bg-white rounded-xl p-4 border border-gray-200">
-              <div className="flex items-center space-x-4">
-                <input
-                  type="range"
-                  min="10"
-                  max="300"
-                  step="10"
-                  value={quizConfig.globalTimeLimit}
-                  onChange={(e) => {
-                    const updatedCampaign = {
-                      ...campaign,
-                      gameConfig: {
-                        ...campaign.gameConfig,
-                        quiz: {
-                          ...quizConfig,
-                          globalTimeLimit: parseInt(e.target.value)
-                        }
+            <p className="text-xs text-gray-500">
+              Choisissez comment les réponses seront affichées dans le quiz
+            </p>
+            
+            {/* Button Style Options - Single-column vertical list */}
+            <div className="flex flex-col gap-3">
+              {/* Radio Buttons */}
+              <button
+                onClick={() => {
+                  const updatedCampaign = {
+                    ...campaign,
+                    gameConfig: {
+                      ...campaign.gameConfig,
+                      quiz: {
+                        ...quizConfig,
+                        buttonStyle: 'radio'
                       }
-                    };
-                    setCampaign(updatedCampaign);
-                  }}
-                  className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                />
-                <div className="px-3 py-2 rounded-lg border" style={{ backgroundColor: 'rgba(132, 27, 96, 0.05)', borderColor: 'rgba(132, 27, 96, 0.2)' }}>
-                  <span className="text-sm font-medium" style={{ color: '#44444d' }}>
-                    {quizConfig.globalTimeLimit}s
-                  </span>
-                </div>
-              </div>
-              <p className="text-xs text-gray-400 mt-2">
-                Temps maximum pour répondre à toutes les questions
-              </p>
-            </div>
-          </div>
-
-          {/* Show Correct Answer */}
-          <div className="space-y-4">
-            <div className="flex items-center space-x-2">
-              <HelpCircle className="w-4 h-4" style={{ color: '#44444d' }} />
-              <label className="block text-sm font-semibold text-gray-900">
-                Afficher la bonne réponse
-              </label>
-            </div>
-            <div className="bg-white rounded-xl p-4 border border-gray-200">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-900 mb-1">Révéler la réponse correcte</p>
-                  <p className="text-xs text-gray-400">Affiche automatiquement la bonne réponse après chaque question</p>
-                </div>
-                <button
-                  onClick={() => {
-                    const updatedCampaign = {
-                      ...campaign,
-                      gameConfig: {
-                        ...campaign.gameConfig,
-                        quiz: {
-                          ...quizConfig,
-                          showCorrectAnswer: !quizConfig.showCorrectAnswer
-                        }
-                      }
-                    };
-                    setCampaign(updatedCampaign);
-                  }}
-                  className={`relative w-12 h-6 rounded-full transition-colors ${
-                    quizConfig.showCorrectAnswer ? '' : 'bg-gray-600'
-                  }`}
-                  style={{
-                    backgroundColor: quizConfig.showCorrectAnswer ? '#44444d' : 'rgb(75 85 99)'
-                  }}
-                >
-                  <div className={`w-5 h-5 bg-white rounded-full transition-transform absolute top-0.5 ${
-                    quizConfig.showCorrectAnswer ? 'translate-x-6' : 'translate-x-0.5'
-                  }`} />
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Randomize Questions */}
-          <div className="space-y-4">
-            <div className="flex items-center space-x-2">
-              <HelpCircle className="w-4 h-4" style={{ color: '#44444d' }} />
-              <label className="block text-sm font-semibold text-gray-900">
-                Mélanger les questions
-              </label>
-            </div>
-            <div className="bg-white rounded-xl p-4 border border-gray-200">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-900 mb-1">Ordre aléatoire</p>
-                  <p className="text-xs text-gray-400">Les questions apparaîtront dans un ordre différent pour chaque utilisateur</p>
-                </div>
-                <button
-                  onClick={() => {
-                    const updatedCampaign = {
-                      ...campaign,
-                      gameConfig: {
-                        ...campaign.gameConfig,
-                        quiz: {
-                          ...quizConfig,
-                          randomizeQuestions: !quizConfig.randomizeQuestions
-                        }
-                      }
-                    };
-                    setCampaign(updatedCampaign);
-                  }}
-                  className={`relative w-12 h-6 rounded-full transition-colors ${
-                    quizConfig.randomizeQuestions ? '' : 'bg-gray-600'
-                  }`}
-                  style={{
-                    backgroundColor: quizConfig.randomizeQuestions ? '#44444d' : 'rgb(75 85 99)'
-                  }}
-                >
-                  <div className={`w-5 h-5 bg-white rounded-full transition-transform absolute top-0.5 ${
-                    quizConfig.randomizeQuestions ? 'translate-x-6' : 'translate-x-0.5'
-                  }`} />
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Quiz Stats */}
-          <div className="space-y-4">
-            <div className="flex items-center space-x-2">
-              <Clock className="w-4 h-4" style={{ color: '#44444d' }} />
-              <label className="block text-sm font-semibold text-gray-900">
-                Statistiques du quiz
-              </label>
-            </div>
-            <div className="bg-white rounded-xl p-4 border border-gray-200">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-gray-50 rounded-lg p-3">
-                  <div className="text-xs text-gray-400 mb-1">Questions</div>
-                  <div className="text-lg font-semibold" style={{ color: '#44444d' }}>{quizConfig.questions.length}</div>
-                </div>
-                <div className="bg-gray-50 rounded-lg p-3">
-                  <div className="text-xs text-gray-400 mb-1">Durée estimée</div>
-                  <div className="text-lg font-semibold" style={{ color: '#44444d' }}>
-                    {Math.ceil(quizConfig.questions.length * quizConfig.globalTimeLimit / 60)}min
+                    }
+                  };
+                  setCampaign(updatedCampaign);
+                }}
+                className={`w-full p-4 rounded-xl border-2 transition-all duration-200 text-left ${
+                  quizConfig.buttonStyle === 'radio' || !quizConfig.buttonStyle
+                    ? 'border-[#44444d] bg-gradient-to-br from-[#44444d]/5 to-[#6d164f]/5'
+                    : 'border-gray-200 hover:border-gray-300 bg-white'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                      quizConfig.buttonStyle === 'radio' || !quizConfig.buttonStyle
+                        ? 'border-[#44444d]'
+                        : 'border-gray-300'
+                    }`}>
+                      {(quizConfig.buttonStyle === 'radio' || !quizConfig.buttonStyle) && (
+                        <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: '#44444d' }} />
+                      )}
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">Boutons radio</p>
+                      <p className="text-xs text-gray-500">Style classique avec cercles de sélection</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-2 text-xs text-gray-400">
+                    <div className="w-3 h-3 rounded-full border-2 border-gray-300" />
+                    <div className="w-3 h-3 rounded-full border-2 border-gray-300" />
                   </div>
                 </div>
-              </div>
+              </button>
+
+              {/* Checkbox Style */}
+              <button
+                onClick={() => {
+                  const updatedCampaign = {
+                    ...campaign,
+                    gameConfig: {
+                      ...campaign.gameConfig,
+                      quiz: {
+                        ...quizConfig,
+                        buttonStyle: 'checkbox'
+                      }
+                    }
+                  };
+                  console.log('🎨 [QuizManagementPanel] Setting buttonStyle to checkbox:', updatedCampaign.gameConfig.quiz);
+                  setCampaign(updatedCampaign);
+                }}
+                className={`w-full p-4 rounded-xl border-2 transition-all duration-200 text-left ${
+                  quizConfig.buttonStyle === 'checkbox'
+                    ? 'border-[#44444d] bg-gradient-to-br from-[#44444d]/5 to-[#6d164f]/5'
+                    : 'border-gray-200 hover:border-gray-300 bg-white'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
+                      quizConfig.buttonStyle === 'checkbox'
+                        ? 'border-[#44444d]'
+                        : 'border-gray-300'
+                    }`}>
+                      {quizConfig.buttonStyle === 'checkbox' && (
+                        <svg className="w-3 h-3" style={{ color: '#44444d' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
+                        </svg>
+                      )}
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">Cases à cocher</p>
+                      <p className="text-xs text-gray-500">Style avec cases carrées</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-2 text-xs text-gray-400">
+                    <div className="w-3 h-3 rounded border-2 border-gray-300" />
+                    <div className="w-3 h-3 rounded border-2 border-gray-300" />
+                  </div>
+                </div>
+              </button>
+
+              {/* Card Style */}
+              <button
+                onClick={() => {
+                  const updatedCampaign = {
+                    ...campaign,
+                    gameConfig: {
+                      ...campaign.gameConfig,
+                      quiz: {
+                        ...quizConfig,
+                        buttonStyle: 'card'
+                      }
+                    }
+                  };
+                  setCampaign(updatedCampaign);
+                }}
+                className={`w-full p-4 rounded-xl border-2 transition-all duration-200 text-left ${
+                  quizConfig.buttonStyle === 'card'
+                    ? 'border-[#44444d] bg-gradient-to-br from-[#44444d]/5 to-[#6d164f]/5'
+                    : 'border-gray-200 hover:border-gray-300 bg-white'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className={`w-5 h-5 rounded-lg border-2 flex items-center justify-center ${
+                      quizConfig.buttonStyle === 'card'
+                        ? 'border-[#44444d] bg-[#44444d]'
+                        : 'border-gray-300'
+                    }`}>
+                      {quizConfig.buttonStyle === 'card' && (
+                        <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
+                        </svg>
+                      )}
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">Cartes</p>
+                      <p className="text-xs text-gray-500">Grandes cartes cliquables avec effet hover</p>
+                    </div>
+                  </div>
+                  <div className="flex flex-col space-y-1 text-xs text-gray-400">
+                    <div className="w-12 h-2 rounded bg-gray-200" />
+                    <div className="w-12 h-2 rounded bg-gray-200" />
+                  </div>
+                </div>
+              </button>
+
+              {/* Button Style */}
+              <button
+                onClick={() => {
+                  const updatedCampaign = {
+                    ...campaign,
+                    gameConfig: {
+                      ...campaign.gameConfig,
+                      quiz: {
+                        ...quizConfig,
+                        buttonStyle: 'button'
+                      }
+                    }
+                  };
+                  setCampaign(updatedCampaign);
+                }}
+                className={`w-full p-4 rounded-xl border-2 transition-all duration-200 text-left ${
+                  quizConfig.buttonStyle === 'button'
+                    ? 'border-[#44444d] bg-gradient-to-br from-[#44444d]/5 to-[#6d164f]/5'
+                    : 'border-gray-200 hover:border-gray-300 bg-white'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className={`w-5 h-5 rounded-lg border-2 flex items-center justify-center ${
+                      quizConfig.buttonStyle === 'button'
+                        ? 'border-[#44444d] bg-[#44444d]'
+                        : 'border-gray-300'
+                    }`}>
+                      {quizConfig.buttonStyle === 'button' && (
+                        <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
+                        </svg>
+                      )}
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">Boutons pleins</p>
+                      <p className="text-xs text-gray-500">Boutons colorés avec fond plein</p>
+                    </div>
+                  </div>
+                  <div className="flex flex-col space-y-1">
+                    <div className="px-3 py-1 rounded-lg text-[10px] font-medium text-white" style={{ backgroundColor: '#44444d' }}>
+                      BTN
+                    </div>
+                  </div>
+                </div>
+              </button>
+
+              {/* Minimal Style */}
+              <button
+                onClick={() => {
+                  const updatedCampaign = {
+                    ...campaign,
+                    gameConfig: {
+                      ...campaign.gameConfig,
+                      quiz: {
+                        ...quizConfig,
+                        buttonStyle: 'minimal'
+                      }
+                    }
+                  };
+                  setCampaign(updatedCampaign);
+                }}
+                className={`w-full p-3 rounded-xl border-2 transition-all duration-200 text-left ${
+                  quizConfig.buttonStyle === 'minimal'
+                    ? 'border-[#44444d] bg-gradient-to-br from-[#44444d]/5 to-[#6d164f]/5'
+                    : 'border-gray-200 hover:border-gray-300 bg-white'
+                }`}
+              >
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-gray-900">Minimal</p>
+                  <p className="text-xs text-gray-500">Sans bordure, texte simple</p>
+                </div>
+              </button>
+
+              {/* This or That Style */}
+              <button
+                onClick={() => {
+                  const updatedCampaign = {
+                    ...campaign,
+                    gameConfig: {
+                      ...campaign.gameConfig,
+                      quiz: {
+                        ...quizConfig,
+                        buttonStyle: 'split'
+                      }
+                    }
+                  };
+                  setCampaign(updatedCampaign);
+                }}
+                className={`w-full p-3 rounded-xl border-2 transition-all duration-200 text-left ${
+                  quizConfig.buttonStyle === 'split'
+                    ? 'border-[#44444d] bg-gradient-to-br from-[#44444d]/5 to-[#6d164f]/5'
+                    : 'border-gray-200 hover:border-gray-300 bg-white'
+                }`}
+              >
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-gray-900">This or That</p>
+                  <p className="text-xs text-gray-500">Zones colorées séparées</p>
+                </div>
+              </button>
+
+              {/* Gradient Style */}
+              <button
+                onClick={() => {
+                  const updatedCampaign = {
+                    ...campaign,
+                    gameConfig: {
+                      ...campaign.gameConfig,
+                      quiz: {
+                        ...quizConfig,
+                        buttonStyle: 'gradient'
+                      }
+                    }
+                  };
+                  setCampaign(updatedCampaign);
+                }}
+                className={`w-full p-3 rounded-xl border-2 transition-all duration-200 text-left ${
+                  quizConfig.buttonStyle === 'gradient'
+                    ? 'border-[#44444d] bg-gradient-to-br from-[#44444d]/5 to-[#6d164f]/5'
+                    : 'border-gray-200 hover:border-gray-300 bg-white'
+                }`}
+              >
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-gray-900">Gradient</p>
+                  <p className="text-xs text-gray-500">Dégradés de couleurs</p>
+                </div>
+              </button>
+
+              {/* Outlined Style */}
+              <button
+                onClick={() => {
+                  const updatedCampaign = {
+                    ...campaign,
+                    gameConfig: {
+                      ...campaign.gameConfig,
+                      quiz: {
+                        ...quizConfig,
+                        buttonStyle: 'outlined'
+                      }
+                    }
+                  };
+                  setCampaign(updatedCampaign);
+                }}
+                className={`w-full p-3 rounded-xl border-2 transition-all duration-200 text-left ${
+                  quizConfig.buttonStyle === 'outlined'
+                    ? 'border-[#44444d] bg-gradient-to-br from-[#44444d]/5 to-[#6d164f]/5'
+                    : 'border-gray-200 hover:border-gray-300 bg-white'
+                }`}
+              >
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-gray-900">Outlined</p>
+                  <p className="text-xs text-gray-500">Bordure épaisse colorée</p>
+                </div>
+              </button>
+
+              {/* Pill Style */}
+              <button
+                onClick={() => {
+                  const updatedCampaign = {
+                    ...campaign,
+                    gameConfig: {
+                      ...campaign.gameConfig,
+                      quiz: {
+                        ...quizConfig,
+                        buttonStyle: 'pill'
+                      }
+                    }
+                  };
+                  setCampaign(updatedCampaign);
+                }}
+                className={`w-full p-3 rounded-xl border-2 transition-all duration-200 text-left ${
+                  quizConfig.buttonStyle === 'pill'
+                    ? 'border-[#44444d] bg-gradient-to-br from-[#44444d]/5 to-[#6d164f]/5'
+                    : 'border-gray-200 hover:border-gray-300 bg-white'
+                }`}
+              >
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-gray-900">Pill</p>
+                  <p className="text-xs text-gray-500">Boutons arrondis compacts</p>
+                </div>
+              </button>
+
+              {/* Neon Style */}
+              <button
+                onClick={() => {
+                  const updatedCampaign = {
+                    ...campaign,
+                    gameConfig: {
+                      ...campaign.gameConfig,
+                      quiz: {
+                        ...quizConfig,
+                        buttonStyle: 'neon'
+                      }
+                    }
+                  };
+                  setCampaign(updatedCampaign);
+                }}
+                className={`w-full p-3 rounded-xl border-2 transition-all duration-200 text-left ${
+                  quizConfig.buttonStyle === 'neon'
+                    ? 'border-[#44444d] bg-gradient-to-br from-[#44444d]/5 to-[#6d164f]/5'
+                    : 'border-gray-200 hover:border-gray-300 bg-white'
+                }`}
+              >
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-gray-900">Neon</p>
+                  <p className="text-xs text-gray-500">Effet lumineux au hover</p>
+                </div>
+              </button>
             </div>
+          </div>
+
+          {/* Preview Note */}
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <p className="text-xs text-blue-800">
+              <strong>💡 Astuce :</strong> Le style sélectionné sera appliqué à toutes les questions du quiz. Vous pouvez prévisualiser le rendu en mode Article.
+            </p>
           </div>
         </div>
         )}

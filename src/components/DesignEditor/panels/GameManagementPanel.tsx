@@ -59,7 +59,7 @@ const GameManagementPanel: React.FC<GameManagementPanelProps> = ({
   setCampaign
 }) => {
   const [activeSection, setActiveSection] = useState<'segments' | 'prizes'>('segments');
-  const [localGameType, setLocalGameType] = useState(campaign?.type || 'wheel');
+  const gameType = campaign?.type || 'wheel';
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [dotationPrizes, setDotationPrizes] = useState<DotationPrize[]>([]);
   const lastExtractedColorsRef = useRef<string>('');
@@ -94,12 +94,7 @@ const GameManagementPanel: React.FC<GameManagementPanelProps> = ({
     loadDotationPrizes();
   }, [campaign?.id]);
 
-  // Synchroniser le type local avec la campagne
-  React.useEffect(() => {
-    if (campaign?.type) {
-      setLocalGameType(campaign.type);
-    }
-  }, [campaign?.type]);
+  // Le type de jeu est désormais dérivé directement de la campagne
 
   // Fonction pour mettre à jour les couleurs des segments existants
   const updateSegmentColorsFromExtractedColors = () => {
@@ -302,31 +297,6 @@ const GameManagementPanel: React.FC<GameManagementPanelProps> = ({
     ));
   };
 
-  const handleGameTypeChange = (newType: string) => {
-    console.log('🎮 Changing game type from', localGameType, 'to', newType);
-    console.log('📦 Current campaign:', campaign);
-    
-    // Mettre à jour le state local immédiatement
-    setLocalGameType(newType);
-    
-    // Créer une nouvelle campagne avec le type mis à jour
-    const updatedCampaign = {
-      ...campaign,
-      type: newType,
-      // Réinitialiser les configs spécifiques si on change de type
-      ...(newType !== 'wheel' && { wheelConfig: undefined }),
-      ...(newType !== 'quiz' && { quizConfig: undefined }),
-      ...(newType !== 'scratch' && { scratchConfig: undefined }),
-    };
-    
-    console.log('📦 Updated campaign:', updatedCampaign);
-    
-    // Mettre à jour la campagne
-    setCampaign(updatedCampaign);
-    
-    console.log('✅ Game type changed to', newType);
-  };
-
   return (
     <div className="p-6 space-y-6 min-h-full overflow-y-auto text-[hsl(var(--sidebar-text-primary))]">
       {/* En-tête */}
@@ -337,30 +307,8 @@ const GameManagementPanel: React.FC<GameManagementPanelProps> = ({
         </p>
       </div>
 
-      {/* Sélecteur de mécanique de jeu */}
-      <div className="space-y-2">
-        <label className="flex items-center text-sm font-medium text-gray-700">
-          <Gamepad2 className="w-4 h-4 mr-2" />
-          Mécanique de jeu
-        </label>
-        <select
-          value={localGameType}
-          onChange={(e) => handleGameTypeChange(e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#44444d] focus:border-transparent"
-        >
-          {GAME_TYPES.map((gameType) => (
-            <option key={gameType.value} value={gameType.value}>
-              {gameType.icon} {gameType.label}
-            </option>
-          ))}
-        </select>
-        <p className="text-xs text-gray-500">
-          Changez la mécanique de jeu pour ce template
-        </p>
-      </div>
-
       {/* Configuration spécifique selon le type de jeu */}
-      {localGameType === 'wheel' && (
+      {gameType === 'wheel' && (
         <>
           {/* Navigation des sections pour la roue */}
           <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg">
@@ -764,7 +712,7 @@ const GameManagementPanel: React.FC<GameManagementPanelProps> = ({
       )}
 
       {/* Configuration pour Jackpot */}
-      {localGameType === 'jackpot' && (
+      {gameType === 'jackpot' && (
         <div className="space-y-4">
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
             <h3 className="text-lg font-medium text-gray-900 mb-2">🎰 Configuration Jackpot</h3>
@@ -776,7 +724,7 @@ const GameManagementPanel: React.FC<GameManagementPanelProps> = ({
       )}
 
       {/* Configuration pour Carte à Gratter */}
-      {localGameType === 'scratch' && (
+      {gameType === 'scratch' && (
         <div className="space-y-4">
           <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
             <h3 className="text-lg font-medium text-gray-900 mb-2">🎫 Configuration Carte à Gratter</h3>
@@ -788,7 +736,7 @@ const GameManagementPanel: React.FC<GameManagementPanelProps> = ({
       )}
 
       {/* Configuration pour Quiz */}
-      {localGameType === 'quiz' && (
+      {gameType === 'quiz' && (
         <div className="space-y-4">
           <div className="bg-green-50 border border-green-200 rounded-lg p-4">
             <h3 className="text-lg font-medium text-gray-900 mb-2">📝 Configuration Quiz</h3>
@@ -800,7 +748,7 @@ const GameManagementPanel: React.FC<GameManagementPanelProps> = ({
       )}
 
       {/* Configuration pour Formulaire */}
-      {localGameType === 'form' && (
+      {gameType === 'form' && (
         <div className="space-y-4">
           <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
             <h3 className="text-lg font-medium text-gray-900 mb-2">📋 Configuration Formulaire</h3>

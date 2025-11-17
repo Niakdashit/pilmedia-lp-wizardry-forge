@@ -176,6 +176,26 @@ const SlotMachine: React.FC<SlotMachineProps> = ({
     const cleaned = (src || []).filter((s) => typeof s === 'string' && s.trim().length > 0);
     return cleaned.length > 0 ? cleaned : DEFAULT_SYMBOLS;
   }, [propSymbols, storedSlotSymbols, campaignSymbols]);
+
+  // Réinitialiser la session globale lorsque l'on change de campagne pour éviter
+  // qu'un spin d'une ancienne campagne bloque la nouvelle (aperçu de campagnes sauvegardées).
+  React.useEffect(() => {
+    try {
+      const campaignId = campaign?.id;
+      if (!campaignId) {
+        return;
+      }
+      // Reset complet de la session in-memory
+      if (jackpotSession.hardTimerId) {
+        clearTimeout(jackpotSession.hardTimerId as any);
+        jackpotSession.hardTimerId = null;
+      }
+      jackpotSession.hasSpun = false;
+      jackpotSession.spinning = false;
+    } catch {
+      // ignore
+    }
+  }, [campaign?.id]);
   // Initialiser dès le premier render pour éviter tout flash de symboles par défaut
   const initialSetup = useMemo(() => {
     const size = (templateOverride === 'jackpot-4') ? 80 : 70;
@@ -287,6 +307,7 @@ const SlotMachine: React.FC<SlotMachineProps> = ({
       return;
     }
 
+    // Log du démarrage de spin gardé minimal pour éviter le flood console
     console.log('🚀 [SlotMachine] SPIN STARTED');
     try {
       // Notifier le parent pour verrouiller les re-renders destructifs pendant le spin
@@ -305,8 +326,7 @@ const SlotMachine: React.FC<SlotMachineProps> = ({
     // 🎯 Utiliser le système de dotation si activé
     if (useDotationSystem && campaign?.id && participantEmail) {
       try {
-        console.log('🎰 [SlotMachine] Using dotation system');
-        console.log('🗺️ [SlotMachine] symbolToPrizeMap:', symbolToPrizeMap);
+        // Logs de debug détaillés désactivés par défaut pour ne pas saturer la console
         
         const result = await jackpotDotationIntegration.determineJackpotSpin(
           {
@@ -320,23 +340,29 @@ const SlotMachine: React.FC<SlotMachineProps> = ({
         );
         
         finals = result.symbols;
-        console.log('🎲 [SlotMachine] Dotation result:', result);
+        if ((window as any).__DEBUG_JACKPOT__) {
+          console.log('🎲 [SlotMachine] Dotation result:', result);
+        }
       } catch (error) {
         console.error('❌ [SlotMachine] Dotation error, falling back to random:', error);
         finals = [0, 1, 2].map(() => symbols[Math.floor(Math.random() * symbols.length)]);
       }
     } else {
       // Mode aléatoire (par défaut)
-      console.log('🎲 [SlotMachine] Using random mode');
+      if ((window as any).__DEBUG_JACKPOT__) {
+        console.log('🎲 [SlotMachine] Using random mode');
+      }
       finals = [0, 1, 2].map(() => symbols[Math.floor(Math.random() * symbols.length)]);
     }
     
     // 🔒 CRITICAL: Verrouiller les finals pour qu'ils ne changent JAMAIS pendant le spin
     finalsRef.current = [...finals]; // Copie pour éviter toute mutation
     lockedFinalsRef.current = [...finals]; // Copie IMMUABLE pour finalizeSpin
-    console.log('🎯 [SlotMachine] Finals determined at spin start:', finals);
-    console.log('🔒 [SlotMachine] Finals locked in finalsRef.current:', finalsRef.current);
-    console.log('🔒 [SlotMachine] Finals locked in lockedFinalsRef.current:', lockedFinalsRef.current);
+    if ((window as any).__DEBUG_JACKPOT__) {
+      console.log('🎯 [SlotMachine] Finals determined at spin start:', finals);
+      console.log('🔒 [SlotMachine] Finals locked in finalsRef.current:', finalsRef.current);
+      console.log('🔒 [SlotMachine] Finals locked in lockedFinalsRef.current:', lockedFinalsRef.current);
+    }
     
     // Sauvegarder aussi dans une variable locale pour l'animation
     const lockedFinals = [...finals];
@@ -360,7 +386,9 @@ const SlotMachine: React.FC<SlotMachineProps> = ({
     [0, 1, 2].forEach((reelIndex) => {
       const finalSymbol = lockedFinals[reelIndex];
       const finalSymbolIndex = symbols.indexOf(finalSymbol);
-      console.log(`🎯 [SlotMachine] Rouleau ${reelIndex} target:`, finalSymbol);
+      if ((window as any).__DEBUG_JACKPOT__) {
+        console.log(`🎯 [SlotMachine] Rouleau ${reelIndex} target:`, finalSymbol);
+      }
       
       // 🎰 CONFIGURATION PAR ROULEAU
       // Chaque rouleau fait un nombre différent de tours pour plus de variété
@@ -421,7 +449,9 @@ const SlotMachine: React.FC<SlotMachineProps> = ({
             animReqs.current[reelIndex] = requestAnimationFrame(animate);
           } else {
           // Animation terminée: snap à la position finale exacte
-          console.log(`🎯 [SlotMachine] Rouleau ${reelIndex} terminé`);
+          if ((window as any).__DEBUG_JACKPOT__) {
+            console.log(`🎯 [SlotMachine] Rouleau ${reelIndex} terminé`);
+          }
           const snapOffset = targetOffsetsRef.current[reelIndex] ?? -(finalSymbolIndex * cellSize);
           
           // Snap final via DOM direct
@@ -461,22 +491,50 @@ const SlotMachine: React.FC<SlotMachineProps> = ({
   const isUserTemplate = currentTemplate === 'user-template' && !!customTemplateUrl;
 
   // Log pour déboguer le rendu avec stack trace pour voir qui cause le re-render
-  console.log('🎨 [SlotMachine] RENDER:', {
-    isSpinning,
-    completedReels: completedReels,
-    completedReelsValues: `[${completedReels[0]}, ${completedReels[1]}, ${completedReels[2]}]`,
-    reels: reels.map(r => typeof r === 'string' ? r.substring(0, 10) : r),
-    disabled,
-    templateOverride,
-    symbolsCount: symbols?.length
-  });
+  // Log de render désactivé par défaut pour éviter un spam massif (60fps).
+  if ((window as any).__DEBUG_JACKPOT__) {
+    console.log('🎨 [SlotMachine] RENDER:', {
+      isSpinning,
+      completedReels: completedReels,
+      completedReelsValues: `[${completedReels[0]}, ${completedReels[1]}, ${completedReels[2]}]`,
+      reels: reels.map(r => typeof r === 'string' ? r.substring(0, 10) : r),
+      disabled,
+      templateOverride,
+      symbolsCount: symbols?.length
+    });
+  }
   
   // Si on passe de spinning à non-spinning pendant l'animation, c'est un problème
   if (!isSpinning && completedReels.some(c => !c)) {
-    console.error('❌ [SlotMachine] BUG DÉTECTÉ: isSpinning=false mais rouleaux pas tous terminés!', {
+    console.error('❌ [SlotMachine] BUG DÉTECTÉ: isSpinning=false mais rouleaux pas tous terminés! Correction automatique en cours...', {
       completedReels,
       stackTrace: new Error().stack
     });
+
+    try {
+      // 🔒 Utiliser les finals verrouillés si disponibles, sinon générer un fallback cohérent
+      const size = (currentTemplate === 'jackpot-4') ? 80 : 70;
+      let finals = lockedFinalsRef.current || finalsRef.current;
+      if (!finals || finals.length !== 3) {
+        finals = [0, 1, 2].map(() => symbols[Math.floor(Math.random() * symbols.length)]);
+        finalsRef.current = finals;
+        lockedFinalsRef.current = finals;
+      }
+
+      const targets = finals.map((s) => -(Math.max(symbols.indexOf(s), 0) * size));
+      targetOffsetsRef.current = targets as any;
+
+      // Snap direct des rouleaux sur la position finale
+      setReelOffsets(targets as any);
+      completedReelsRef.current = [true, true, true];
+      setCompletedReels([true, true, true]);
+      setReels([finals[0], finals[1], finals[2]]);
+
+      // Finaliser immédiatement le spin pour débloquer l'état
+      finalizeSpin();
+    } catch (autoFixError) {
+      console.error('❌ [SlotMachine] Auto-fix failed:', autoFixError);
+    }
   }
 
   React.useEffect(() => {
@@ -488,9 +546,13 @@ const SlotMachine: React.FC<SlotMachineProps> = ({
       // Re-signal spinning state for rendering logic after remount
       setIsSpinning(true);
     }
-    console.log('🟢 [SlotMachine] Component MOUNTED');
+    if ((window as any).__DEBUG_JACKPOT__) {
+      console.log('🟢 [SlotMachine] Component MOUNTED');
+    }
     return () => {
-      console.log('🔴 [SlotMachine] Component UNMOUNTING - cleaning up animations');
+      if ((window as any).__DEBUG_JACKPOT__) {
+        console.log('🔴 [SlotMachine] Component UNMOUNTING - cleaning up animations');
+      }
       animReqs.current.forEach((id) => cancelAnimationFrame(id));
       animReqs.current = [];
       clearFinishTimers();

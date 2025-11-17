@@ -159,6 +159,7 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
   const isRestoringRef = useRef(false);
   const didRestoreDeviceRef = useRef(false);
   const didHydrateModularRef = useRef(false);
+  const [hasInitialLoad, setHasInitialLoad] = useState(false);
 
   // Listen for explicit save requests from panels (e.g., CodePanel Apply)
   useEffect(() => {
@@ -384,6 +385,7 @@ useEffect(() => {
         }
         
         setIsLoading(false);
+        setHasInitialLoad(true);
       }
     } catch (error) {
       console.error('❌ [DesignEditor] Failed to load campaign:', error);
@@ -411,6 +413,7 @@ useEffect(() => {
     
     // CRITICAL: Initialiser la campagne avec l'ID temporaire dans le store
     initializeNewCampaignWithId('wheel', tempId);
+    setHasInitialLoad(true);
     
     // Mettre à jour l'URL pour inclure le temp ID
     navigate(`${location.pathname}?campaign=${tempId}${searchParams.get('mode') ? `&mode=${searchParams.get('mode')}` : ''}`, { replace: true });
@@ -528,6 +531,7 @@ useEffect(() => {
 
 // 🔗 Miroir local → store: conserve les éléments dans campaign.config.canvasConfig afin d'éviter toute perte
 useEffect(() => {
+  if (!hasInitialLoad || isRestoringRef.current) return;
   if (isRestoringRef.current) return;
   setCampaign((prev: any) => {
     if (!prev) return prev;
@@ -547,10 +551,11 @@ useEffect(() => {
     };
     return next as any;
   });
-}, [canvasElements, screenBackgrounds, selectedDevice, canvasZoom, setCampaign]);
+}, [canvasElements, screenBackgrounds, selectedDevice, canvasZoom, setCampaign, hasInitialLoad]);
 
 // 💾 Autosave léger et non intrusif des éléments du canvas
 useEffect(() => {
+  if (!hasInitialLoad || isRestoringRef.current) return;
   const id = (campaignState as any)?.id as string | undefined;
   const isUuid = (v?: string) => !!v && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v);
   if (!id || !isUuid(id) || isRestoringRef.current) return;
@@ -588,7 +593,7 @@ useEffect(() => {
     }
   }, 1000);
   return () => clearTimeout(t);
-}, [campaignState?.id, canvasElements, screenBackgrounds, selectedDevice, canvasZoom, canvasBackground]);
+}, [campaignState?.id, canvasElements, screenBackgrounds, selectedDevice, canvasZoom, canvasBackground, hasInitialLoad]);
 
 
   // État pour tracker la position de scroll (quel écran est visible)

@@ -457,19 +457,31 @@ const EditableText: React.FC<EditableTextProps> = ({
   useEffect(() => {
     if (!editorRef.current) return;
     
-    // Skip if focused (user is editing)
-    if (isFocused) return;
+    // CRITICAL: Skip ALL syncs if focused (user is editing)
+    if (isFocused) {
+      console.log('⏸️ [EditableText] Skipping sync - user is editing');
+      return;
+    }
     
     const incoming = propHtmlContent?.trim() || '';
+    const current = editorRef.current.innerHTML || '';
+    
+    // Skip empty incoming content
     if (incoming.length === 0) return;
 
-    // Guard against placeholder flicker: never overwrite non-empty editor content
-    // with the default placeholder coming from parent during transient re-renders
-    const isPlaceholder = (s: string) => s.includes('Décrivez votre contenu ici');
-    const current = editorRef.current.innerHTML || '';
-    if (isPlaceholder(incoming) && current && !isPlaceholder(current)) {
-      // Ignore placeholder sync as we already have meaningful content locally
-      return;
+    // CRITICAL: In preview mode (editable=false), ALWAYS sync to show latest content
+    // In edit mode, guard against placeholder overwrites
+    const isPlaceholder = (s: string) => {
+      return s.includes('Décrivez votre contenu ici') || 
+             s.includes('Merci de compléter ce formulaire');
+    };
+    
+    if (editable) {
+      // Edit mode: protect against placeholder overwrites
+      if (isPlaceholder(incoming) && current && !isPlaceholder(current)) {
+        console.log('🛡️ [EditableText] Blocking placeholder overwrite - preserving user content');
+        return;
+      }
     }
 
     // If the prop value hasn't changed since last sync, do nothing
@@ -480,15 +492,17 @@ const EditableText: React.FC<EditableTextProps> = ({
     // Only sync if content is actually different
     if (current !== incoming) {
       console.log('🔄 [EditableText] Syncing external content change:', {
+        editable,
         currentLength: current.length,
         newLength: incoming.length,
-        preview: incoming.substring(0, 100)
+        preview: incoming.substring(0, 100),
+        isPlaceholder: isPlaceholder(incoming)
       });
       setHtmlContent(incoming);
       editorRef.current.innerHTML = incoming;
       lastSyncedPropHtmlRef.current = incoming;
     }
-  }, [propHtmlContent, isFocused]);
+  }, [propHtmlContent, isFocused, editable]);
 
   // No need for constant sync - removed to prevent reinitialization
 
@@ -1259,8 +1273,8 @@ const EditableText: React.FC<EditableTextProps> = ({
           contentEditable
           suppressContentEditableWarning
           onInput={() => {
-            // Ne PAS mettre à jour htmlContent pendant l'édition
-            // Cela évite la perte du caret et la réinitialisation des couleurs
+            // Ne PAS appeler updateContent() ici pour éviter la perte du caret
+            // et la réinitialisation des couleurs pendant l'édition
             // La mise à jour se fait uniquement lors du blur
           }}
           onFocus={() => {
@@ -1278,19 +1292,31 @@ const EditableText: React.FC<EditableTextProps> = ({
                 preview: content.substring(0, 150),
                 hasColorStyles: content.includes('style="color')
               });
+              
+              // CRITICAL: Update local state first
               setHtmlContent(content);
-              // Immediate propagate to parent to avoid reset when toggling preview
+              
+              // CRITICAL: Immediate propagate to parent to avoid reset when toggling preview
               if (onHtmlContentChange) {
                 try {
                   onHtmlContentChange(content);
+                  // Mark this content as synced to prevent re-sync loop
                   lastSyncedPropHtmlRef.current = content;
+                  console.log('✅ [EditableText] Content saved to parent successfully');
                 } catch (e) {
-                  console.warn('⚠️ [EditableText] onHtmlContentChange failed:', e);
+                  console.error('❌ [EditableText] onHtmlContentChange failed:', e);
                 }
               }
+              
+              // Also call legacy callbacks for backward compatibility
+              const div = document.createElement('div');
+              div.innerHTML = content;
+              const h2 = div.querySelector('h2');
+              const titleText = h2?.textContent || '';
+              h2?.remove();
+              onTitleChange?.(titleText);
+              onDescriptionChange?.(div.innerHTML);
             }
-            // Fallback async update (kept for backward compatibility)
-            updateContent();
           }}
           className={`w-full ${compact ? 'min-h-[40px]' : 'min-h-[150px]'} pt-3 px-3 pb-0 focus:outline-none prose prose-lg max-w-none transition-colors duration-200 ${
             isFocused ? 'bg-gray-50' : ''

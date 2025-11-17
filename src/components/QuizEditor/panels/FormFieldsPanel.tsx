@@ -89,7 +89,7 @@ const FormFieldsPanel: React.FC<FormFieldsPanelProps> = ({ campaign, setCampaign
           />
           <div className="flex-1">
             <label htmlFor="show-form-toggle" className="block text-sm font-semibold text-gray-900 cursor-pointer">
-              Afficher le formulaire après le quiz
+              Afficher le formulaire
             </label>
             <p className="text-xs text-gray-600 mt-1">
               Si activé, le formulaire de participation s'affichera entre la dernière question du quiz et l'écran de résultat.

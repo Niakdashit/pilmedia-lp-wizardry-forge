@@ -63,32 +63,30 @@ const WheelSegmentsPanel: React.FC<WheelSegmentsPanelProps> = ({
   }, [campaign]);
 
   const updateSegmentsInCampaign = (updatedSegments: Segment[]) => {
+    const normalized = updatedSegments.map(({ id, label, color, probability, textColor }) => ({
+      id,
+      label,
+      color,
+      probability,
+      textColor
+    }));
+
     setCampaign((prev: any) => ({
       ...prev,
       gameConfig: {
         ...prev.gameConfig,
+        // Champ canonique utilisé par WheelConfigService / StandardizedWheel
+        wheelSegments: normalized,
         wheel: {
           ...prev.gameConfig?.wheel,
-          segments: updatedSegments.map(({ id, label, color, probability, textColor }) => ({
-            id,
-            label,
-            color,
-            probability,
-            textColor
-          }))
+          segments: normalized
         }
       },
       config: {
         ...prev.config,
         roulette: {
           ...prev.config?.roulette,
-          segments: updatedSegments.map(({ id, label, color, probability, textColor }) => ({
-            id,
-            label,
-            color,
-            probability,
-            textColor
-          }))
+          segments: normalized
         }
       },
       _lastUpdate: Date.now()

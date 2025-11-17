@@ -3671,16 +3671,7 @@ useEffect(() => {
               `}</style>
               {editorMode === 'article' ? (
                 <ArticleFunnelView
-                  articleConfig={(() => {
-                    const config = getArticleConfigWithDefaults(campaignState, memoCampaignData);
-                    console.log('🔍 [FormEditor] ArticleFunnelView articleConfig (preview mode):', {
-                      hasWinnerContent: !!(config as any)?.winnerContent,
-                      winnerContent: (config as any)?.winnerContent?.substring(0, 100),
-                      hasLoserContent: !!(config as any)?.loserContent,
-                      campaignStateWinnerContent: (campaignState as any)?.articleConfig?.winnerContent?.substring(0, 100)
-                    });
-                    return config;
-                  })()}
+                  articleConfig={(campaignState as any)?.articleConfig || {}}
                   campaignType={(campaignState as any)?.type || 'form'}
                   campaign={memoCampaignData}
                   wheelModalConfig={undefined}
@@ -3690,8 +3681,34 @@ useEffect(() => {
                   formFields={(campaignState as any)?.formFields}
                   onBannerChange={() => {}}
                   onBannerRemove={() => {}}
-                  onTitleChange={() => {}}
-                  onDescriptionChange={() => {}}
+                  onTitleChange={(title) => {
+                    if (campaignState) {
+                      setCampaign({
+                        ...campaignState,
+                        articleConfig: {
+                          ...(campaignState as any).articleConfig,
+                          content: {
+                            ...(campaignState as any).articleConfig?.content,
+                            title,
+                          },
+                        },
+                      });
+                    }
+                  }}
+                  onDescriptionChange={(description) => {
+                    if (campaignState) {
+                      setCampaign({
+                        ...campaignState,
+                        articleConfig: {
+                          ...(campaignState as any).articleConfig,
+                          content: {
+                            ...(campaignState as any).articleConfig?.content,
+                            description,
+                          },
+                        },
+                      });
+                    }
+                  }}
                   onArticleHtmlContentChange={(html) => {
                     if (campaignState) {
                       setCampaign({
@@ -3702,6 +3719,17 @@ useEffect(() => {
                             ...(campaignState as any).articleConfig?.content,
                             htmlContent: html,
                           },
+                        },
+                      });
+                    }
+                  }}
+                  onFormContentChange={(html) => {
+                    if (campaignState) {
+                      setCampaign({
+                        ...campaignState,
+                        articleConfig: {
+                          ...(campaignState as any).articleConfig,
+                          formHtmlContent: html,
                         },
                       });
                     }
@@ -4116,16 +4144,7 @@ useEffect(() => {
                   <div className="flex-1 flex flex-col items-center justify-center overflow-hidden relative">
                     {editorMode === 'article' && (
                       <ArticleFunnelView
-                        articleConfig={(() => {
-                          const config = getArticleConfigWithDefaults(campaignState, memoCampaignData);
-                          console.log('🔍 [FormEditor] ArticleFunnelView articleConfig (edit mode):', {
-                            hasWinnerContent: !!(config as any)?.winnerContent,
-                            winnerContent: (config as any)?.winnerContent?.substring(0, 100),
-                            hasLoserContent: !!(config as any)?.loserContent,
-                            campaignStateWinnerContent: (campaignState as any)?.articleConfig?.winnerContent?.substring(0, 100)
-                          });
-                          return config;
-                        })()}
+                        articleConfig={(campaignState as any)?.articleConfig || {}}
                         campaignType={(campaignState as any)?.type || 'form'}
                         campaign={memoCampaignData}
                         wheelModalConfig={undefined}
@@ -4199,6 +4218,17 @@ useEffect(() => {
                                   ...(campaignState as any).articleConfig?.content,
                                   htmlContent: html,
                                 },
+                              },
+                            });
+                          }
+                        }}
+                        onFormContentChange={(html) => {
+                          if (campaignState) {
+                            setCampaign({
+                              ...campaignState,
+                              articleConfig: {
+                                ...(campaignState as any).articleConfig,
+                                formHtmlContent: html,
                               },
                             });
                           }

@@ -2784,7 +2784,16 @@ const handleSaveCampaignName = useCallback(async () => {
     
     console.log('🧭 [QuizEditorLayout] campaignData questions:', {
       count: Array.isArray(configuredQuestions) ? configuredQuestions.length : 0,
-      device: selectedDevice
+      device: selectedDevice,
+      questionsDebug: configuredQuestions.map((q: any) => ({
+        question: q.question,
+        answers: q.answers?.map((a: any) => ({
+          text: a.text,
+          hasImage: !!a.image,
+          hasColor: !!a.color,
+          color: a.color
+        }))
+      }))
     });
 
     const buttonCustomStyles = launchButtonStyles;
@@ -2907,7 +2916,9 @@ const handleSaveCampaignName = useCallback(async () => {
           timeLimit: campaignConfig?.design?.quizConfig?.timeLimit || quizConfig.timeLimit || 30,
           templateId: quizConfig.templateId,
           buttonLabel: fallbackButtonText,
-          buttonStyles: buttonCustomStyles
+          buttonStyles: buttonCustomStyles,
+          // CRITICAL: Include buttonStyle from campaign state for ArticleQuiz rendering
+          buttonStyle: (campaignState as any)?.gameConfig?.quiz?.buttonStyle || 'radio'
         }
       },
       buttonConfig: {
@@ -3672,7 +3683,7 @@ const handleSaveCampaignName = useCallback(async () => {
               <div className="w-full h-full overflow-auto">
                   {editorMode === 'article' ? (
                     <ArticleFunnelView
-                      articleConfig={getArticleConfigWithDefaults(campaignState, campaignData)}
+                      articleConfig={(campaignState as any)?.articleConfig || {}}
                       campaignType={(campaignState as any)?.type || 'quiz'}
                       campaign={campaignData}
                       wheelModalConfig={wheelModalConfig}
@@ -3682,8 +3693,34 @@ const handleSaveCampaignName = useCallback(async () => {
                       formFields={(campaignState as any)?.formFields}
                       onBannerChange={() => {}}
                       onBannerRemove={() => {}}
-                      onTitleChange={() => {}}
-                      onDescriptionChange={() => {}}
+                      onTitleChange={(title) => {
+                        if (campaignState) {
+                          setCampaign({
+                            ...campaignState,
+                            articleConfig: {
+                              ...(campaignState as any).articleConfig,
+                              content: {
+                                ...(campaignState as any).articleConfig?.content,
+                                title,
+                              },
+                            },
+                          });
+                        }
+                      }}
+                      onDescriptionChange={(description) => {
+                        if (campaignState) {
+                          setCampaign({
+                            ...campaignState,
+                            articleConfig: {
+                              ...(campaignState as any).articleConfig,
+                              content: {
+                                ...(campaignState as any).articleConfig?.content,
+                                description,
+                              },
+                            },
+                          });
+                        }
+                      }}
                       onArticleHtmlContentChange={(html) => {
                         if (campaignState) {
                           setCampaign({
@@ -3694,6 +3731,17 @@ const handleSaveCampaignName = useCallback(async () => {
                                 ...(campaignState as any).articleConfig?.content,
                                 htmlContent: html,
                               },
+                            },
+                          });
+                        }
+                      }}
+                      onFormContentChange={(html) => {
+                        if (campaignState) {
+                          setCampaign({
+                            ...campaignState,
+                            articleConfig: {
+                              ...(campaignState as any).articleConfig,
+                              formHtmlContent: html,
                             },
                           });
                         }
@@ -3717,7 +3765,7 @@ const handleSaveCampaignName = useCallback(async () => {
               /* Desktop/Tablet Preview OU Mobile physique: Fullscreen sans cadre */
               editorMode === 'article' ? (
                 <ArticleFunnelView
-                  articleConfig={getArticleConfigWithDefaults(campaignState, campaignData)}
+                  articleConfig={(campaignState as any)?.articleConfig || {}}
                   campaignType={(campaignState as any)?.type || 'quiz'}
                   campaign={campaignData}
                   wheelModalConfig={wheelModalConfig}
@@ -3727,8 +3775,34 @@ const handleSaveCampaignName = useCallback(async () => {
                   formFields={(campaignState as any)?.formFields}
                   onBannerChange={() => {}}
                   onBannerRemove={() => {}}
-                  onTitleChange={() => {}}
-                  onDescriptionChange={() => {}}
+                  onTitleChange={(title) => {
+                    if (campaignState) {
+                      setCampaign({
+                        ...campaignState,
+                        articleConfig: {
+                          ...(campaignState as any).articleConfig,
+                          content: {
+                            ...(campaignState as any).articleConfig?.content,
+                            title,
+                          },
+                        },
+                      });
+                    }
+                  }}
+                  onDescriptionChange={(description) => {
+                    if (campaignState) {
+                      setCampaign({
+                        ...campaignState,
+                        articleConfig: {
+                          ...(campaignState as any).articleConfig,
+                          content: {
+                            ...(campaignState as any).articleConfig?.content,
+                            description,
+                          },
+                        },
+                      });
+                    }
+                  }}
                   onArticleHtmlContentChange={(html) => {
                     if (campaignState) {
                       setCampaign({
@@ -3739,6 +3813,17 @@ const handleSaveCampaignName = useCallback(async () => {
                             ...(campaignState as any).articleConfig?.content,
                             htmlContent: html,
                           },
+                        },
+                      });
+                    }
+                  }}
+                  onFormContentChange={(html) => {
+                    if (campaignState) {
+                      setCampaign({
+                        ...campaignState,
+                        articleConfig: {
+                          ...(campaignState as any).articleConfig,
+                          formHtmlContent: html,
                         },
                       });
                     }
@@ -4100,7 +4185,7 @@ const handleSaveCampaignName = useCallback(async () => {
                   <div className="flex-1 flex flex-col items-center justify-center overflow-hidden relative">
                     {editorMode === 'article' && (
                       <ArticleFunnelView
-                        articleConfig={getArticleConfigWithDefaults(campaignState, campaignData)}
+                        articleConfig={(campaignState as any)?.articleConfig || {}}
                         campaignType={(campaignState as any)?.type || 'quiz'}
                         campaign={campaignData}
                         wheelModalConfig={quizModalConfig}
@@ -4174,6 +4259,17 @@ const handleSaveCampaignName = useCallback(async () => {
                                   ...(campaignState as any).articleConfig?.content,
                                   htmlContent: html,
                                 },
+                              },
+                            });
+                          }
+                        }}
+                        onFormContentChange={(html) => {
+                          if (campaignState) {
+                            setCampaign({
+                              ...campaignState,
+                              articleConfig: {
+                                ...(campaignState as any).articleConfig,
+                                formHtmlContent: html,
                               },
                             });
                           }
