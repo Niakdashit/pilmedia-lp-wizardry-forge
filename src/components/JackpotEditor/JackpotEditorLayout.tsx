@@ -634,23 +634,44 @@ useEffect(() => {
       );
     }
     
-    prevPathRef.current = currentPath;
-  }, [location.pathname, mode, canvasBackground.type]); // Se déclenche au changement de route
+  prevPathRef.current = currentPath;
+}, [location.pathname, mode, canvasBackground.type]); // Se déclenche au changement de route
+
+// Mémorise le dernier background image appliqué pour éviter les mises à jour redondantes
+const lastAppliedBgRef = useRef<string>('');
+
 
 // Recharger l'image de fond correcte depuis la campaign quand on change de device
 useEffect(() => {
-  if (campaignState?.design) {
-    const design = campaignState.design as any;
-    const bgImage = selectedDevice === 'mobile' 
-      ? design.mobileBackgroundImage 
-      : design.backgroundImage;
-    
-    if (bgImage) {
-      console.log(`🔄 Switching to ${selectedDevice}, loading background:`, bgImage.substring(0, 50) + '...');
-      setCanvasBackground({ type: 'image', value: bgImage });
-    }
+  if (!campaignState?.design) return;
+  const design = (campaignState as any).design as any;
+  const bgImage = selectedDevice === 'mobile' 
+    ? design.mobileBackgroundImage 
+    : design.backgroundImage;
+
+  if (!bgImage) return;
+
+  // Évite les mises à jour inutiles si le même background est déjà appliqué
+  if (canvasBackground.type === 'image' && canvasBackground.value === bgImage) {
+    return;
   }
+  if (lastAppliedBgRef.current === bgImage) {
+    return;
+  }
+
+  console.log(`🔄 Switching to ${selectedDevice}, preloading background:`, String(bgImage).slice(0, 50) + '...');
+  const img = new Image();
+  img.onload = () => {
+    lastAppliedBgRef.current = bgImage;
+    console.log(`✅ Background image loaded for ${selectedDevice}`);
+    setCanvasBackground({ type: 'image', value: bgImage });
+  };
+  img.onerror = () => {
+    console.warn('⚠️ Background image failed to load, keeping previous background');
+  };
+  img.src = bgImage;
 }, [selectedDevice, campaignState?.design]);
+
 
 // ✅ Hydrater les éléments/modularPage/backgrounds depuis la DB à l'ouverture
 // ✅ FIX: Ne pas déclencher lors de simples changements de background
