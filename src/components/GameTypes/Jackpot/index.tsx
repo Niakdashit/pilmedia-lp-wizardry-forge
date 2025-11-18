@@ -35,8 +35,13 @@ const Jackpot: React.FC<JackpotProps> = ({
     return <div><p>Pas de configuration pour le moment.</p></div>;
   }
 
-  // 🎰 Priority: propSymbols > campaign symbols
-  const symbols = propSymbols || campaign?.gameConfig?.jackpot?.symbols || campaign?.jackpotConfig?.symbols;
+  // 🎰 Priority: propSymbols > jackpot.slotMachineSymbols > jackpot.symbols
+  const symbols =
+    propSymbols ||
+    campaign?.gameConfig?.jackpot?.slotMachineSymbols ||
+    campaign?.gameConfig?.jackpot?.symbols ||
+    campaign?.jackpotConfig?.slotMachineSymbols ||
+    campaign?.jackpotConfig?.symbols;
   
   console.log('🎰 [Jackpot] Using symbols:', {
     hasPropSymbols: !!propSymbols,
@@ -59,4 +64,4 @@ const Jackpot: React.FC<JackpotProps> = ({
   );
 };
 
-export default Jackpot;
+export default React.memo(Jackpot);

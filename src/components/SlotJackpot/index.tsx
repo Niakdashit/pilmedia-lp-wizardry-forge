@@ -10,6 +10,11 @@ interface SlotJackpotProps {
   templateOverride?: string;
   // Permet d'injecter les symboles depuis la campagne
   symbols?: string[];
+  // Props nécessaires au portail fullscreen et à la dotation (transmises à SlotMachine)
+  campaign?: any;
+  participantEmail?: string;
+  participantId?: string;
+  useDotationSystem?: boolean;
 }
 
 const SlotJackpot: React.FC<SlotJackpotProps> = memo((props) => {

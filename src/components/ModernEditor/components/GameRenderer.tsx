@@ -81,7 +81,8 @@ const GameRenderer: React.FC<GameRendererProps> = ({
         return (
           <Jackpot
             {...commonProps}
-            key={`jackpot-${campaign._lastUpdate || Date.now()}`}
+            isPreview={true}
+            key={`jackpot-${campaign?.id || campaign?.slug || 'preview'}`}
           />
         );
         
