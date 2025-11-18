@@ -25,6 +25,8 @@ interface StandardizedWheelProps {
   // External config handlers (optional)
   getCanonicalConfig?: (options?: { device?: string; shouldCropWheel?: boolean }) => any;
   updateWheelConfig?: (updates: any) => void;
+  // Optional explicit button position override (otherwise inferred from wheel position)
+  buttonPosition?: 'top' | 'bottom' | 'left' | 'right' | 'center';
 }
 
 /**
@@ -49,6 +51,7 @@ const StandardizedWheel: React.FC<StandardizedWheelProps> = ({
   useDotationSystem = false,
   participantEmail,
   participantId,
+  buttonPosition,
 }) => {
   // Configuration canonique via le service (évaluée à chaque rendu pour capter les mutations profondes)
   // Option A: ignorer toute fonction getCanonicalConfig potentiellement stale.
@@ -237,7 +240,7 @@ const StandardizedWheel: React.FC<StandardizedWheelProps> = ({
             color: buttonColor,
             textColor: '#ffffff'
           }}
-          buttonPosition={wheelPosition === 'center' ? 'top' : 'bottom'}
+          buttonPosition={buttonPosition || (wheelPosition === 'center' ? 'top' : 'bottom')}
           disabled={disabled}
           disablePointerAnimation={true}
           onSpin={onSpin}

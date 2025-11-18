@@ -218,12 +218,28 @@ const SlotMachine: React.FC<SlotMachineProps> = ({
     const campaignId = String(campaign?.id || 'preview');
 
     // Use cached UI state if available to prevent flicker on remount
+    // IMPORTANT: Ne réutiliser le cache qu'après au moins un spin réel.
+    // Avant le premier spin (jackpotSession.hasSpun === false), on veut toujours
+    // une combinaison initiale fraîche, nettoyée pour éviter 3 symboles identiques.
     const cached = jackpotUiCache.get(campaignId);
-    if (cached && Array.isArray(cached.reels) && Array.isArray(cached.offsets)) {
+    if (jackpotSession.hasSpun && cached && Array.isArray(cached.reels) && Array.isArray(cached.offsets)) {
       return { reels0: cached.reels, offsets0: cached.offsets };
     }
 
-    const reels0 = [0, 1, 2].map(() => symbols[Math.floor(Math.random() * symbols.length)]);
+    // Initial reels: avoid showing three identical symbols before the first spin
+    let reels0 = [0, 1, 2].map(() => symbols[Math.floor(Math.random() * symbols.length)]);
+    if (
+      reels0.length === 3 &&
+      reels0[0] === reels0[1] &&
+      reels0[1] === reels0[2] &&
+      symbols.length > 1
+    ) {
+      // Force at least one reel to a different symbol to avoid pre-spin confusion
+      const alternatives = symbols.filter((s) => s !== reels0[0]);
+      const replacement = alternatives[Math.floor(Math.random() * alternatives.length)] || symbols[0];
+      // Change the middle reel for visual clarity
+      reels0[1] = replacement;
+    }
     const offsets0 = reels0.map((s) => {
       const idx = symbols.indexOf(s);
       return -(Math.max(idx, 0) * size);
@@ -249,9 +265,41 @@ const SlotMachine: React.FC<SlotMachineProps> = ({
       jackpotUiCache.set(campaignId, { reels, offsets: reelOffsets });
     } catch {}
   }, [reels, reelOffsets, campaign?.id]);
-  
+
+  // Reset session and cached UI when the symbol set changes (new jackpot configuration)
+  React.useEffect(() => {
+    try {
+      const campaignId = String(campaign?.id || 'preview');
+      const key = `${campaignId}::${symbols.join('|')}`;
+      // Store last key on window to detect actual changes across renders
+      const g = window as any;
+      if (g.__JACKPOT_LAST_SYMBOLS_KEY__ === key) return;
+      g.__JACKPOT_LAST_SYMBOLS_KEY__ = key;
+
+      // Ne jamais toucher à la session en plein spin
+      if (jackpotSession.spinning || isSpinning) {
+        return;
+      }
+
+      // Nouvelle configuration de symboles: réinitialiser complètement la session
+      if (jackpotSession.hardTimerId) {
+        clearTimeout(jackpotSession.hardTimerId as any);
+        jackpotSession.hardTimerId = null;
+      }
+      jackpotSession.hasSpun = false;
+      jackpotSession.spinning = false;
+
+      // Supprimer le cache UI pour cette campagne afin que initialSetup recalcule
+      jackpotUiCache.delete(campaignId);
+    } catch {
+      // ignore
+    }
+  }, [symbols.join('|'), campaign?.id, isSpinning]);
+
   // 🔒 CRITICAL: Ref séparé pour stocker le résultat final de manière IMMUABLE
   const lockedFinalsRef = useRef<string[] | null>(null);
+  // 🔒 Forcer le résultat gagnant/perdant selon le moteur de dotation (shouldWin)
+  const forcedWinRef = useRef<boolean | null>(null);
   
   // Fonction helper pour mettre à jour completedReels de manière synchrone
   const updateCompletedReel = (index: number, value: boolean) => {
@@ -317,8 +365,17 @@ const SlotMachine: React.FC<SlotMachineProps> = ({
     }
 
     // 🔒 Calculer le résultat AVANT d'appeler les callbacks
-    const isWinning = finals.every((symbol) => symbol === finals[0]);
-    console.log(`🎲 [SlotMachine] Final result computed: ${isWinning ? 'WIN' : 'LOSE'}`, finals);
+    let isWinning = finals.every((symbol) => symbol === finals[0]);
+    // Si le moteur de dotation a explicitement indiqué shouldWin, il a toujours priorité
+    if (forcedWinRef.current !== null) {
+      isWinning = forcedWinRef.current;
+      console.log('🎯 [SlotMachine] Using forcedWin from dotation engine:', {
+        forcedWin: forcedWinRef.current,
+        finals,
+      });
+    } else {
+      console.log(`🎲 [SlotMachine] Final result computed from symbols: ${isWinning ? 'WIN' : 'LOSE'}`, finals);
+    }
     console.log('🔒 [SlotMachine] Result locked, calling callbacks with:', finals);
 
     // Attendre 1 seconde après l'arrêt pour bien voir les symboles finaux avant d'afficher le résultat
@@ -351,6 +408,8 @@ const SlotMachine: React.FC<SlotMachineProps> = ({
       window.dispatchEvent(new CustomEvent('jackpot:spin-start'));
     } catch {}
     clearFinishTimers();
+    // Réinitialiser le forcedWin à chaque nouveau spin
+    forcedWinRef.current = null;
     jackpotSession.hasSpun = true;
     jackpotSession.spinning = true;
     setHasPlayed(true); // Autoriser un seul spin maximum
@@ -376,6 +435,8 @@ const SlotMachine: React.FC<SlotMachineProps> = ({
         );
         
         finals = result.symbols;
+        // Stocker shouldWin pour l'utiliser au moment du résultat visuel
+        forcedWinRef.current = typeof result.shouldWin === 'boolean' ? result.shouldWin : null;
         if ((window as any).__DEBUG_JACKPOT__) {
           console.log('🎲 [SlotMachine] Dotation result:', result);
         }
@@ -390,7 +451,42 @@ const SlotMachine: React.FC<SlotMachineProps> = ({
       }
       finals = [0, 1, 2].map(() => symbols[Math.floor(Math.random() * symbols.length)]);
     }
-    
+
+    // 🔒 Sanitize finals: every symbol must exist in the visible symbols list
+    // to avoid inconsistent offsets/animation glitches when dotation returns
+    // a symbol that is not part of the current reels.
+    finals = finals.map((symbol) => {
+      if (symbols.includes(symbol)) return symbol;
+      // Fallback: force to first available symbol to keep animation stable
+      const fallback = symbols[0];
+      if ((window as any).__DEBUG_JACKPOT__) {
+        console.warn('⚠️ [SlotMachine] Sanitizing final symbol not in symbols[]:', {
+          symbol,
+          fallback,
+          symbolsSample: symbols.slice(0, 8)
+        });
+      }
+      return fallback;
+    });
+
+    // 🔒 Si le moteur de dotation a explicitement indiqué une défaite,
+    // on évite d'afficher 3 symboles identiques pour ne pas suggérer visuellement un gain.
+    if (forcedWinRef.current === false && finals.length === 3) {
+      const allSame = finals[0] === finals[1] && finals[1] === finals[2];
+      if (allSame && symbols.length > 1) {
+        const alternatives = symbols.filter((s) => s !== finals[0]);
+        const replacement = alternatives[Math.floor(Math.random() * alternatives.length)] || symbols[0];
+        // Modifier le rouleau central pour casser la combinaison gagnante visuelle
+        finals[1] = replacement;
+        if ((window as any).__DEBUG_JACKPOT__) {
+          console.log('🎭 [SlotMachine] Forcing losing visual combo despite dotation lose:', {
+            forcedWin: forcedWinRef.current,
+            adjustedFinals: finals,
+          });
+        }
+      }
+    }
+
     // 🔒 CRITICAL: Verrouiller les finals pour qu'ils ne changent JAMAIS pendant le spin
     finalsRef.current = [...finals]; // Copie pour éviter toute mutation
     lockedFinalsRef.current = [...finals]; // Copie IMMUABLE pour finalizeSpin

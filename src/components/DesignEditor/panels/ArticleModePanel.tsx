@@ -356,6 +356,74 @@ const ArticleModePanel: React.FC<ArticleModePanelProps> = ({
             <div className="pt-2 border-t border-gray-200">
               <h4 className="text-xs font-medium text-gray-700 mb-3">Cadre (arrondi + bordure)</h4>
               <div className="grid grid-cols-1 gap-4">
+                {/* Largeur du cadre */}
+                <div>
+                  <label className="block text-xs text-gray-600 mb-1">Largeur du cadre (px)</label>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="range"
+                      min={480}
+                      max={1000}
+                      step={10}
+                      value={(articleConfig as any)?.frameWidth ?? 810}
+                      onChange={(e) => onCampaignChange({
+                        articleConfig: {
+                          ...articleConfig,
+                          frameWidth: Number(e.target.value),
+                        },
+                      })}
+                      className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#44444d]"
+                    />
+                    <input
+                      type="number"
+                      min={320}
+                      max={1200}
+                      value={(articleConfig as any)?.frameWidth ?? 810}
+                      onChange={(e) => onCampaignChange({
+                        articleConfig: {
+                          ...articleConfig,
+                          frameWidth: Number(e.target.value) || 810,
+                        },
+                      })}
+                      className="w-20 px-2 py-1 text-sm border border-gray-300 rounded"
+                    />
+                  </div>
+                </div>
+
+                {/* Hauteur du cadre */}
+                <div>
+                  <label className="block text-xs text-gray-600 mb-1">Hauteur du cadre (px)</label>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="range"
+                      min={600}
+                      max={1600}
+                      step={20}
+                      value={(articleConfig as any)?.frameHeight ?? 1200}
+                      onChange={(e) => onCampaignChange({
+                        articleConfig: {
+                          ...articleConfig,
+                          frameHeight: Number(e.target.value),
+                        },
+                      })}
+                      className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#44444d]"
+                    />
+                    <input
+                      type="number"
+                      min={400}
+                      max={2000}
+                      value={(articleConfig as any)?.frameHeight ?? 1200}
+                      onChange={(e) => onCampaignChange({
+                        articleConfig: {
+                          ...articleConfig,
+                          frameHeight: Number(e.target.value) || 1200,
+                        },
+                      })}
+                      className="w-20 px-2 py-1 text-sm border border-gray-300 rounded"
+                    />
+                  </div>
+                </div>
+
                 {/* Rayon d'arrondi */}
                 <div>
                   <label className="block text-xs text-gray-600 mb-1">Arrondi du cadre (px)</label>

@@ -172,14 +172,20 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
   const handleGameComplete = React.useCallback((result: 'win' | 'lose') => {
     console.log('🎯 [CanvasGameRenderer] Game completed with result:', result);
     // Délai pour laisser l'animation se terminer complètement avant d'appeler onGameFinish
-    // Victoire: 1500ms pour voir les confettis, Défaite: 1200ms pour voir le résultat
-    const delay = result === 'win' ? 1500 : 1200;
-    console.log(`⏱️ [CanvasGameRenderer] Will call onGameFinish in ${delay}ms`);
+    // Jackpot a une animation plus longue (~4s), donc on utilise un délai étendu uniquement pour ce type.
+    let delay: number;
+    if (campaign.type === 'jackpot') {
+      delay = 4000;
+    } else {
+      // Victoire: 1500ms pour voir les confettis, Défaite: 1200ms pour voir le résultat
+      delay = result === 'win' ? 1500 : 1200;
+    }
+    console.log(`⏱️ [CanvasGameRenderer] Will call onGameFinish in ${delay}ms (type=${campaign.type})`);
     setTimeout(() => {
       console.log('✅ [CanvasGameRenderer] Now calling onGameFinish');
       onGameFinish(result);
     }, delay);
-  }, [onGameFinish]);
+  }, [onGameFinish, campaign.type]);
 
   const handleWin = React.useCallback(() => handleGameComplete('win'), [handleGameComplete]);
   const handleLose = React.useCallback(() => handleGameComplete('lose'), [handleGameComplete]);
@@ -348,26 +354,13 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
         symbolsCount: Array.isArray(effectiveSymbols) ? effectiveSymbols.length : 0,
         borderColor: effectiveBorderColor,
         backgroundColor: effectiveBackgroundColor,
-        textColor: effectiveTextColor
+        textColor: effectiveTextColor,
+        fullScreen
       });
-      
-      // En fullscreen, utiliser le portail singleton pour éviter tout unmount
-      if (fullScreen) {
-        return (
-          <FullscreenJackpotPortal
-            templateOverride={effectiveTemplate}
-            symbols={effectiveSymbols}
-            onWin={handleWin}
-            onLose={handleLose}
-            campaign={campaign}
-            participantEmail={participantEmail}
-            participantId={participantId}
-            useDotationSystem={useDotationSystem}
-          />
-        );
-      }
 
-      // Mode non-fullscreen: rendu direct
+      // Rendu unique pour jackpot, que le wrapper soit fullscreen ou non :
+      // on utilise toujours SlotJackpot directement pour partager exactement
+      // le même SlotMachine que le canvas (Écran 2) et le mode Article.
       return (
         <div className="absolute inset-0" style={{ zIndex: 10 }}>
           <SlotJackpot

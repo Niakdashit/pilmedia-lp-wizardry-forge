@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '../../../integrations/supabase/client';
 import type { Prize as DotationPrize } from '../../../types/dotation';
+import WheelConfigSettings from './WheelConfigSettings';
 
 interface GameManagementPanelProps {
   campaign: any;
@@ -141,6 +142,21 @@ const GameManagementPanel: React.FC<GameManagementPanelProps> = ({
     defaultSegments;
   
   const prizes: Prize[] = campaign?.prizes || [];
+
+  // Configuration visuelle de la roue (bordure, taille, ampoules, position)
+  const wheelBorderStyle: string = campaign?.design?.wheelConfig?.borderStyle || 'classic';
+  const wheelBorderColor: string = campaign?.design?.wheelConfig?.borderColor || '#44444d';
+  const wheelBorderWidth: number =
+    typeof campaign?.design?.wheelConfig?.borderWidth === 'number'
+      ? campaign.design.wheelConfig.borderWidth
+      : 16;
+  const wheelScale: number =
+    typeof campaign?.design?.wheelConfig?.scale === 'number'
+      ? campaign.design.wheelConfig.scale
+      : 2;
+  const wheelShowBulbs: boolean = (campaign?.design?.wheelConfig as any)?.showBulbs ?? false;
+  const wheelPosition: 'left' | 'right' | 'center' | 'centerTop' =
+    (campaign?.design?.wheelConfig as any)?.position || 'center';
   
   console.log('🎯 GameManagementPanel: Loaded segments', {
     source: campaign?.wheelConfig?.segments ? 'wheelConfig' :
@@ -322,7 +338,7 @@ const GameManagementPanel: React.FC<GameManagementPanelProps> = ({
               }`}
             >
               <Gift className="w-4 h-4 inline mr-2" />
-              Lots
+              Roue
             </button>
           </div>
 
@@ -528,175 +544,98 @@ const GameManagementPanel: React.FC<GameManagementPanelProps> = ({
         </div>
       )}
 
-      {/* Section Lots */}
+      {/* Section Lots → remplacée par le panneau de configuration de la roue */}
       {activeSection === 'prizes' && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-medium text-gray-900">
-              Lots à gagner ({prizes.length})
-            </h3>
-            <button
-              onClick={addPrize}
-              className="flex items-center px-3 py-2 bg-[#44444d] text-white text-sm rounded-lg hover:bg-[#5a5a63] transition-colors"
-            >
-              <Plus className="w-4 h-4 mr-1" />
-              Créer un lot
-            </button>
-          </div>
-
-          {prizes.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
-              <Gift className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-              <p>Aucun lot configuré</p>
-              <p className="text-sm">Cliquez sur "Créer un lot" pour commencer</p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {prizes.map((prize, index) => (
-                <div key={prize.id} className="bg-gray-50 p-4 rounded-lg border">
-                  <div className="flex items-center justify-between mb-4">
-                    <span className="text-sm font-medium text-gray-700">
-                      Lot {index + 1}
-                    </span>
-                    <button
-                      onClick={() => removePrize(prize.id)}
-                      className="text-red-500 hover:text-red-700 transition-colors"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-
-                  <div className="space-y-3">
-                    {/* Nom et description */}
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-xs font-medium text-gray-600 mb-1">
-                          Nom du lot
-                        </label>
-                        <input
-                          type="text"
-                          value={prize.name}
-                          onChange={(e) => updatePrize(prize.id, { name: e.target.value })}
-                          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-[#44444d] focus:border-transparent"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-medium text-gray-600 mb-1">
-                          Quantité
-                        </label>
-                        <input
-                          type="number"
-                          min="0"
-                          value={prize.totalUnits || 1}
-                          onChange={(e) => updatePrize(prize.id, { totalUnits: Number(e.target.value) || 1 })}
-                          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-[#44444d] focus:border-transparent"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Méthode d'attribution */}
-                    <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-2">
-                        Méthode d'attribution
-                      </label>
-                      <div className="flex space-x-3">
-                        <label className="flex items-center">
-                          <input
-                            type="radio"
-                            name={`attribution-${prize.id}`}
-                            value="probability"
-                            checked={prize.attributionMethod === 'probability'}
-                            onChange={(e) => updatePrize(prize.id, { attributionMethod: 'probability' })}
-                            className="mr-2"
-                          />
-                          <Percent className="w-4 h-4 mr-1" />
-                          <span className="text-sm">Probabilité</span>
-                        </label>
-                        <label className="flex items-center">
-                          <input
-                            type="radio"
-                            name={`attribution-${prize.id}`}
-                            value="calendar"
-                            checked={prize.attributionMethod === 'calendar'}
-                            onChange={(e) => updatePrize(prize.id, { attributionMethod: 'calendar' })}
-                            className="mr-2"
-                          />
-                          <Calendar className="w-4 h-4 mr-1" />
-                          <span className="text-sm">Calendrier</span>
-                        </label>
-                      </div>
-                    </div>
-
-                    {/* Configuration selon la méthode */}
-                    {prize.attributionMethod === 'probability' && (
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <label className="block text-xs font-medium text-gray-600 mb-1">
-                            Probabilité (%)
-                          </label>
-                          <input
-                            type="number"
-                            min="0"
-                            max="100"
-                            value={prize.probability || 0}
-                            onChange={(e) => updatePrize(prize.id, { probability: Number(e.target.value) })}
-                            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-[#44444d] focus:border-transparent"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-xs font-medium text-gray-600 mb-1">
-                            Segment associé
-                          </label>
-                          <select
-                            value={prize.segmentId || ''}
-                            onChange={(e) => updatePrize(prize.id, { segmentId: e.target.value })}
-                            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-[#44444d] focus:border-transparent"
-                          >
-                            <option value="">Aucun segment</option>
-                            {segments.map((segment) => (
-                              <option key={segment.id} value={segment.id}>
-                                {segment.label}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                      </div>
-                    )}
-
-                    {prize.attributionMethod === 'calendar' && (
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <label className="block text-xs font-medium text-gray-600 mb-1">
-                            <Calendar className="w-3 h-3 inline mr-1" />
-                            Date d'attribution
-                          </label>
-                          <input
-                            type="date"
-                            value={prize.calendarDate || ''}
-                            onChange={(e) => updatePrize(prize.id, { calendarDate: e.target.value })}
-                            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-[#44444d] focus:border-transparent"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-xs font-medium text-gray-600 mb-1">
-                            <Clock className="w-3 h-3 inline mr-1" />
-                            Heure d'attribution
-                          </label>
-                          <input
-                            type="time"
-                            value={prize.calendarTime || ''}
-                            onChange={(e) => updatePrize(prize.id, { calendarTime: e.target.value })}
-                            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-[#44444d] focus:border-transparent"
-                          />
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+        <WheelConfigSettings
+          wheelBorderStyle={wheelBorderStyle}
+          wheelBorderColor={wheelBorderColor}
+          wheelBorderWidth={wheelBorderWidth}
+          wheelScale={wheelScale}
+          wheelShowBulbs={wheelShowBulbs}
+          wheelPosition={wheelPosition}
+          compact={true}
+          selectedDevice="desktop"
+          onBorderStyleChange={(style) => {
+            // Mettre à jour à la fois design.wheelBorderStyle et design.wheelConfig.borderStyle
+            setCampaign({
+              ...campaign,
+              design: {
+                ...campaign?.design,
+                wheelBorderStyle: style,
+                wheelConfig: {
+                  ...(campaign?.design?.wheelConfig || {}),
+                  borderStyle: style
+                }
+              },
+              _lastUpdate: Date.now()
+            });
+          }}
+          onBorderColorChange={(color) => {
+            setCampaign({
+              ...campaign,
+              design: {
+                ...campaign?.design,
+                wheelConfig: {
+                  ...(campaign?.design?.wheelConfig || {}),
+                  borderColor: color
+                }
+              },
+              _lastUpdate: Date.now()
+            });
+          }}
+          onBorderWidthChange={(width) => {
+            setCampaign({
+              ...campaign,
+              design: {
+                ...campaign?.design,
+                wheelConfig: {
+                  ...(campaign?.design?.wheelConfig || {}),
+                  borderWidth: width
+                }
+              },
+              _lastUpdate: Date.now()
+            });
+          }}
+          onScaleChange={(scale) => {
+            setCampaign({
+              ...campaign,
+              design: {
+                ...campaign?.design,
+                wheelConfig: {
+                  ...(campaign?.design?.wheelConfig || {}),
+                  scale
+                }
+              },
+              _lastUpdate: Date.now()
+            });
+          }}
+          onShowBulbsChange={(show) => {
+            setCampaign({
+              ...campaign,
+              design: {
+                ...campaign?.design,
+                wheelConfig: {
+                  ...(campaign?.design?.wheelConfig || {}),
+                  showBulbs: show
+                }
+              },
+              _lastUpdate: Date.now()
+            });
+          }}
+          onPositionChange={(position) => {
+            setCampaign({
+              ...campaign,
+              design: {
+                ...campaign?.design,
+                wheelConfig: {
+                  ...(campaign?.design?.wheelConfig || {}),
+                  position
+                }
+              },
+              _lastUpdate: Date.now()
+            });
+          }}
+        />
       )}
         </>
       )}

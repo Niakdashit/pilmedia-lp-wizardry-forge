@@ -16,6 +16,7 @@ interface WheelConfigSettingsProps {
   onScaleChange: (scale: number) => void;
   onShowBulbsChange?: (show: boolean) => void;
   onPositionChange?: (position: 'left' | 'right' | 'center' | 'centerTop') => void;
+  compact?: boolean;
 }
 
 const COLOR_PALETTE = [
@@ -42,19 +43,24 @@ const WheelConfigSettings: React.FC<WheelConfigSettingsProps> = ({
   onBorderWidthChange,
   onScaleChange,
   onShowBulbsChange,
-  onPositionChange
+  onPositionChange,
+  compact = false
 }) => {
   const campaign = useEditorStore((s) => s.campaign as any);
   const setCampaign = useEditorStore((s) => s.setCampaign as any);
   const initialisedRef = useRef(false);
 
-  // Lire showBulbs directement depuis la campagne (source de vérité)
+  // Lire showBulbs en priorité depuis la prop (mode contrôlé), sinon depuis la campagne
   const actualShowBulbs = useMemo(() => {
+    if (typeof wheelShowBulbs === 'boolean') {
+      console.log('💡 [WheelConfigSettings] actualShowBulbs from prop:', wheelShowBulbs);
+      return wheelShowBulbs;
+    }
     const value = (campaign?.design?.wheelConfig as any)?.showBulbs;
     const result = value ?? false; // Par défaut: false
-    console.log('💡 [WheelConfigSettings] actualShowBulbs:', { value, result });
+    console.log('💡 [WheelConfigSettings] actualShowBulbs from campaign:', { value, result });
     return result;
-  }, [campaign?.design?.wheelConfig]);
+  }, [wheelShowBulbs, campaign?.design?.wheelConfig]);
 
   // Initialiser showBulbs à false par défaut si non défini
   useEffect(() => {
@@ -258,8 +264,12 @@ const WheelConfigSettings: React.FC<WheelConfigSettingsProps> = ({
     }
   }, [segmentsLength, setSegmentCount]);
 
+  const containerClass = compact
+    ? 'space-y-8 text-[hsl(var(--sidebar-text-primary))]'
+    : 'p-6 space-y-8 text-[hsl(var(--sidebar-text-primary))]';
+
   return (
-    <div className="p-6 space-y-8 text-[hsl(var(--sidebar-text-primary))]">
+    <div className={containerClass}>
       <div className="space-y-6">
         <div>
           <label className="block text-sm font-semibold mb-2">

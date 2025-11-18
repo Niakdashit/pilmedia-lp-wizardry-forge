@@ -129,6 +129,29 @@ const ArticleCanvas: React.FC<ArticleCanvasProps> = ({
     fullContent: articleConfig.content
   });
 
+  // Store last submitted form data to drive dotation system in article-mode games (Jackpot, etc.)
+  const [lastFormData, setLastFormData] = React.useState<Record<string, string> | null>(null);
+  
+  // Resolve participant email from form submission (fallback to synthetic email for preview/testing)
+  const participantEmail = React.useMemo(() => {
+    if (!lastFormData) {
+      return campaign?.id ? `preview+${campaign.id}@local.test` : 'preview@local.test';
+    }
+
+    const candidates = [
+      lastFormData.email,
+      (lastFormData as any).Email,
+      (lastFormData as any).EMAIL,
+      lastFormData.mail,
+      (lastFormData as any).Mail
+    ].filter(Boolean) as string[];
+
+    const primary = candidates.find((v) => typeof v === 'string' && v.includes('@'));
+    if (primary) return primary;
+
+    return campaign?.id ? `preview+${campaign.id}@local.test` : 'preview@local.test';
+  }, [lastFormData, campaign?.id]);
+
   // Navigation entre les étapes - use custom steps if provided (e.g., form campaigns skip 'article')
   const steps: Array<'article' | 'form' | 'game' | 'result'> = availableSteps || ['article', 'form', 'game', 'result'];
   const currentStepIndex = steps.indexOf(currentStep);
@@ -236,6 +259,8 @@ const ArticleCanvas: React.FC<ArticleCanvasProps> = ({
               fields={formFields}
               onSubmit={(data) => {
                 console.log('Form submitted:', data);
+                // Persist form data locally so article-mode games (e.g. Jackpot) can use it for dotation
+                setLastFormData(data as Record<string, string>);
                 onFormSubmit?.(data);
               }}
               submitLabel={campaignType === 'form' ? 'Envoyer' : 'Valider'}
@@ -274,16 +299,42 @@ const ArticleCanvas: React.FC<ArticleCanvasProps> = ({
                     wheelModalConfig={wheelModalConfig}
                     shouldCropWheel={false}
                     className="mx-auto"
+                    buttonPosition="bottom"
+                    // Activer le système de dotation en mode article exactement comme en fullscreen
+                    useDotationSystem={true}
+                    participantEmail={participantEmail}
+                    participantId={campaign?.id}
                     onComplete={(prize: string) => {
-                      console.log('🎡 Wheel completed with prize:', prize);
-                      const isWinner = prize && !['Perdu', 'Dommage', 'Rien', 'Vide', ''].includes(prize);
-                      const result: 'winner' | 'loser' = isWinner ? 'winner' : 'loser';
+                      console.log('🎡 [ArticleCanvas] Wheel completed with prize:', prize);
+
+                      // Avec le système de dotation, SmartWheel ne renvoie une valeur de prize
+                      // que lorsque le segment correspond à un lot réellement attribué.
+                      // On suit donc la même logique que PreviewRenderer:
+                      //   - prize truthy  => WIN
+                      //   - prize falsy   => LOSE
+                      const isWin = !!prize;
+                      const result: 'winner' | 'loser' = isWin ? 'winner' : 'loser';
+
                       setGameResult(result);
-                      console.log('🎯 Game result detected:', result, 'Prize:', prize);
-                      onGameComplete?.();
-                      if (onStepChange) {
-                        setTimeout(() => onStepChange('result'), 4000);
+                      if (onGameResultChange) {
+                        onGameResultChange(result);
                       }
+
+                      console.log('🎯 [ArticleCanvas] Game result detected from dotation:', {
+                        result,
+                        prize,
+                      });
+
+                      // Garder la roue visible suffisamment longtemps (4s)
+                      const delay = 4000;
+                      console.log(`⏱️ [ArticleCanvas] Transitioning to result step in ${delay}ms`);
+
+                      setTimeout(() => {
+                        onGameComplete?.();
+                        if (onStepChange) {
+                          onStepChange('result');
+                        }
+                      }, delay);
                     }}
                   />
                 </div>
@@ -299,19 +350,45 @@ const ArticleCanvas: React.FC<ArticleCanvasProps> = ({
                 }}>
                   <SlotMachine
                     campaign={campaign}
+                    participantEmail={participantEmail}
+                    participantId={campaign?.id}
+                    useDotationSystem={true}
                     onWin={(results: string[]) => {
                       console.log('🎰 Jackpot won:', results);
-                      onGameComplete?.();
-                      if (onStepChange) {
-                        setTimeout(() => onStepChange('result'), 4000);
+                      // Align article-mode jackpot flow with fullscreen funnel timing
+                      // 1) Marquer le résultat comme gagnant
+                      setGameResult('winner');
+                      if (onGameResultChange) {
+                        onGameResultChange('winner');
                       }
+                      // 2) Utiliser un délai long (4000ms) comme auparavant pour garantir que
+                      //    l'animation des rouleaux est complètement terminée avant l'écran de sortie
+                      const delay = 4000;
+                      console.log(`⏱️ [ArticleCanvas] Jackpot win - transitioning to result in ${delay}ms (long delay for full animation)`);
+                      setTimeout(() => {
+                        onGameComplete?.();
+                        if (onStepChange) {
+                          onStepChange('result');
+                        }
+                      }, delay);
                     }}
                     onLose={() => {
                       console.log('🎰 Jackpot lost');
-                      onGameComplete?.();
-                      if (onStepChange) {
-                        setTimeout(() => onStepChange('result'), 4000);
+                      // 1) Marquer le résultat comme perdant
+                      setGameResult('loser');
+                      if (onGameResultChange) {
+                        onGameResultChange('loser');
                       }
+                      // 2) Utiliser également un délai long (4000ms) pour que la défaite
+                      //    laisse le temps de voir l'animation complète des rouleaux
+                      const delay = 4000;
+                      console.log(`⏱️ [ArticleCanvas] Jackpot lose - transitioning to result in ${delay}ms (long delay for full animation)`);
+                      setTimeout(() => {
+                        onGameComplete?.();
+                        if (onStepChange) {
+                          onStepChange('result');
+                        }
+                      }, delay);
                     }}
                   />
                 </div>
@@ -376,7 +453,8 @@ const ArticleCanvas: React.FC<ArticleCanvasProps> = ({
         const isQuizOrForm = campaignType === 'quiz' || campaignType === 'form';
 
         // Use external game result for display (from parent) or fallback to internal state
-        const effectiveGameResult = externalGameResult || gameResult || 'winner';
+        // IMPORTANT: default to 'loser' when no explicit result exists to avoid false positives
+        const effectiveGameResult = externalGameResult || gameResult || 'loser';
 
         // Contenu affiché :
         // - Quiz/Form: toujours winnerHtmlContent comme message unique
@@ -461,8 +539,8 @@ const ArticleCanvas: React.FC<ArticleCanvasProps> = ({
     <div 
       className="article-canvas mx-auto relative"
       style={{
-        width: `${maxWidth}px`,
-        minHeight: 'auto',
+        width: `${(articleConfig as any)?.frameWidth ?? maxWidth}px`,
+        minHeight: (articleConfig as any)?.frameHeight ? `${(articleConfig as any).frameHeight}px` : 'auto',
         backgroundColor: (articleConfig as any)?.frameColor || '#ffffff',
         borderStyle: 'solid',
         borderWidth: `${(articleConfig as any)?.frameBorderWidth ?? 0}px`,

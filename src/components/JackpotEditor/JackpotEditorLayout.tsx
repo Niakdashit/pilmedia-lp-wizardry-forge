@@ -13,6 +13,7 @@ const FunnelUnlockedGame = lazy(() => import('@/components/funnels/FunnelUnlocke
 const FunnelQuizParticipate = lazy(() => import('../funnels/FunnelQuizParticipate'));
 const FullScreenPreviewModal = lazy(() => import('@/components/shared/modals/FullScreenPreviewModal'));
 import GameCanvasPreview from '@/components/ModernEditor/components/GameCanvasPreview';
+import CanvasGameRenderer from '@/components/funnels/components/CanvasGameRenderer';
 // Scratch editor uses FunnelUnlockedGame for preview
 import type { ModularPage, ScreenId, BlocBouton, Module } from '@/types/modularEditor';
 import { createEmptyModularPage } from '@/types/modularEditor';
@@ -1580,7 +1581,8 @@ useEffect(() => {
   }, 'jackpot'), [quizModalConfig, extractedColors]);
   const [showFunnel, setShowFunnel] = useState(false);
   const [currentStep, setCurrentStep] = useState<'article' | 'form' | 'game' | 'result'>('article');
-  const [currentGameResult, setCurrentGameResult] = useState<'winner' | 'loser'>('winner');
+  // IMPORTANT: default to 'loser' to avoid showing a win when no game has been played yet
+  const [currentGameResult, setCurrentGameResult] = useState<'winner' | 'loser'>('loser');
   const [previewButtonSide, setPreviewButtonSide] = useState<'left' | 'right'>(() =>
     (typeof window !== 'undefined' && localStorage.getItem('previewButtonSide') === 'left') ? 'left' : 'right'
   );
@@ -3005,11 +3007,15 @@ useEffect(() => {
     // ALWAYS reset to 'article' when toggling preview to ensure clean state
     // This prevents the funnel from staying on 'result' after game completion
     setCurrentStep('article');
+    // Reset game result to loser so that the result screen defaults to a safe state
+    setCurrentGameResult('loser');
   };
 
   // Funnel progression handlers
   const handleCTAClick = () => {
     console.log('🎯 [JackpotEditor] CTA clicked, moving to form step');
+    // Starting a new funnel run: reset result to loser until the game says otherwise
+    setCurrentGameResult('loser');
     setCurrentStep('form');
   };
 
@@ -4696,11 +4702,29 @@ useEffect(() => {
         onDeviceChange={setFullScreenPreviewDevice}
       >
         <div className="w-full h-full overflow-hidden bg-white">
-          <GameCanvasPreview
-            campaign={campaignData}
-            previewDevice={fullScreenPreviewDevice}
-            key={`canvas-preview-${fullScreenPreviewDevice}-${(campaignData as any)?.type}`}
-          />
+          {campaignData?.type === 'jackpot' ? (
+            <CanvasGameRenderer
+              campaign={campaignData}
+              formValidated={true}
+              showValidationMessage={false}
+              previewMode={fullScreenPreviewDevice as 'desktop' | 'tablet' | 'mobile'}
+              mobileConfig={null}
+              wheelModalConfig={undefined}
+              onGameFinish={() => {}}
+              onGameStart={() => {}}
+              onGameButtonClick={() => {}}
+              fullScreen={true}
+              participantEmail={undefined}
+              participantId={undefined}
+              useDotationSystem={true}
+            />
+          ) : (
+            <GameCanvasPreview
+              campaign={campaignData}
+              previewDevice={fullScreenPreviewDevice}
+              key={`canvas-preview-${fullScreenPreviewDevice}-${(campaignData as any)?.type}`}
+            />
+          )}
         </div>
       </FullScreenPreviewModal>
     </MobileStableEditor>
