@@ -1362,15 +1362,7 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
           </ScreenLayoutWrapper>
         </div>
 
-        <FormHandler
-          showFormModal={showFormModal}
-          campaign={campaign}
-          fields={fields}
-          participationLoading={participationLoading}
-          onClose={() => setShowFormModal(false)}
-          onSubmit={handleFormSubmit}
-          launchButtonStyles={launchButtonStyles}
-        />
+        {/* Removed duplicate FormHandler to prevent remounts during preview */}
       </div>
     );
   }
@@ -1412,7 +1404,7 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
         }}
         onSubmit={handleFormSubmit}
         launchButtonStyles={launchButtonStyles}
-        usePortal={false}
+        usePortal={true}
       />
     </div>
   );
