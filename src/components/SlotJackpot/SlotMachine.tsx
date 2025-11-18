@@ -309,15 +309,16 @@ const SlotMachine: React.FC<SlotMachineProps> = ({
     console.log(`🎲 [SlotMachine] Final result computed: ${isWinning ? 'WIN' : 'LOSE'}`, finals);
     console.log('🔒 [SlotMachine] Result locked, calling callbacks with:', finals);
 
-    // Appeler immédiatement car l'animation a déjà duré ~3.6s + 100ms
-    // Le délai de 2s sera géré par FunnelUnlockedGame qui affiche le jeu pendant 2s avant de montrer le résultat
-    if (isWinning) {
-      console.log('🎉 [SlotMachine] Calling onWin immediately with finals:', finals);
-      onWin?.(finals);
-    } else {
-      console.log('😔 [SlotMachine] Calling onLose immediately');
-      onLose?.();
-    }
+    // Attendre 1 seconde après l'arrêt pour bien voir les symboles finaux avant d'afficher le résultat
+    resultTimeoutRef.current = window.setTimeout(() => {
+      if (isWinning) {
+        console.log('🎉 [SlotMachine] Calling onWin after delay with finals:', finals);
+        onWin?.(finals);
+      } else {
+        console.log('😔 [SlotMachine] Calling onLose after delay');
+        onLose?.();
+      }
+    }, 1000);
   }, [onLose, onWin, currentTemplate, symbols]);
 
   const spin = useCallback(async () => {
