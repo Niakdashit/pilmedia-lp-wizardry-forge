@@ -412,8 +412,8 @@ const SlotMachine: React.FC<SlotMachineProps> = ({
       }
       
       // 🎰 CONFIGURATION PAR ROULEAU
-      // Animation ultra-professionnelle : plus de tours + timing précis
-      const fullCycles = 8 + (reelIndex * 2); // 8, 10, 12 tours complets
+      // Animation ultra-professionnelle : arrêt séquentiel 1 par 1
+      const fullCycles = 6 + (reelIndex * 1); // 6, 7, 8 tours complets
       
       // Position finale du symbole gagnant
       const targetOffset = -(finalSymbolIndex * cellSize);
@@ -424,11 +424,13 @@ const SlotMachine: React.FC<SlotMachineProps> = ({
       const distanceToTarget = currentPos - targetOffset;
       const totalDistance = (fullCycles * stripLength) + distanceToTarget;
       
-      // ⚡ DURÉES PROFESSIONNELLES : timing précis pour chaque rouleau
-      // Rouleau 1: 2.8s, Rouleau 2: 3.4s, Rouleau 3: 4.2s
-      const duration = 2800 + (reelIndex * 600);
-      // Délais cascade: 0ms, 200ms, 450ms (accélération progressive)
-      const startDelay = reelIndex === 0 ? 0 : (reelIndex === 1 ? 200 : 450);
+      // ⚡ DURÉES ÉCHELONNÉES pour arrêt séquentiel visible
+      // Rouleau 1: 2200ms, Rouleau 2: 3000ms (+800ms), Rouleau 3: 3900ms (+900ms)
+      // Chaque rouleau s'arrête clairement APRÈS le précédent
+      const duration = 2200 + (reelIndex * 800);
+      // Pas de délai de démarrage : tous démarrent ensemble, s'arrêtent en cascade
+      const startDelay = 0;
+
 
 
       // 🎰 DÉLAI DE DÉMARRAGE pour effet cascade
