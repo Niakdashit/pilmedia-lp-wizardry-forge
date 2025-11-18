@@ -950,4 +950,18 @@ const SlotMachine: React.FC<SlotMachineProps> = ({
   );
 };
 
-export default SlotMachine;
+export default React.memo(SlotMachine, (prev, next) => {
+  // Avoid re-render if only symbols array reference changed but content is same
+  const arrEq = (a?: string[], b?: string[]) => {
+    if (a === b) return true;
+    if (!Array.isArray(a) || !Array.isArray(b)) return a === (b as any);
+    if (a.length !== b.length) return false;
+    for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return false;
+    return true;
+  };
+  return prev.disabled === next.disabled
+    && prev.templateOverride === next.templateOverride
+    && arrEq(prev.symbols, next.symbols)
+    && prev.onWin === next.onWin
+    && prev.onLose === next.onLose;
+});
