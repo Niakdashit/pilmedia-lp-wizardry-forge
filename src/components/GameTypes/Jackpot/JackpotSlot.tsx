@@ -29,37 +29,34 @@ const JackpotSlot: React.FC<JackpotSlotProps> = ({
         backgroundColor: slotBackgroundColor,
         fontSize: Math.max(20, slotSize * 0.4),
         fontWeight: 700,
-        // Effets 3D pour les slots individuels
+        // Effets 3D professionnels pour les slots
         boxShadow: `
-          0 6px 20px rgba(0, 0, 0, 0.15),
-          0 2px 8px rgba(0, 0, 0, 0.1),
-          inset 0 1px 3px rgba(255, 255, 255, 0.2),
-          inset 0 -1px 3px rgba(0, 0, 0, 0.1)
+          0 8px 24px rgba(0, 0, 0, 0.18),
+          0 3px 10px rgba(0, 0, 0, 0.12),
+          inset 0 2px 4px rgba(255, 255, 255, 0.25),
+          inset 0 -2px 4px rgba(0, 0, 0, 0.15)
         `,
         background: `
           linear-gradient(145deg, 
             ${slotBackgroundColor}, 
-            ${slotBackgroundColor}f0
+            ${slotBackgroundColor}f5
           )
         `,
       }} 
       animate={{
-        scale: isRolling ? [1, 0.93, 1] : 1,
-        rotateY: isRolling ? [0, 180, 360] : 0,
-        boxShadow: isRolling ? [
-          `0 6px 20px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1)`,
-          `0 8px 25px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(0, 0, 0, 0.15)`,
-          `0 6px 20px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1)`
-        ] : `0 6px 20px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1)`
+        scale: isRolling ? [1, 0.96, 1] : 1,
+        rotateY: isRolling ? [0, 5, -5, 0] : 0,
       }} 
       transition={{
-        duration: 0.32,
-        repeat: isRolling ? Infinity : 0
+        duration: 0.15,
+        repeat: isRolling ? Infinity : 0,
+        ease: "easeInOut"
       }} 
       className="flex items-center justify-center flex-shrink-0"
     >
       {symbol}
     </motion.div>
+
   );
 };
 

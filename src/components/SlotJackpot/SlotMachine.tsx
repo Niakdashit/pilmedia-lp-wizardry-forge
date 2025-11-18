@@ -412,8 +412,8 @@ const SlotMachine: React.FC<SlotMachineProps> = ({
       }
       
       // 🎰 CONFIGURATION PAR ROULEAU
-      // Chaque rouleau fait un nombre différent de tours pour plus de suspense
-      const fullCycles = 12 + (reelIndex * 3); // 12, 15, 18 tours (plus de rotations = plus de suspense)
+      // Animation ultra-professionnelle : plus de tours + timing précis
+      const fullCycles = 8 + (reelIndex * 2); // 8, 10, 12 tours complets
       
       // Position finale du symbole gagnant
       const targetOffset = -(finalSymbolIndex * cellSize);
@@ -423,10 +423,13 @@ const SlotMachine: React.FC<SlotMachineProps> = ({
       const currentPos = startOffsets[reelIndex];
       const distanceToTarget = currentPos - targetOffset;
       const totalDistance = (fullCycles * stripLength) + distanceToTarget;
-      // Durées plus longues pour plus de suspense (4s, 4.6s, 5.2s)
-      const duration = 4000 + (reelIndex * 600);
-      // Délais de démarrage plus espacés (0ms, 300ms, 600ms)
-      const startDelay = reelIndex * 300;
+      
+      // ⚡ DURÉES PROFESSIONNELLES : timing précis pour chaque rouleau
+      // Rouleau 1: 2.8s, Rouleau 2: 3.4s, Rouleau 3: 4.2s
+      const duration = 2800 + (reelIndex * 600);
+      // Délais cascade: 0ms, 200ms, 450ms (accélération progressive)
+      const startDelay = reelIndex === 0 ? 0 : (reelIndex === 1 ? 200 : 450);
+
 
       // 🎰 DÉLAI DE DÉMARRAGE pour effet cascade
       const startAnimation = () => {
@@ -445,51 +448,92 @@ const SlotMachine: React.FC<SlotMachineProps> = ({
           const adjustedElapsed = elapsed - startDelay;
           const progress = Math.min(1, adjustedElapsed / duration);
           
-          // 🎰 EASING RÉALISTE TYPE MACHINE À SOUS
-          // Phase 1: Accélération rapide (0-10%)
-          // Phase 2: Vitesse maximale constante (10-70%)
-          // Phase 3: Décélération progressive dramatique (70-100%)
+          // 🎰 EASING ULTRA-PROFESSIONNEL TYPE VRAIE MACHINE À SOUS
+          // Basé sur l'analyse de vraies machines : anticipation + plateau + décélération exponentielle
           let eased: number;
-          if (progress < 0.1) {
-            // Accélération rapide (easeOutCubic)
-            const t = progress / 0.1;
-            eased = t * t * t * 0.1;
-          } else if (progress < 0.7) {
-            // Vitesse constante élevée
-            const t = (progress - 0.1) / 0.6;
-            eased = 0.1 + (t * 0.6);
+          
+          if (progress < 0.05) {
+            // Phase 1 (0-5%): Micro-anticipation (léger recul)
+            const t = progress / 0.05;
+            eased = -0.02 * Math.sin(t * Math.PI); // Léger "wind-up"
+          } else if (progress < 0.12) {
+            // Phase 2 (5-12%): Accélération explosive
+            const t = (progress - 0.05) / 0.07;
+            eased = t * t * t * 0.15; // Cubic ease-in
+          } else if (progress < 0.78) {
+            // Phase 3 (12-78%): Vitesse maximale constante (66% du temps)
+            const t = (progress - 0.12) / 0.66;
+            eased = 0.15 + (t * 0.70); // Vitesse linéaire élevée
+          } else if (progress < 0.92) {
+            // Phase 4 (78-92%): Décélération initiale progressive
+            const t = (progress - 0.78) / 0.14;
+            const decel = 1 - Math.pow(1 - t, 3); // Ease-out cubic
+            eased = 0.85 + (decel * 0.10);
           } else {
-            // Décélération dramatique (easeOutQuart avec effet de "settling")
-            const t = (progress - 0.7) / 0.3;
-            // Courbe en 4 phases pour ralentissement progressif
-            const easeOut = 1 - Math.pow(1 - t, 4);
-            eased = 0.7 + (0.3 * easeOut);
+            // Phase 5 (92-100%): Décélération finale exponentielle + micro-rebond
+            const t = (progress - 0.92) / 0.08;
+            // Courbe exponentielle pour ralentissement dramatique
+            const slowdown = 1 - Math.exp(-5 * t);
+            // Micro-rebond élastique à la fin (overshoot puis settle)
+            const bounce = t > 0.7 ? Math.sin((t - 0.7) * Math.PI * 3) * 0.008 * (1 - t) : 0;
+            eased = 0.95 + (slowdown * 0.05) + bounce;
           }
+
           
           // 🎰 ANIMATION CONTINUE SANS MODULO (pas de saut)
           const distanceTravelled = totalDistance * eased;
           const currentOffset = startOffsets[reelIndex] - distanceTravelled;
 
-          // 🚀 MANIPULATION DOM DIRECTE pour 60 FPS (pas de re-render React)
+          // 🚀 MANIPULATION DOM DIRECTE pour 60 FPS + EFFETS VISUELS PRO
           const stripElement = reelStripRefs.current[reelIndex];
           if (stripElement) {
-            // Pas de modulo = animation continue et fluide
+            // Animation continue fluide
             stripElement.style.transform = `translateY(${currentOffset}px)`;
+            
+            // ✨ EFFETS VISUELS DYNAMIQUES pendant le spin
+            if (progress < 0.85) {
+              // Blur pendant la vitesse élevée (effet de mouvement)
+              const blurAmount = progress < 0.12 ? 0 : (progress < 0.78 ? 3 : 3 * (1 - (progress - 0.78) / 0.14));
+              stripElement.style.filter = `blur(${blurAmount}px)`;
+              stripElement.style.opacity = '0.95';
+            } else {
+              // Nettoyer progressivement le blur en fin de course
+              const clearProgress = (progress - 0.85) / 0.15;
+              stripElement.style.filter = `blur(${3 * (1 - clearProgress)}px)`;
+              stripElement.style.opacity = String(0.95 + (clearProgress * 0.05));
+            }
           }
+
 
           if (progress < 1) {
             animReqs.current[reelIndex] = requestAnimationFrame(animate);
           } else {
-          // Animation terminée: snap à la position finale exacte
+          // 🎯 Animation terminée: snap final + effet de "clunk"
           if ((window as any).__DEBUG_JACKPOT__) {
-            console.log(`🎯 [SlotMachine] Rouleau ${reelIndex} terminé`);
+            console.log(`🎯 [SlotMachine] Rouleau ${reelIndex} terminé avec succès`);
           }
           const snapOffset = targetOffsetsRef.current[reelIndex] ?? -(finalSymbolIndex * cellSize);
           
-          // Snap final via DOM direct
+          // Snap final via DOM + nettoyage effets
           if (stripElement) {
             stripElement.style.transform = `translateY(${snapOffset}px)`;
+            stripElement.style.filter = 'none';
+            stripElement.style.opacity = '1';
+            
+            // 💥 EFFET SHAKE À L'ARRÊT (comme une vraie machine)
+            const shakeKeyframes = [
+              { transform: `translateY(${snapOffset}px) translateX(0px)` },
+              { transform: `translateY(${snapOffset}px) translateX(-2px)` },
+              { transform: `translateY(${snapOffset}px) translateX(2px)` },
+              { transform: `translateY(${snapOffset}px) translateX(-1px)` },
+              { transform: `translateY(${snapOffset}px) translateX(0px)` }
+            ];
+            stripElement.animate(shakeKeyframes, {
+              duration: 150,
+              easing: 'ease-out'
+            });
           }
+
           
           updateCompletedReel(reelIndex, true);
           
