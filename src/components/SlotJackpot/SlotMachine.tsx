@@ -413,8 +413,8 @@ const SlotMachine: React.FC<SlotMachineProps> = ({
       }
       
       // 🎰 CONFIGURATION PAR ROULEAU
-      // Animation ultra-professionnelle : arrêt séquentiel 1 par 1
-      const fullCycles = 6 + (reelIndex * 1); // 6, 7, 8 tours complets
+      // Animation ultra-professionnelle : arrêt séquentiel 1 par 1, décélération douce
+      const fullCycles = 5 + (reelIndex * 1); // 5, 6, 7 tours complets
       
       // Position finale du symbole gagnant
       const targetOffset = -(finalSymbolIndex * cellSize);
@@ -425,10 +425,10 @@ const SlotMachine: React.FC<SlotMachineProps> = ({
       const distanceToTarget = currentPos - targetOffset;
       const totalDistance = (fullCycles * stripLength) + distanceToTarget;
       
-      // ⚡ DURÉES ÉCHELONNÉES pour arrêt séquentiel visible
-      // Rouleau 1: 2200ms, Rouleau 2: 3000ms (+800ms), Rouleau 3: 3900ms (+900ms)
-      // Chaque rouleau s'arrête clairement APRÈS le précédent
-      const duration = 2200 + (reelIndex * 800);
+      // ⚡ DURÉES ÉCHELONNÉES pour arrêt séquentiel doux et visible
+      // Rouleau 1: 2800ms, Rouleau 2: 3800ms (+1000ms), Rouleau 3: 4900ms (+1100ms)
+      // Décélération progressive plus longue pour effet plus doux
+      const duration = 2800 + (reelIndex * 1000);
       // Pas de délai de démarrage : tous démarrent ensemble, s'arrêtent en cascade
       const startDelay = 0;
 
@@ -451,8 +451,8 @@ const SlotMachine: React.FC<SlotMachineProps> = ({
           const adjustedElapsed = elapsed - startDelay;
           const progress = Math.min(1, adjustedElapsed / duration);
           
-          // 🎰 EASING ULTRA-PROFESSIONNEL TYPE VRAIE MACHINE À SOUS
-          // Basé sur l'analyse de vraies machines : anticipation + plateau + décélération exponentielle
+          // 🎰 EASING ULTRA-PROFESSIONNEL TYPE VRAIE MACHINE À SOUS - VERSION DOUCE
+          // Décélération plus progressive et douce pour un effet premium
           let eased: number;
           
           if (progress < 0.05) {
@@ -463,23 +463,23 @@ const SlotMachine: React.FC<SlotMachineProps> = ({
             // Phase 2 (5-12%): Accélération explosive
             const t = (progress - 0.05) / 0.07;
             eased = t * t * t * 0.15; // Cubic ease-in
-          } else if (progress < 0.78) {
-            // Phase 3 (12-78%): Vitesse maximale constante (66% du temps)
-            const t = (progress - 0.12) / 0.66;
-            eased = 0.15 + (t * 0.70); // Vitesse linéaire élevée
-          } else if (progress < 0.92) {
-            // Phase 4 (78-92%): Décélération initiale progressive
-            const t = (progress - 0.78) / 0.14;
-            const decel = 1 - Math.pow(1 - t, 3); // Ease-out cubic
-            eased = 0.85 + (decel * 0.10);
+          } else if (progress < 0.70) {
+            // Phase 3 (12-70%): Vitesse maximale constante (58% du temps)
+            const t = (progress - 0.12) / 0.58;
+            eased = 0.15 + (t * 0.60); // Vitesse linéaire élevée
+          } else if (progress < 0.88) {
+            // Phase 4 (70-88%): Décélération initiale très progressive (18%)
+            const t = (progress - 0.70) / 0.18;
+            const decel = 1 - Math.pow(1 - t, 2); // Ease-out quadratic (plus doux que cubic)
+            eased = 0.75 + (decel * 0.15);
           } else {
-            // Phase 5 (92-100%): Décélération finale exponentielle + micro-rebond
-            const t = (progress - 0.92) / 0.08;
-            // Courbe exponentielle pour ralentissement dramatique
-            const slowdown = 1 - Math.exp(-5 * t);
-            // Micro-rebond élastique à la fin (overshoot puis settle)
-            const bounce = t > 0.7 ? Math.sin((t - 0.7) * Math.PI * 3) * 0.008 * (1 - t) : 0;
-            eased = 0.95 + (slowdown * 0.05) + bounce;
+            // Phase 5 (88-100%): Décélération finale ultra-douce (12%)
+            const t = (progress - 0.88) / 0.12;
+            // Courbe quadratique pour ralentissement très progressif
+            const slowdown = 1 - Math.pow(1 - t, 2);
+            // Micro-rebond élastique à la fin réduit pour plus de douceur
+            const bounce = t > 0.75 ? Math.sin((t - 0.75) * Math.PI * 2.5) * 0.005 * (1 - t) : 0;
+            eased = 0.90 + (slowdown * 0.10) + bounce;
           }
 
           
