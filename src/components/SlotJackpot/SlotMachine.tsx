@@ -309,7 +309,7 @@ const SlotMachine: React.FC<SlotMachineProps> = ({
     console.log(`🎲 [SlotMachine] Final result computed: ${isWinning ? 'WIN' : 'LOSE'}`, finals);
     console.log('🔒 [SlotMachine] Result locked, calling callbacks with:', finals);
 
-    // Attendre 1 seconde après l'arrêt pour bien voir les symboles finaux avant d'afficher le résultat
+    // Attendre 1.5 secondes après l'arrêt pour bien voir les symboles finaux avant d'afficher le résultat
     resultTimeoutRef.current = window.setTimeout(() => {
       if (isWinning) {
         console.log('🎉 [SlotMachine] Calling onWin after delay with finals:', finals);
@@ -318,7 +318,7 @@ const SlotMachine: React.FC<SlotMachineProps> = ({
         console.log('😔 [SlotMachine] Calling onLose after delay');
         onLose?.();
       }
-    }, 1000);
+    }, 1500);
   }, [onLose, onWin, currentTemplate, symbols]);
 
   const spin = useCallback(async () => {
@@ -413,8 +413,8 @@ const SlotMachine: React.FC<SlotMachineProps> = ({
       }
       
       // 🎰 CONFIGURATION PAR ROULEAU
-      // Animation ultra-professionnelle : arrêt séquentiel 1 par 1, décélération douce
-      const fullCycles = 5 + (reelIndex * 1); // 5, 6, 7 tours complets
+      // Animation ultra-professionnelle : arrêt séquentiel 1 par 1, très lent
+      const fullCycles = 4 + (reelIndex * 1); // 4, 5, 6 tours complets
       
       // Position finale du symbole gagnant
       const targetOffset = -(finalSymbolIndex * cellSize);
@@ -425,10 +425,10 @@ const SlotMachine: React.FC<SlotMachineProps> = ({
       const distanceToTarget = currentPos - targetOffset;
       const totalDistance = (fullCycles * stripLength) + distanceToTarget;
       
-      // ⚡ DURÉES ÉCHELONNÉES pour arrêt séquentiel doux et visible
-      // Rouleau 1: 2800ms, Rouleau 2: 3800ms (+1000ms), Rouleau 3: 4900ms (+1100ms)
-      // Décélération progressive plus longue pour effet plus doux
-      const duration = 2800 + (reelIndex * 1000);
+      // ⚡ DURÉES ÉCHELONNÉES pour arrêt séquentiel très lent et visible
+      // Rouleau 1: 3500ms, Rouleau 2: 5500ms (+2000ms), Rouleau 3: 7500ms (+2000ms)
+      // Décélération progressive très longue pour effet ultra-lent
+      const duration = 3500 + (reelIndex * 2000);
       // Pas de délai de démarrage : tous démarrent ensemble, s'arrêtent en cascade
       const startDelay = 0;
 
