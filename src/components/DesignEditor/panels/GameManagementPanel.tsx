@@ -2,10 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { 
   Plus, 
   Trash2, 
-  Calendar, 
-  Percent,
   RotateCcw,
-  Clock,
   Gift,
   Image,
   Type,
@@ -199,19 +196,6 @@ const GameManagementPanel: React.FC<GameManagementPanelProps> = ({
     });
   };
 
-  const updatePrizes = (newPrizes: Prize[]) => {
-    setCampaign({
-      ...campaign,
-      prizes: newPrizes.map(prize => ({
-        ...prize,
-        // Map GameManagementPanel format to ProbabilityEngine format
-        method: prize.attributionMethod,
-        probabilityPercent: prize.probability,
-        calendarDateTime: prize.calendarDate && prize.calendarTime ? 
-          `${prize.calendarDate}T${prize.calendarTime}` : undefined
-      }))
-    });
-  };
 
   const addSegment = () => {
     const newSegmentIndex = segments.length;
@@ -281,27 +265,6 @@ const GameManagementPanel: React.FC<GameManagementPanelProps> = ({
     event.target.value = '';
   };
 
-  const addPrize = () => {
-    const newPrize: Prize = {
-      id: Date.now().toString(),
-      name: 'Nouveau lot',
-      totalUnits: 1,
-      awardedUnits: 0,
-      method: 'probability',
-      probabilityPercent: 10
-    };
-    updatePrizes([...prizes, newPrize]);
-  };
-
-  const removePrize = (prizeId: string) => {
-    updatePrizes(prizes.filter(p => p.id !== prizeId));
-  };
-
-  const updatePrize = (prizeId: string, updates: Partial<Prize>) => {
-    updatePrizes(prizes.map(p => 
-      p.id === prizeId ? { ...p, ...updates } : p
-    ));
-  };
 
   return (
     <div className="p-6 space-y-6 min-h-full overflow-y-auto text-[hsl(var(--sidebar-text-primary))]">
