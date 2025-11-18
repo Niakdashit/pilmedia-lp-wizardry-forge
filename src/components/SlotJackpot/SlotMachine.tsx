@@ -412,7 +412,7 @@ const SlotMachine: React.FC<SlotMachineProps> = ({
       }
       
       // 🎰 CONFIGURATION PAR ROULEAU
-      // Animation ultra-professionnelle : arrêt séquentiel 1 par 1 avec suspense
+      // Animation ultra-professionnelle : arrêt séquentiel 1 par 1
       const fullCycles = 6 + (reelIndex * 1); // 6, 7, 8 tours complets
       
       // Position finale du symbole gagnant
@@ -424,13 +424,12 @@ const SlotMachine: React.FC<SlotMachineProps> = ({
       const distanceToTarget = currentPos - targetOffset;
       const totalDistance = (fullCycles * stripLength) + distanceToTarget;
       
-      // ⚡ DURÉES SUSPENSE : arrêt séquentiel bien visible avec du drama
-      // Rouleau 1: 3.0s, Rouleau 2: 4.2s (+1.2s), Rouleau 3: 5.6s (+1.4s)
-      // Écarts larges pour maximum de suspense
-      const duration = 3000 + (reelIndex * 1200) + (reelIndex === 2 ? 200 : 0);
+      // ⚡ DURÉES ÉCHELONNÉES pour arrêt séquentiel visible
+      // Rouleau 1: 2200ms, Rouleau 2: 3000ms (+800ms), Rouleau 3: 3900ms (+900ms)
+      // Chaque rouleau s'arrête clairement APRÈS le précédent
+      const duration = 2200 + (reelIndex * 800);
       // Pas de délai de démarrage : tous démarrent ensemble, s'arrêtent en cascade
       const startDelay = 0;
-
 
 
 
