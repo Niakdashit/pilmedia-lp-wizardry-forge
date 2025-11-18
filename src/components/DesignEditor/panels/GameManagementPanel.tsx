@@ -9,8 +9,7 @@ import {
   Gift,
   Image,
   Type,
-  Upload,
-  Gamepad2
+  Upload
 } from 'lucide-react';
 import { supabase } from '../../../integrations/supabase/client';
 import type { Prize as DotationPrize } from '../../../types/dotation';
@@ -19,15 +18,6 @@ interface GameManagementPanelProps {
   campaign: any;
   setCampaign: (campaign: any) => void;
 }
-
-// Types de jeux disponibles
-const GAME_TYPES = [
-  { value: 'wheel', label: 'Roue de la Fortune', icon: '🎡' },
-  { value: 'jackpot', label: 'Jackpot', icon: '🎰' },
-  { value: 'scratch', label: 'Carte à Gratter', icon: '🎫' },
-  { value: 'quiz', label: 'Quiz', icon: '📝' },
-  { value: 'form', label: 'Formulaire', icon: '📋' },
-];
 
 interface WheelSegment {
   id: string;

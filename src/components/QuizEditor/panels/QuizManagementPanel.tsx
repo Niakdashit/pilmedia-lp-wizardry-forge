@@ -38,7 +38,6 @@ const QuizManagementPanel: React.FC<QuizManagementPanelProps> = ({
     || 'image-quiz';
   const selectedTemplate = quizTemplates.find(t => t.id === selectedTemplateId) || quizTemplates[1];
   const showQuestionImageUploader = !!selectedTemplate.hasImage && !selectedTemplate.hasGrid;
-  const showAnswerImageUploader = !!selectedTemplate.hasGrid;
 
   // Get quiz config from campaign
   const quizConfig = campaign?.gameConfig?.quiz || {
