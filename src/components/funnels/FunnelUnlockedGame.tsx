@@ -1,6 +1,7 @@
 // @ts-nocheck
 // FunnelUnlockedGame - Version avec logos/footers collés aux bords (UPDATED)
 import React, { useMemo, useState, useEffect } from 'react';
+import { throttle } from 'lodash-es';
 import { useParticipations } from '../../hooks/useParticipations';
 import { toast } from 'react-toastify';
 import CanvasGameRenderer from './components/CanvasGameRenderer';
@@ -76,25 +77,43 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
   const [participantEmail, setParticipantEmail] = useState<string>('');
   const [participantId, setParticipantId] = useState<string>('');
 
+  // Anti-flicker guards: freeze updates while modal open + debounce updates
+  const isModalOpenRef = React.useRef(false);
+  React.useEffect(() => { isModalOpenRef.current = showFormModal; }, [showFormModal]);
+
+  const safeForceUpdate = React.useMemo(
+    () => throttle(() => { if (!isModalOpenRef.current) setForceUpdate(prev => prev + 1); }, 250, { leading: true, trailing: true }),
+    [],
+  );
+  React.useEffect(() => {
+    return () => {
+      // @ts-ignore
+      safeForceUpdate.cancel?.();
+    };
+  }, [safeForceUpdate]);
+
   // Écouter les mises à jour de style pour forcer le re-render (comme FunnelQuizParticipate)
   React.useEffect(() => {
     const handleStyleUpdate = () => {
+      if (isModalOpenRef.current) return;
       console.log('🔄 [FunnelUnlockedGame] Style update received, forcing re-render');
-      setForceUpdate(prev => prev + 1);
+      safeForceUpdate();
     };
     
     const handleEditorSync = (e: Event) => {
+      if (isModalOpenRef.current) return;
       console.log('🔄 [FunnelUnlockedGame] Editor sync event received:', (e as CustomEvent).detail);
-      setForceUpdate(prev => prev + 1);
+      safeForceUpdate();
     };
     
     const handleFormFieldsSync = (e: Event) => {
+      if (isModalOpenRef.current) return;
       const detail = (e as CustomEvent).detail;
       console.log('📋 [FunnelUnlockedGame] FormFields sync event received:', {
         fieldsCount: detail?.formFields?.length,
         timestamp: detail?.timestamp
       });
-      setForceUpdate(prev => prev + 1);
+      safeForceUpdate();
     };
     
     window.addEventListener('quizStyleUpdate', handleStyleUpdate);
@@ -119,9 +138,10 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
   // Écouter les MAJ d'image de fond (DesignCanvas) pour forcer le re-render du preview
   React.useEffect(() => {
     const handleBgSync = (e: Event) => {
+      if (isModalOpenRef.current) return;
       const detail = (e as CustomEvent<any>)?.detail;
       console.log('🔄 [FunnelUnlockedGame] Background sync event:', detail);
-      setForceUpdate(prev => prev + 1);
+      safeForceUpdate();
     };
     window.addEventListener('sc-bg-sync', handleBgSync);
     window.addEventListener('applyBackgroundAllScreens', handleBgSync);
@@ -138,8 +158,9 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
     const onStorage = (e: StorageEvent) => {
       if (!e.key) return;
       if (e.key.startsWith('sc-bg-')) {
+        if (isModalOpenRef.current) return;
         console.log('🔄 [FunnelUnlockedGame] storage change:', e.key);
-        setForceUpdate(prev => prev + 1);
+        safeForceUpdate();
       }
     };
     window.addEventListener('storage', onStorage);
