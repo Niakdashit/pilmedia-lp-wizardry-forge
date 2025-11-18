@@ -189,6 +189,18 @@ const SlotMachine: React.FC<SlotMachineProps> = ({
       if (!campaignId) {
         return;
       }
+
+      // ⚠️ Ne pas reset la session en plein spin (sinon l'animation est coupée net)
+      if (jackpotSession.spinning || isSpinning) {
+        if ((window as any).__DEBUG_JACKPOT__) {
+          console.log('⏸️ [SlotMachine] Skip session reset on campaign change because spinning', {
+            campaignId,
+            session: { ...jackpotSession },
+          });
+        }
+        return;
+      }
+
       // Reset complet de la session in-memory
       if (jackpotSession.hardTimerId) {
         clearTimeout(jackpotSession.hardTimerId as any);
@@ -199,7 +211,7 @@ const SlotMachine: React.FC<SlotMachineProps> = ({
     } catch {
       // ignore
     }
-  }, [campaign?.id]);
+  }, [campaign?.id, isSpinning]);
   // Initialiser dès le premier render pour éviter tout flash de symboles par défaut
   const initialSetup = useMemo(() => {
     const size = (templateOverride === 'jackpot-4') ? 80 : 70;
