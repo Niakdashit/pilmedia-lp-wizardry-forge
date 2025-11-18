@@ -4,6 +4,10 @@ const jackpotSession = {
   spinning: false,
   hardTimerId: null as number | null,
 };
+
+// UI cache per campaign to avoid flicker on transient remounts
+const jackpotUiCache: Map<string, { reels: string[]; offsets: number[] }> = new Map();
+
 import React, { useState, useCallback, useMemo, useRef } from 'react';
 import { useEditorStore } from '../../stores/editorStore';
 import { jackpotDotationIntegration } from '@/services/JackpotDotationIntegration';
@@ -199,13 +203,24 @@ const SlotMachine: React.FC<SlotMachineProps> = ({
   // Initialiser dès le premier render pour éviter tout flash de symboles par défaut
   const initialSetup = useMemo(() => {
     const size = (templateOverride === 'jackpot-4') ? 80 : 70;
+    const campaignId = String(campaign?.id || 'preview');
+
+    // Use cached UI state if available to prevent flicker on remount
+    const cached = jackpotUiCache.get(campaignId);
+    if (cached && Array.isArray(cached.reels) && Array.isArray(cached.offsets)) {
+      return { reels0: cached.reels, offsets0: cached.offsets };
+    }
+
     const reels0 = [0, 1, 2].map(() => symbols[Math.floor(Math.random() * symbols.length)]);
     const offsets0 = reels0.map((s) => {
       const idx = symbols.indexOf(s);
       return -(Math.max(idx, 0) * size);
     });
+
+    // Prime cache for first render
+    jackpotUiCache.set(campaignId, { reels: reels0, offsets: offsets0 });
     return { reels0, offsets0 };
-  }, [symbols, templateOverride]);
+  }, [symbols, templateOverride, campaign?.id]);
   const [reels, setReels] = useState<string[]>(() => [initialSetup.reels0[0], initialSetup.reels0[1], initialSetup.reels0[2]]);
   const [hasPlayed, setHasPlayed] = useState(false); // Non utilisé pour bloquer désormais
   // Utiliser useRef pour completedReels car setState ne fonctionne pas bien dans requestAnimationFrame
@@ -214,6 +229,14 @@ const SlotMachine: React.FC<SlotMachineProps> = ({
   // Offsets et cibles initialisés après initialSetup pour éviter toute référence précocement
   const [reelOffsets, setReelOffsets] = useState<number[]>(() => [initialSetup.offsets0[0], initialSetup.offsets0[1], initialSetup.offsets0[2]]);
   const targetOffsetsRef = useRef<number[]>([initialSetup.offsets0[0], initialSetup.offsets0[1], initialSetup.offsets0[2]]);
+
+  // Persist UI state in cache to survive transient remounts
+  React.useEffect(() => {
+    try {
+      const campaignId = String(campaign?.id || 'preview');
+      jackpotUiCache.set(campaignId, { reels, offsets: reelOffsets });
+    } catch {}
+  }, [reels, reelOffsets, campaign?.id]);
   
   // 🔒 CRITICAL: Ref séparé pour stocker le résultat final de manière IMMUABLE
   const lockedFinalsRef = useRef<string[] | null>(null);
