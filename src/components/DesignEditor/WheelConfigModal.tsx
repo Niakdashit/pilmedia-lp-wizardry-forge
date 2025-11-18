@@ -9,14 +9,14 @@ interface WheelConfigModalProps {
   wheelBorderWidth: number;
   wheelScale: number;
   wheelShowBulbs?: boolean;
-  wheelPosition?: 'left' | 'right' | 'center';
+  wheelPosition?: 'left' | 'right' | 'center' | 'centerTop';
 
   onBorderStyleChange: (style: string) => void;
   onBorderColorChange: (color: string) => void;
   onBorderWidthChange: (width: number) => void;
   onScaleChange: (scale: number) => void;
   onShowBulbsChange?: (show: boolean) => void;
-  onPositionChange?: (position: 'left' | 'right' | 'center') => void;
+  onPositionChange?: (position: 'left' | 'right' | 'center' | 'centerTop') => void;
 
   selectedDevice: 'desktop' | 'tablet' | 'mobile';
 }
