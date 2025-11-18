@@ -5,6 +5,7 @@ import { useCampaignValidation } from '@/hooks/useCampaignValidation';
 // Align routing with QuizEditor via router adapter
 import { useLocation, useNavigate } from '@/lib/router-adapter';
 import { Save, X } from 'lucide-react';
+import { EditorLoaderDelayed } from '@/components/shared/LoadingBoundary';
 
 const HybridSidebar = lazy(() => import('./HybridSidebar'));
 const DesignToolbar = lazy(() => import('./DesignToolbar'));
@@ -3509,11 +3510,8 @@ useEffect(() => {
   });
 
   return (
-    <Suspense fallback={
-      <div className="min-h-screen w-full flex items-center justify-center" style={{ background: 'linear-gradient(180deg, rgba(59, 56, 135, 0.855), rgba(156, 26, 96, 0.72), rgba(195, 85, 70, 0.775), rgba(156, 26, 96, 0.72))', minHeight: '100vh' }}>
-        <div className="text-white text-lg">Chargement...</div>
-      </div>
-    }>
+    <Suspense fallback={<EditorLoaderDelayed delayMs={250} />}>
+
       <div
         className="min-h-screen w-full"
         style={{
