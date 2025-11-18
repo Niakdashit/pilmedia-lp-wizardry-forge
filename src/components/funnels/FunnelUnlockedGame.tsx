@@ -1208,17 +1208,7 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
             )}
             </div>
             
-            {/* Modal de formulaire - À L'INTÉRIEUR du background pour rester dans le cadre */}
-            <FormHandler
-              showFormModal={showFormModal}
-              campaign={campaign}
-              fields={fields}
-              participationLoading={participationLoading}
-              onClose={() => setShowFormModal(false)}
-              onSubmit={handleFormSubmit}
-              launchButtonStyles={launchButtonStyles}
-              usePortal={false}
-            />
+            {/* Form modal removed here to avoid duplicate mounts and flicker */}
           </div>
         </div>
       </div>
