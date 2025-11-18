@@ -64,4 +64,20 @@ const Jackpot: React.FC<JackpotProps> = ({
   );
 };
 
-export default React.memo(Jackpot);
+export default React.memo(Jackpot, (prev, next) => {
+  // Stable if campaign id and template stay the same, and symbols content identical
+  const prevId = prev.campaign?.id || (useEditorStore.getState?.()?.campaign?.id);
+  const nextId = next.campaign?.id || (useEditorStore.getState?.()?.campaign?.id);
+  const prevTpl = prev.campaign?.gameConfig?.jackpot?.template || prev.campaign?.jackpotConfig?.template;
+  const nextTpl = next.campaign?.gameConfig?.jackpot?.template || next.campaign?.jackpotConfig?.template;
+  const a = prev.symbols || prev.campaign?.gameConfig?.jackpot?.slotMachineSymbols || prev.campaign?.gameConfig?.jackpot?.symbols;
+  const b = next.symbols || next.campaign?.gameConfig?.jackpot?.slotMachineSymbols || next.campaign?.gameConfig?.jackpot?.symbols;
+  const symEqual = Array.isArray(a) && Array.isArray(b)
+    ? a.length === b.length && a.every((v, i) => v === b[i])
+    : a === b;
+  return prev.isPreview === next.isPreview
+    && prev.disabled === next.disabled
+    && prevId === nextId
+    && prevTpl === nextTpl
+    && symEqual;
+});
