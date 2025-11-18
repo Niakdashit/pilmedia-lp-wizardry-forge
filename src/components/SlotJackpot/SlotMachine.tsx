@@ -391,9 +391,7 @@ const SlotMachine: React.FC<SlotMachineProps> = ({
     const lockedFinals = [...finals];
 
     // 🎰 ANIMATION RÉALISTE AVEC DÉCALAGES
-    // Chaque rouleau a sa propre durée et son propre délai de démarrage
-    const durations = [2000, 2600, 3200]; // Durées progressives
-    const startDelays = [0, 150, 300]; // Délais de démarrage décalés (en ms)
+    // Chaque rouleau a sa propre durée et son propre délai de démarrage (définis plus bas)
     const cellSize = (currentTemplate === 'jackpot-4') ? 80 : 70;
     const stripLength = symbols.length * cellSize;
 
@@ -414,8 +412,8 @@ const SlotMachine: React.FC<SlotMachineProps> = ({
       }
       
       // 🎰 CONFIGURATION PAR ROULEAU
-      // Chaque rouleau fait un nombre différent de tours pour plus de variété
-      const fullCycles = 10 + (reelIndex * 2); // 10, 12, 14 tours
+      // Chaque rouleau fait un nombre différent de tours pour plus de suspense
+      const fullCycles = 12 + (reelIndex * 3); // 12, 15, 18 tours (plus de rotations = plus de suspense)
       
       // Position finale du symbole gagnant
       const targetOffset = -(finalSymbolIndex * cellSize);
@@ -425,8 +423,10 @@ const SlotMachine: React.FC<SlotMachineProps> = ({
       const currentPos = startOffsets[reelIndex];
       const distanceToTarget = currentPos - targetOffset;
       const totalDistance = (fullCycles * stripLength) + distanceToTarget;
-      const duration = durations[reelIndex];
-      const startDelay = startDelays[reelIndex];
+      // Durées plus longues pour plus de suspense (4s, 4.6s, 5.2s)
+      const duration = 4000 + (reelIndex * 600);
+      // Délais de démarrage plus espacés (0ms, 300ms, 600ms)
+      const startDelay = reelIndex * 300;
 
       // 🎰 DÉLAI DE DÉMARRAGE pour effet cascade
       const startAnimation = () => {
@@ -445,16 +445,25 @@ const SlotMachine: React.FC<SlotMachineProps> = ({
           const adjustedElapsed = elapsed - startDelay;
           const progress = Math.min(1, adjustedElapsed / duration);
           
-          // 🎰 EASING ULTRA-SIMPLE pour fluidité maximale
-          // Vitesse constante puis décélération douce
+          // 🎰 EASING RÉALISTE TYPE MACHINE À SOUS
+          // Phase 1: Accélération rapide (0-10%)
+          // Phase 2: Vitesse maximale constante (10-70%)
+          // Phase 3: Décélération progressive dramatique (70-100%)
           let eased: number;
-          if (progress < 0.85) {
-            // 85% du temps: vitesse linéaire constante
-            eased = progress;
+          if (progress < 0.1) {
+            // Accélération rapide (easeOutCubic)
+            const t = progress / 0.1;
+            eased = t * t * t * 0.1;
+          } else if (progress < 0.7) {
+            // Vitesse constante élevée
+            const t = (progress - 0.1) / 0.6;
+            eased = 0.1 + (t * 0.6);
           } else {
-            // 15% final: décélération douce (easeOutQuad)
-            const t = (progress - 0.85) / 0.15;
-            eased = 0.85 + (0.15 * (1 - (1 - t) * (1 - t)));
+            // Décélération dramatique (easeOutQuart avec effet de "settling")
+            const t = (progress - 0.7) / 0.3;
+            // Courbe en 4 phases pour ralentissement progressif
+            const easeOut = 1 - Math.pow(1 - t, 4);
+            eased = 0.7 + (0.3 * easeOut);
           }
           
           // 🎰 ANIMATION CONTINUE SANS MODULO (pas de saut)
