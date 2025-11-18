@@ -390,10 +390,10 @@ const SlotMachine: React.FC<SlotMachineProps> = ({
     // Sauvegarder aussi dans une variable locale pour l'animation
     const lockedFinals = [...finals];
 
-    // 🎰 ANIMATION RÉALISTE AVEC DÉCALAGES
+    // 🎰 ANIMATION RÉALISTE AVEC DÉCALAGES (Style Casino Pro)
     // Chaque rouleau a sa propre durée et son propre délai de démarrage
-    const durations = [2000, 2600, 3200]; // Durées progressives
-    const startDelays = [0, 150, 300]; // Délais de démarrage décalés (en ms)
+    const durations = [3500, 4500, 5500]; // Durées plus longues pour effet pro
+    const startDelays = [0, 200, 400]; // Délais de démarrage cascade
     const cellSize = (currentTemplate === 'jackpot-4') ? 80 : 70;
     const stripLength = symbols.length * cellSize;
 
@@ -445,16 +445,17 @@ const SlotMachine: React.FC<SlotMachineProps> = ({
           const adjustedElapsed = elapsed - startDelay;
           const progress = Math.min(1, adjustedElapsed / duration);
           
-          // 🎰 EASING ULTRA-SIMPLE pour fluidité maximale
-          // Vitesse constante puis décélération douce
+          // 🎰 EASING PRO STYLE CASINO
+          // Vitesse constante puis décélération progressive et réaliste
           let eased: number;
-          if (progress < 0.85) {
-            // 85% du temps: vitesse linéaire constante
+          if (progress < 0.75) {
+            // 75% du temps: vitesse linéaire constante (rapide)
             eased = progress;
           } else {
-            // 15% final: décélération douce (easeOutQuad)
-            const t = (progress - 0.85) / 0.15;
-            eased = 0.85 + (0.15 * (1 - (1 - t) * (1 - t)));
+            // 25% final: décélération progressive (easeOutCubic pour effet naturel)
+            const t = (progress - 0.75) / 0.25;
+            const deceleration = 1 - Math.pow(1 - t, 3);
+            eased = 0.75 + (0.25 * deceleration);
           }
           
           // 🎰 ANIMATION CONTINUE SANS MODULO (pas de saut)
