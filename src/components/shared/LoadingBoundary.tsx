@@ -31,8 +31,19 @@ const DefaultLoader: React.FC<{ minHeight?: string }> = ({ minHeight = '400px' }
 
 /**
  * Boundary Suspense réutilisable avec fallback personnalisable
- * Améliore l'UX pendant le chargement des composants lazy
+ * Ajoute un léger délai pour éviter les clignotements lors de suspensions très courtes
  */
+const DelayedFallback: React.FC<{ delayMs?: number; children: React.ReactNode }> = ({ delayMs = 200, children }) => {
+  const [ready, setReady] = React.useState(delayMs === 0);
+  React.useEffect(() => {
+    if (delayMs === 0) return;
+    const t = setTimeout(() => setReady(true), delayMs);
+    return () => clearTimeout(t);
+  }, [delayMs]);
+  if (!ready) return null;
+  return <>{children}</>;
+};
+
 export const LoadingBoundary: React.FC<LoadingBoundaryProps> = ({
   children,
   fallback,
@@ -42,17 +53,20 @@ export const LoadingBoundary: React.FC<LoadingBoundaryProps> = ({
   return (
     <Suspense
       fallback={
-        fallback || (
-          <div className={className}>
-            <DefaultLoader minHeight={minHeight} />
-          </div>
-        )
+        <DelayedFallback>
+          {fallback || (
+            <div className={className}>
+              <DefaultLoader minHeight={minHeight} />
+            </div>
+          )}
+        </DelayedFallback>
       }
     >
       {children}
     </Suspense>
   );
 };
+
 
 /**
  * HOC pour wrapper automatiquement un composant lazy avec LoadingBoundary
@@ -93,6 +107,14 @@ export const EditorLoader: React.FC = () => (
     </div>
   </div>
 );
+
+// Variante avec délai anti-clignotement
+export const EditorLoaderDelayed: React.FC<{ delayMs?: number }> = ({ delayMs = 200 }) => (
+  <DelayedFallback delayMs={delayMs}>
+    <EditorLoader />
+  </DelayedFallback>
+);
+
 
 /**
  * Loader minimal pour les petits composants
