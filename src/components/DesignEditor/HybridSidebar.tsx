@@ -615,13 +615,18 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
 
   // Fermeture spécifique pour le mode mobile/portrait (overlay ou swipe)
   const handleCloseActiveTab = () => {
-    setInternalActiveTab(null);
+    // Fermer l’onglet côté état interne + parent (activeTab)
+    setActiveTab(null);
+
+    // Fermer tous les panneaux temporaires
     onEffectsPanelChange?.(false);
     onAnimationsPanelChange?.(false);
     onPositionPanelChange?.(false);
     onQuizPanelChange?.(false);
     onWheelPanelChange?.(false);
     onDesignPanelChange?.(false);
+
+    // Désélectionner le module sélectionné
     onSelectedModuleChange?.(null);
   };
 
