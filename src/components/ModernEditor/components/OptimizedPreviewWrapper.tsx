@@ -20,13 +20,11 @@ const OptimizedPreviewWrapper: React.FC<OptimizedPreviewWrapperProps> = memo(({
   // Précharge les images dès que la campagne est disponible
   usePreloadCampaignImages(campaign);
 
-  // Affichage optimisé avec transition
+  // Affichage stable sans transition qui cause des clignotements
   const wrapperStyle = useMemo(() => ({
-    opacity: campaign && !isLoading ? 1 : 0,
-    transition: 'opacity 0.15s ease-in',
     width: '100%',
     height: '100%'
-  }), [campaign, isLoading]);
+  }), []);
 
   return (
     <div className={className} style={wrapperStyle}>
