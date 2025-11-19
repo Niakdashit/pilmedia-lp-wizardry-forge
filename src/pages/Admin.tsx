@@ -87,7 +87,6 @@ const Admin: React.FC = () => {
     <div className="min-h-screen bg-background">
       <PageHeader 
         title="Administration"
-        className="mt-4"
       >
         <p className="text-base text-muted-foreground">Gestion de la plateforme</p>
       </PageHeader>

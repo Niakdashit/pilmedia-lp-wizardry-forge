@@ -49,7 +49,6 @@ export default function Partnerships() {
     <div className="min-h-screen bg-background">
       <PageHeader 
         title="Partenariats"
-        className="mt-4"
       >
         <p className="text-base text-muted-foreground max-w-3xl">
           Mettez en relation votre entreprise avec des médias exclusivement en échange de marchandises. Dotations concours contre visibilité.
