@@ -386,8 +386,8 @@ export class WheelConfigService {
       return result;
     }
 
-    // Cas 1: Position "center" => conserver l'ancien découpage (croppé en bas) pour tous les devices
-    if ((position === 'center' || position === undefined) || device !== 'desktop') {
+    // Cas 1: Position "center" ou non définie => découpage centré (ancienne logique)
+    if (position === 'center' || position === undefined) {
       const base = 'absolute bottom-0 transform translate-y-1/3 overflow-hidden pointer-events-none';
       const centerClass = 'left-1/2 -translate-x-1/2';
       const result = {
@@ -402,7 +402,7 @@ export class WheelConfigService {
       return result;
     }
 
-    // Cas 2: Desktop + position "centerTop" => roue centrée verticalement et horizontalement (pleine hauteur visible)
+    // Cas 2: Position "centerTop" => roue centrée verticalement et horizontalement (pleine hauteur visible)
     if (position === 'centerTop') {
       const base = 'absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2';
       const result = {
