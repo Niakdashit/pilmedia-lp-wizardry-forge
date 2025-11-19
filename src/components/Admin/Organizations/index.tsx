@@ -66,11 +66,11 @@ export const AdminOrganizations: React.FC = () => {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="flex-1">
-          <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
+          <h2 className="text-2xl font-bold text-foreground flex items-center gap-3">
             <Building2 className="w-8 h-8 text-primary" />
             Gestion des organisations
           </h2>
-          <p className="text-gray-600 mt-1">
+          <p className="text-muted-foreground mt-1">
             Créez et gérez les organisations de votre plateforme
           </p>
         </div>
@@ -97,12 +97,12 @@ export const AdminOrganizations: React.FC = () => {
             onInviteMember={() => setShowInviteModal(true)}
           />
         ) : (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 flex flex-col items-center justify-center text-center">
-            <Building2 className="w-20 h-20 text-gray-300 mb-4" />
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">
+          <div className="bg-card rounded-xl shadow-sm border border-border p-12 flex flex-col items-center justify-center text-center">
+            <Building2 className="w-20 h-20 text-muted-foreground mb-4" />
+            <h3 className="text-xl font-semibold text-foreground mb-2">
               Sélectionnez une organisation
             </h3>
-            <p className="text-gray-500">
+            <p className="text-muted-foreground">
               Cliquez sur une organisation pour voir ses détails et gérer ses membres
             </p>
           </div>
