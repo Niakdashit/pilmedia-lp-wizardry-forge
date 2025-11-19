@@ -88,11 +88,26 @@ const ScratchCard: React.FC<ScratchCardProps> = ({
     }
   };
 
+  // Déterminer le style de bordure selon cardShape
+  const getBorderRadiusClass = () => {
+    switch (cardShape) {
+      case 'square':
+        return 'rounded-none';
+      case 'circle':
+        return 'rounded-full';
+      case 'rounded':
+      default:
+        return 'rounded-xl';
+    }
+  };
+
+  const borderRadiusClass = getBorderRadiusClass();
+
   if (!gameStarted) {
     return (
       <div className="flex flex-col items-center w-full">
         <div
-          className="relative rounded-xl overflow-hidden border-2 border-gray-200 shadow-sm bg-white"
+          className={`relative overflow-hidden border-2 border-gray-200 shadow-sm bg-white ${borderRadiusClass}`}
           style={{
             width: `${width}px`,
             height: `${height}px`,
@@ -128,7 +143,7 @@ const ScratchCard: React.FC<ScratchCardProps> = ({
 
       {/* Carte à gratter */}
       <div 
-        className={`relative rounded-xl overflow-hidden border-2 transition-all duration-200 shadow-lg bg-white ${
+        className={`relative overflow-hidden border-2 transition-all duration-200 shadow-lg bg-white ${borderRadiusClass} ${
           isSelected 
             ? 'border-[#44444d] shadow-xl ring-2 ring-[#44444d]/20' 
             : selectable && !locked
