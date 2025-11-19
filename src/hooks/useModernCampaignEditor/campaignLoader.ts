@@ -303,10 +303,13 @@ export const loadCampaign = async (
           ...(existingCampaignType === 'jackpot' && existingCampaign.game_config?.jackpot ? { jackpot: existingCampaign.game_config.jackpot } : {})
         },
         
-        // 🎯 CRITICAL: Restore wheel segments configuration (labels, colors, prize assignments)
-        // This ensures segment names like "ON GAGNE" and prize assignments are restored
-        wheelConfig: existingCampaign.game_config?.wheel || existingCampaign.wheelConfig || {
-          segments: existingCampaign.game_config?.wheelSegments || []
+        // 🎯 CRITICAL: Restore wheel configuration (segments + layout options like position)
+        wheelConfig: {
+          ...(existingCampaign.game_config?.wheel || existingCampaign.wheelConfig || {
+            segments: existingCampaign.game_config?.wheelSegments || []
+          }),
+          // ✅ Ensure we also restore layout options stored in design.wheelConfig (eg. position, showBulbs)
+          ...(existingCampaign.design?.wheelConfig || {})
         },
         
         // 🎰 CRITICAL: Restore jackpot configuration (symbols, prize mappings)
