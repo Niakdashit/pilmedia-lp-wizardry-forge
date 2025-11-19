@@ -95,7 +95,7 @@ const ScratchCard: React.FC<ScratchCardProps> = ({
         return 'rounded-none';
       case 'circle':
         return 'rounded-full';
-      case 'rounded':
+      case 'vertical-rectangle':
       default:
         return 'rounded-xl';
     }

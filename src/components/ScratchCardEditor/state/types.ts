@@ -27,7 +27,7 @@ export type ScratchCard = {
   revealed?: boolean;     // lecture seule
 };
 
-export type CardShape = 'vertical-rectangle';
+export type CardShape = 'vertical-rectangle' | 'square' | 'circle';
 
 export type GridSettings = { 
   rows: number; 
