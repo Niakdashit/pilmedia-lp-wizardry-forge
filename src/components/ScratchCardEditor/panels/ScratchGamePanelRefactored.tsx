@@ -223,6 +223,39 @@ const ScratchGamePanelRefactored: React.FC<ScratchGamePanelProps> = ({
                   />
                 </div>
 
+                {/* Épaisseur de la bordure */}
+                <div>
+                  <label className="block text-sm font-medium text-[hsl(var(--sidebar-text-primary))] mb-2">
+                    Épaisseur de la bordure (px)
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="20"
+                    value={scratchConfig.grid?.borderWidth ?? 2}
+                    onChange={(e) => updateStoreGrid({ borderWidth: parseInt(e.target.value) || 0 })}
+                    className="w-full px-3 py-2 text-sm border border-[hsl(var(--sidebar-border))] rounded-md bg-[hsl(var(--sidebar-bg))] text-[hsl(var(--sidebar-text-primary))]"
+                  />
+                </div>
+
+                {/* Couleur de la bordure */}
+                <div>
+                  <label className="block text-sm font-medium text-[hsl(var(--sidebar-text-primary))] mb-2">
+                    Couleur de la bordure
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="color"
+                      value={scratchConfig.grid?.borderColor ?? '#e5e7eb'}
+                      onChange={(e) => updateStoreGrid({ borderColor: e.target.value })}
+                      className="w-12 h-10 border border-[hsl(var(--sidebar-border))] rounded cursor-pointer"
+                    />
+                    <span className="text-sm text-[hsl(var(--sidebar-text-secondary))]">
+                      {scratchConfig.grid?.borderColor ?? '#e5e7eb'}
+                    </span>
+                  </div>
+                </div>
+
                 {/* Rayon de bordure */}
                 <div>
                   <label className="block text-sm font-medium text-[hsl(var(--sidebar-text-primary))] mb-2">
