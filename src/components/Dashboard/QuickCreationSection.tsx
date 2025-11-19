@@ -11,6 +11,8 @@ const shortcutIconMap: Record<string, string> = {
   memory: '/gamification/shortcuts/memory.svg',
   puzzle: '/gamification/shortcuts/puzzle.svg',
   form: '/gamification/shortcuts/form.svg',
+  swiper: '/gamification/shortcuts/swiper.svg',
+  webeditor: '/gamification/shortcuts/webeditor.svg',
   // alias for the new Advanced entry
   advanced: '/gamification/shortcuts/advanced_v2.svg',
 };
@@ -42,6 +44,12 @@ const QuickCreationSection: React.FC = () => {
   }, {
     type: 'form',
     label: 'Formulaire'
+  }, {
+    type: 'swiper',
+    label: 'Swiper'
+  }, {
+    type: 'webeditor',
+    label: 'Web Editor'
   }, {
     type: 'advanced',
     label: 'Avancé'
@@ -104,6 +112,13 @@ const QuickCreationSection: React.FC = () => {
                     <span className="mt-2 text-sm font-medium text-gray-700 group-hover:text-[#44444d] transition-colors text-center drop-shadow-sm">{game.label}</span>
                   </>
                 );
+                
+                const getRoute = (type: string) => {
+                  if (type === 'swiper') return '/swiper-editor';
+                  if (type === 'webeditor') return '/web-editor';
+                  return `/quick-campaign?type=${type}`;
+                };
+                
                 return game.type === 'advanced' ? (
                   <button
                     key={game.type}
@@ -117,7 +132,7 @@ const QuickCreationSection: React.FC = () => {
                 ) : (
                   <Link
                     key={game.type}
-                    to={`/quick-campaign?type=${game.type}`}
+                    to={getRoute(game.type)}
                     className="flex flex-col items-center group cursor-pointer opacity-0 animate-fade-in"
                     style={{ animationDelay: `${index * 0.1}s`, animationFillMode: 'forwards' }}
                   >
@@ -144,6 +159,13 @@ const QuickCreationSection: React.FC = () => {
                       <span className="mt-2 text-sm font-medium text-gray-700 group-hover:text-[#44444d] transition-colors text-center drop-shadow-sm">{game.label}</span>
                     </>
                   );
+                  
+                  const getRoute = (type: string) => {
+                    if (type === 'swiper') return '/swiper-editor';
+                    if (type === 'webeditor') return '/web-editor';
+                    return `/quick-campaign?type=${type}`;
+                  };
+                  
                   return game.type === 'advanced' ? (
                     <button
                       key={game.type}
@@ -157,7 +179,7 @@ const QuickCreationSection: React.FC = () => {
                   ) : (
                     <Link
                       key={game.type}
-                      to={`/quick-campaign?type=${game.type}`}
+                      to={getRoute(game.type)}
                       className="flex flex-col items-center group cursor-pointer opacity-0 animate-fade-in flex-shrink-0"
                       style={{ animationDelay: `${index * 0.1}s`, animationFillMode: 'forwards' }}
                     >

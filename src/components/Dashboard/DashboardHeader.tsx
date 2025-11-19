@@ -23,12 +23,28 @@ const DashboardHeader: React.FC = () => {
     type: 'form',
     label: 'Formulaire'
   }, {
+    type: 'swiper' as any,
+    label: 'Swiper'
+  }, {
+    type: 'webeditor' as any,
+    label: 'Web Editor'
+  }, {
     // New advanced shortcut (opens modal)
     type: 'advanced' as any,
     label: 'Avancé'
   }];
 
   const handleGameTypeClick = (type: GameType['type']) => {
+    // Routes directes pour Swiper et WebEditor
+    if (type === 'swiper' as any) {
+      window.location.href = '/swiper-editor';
+      return;
+    }
+    if (type === 'webeditor' as any) {
+      window.location.href = '/web-editor';
+      return;
+    }
+    
     setSelectedEditorType(type);
     setIsModalOpen(true);
   };
@@ -55,6 +71,8 @@ const DashboardHeader: React.FC = () => {
                   scratch: '/gamification/shortcuts/scratch.svg',
                   jackpot: '/gamification/shortcuts/jackpot.svg',
                   form: '/gamification/shortcuts/form.svg',
+                  swiper: '/gamification/shortcuts/swiper.svg',
+                  webeditor: '/gamification/shortcuts/webeditor.svg',
                   advanced: '/gamification/shortcuts/advanced_v2.svg'
                 };
                 const onClick = () => {
@@ -99,6 +117,8 @@ const DashboardHeader: React.FC = () => {
                     scratch: '/gamification/shortcuts/scratch.svg',
                     jackpot: '/gamification/shortcuts/jackpot.svg',
                     form: '/gamification/shortcuts/form.svg',
+                    swiper: '/gamification/shortcuts/swiper.svg',
+                    webeditor: '/gamification/shortcuts/webeditor.svg',
                     advanced: '/gamification/shortcuts/advanced_v2.svg'
                   };
                   const onClick = () => {
