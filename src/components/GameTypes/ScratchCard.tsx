@@ -110,6 +110,25 @@ const ScratchCard: React.FC<ScratchCardProps> = ({
   };
 
   const borderRadiusClass = getBorderRadiusClass();
+  
+  // Gérer les styles de bordure
+  const borderConfig = config?.scratchConfig?.grid?.border;
+  const getBorderStyles = () => {
+    if (!borderConfig) return {};
+    
+    const { type, color, width: borderWidth } = borderConfig;
+    
+    if (type === 'external') {
+      return {
+        boxShadow: `0 0 0 ${borderWidth}px ${color}`
+      };
+    } else {
+      // internal
+      return {
+        boxShadow: `inset 0 0 0 ${borderWidth}px ${color}`
+      };
+    }
+  };
 
   if (!gameStarted) {
     return (
@@ -120,7 +139,8 @@ const ScratchCard: React.FC<ScratchCardProps> = ({
             width: `${width}px`,
             height: `${height}px`,
             minWidth: `${width}px`,
-            minHeight: `${height}px`
+            minHeight: `${height}px`,
+            ...getBorderStyles()
           }}
         >
           <ScratchCardContent
@@ -163,7 +183,8 @@ const ScratchCard: React.FC<ScratchCardProps> = ({
           height: `${height}px`,
           minWidth: `${width}px`,
           minHeight: `${height}px`,
-          pointerEvents: locked ? 'none' : 'auto'
+          pointerEvents: locked ? 'none' : 'auto',
+          ...getBorderStyles()
         }}
         onClick={handleCardClick}
       >
