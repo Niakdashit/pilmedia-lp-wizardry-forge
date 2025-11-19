@@ -39,7 +39,6 @@ const MediaPortal: React.FC = () => {
     <div className="min-h-screen bg-background">
       <PageHeader 
         title="Espace Média"
-        size="default"
       >
         <p className="text-base text-muted-foreground">{partnerLoading ? 'Chargement du profil média…' : partner?.name || 'Profil média non configuré'}</p>
       </PageHeader>
