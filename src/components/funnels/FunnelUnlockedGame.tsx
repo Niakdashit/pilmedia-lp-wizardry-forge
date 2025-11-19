@@ -293,10 +293,26 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
     if (!bg) {
       return { type: 'color', value: '#ffffff' };
     }
+
     if (typeof bg === 'string') {
+      if (!bg.trim()) {
+        return { type: 'color', value: '#ffffff' };
+      }
       return { type: 'color', value: bg };
     }
+
     if (typeof bg === 'object') {
+      // Support new structure with devices.desktop
+      const deviceBg = bg.devices?.desktop || bg.devices?.mobile || bg.devices?.tablet;
+      if (deviceBg && typeof deviceBg === 'object') {
+        if ((deviceBg.type === 'color' || deviceBg.type === 'image') && typeof deviceBg.value === 'string' && deviceBg.value) {
+          return { type: deviceBg.type, value: deviceBg.value };
+        }
+        if (deviceBg.url) {
+          return { type: 'image', value: deviceBg.url };
+        }
+      }
+
       if (bg.type === 'color' || bg.type === 'image') {
         if (typeof bg.value === 'string' && bg.value) {
           return { type: bg.type, value: bg.value };
@@ -306,9 +322,9 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
         }
       }
     }
+
     return { type: 'color', value: '#ffffff' };
   };
-
   function getStoredZoom(device: 'desktop' | 'tablet' | 'mobile'): number | undefined {
     if (typeof window === 'undefined') {
       return undefined;
