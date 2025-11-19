@@ -225,11 +225,13 @@ export class WheelConfigService {
       },
 
       // Segments provenant de la campagne avec couleurs mises à jour
-      // PRIORITÉ: gameConfig.wheelSegments (sauvegarde principale) > wheelConfig.segments > gameConfig.wheel.segments > config.roulette.segments
+      // PRIORITÉ CORRIGÉE: game_config.wheelSegments (BDD) > gameConfig.wheelSegments (store) > autres sources
       segments: WheelConfigService.updateSegmentColors(
-        (campaign as any)?.gameConfig?.wheelSegments
-          || (campaign as any)?.wheelConfig?.segments
+        (campaign as any)?.game_config?.wheelSegments
+          || (campaign as any)?.gameConfig?.wheelSegments
+          || (campaign as any)?.game_config?.wheel?.segments
           || (campaign as any)?.gameConfig?.wheel?.segments
+          || (campaign as any)?.wheelConfig?.segments
           || (campaign as any)?.config?.roulette?.segments,
         extractedColors
       ),
