@@ -148,11 +148,30 @@ const StandardizedWheel: React.FC<StandardizedWheelProps> = ({
     return bulbs;
   }, [campaign?.design?.wheelConfig, wheelConfig.showBulbs]);
 
+  // Détection de la présence d'un pied de page
+  const hasFooter = useMemo(() => {
+    return WheelConfigService.detectFooterModule(campaign);
+  }, [campaign?.design?.modularPage]);
+
   // Styles de découpage
-  const croppingStyles = useMemo(
-    () => WheelConfigService.getWheelCroppingStyles(shouldCropWheel, wheelPosition, device as 'desktop' | 'tablet' | 'mobile'),
-    [shouldCropWheel, wheelPosition, device]
-  );
+  const croppingStyles = useMemo(() => {
+    const effectivePosition = (device === 'mobile' || device === 'tablet') && hasFooter
+      ? 'centerTop'
+      : wheelPosition;
+
+    console.log('🎯 [StandardizedWheel] Cropping position with footer:', {
+      device,
+      wheelPosition,
+      hasFooter,
+      effectivePosition
+    });
+
+    return WheelConfigService.getWheelCroppingStyles(
+      shouldCropWheel,
+      effectivePosition as 'center' | 'left' | 'right' | 'centerTop',
+      device as 'desktop' | 'tablet' | 'mobile'
+    );
+  }, [shouldCropWheel, wheelPosition, device, hasFooter]);
 
   // Resolve spin props from props -> campaign/config -> defaults
   const resolvedSpinMode: 'random' | 'instant_winner' | 'probability' =
