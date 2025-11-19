@@ -37,6 +37,7 @@ export const MobileBottomSidebarLayout: React.FC<MobileBottomSidebarLayoutProps>
       {internalActiveTab && (
         <div
           className="fixed inset-0 z-40 flex flex-col"
+          onClick={onCloseActiveTab}
         >
           {/* Overlay semi-transparent cliquable pour fermer */}
           <div 
