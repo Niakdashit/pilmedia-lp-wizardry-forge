@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <defs>
+    <linearGradient id="swiperGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#6366f1;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#8b5cf6;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Fond arrondi avec dégradé -->
+  <rect x="5" y="5" width="90" height="90" rx="20" fill="url(#swiperGrad)" opacity="0.1"/>
+  
+  <!-- Cartes en cascade représentant le swipe -->
+  <g transform="translate(25, 20)">
+    <!-- Carte arrière (gris clair) -->
+    <rect x="10" y="10" width="40" height="50" rx="8" fill="#e5e7eb" opacity="0.5"/>
+    
+    <!-- Carte du milieu -->
+    <rect x="5" y="5" width="40" height="50" rx="8" fill="#c7d2fe" opacity="0.7"/>
+    
+    <!-- Carte avant (gradient principal) -->
+    <rect x="0" y="0" width="40" height="50" rx="8" fill="url(#swiperGrad)"/>
+    
+    <!-- Flèches de swipe -->
+    <g transform="translate(20, 25)">
+      <!-- Flèche gauche -->
+      <path d="M -15 0 L -10 -5 L -10 -2 L -5 -2 L -5 2 L -10 2 L -10 5 Z" fill="white" opacity="0.8"/>
+      
+      <!-- Flèche droite -->
+      <path d="M 15 0 L 10 5 L 10 2 L 5 2 L 5 -2 L 10 -2 L 10 -5 Z" fill="white" opacity="0.8"/>
+    </g>
+  </g>
+  
+  <!-- Ligne de swipe animée (suggestion de mouvement) -->
+  <path d="M 20 85 Q 50 80 80 85" stroke="url(#swiperGrad)" stroke-width="3" fill="none" opacity="0.6" stroke-linecap="round"/>
+</svg>
