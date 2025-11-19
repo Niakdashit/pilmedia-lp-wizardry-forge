@@ -117,31 +117,18 @@ const ScratchCard: React.FC<ScratchCardProps> = ({
   
   const getBorderStyles = () => {
     if (!borderConfig) {
-      console.log('[ScratchCard] No border config, using default');
-      return { border: '2px solid #e5e7eb' };
+      console.log('[ScratchCard] No border config, using no extra border');
+      return {};
     }
-    
-    const { type, color, width: borderWidth } = borderConfig;
-    console.log('[ScratchCard] Border styles:', { type, color, borderWidth });
-    
-    if (type === 'external') {
-      // Outline externe - toujours visible au-dessus du contenu
-      return {
-        outline: `${borderWidth}px solid ${color}`,
-        outlineOffset: '0px',
-        position: 'relative' as const,
-        zIndex: 10
-      };
-    } else {
-      // Contour interne - utilise box-shadow inset pour être visible au-dessus du canvas
-      return {
-        boxShadow: `inset 0 0 0 ${borderWidth}px ${color}`,
-        position: 'relative' as const,
-        zIndex: 10
-      };
-    }
-  };
 
+    const { color, width: borderWidth } = borderConfig;
+    console.log('[ScratchCard] Applying card border:', { color, borderWidth });
+
+    return {
+      border: `${borderWidth}px solid ${color}`,
+      boxSizing: 'border-box' as const
+    };
+  };
   if (!gameStarted) {
     return (
       <div className="flex flex-col items-center w-full">
