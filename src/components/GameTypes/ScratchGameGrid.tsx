@@ -20,6 +20,7 @@ interface ScratchGameGridProps {
     cardShape?: string;
   };
   maxCards?: number;
+  allCardsScratching?: boolean; // Nouveau: toutes les cartes sont grattables directement
 }
 
 const ScratchGameGrid: React.FC<ScratchGameGridProps> = ({
@@ -34,7 +35,8 @@ const ScratchGameGrid: React.FC<ScratchGameGridProps> = ({
   config,
   isModal = false,
   gridConfig,
-  maxCards
+  maxCards,
+  allCardsScratching = false
 }) => {
   const effectiveCards = maxCards ? cards.slice(0, maxCards) : cards;
   const resolvedCols = Math.max(1, gridConfig?.cols || effectiveCards.length);
@@ -57,9 +59,10 @@ const ScratchGameGrid: React.FC<ScratchGameGridProps> = ({
         {effectiveCards.map((card: any, index: number) => {
           const isThisCardSelected = selectedCard === index;
           
-          const isLocked = gameStarted && scratchStarted && !isThisCardSelected;
-          const isSelectable = gameStarted && !scratchStarted && selectedCard === null;
-          const canScratch = gameStarted && isThisCardSelected;
+          // Mode "toutes les cartes grattables" : pas de verrouillage ni sélection
+          const isLocked = allCardsScratching ? false : (gameStarted && scratchStarted && !isThisCardSelected);
+          const isSelectable = allCardsScratching ? false : (gameStarted && !scratchStarted && selectedCard === null);
+          const canScratch = allCardsScratching ? gameStarted : (gameStarted && isThisCardSelected);
 
           return (
             <div key={card.id || index} className="flex justify-center items-center">

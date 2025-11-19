@@ -43,8 +43,6 @@ const ScratchPreview: React.FC<ScratchPreviewProps> = ({
   const [gameStarted, setGameStarted] = useState(false);
   const [finishedCards, setFinishedCards] = useState<Set<number>>(new Set());
   const [hasWon, setHasWon] = useState(false);
-  const [selectedCard, setSelectedCard] = useState<number | null>(null);
-  const [scratchStarted, setScratchStarted] = useState(false);
   const [showResult, setShowResult] = useState(false);
   // 🎯 Résultat du système de dotation
   const [dotationResult, setDotationResult] = useState<any>(null);
@@ -109,19 +107,13 @@ const ScratchPreview: React.FC<ScratchPreviewProps> = ({
   };
 
   const handleCardSelect = (index: number) => {
-    // Only allow selection if no scratch has started and no card is selected
-    if (!scratchStarted && selectedCard === null) {
-      setSelectedCard(index);
-    }
+    // Mode multi-cartes grattables : pas de sélection nécessaire
+    return;
   };
 
   const handleScratchStart = (index: number) => {
-    // Only allow scratch to start on the selected card and if no scratch has started yet
-    if (selectedCard === index && !scratchStarted) {
-      setScratchStarted(true);
-      localStorage.setItem(STORAGE_KEY, index.toString());
-      localStorage.setItem(SCRATCH_STARTED_KEY, 'true');
-    }
+    // Mode multi-cartes grattables : toutes les cartes peuvent être grattées directement
+    return;
   };
 
   const handleCardFinish = (result: 'win' | 'lose', cardIndex: number) => {
@@ -169,7 +161,11 @@ const ScratchPreview: React.FC<ScratchPreviewProps> = ({
   // ✅ INTERFACE DE DÉMARRAGE : respecte le funnel unlocked
   if (!gameStarted) {
     return (
-      <div className="w-full h-full flex flex-col bg-gradient-to-br from-gray-50 to-gray-100">
+      <div className="w-full h-full flex flex-col" style={{ 
+        background: config?.globalCover?.type === 'color' 
+          ? config.globalCover.value 
+          : 'linear-gradient(to bottom right, rgb(249, 250, 251), rgb(243, 244, 246))'
+      }}>
         {/* Zone d'aperçu des cartes - prend tout l'espace disponible */}
         <div className="flex-1 w-full h-full">
         <ScratchGameGrid
@@ -185,6 +181,7 @@ const ScratchPreview: React.FC<ScratchPreviewProps> = ({
           isModal={isModal}
           gridConfig={config?.grid}
           maxCards={maxCards}
+          allCardsScratching={true}
         />
         </div>
 
@@ -218,7 +215,11 @@ const ScratchPreview: React.FC<ScratchPreviewProps> = ({
   }
 
   return (
-    <div className="w-full h-full flex flex-col bg-gradient-to-br from-gray-50 to-gray-100">
+    <div className="w-full h-full flex flex-col" style={{ 
+      background: config?.globalCover?.type === 'color' 
+        ? config.globalCover.value 
+        : 'linear-gradient(to bottom right, rgb(249, 250, 251), rgb(243, 244, 246))'
+    }}>
       {/* Zone de jeu - prend tout l'espace disponible */}
       <div className="flex-1 w-full h-full">
         <ScratchGameGrid
@@ -228,12 +229,13 @@ const ScratchPreview: React.FC<ScratchPreviewProps> = ({
           onCardFinish={handleCardFinish}
           onCardSelect={handleCardSelect}
           onScratchStart={handleScratchStart}
-          selectedCard={selectedCard}
-          scratchStarted={scratchStarted}
+          selectedCard={null}
+          scratchStarted={true}
           config={config}
           isModal={isModal}
           gridConfig={config?.grid}
           maxCards={maxCards}
+          allCardsScratching={true}
         />
       </div>
 
