@@ -1,7 +1,8 @@
 
-import { StrictMode, Suspense, lazy } from 'react';
+import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import ErrorBoundary from './components/common/ErrorBoundary';
+import App from './App.tsx';
 import './index.css';
 
 // Vite doesn't provide process.env by default in the browser.
@@ -32,25 +33,12 @@ if (!rootElement) {
   throw new Error('Root element not found');
 }
 
-const App = lazy(() => import('./App.tsx'));
-
-const LoadingSplash = () => (
-  <div className="flex items-center justify-center w-full h-screen bg-gray-100">
-    <div className="text-center">
-      <div className="w-16 h-16 border-4 border-t-4 border-gray-200 rounded-full animate-spin border-t-blue-600 mx-auto"></div>
-      <p className="mt-4 text-gray-700">Loading application...</p>
-    </div>
-  </div>
-);
-
 const root = createRoot(rootElement);
 
 root.render(
   <StrictMode>
     <ErrorBoundary>
-      <Suspense fallback={<LoadingSplash />}>
-        <App />
-      </Suspense>
+      <App />
     </ErrorBoundary>
   </StrictMode>
 );
