@@ -150,7 +150,7 @@ const ScratchPreview: React.FC<ScratchPreviewProps> = ({
 
   // Ensure we have at least one card with proper defaults
   const configuredCards = Array.isArray(scratchConfig?.cards) ? scratchConfig.cards : [];
-  const maxCards = typeof scratchConfig?.grid?.maxCards === 'number' ? scratchConfig.grid.maxCards : configuredCards.length;
+  const maxCards = typeof scratchConfig?.maxCards === 'number' ? scratchConfig.maxCards : configuredCards.length;
   const cards = configuredCards.length > 0
     ? configuredCards.slice(0, Math.max(1, maxCards || configuredCards.length))
     : [{
