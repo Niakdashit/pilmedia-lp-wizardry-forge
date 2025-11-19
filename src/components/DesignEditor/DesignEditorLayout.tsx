@@ -665,34 +665,12 @@ useEffect(() => {
   // Note: Le zoom mobile est maintenant fixe à 100% pour correspondre au mode preview
   // L'ancien code qui ajustait automatiquement le zoom lors du redimensionnement a été supprimé
 
-  // 🔄 MIGRATION AUTOMATIQUE : Recalcule le scaling mobile (-48.2%) pour les modules existants
-  const [hasRecalculated, setHasRecalculated] = useState(false);
-  useEffect(() => {
-    // PROTECTION: Ne pas recalculer si l'utilisateur a déjà fait des modifications
-    // Cela évite d'écraser les changements utilisateur avec des valeurs recalculées
-    const hasUserModifications = canvasElements.some(el => el?._userModified === true) ||
-                                (campaignState as any)?._hasUserModifications === true;
-
-    if (hasUserModifications) {
-      console.log('⏭️ [Migration Canvas] Skipping recalculation - user has made modifications');
-      setHasRecalculated(true);
-      return;
-    }
-
-    // Recalculer les éléments canvas (si présents)
-    if (canvasElements.length > 0 && !hasRecalculated) {
-      console.log('🔄 [Migration Canvas] Recalcul automatique du scaling mobile pour', canvasElements.length, 'éléments...');
-      const recalculated = recalculateAllElements(canvasElements, 'desktop');
-      setCanvasElements(recalculated);
-      setHasRecalculated(true);
-      console.log('✅ [Migration Canvas] Scaling recalculé avec succès !');
-    }
-
-    // NOTE: La migration automatique des modules (modularPage) a été désactivée
-    // car elle provoquait des clignotements visuels lors du rechargement de la page
-    // en mode plein écran. Les campagnes existantes restent fonctionnelles et les
-    // nouveaux ajustements se feront via les outils de mise en page classiques.
-  }, [canvasElements.length, hasRecalculated]);
+  // 🚫 MIGRATION AUTOMATIQUE DÉSACTIVÉE
+  // L'ancien script de migration qui recalculait automatiquement le scaling
+  // des éléments existants provoquait des clignotements/vibrations à
+  // l'ouverture des campagnes. On le désactive complètement pour garder
+  // un rendu stable.
+  const [hasRecalculated] = useState(true);
   
   // Référence pour le canvas
   const canvasRef = useRef<HTMLDivElement>(null);
