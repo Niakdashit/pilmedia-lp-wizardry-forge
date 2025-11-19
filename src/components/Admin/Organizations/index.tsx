@@ -64,8 +64,8 @@ export const AdminOrganizations: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="flex-1">
           <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
             <Building2 className="w-8 h-8 text-primary" />
             Gestion des organisations
@@ -76,7 +76,7 @@ export const AdminOrganizations: React.FC = () => {
         </div>
         <button
           onClick={() => setShowCreateModal(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors font-medium"
+          className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors font-medium shadow-lg whitespace-nowrap"
         >
           <Plus className="w-5 h-5" />
           Nouvelle organisation
