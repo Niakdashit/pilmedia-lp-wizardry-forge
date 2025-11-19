@@ -688,30 +688,11 @@ useEffect(() => {
       console.log('✅ [Migration Canvas] Scaling recalculé avec succès !');
     }
 
-    // Recalculer les modules modulaires (modularPage)
-    const allModules = (Object.values(modularPage.screens) as Module[][]).flat();
-    if (allModules.length > 0 && !hasRecalculated) {
-      console.log('🔄 [Migration Modules] Recalcul automatique du scaling mobile pour', allModules.length, 'modules...');
-      const recalculatedModules = recalculateAllElements(allModules as any[], 'desktop');
-      
-      // Reconstruire modularPage avec les modules recalculés
-      const nextScreens: ModularPage['screens'] = { ...modularPage.screens };
-      let moduleIndex = 0;
-      
-      (Object.keys(nextScreens) as ScreenId[]).forEach((screenId) => {
-        const screenModules = nextScreens[screenId] || [];
-        nextScreens[screenId] = screenModules.map(() => {
-          const recalculated = recalculatedModules[moduleIndex];
-          moduleIndex++;
-          return recalculated as Module;
-        });
-      });
-      
-      setModularPage({ screens: nextScreens, _updatedAt: Date.now() });
-      setHasRecalculated(true);
-      console.log('✅ [Migration Modules] Scaling recalculé avec succès !');
-    }
-  }, [canvasElements.length, modularPage.screens.screen1?.length, modularPage.screens.screen2?.length, modularPage.screens.screen3?.length, hasRecalculated]);
+    // NOTE: La migration automatique des modules (modularPage) a été désactivée
+    // car elle provoquait des clignotements visuels lors du rechargement de la page
+    // en mode plein écran. Les campagnes existantes restent fonctionnelles et les
+    // nouveaux ajustements se feront via les outils de mise en page classiques.
+  }, [canvasElements.length, hasRecalculated]);
   
   // Référence pour le canvas
   const canvasRef = useRef<HTMLDivElement>(null);
