@@ -1,100 +1,70 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { LoadingBoundary, MinimalLoader } from '@/components/shared/LoadingBoundary';
-import { supabase } from '@/integrations/supabase/client';
+import { useParams } from 'react-router-dom';
 import PreviewRenderer from '@/components/preview/PreviewRenderer';
 import { useCampaignView } from '@/hooks/useCampaignView';
 import { isTempCampaignId } from '@/utils/tempCampaignId';
+import { useFastCampaignLoader } from '@/hooks/useFastCampaignLoader';
 
-const PublicCampaign: React.FC = () => {
+const PublicCampaignPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
-  const [campaign, setCampaign] = useState<any | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [isReady, setIsReady] = useState(false);
   
   // 🎯 Track campaign view with rich data (only for real campaigns)
   const shouldTrack = id && !isTempCampaignId(id);
   const { trackInteraction } = useCampaignView(shouldTrack ? id : '');
 
+  // 🚀 Fast campaign loader with cache and image preloading
+  const { campaign, isLoading } = useFastCampaignLoader({
+    campaignId: id || null,
+    enabled: !!id && !isTempCampaignId(id)
+  });
+
   useEffect(() => {
-    let mounted = true;
-    const load = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        if (!id) throw new Error('Aucune campagne');
-        
-        // 🚫 Détecter les IDs temporaires
-        if (isTempCampaignId(id)) {
-          console.log('⚠️ Temp campaign detected in public URL');
-          setError('Cette campagne est un brouillon temporaire non publié. Veuillez la sauvegarder depuis l\'éditeur pour obtenir une URL publique.');
-          setLoading(false);
-          return;
-        }
-        
-        // Fetch campaign directly from Supabase to bypass cache and check visibility
-        const { data, error: fetchError } = await supabase
-          .from('campaigns')
-          .select('*')
-          .eq('id', id)
-          .single();
-        
-        if (fetchError) throw fetchError;
-        if (!mounted) return;
-        
-        if (!data) {
-          setError('Campagne introuvable');
-        } else {
-          // Check if campaign is publicly accessible
-          // Explicitly: true = public, false = private, undefined = public (default)
-          const config = data.config as any;
-          const isPublic = config?.isPublic !== false;
-          console.log('🔒 Public access check:', { campaignId: id, isPublic, configValue: config?.isPublic });
-          
-          // Check if campaign has ended (status or end_date)
-          const now = new Date();
-          const endDate = data.end_date ? new Date(data.end_date) : null;
-          const hasEnded = data.status === 'ended' || (endDate && endDate < now);
-          
-          if (!isPublic || hasEnded) {
-            setError('Cette campagne est désormais terminée');
-          } else {
-            setCampaign(data);
-            // 📊 Track successful campaign load (only for real campaigns)
-            if (shouldTrack) {
-              trackInteraction('click', { 
-                action: 'campaign_loaded', 
-                campaign_name: data.name,
-                campaign_type: data.type 
-              });
-            }
-          }
-        }
-      } catch (e: any) {
-        setError(e?.message || 'Erreur lors du chargement');
-        // 📊 Track error (only for real campaigns)
+    if (!id) {
+      setError('Aucune campagne');
+      return;
+    }
+
+    // 🚫 Detect temporary IDs
+    if (isTempCampaignId(id)) {
+      console.log('⚠️ Temp campaign detected in public URL');
+      setError('Cette campagne est un brouillon temporaire non publié. Veuillez la sauvegarder depuis l\'éditeur pour obtenir une URL publique.');
+      return;
+    }
+
+    if (!isLoading && campaign) {
+      // Check if campaign is publicly accessible
+      const config = campaign.config as any;
+      const isPublic = config?.isPublic !== false;
+      
+      // Check if campaign has ended
+      const now = new Date();
+      const endDate = campaign.end_date ? new Date(campaign.end_date) : null;
+      const hasEnded = campaign.status === 'ended' || (endDate && endDate < now);
+      
+      if (!isPublic || hasEnded) {
+        setError('Cette campagne est désormais terminée');
+      } else {
+        // 📊 Track successful campaign load
         if (shouldTrack) {
           trackInteraction('click', { 
-            action: 'campaign_load_error', 
-            error: e?.message 
+            action: 'campaign_loaded', 
+            campaign_name: campaign.name,
+            campaign_type: campaign.type 
           });
         }
-      } finally {
-        if (mounted) setLoading(false);
+        // Wait a bit for images to be preloaded, then show everything at once
+        setTimeout(() => setIsReady(true), 100);
       }
-    };
-    load();
-    return () => { mounted = false; };
-  }, [id, shouldTrack, navigate]); // trackInteraction intentionally omitted to avoid infinite re-fetch loop
+    } else if (!isLoading && !campaign) {
+      setError('Campagne introuvable');
+    }
+  }, [id, campaign, isLoading, shouldTrack]);
 
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <MinimalLoader />
-      </div>
-    );
+  // Show nothing while loading (browser default behavior)
+  if (isLoading || (!isReady && !error)) {
+    return null;
   }
 
   if (error || !campaign) {
@@ -105,23 +75,16 @@ const PublicCampaign: React.FC = () => {
     );
   }
 
-  // Choix du rendu public: mode article => ArticleFunnelView, sinon PreviewRenderer (desktop)
+  // Render campaign with everything preloaded
   const editorMode = (campaign as any)?.editorMode || (campaign as any)?.editor_mode || 'fullscreen';
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: editorMode === 'article' ? '#2c2c35' : undefined }}>
-        {/* Unified public rendering using PreviewRenderer for all modes */}
-        <div className="w-full min-h-screen">
-          <PreviewRenderer campaign={campaign} previewMode="desktop" />
-        </div>
+      <div className="w-full min-h-screen">
+        <PreviewRenderer campaign={campaign} previewMode="desktop" />
+      </div>
     </div>
   );
 };
 
-export default function PublicCampaignPage() {
-  return (
-    <LoadingBoundary>
-      <PublicCampaign />
-    </LoadingBoundary>
-  );
-}
+export default PublicCampaignPage;
