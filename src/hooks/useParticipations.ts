@@ -85,12 +85,34 @@ export const useParticipations = () => {
         throw new Error(`Validation failed: ${validation.error.message}`);
       }
 
-      // 4. Préparer les données avec sécurité
+      // 4. Préparer les données avec sécurité et métriques enrichies
+      const ua = navigator.userAgent;
+      let device_type = 'desktop';
+      let browser = 'unknown';
+      let os = 'unknown';
+
+      if (/mobile/i.test(ua)) device_type = 'mobile';
+      else if (/tablet|ipad/i.test(ua)) device_type = 'tablet';
+
+      if (ua.includes('Chrome')) browser = 'Chrome';
+      else if (ua.includes('Safari')) browser = 'Safari';
+      else if (ua.includes('Firefox')) browser = 'Firefox';
+      else if (ua.includes('Edge')) browser = 'Edge';
+
+      if (ua.includes('Windows')) os = 'Windows';
+      else if (ua.includes('Mac')) os = 'macOS';
+      else if (ua.includes('Linux')) os = 'Linux';
+      else if (ua.includes('Android')) os = 'Android';
+      else if (ua.includes('iOS') || ua.includes('iPhone') || ua.includes('iPad')) os = 'iOS';
+
       const participationData = {
         ...validation.data,
         ip_address: ipAddress, // ✅ Vraie IP (plus de hardcode)
         user_agent: navigator.userAgent,
-        device_fingerprint: deviceFingerprint, // ✅ Nouveau
+        device_type, // ✅ Device type
+        browser, // ✅ Browser
+        os, // ✅ OS
+        referrer: document.referrer || undefined, // ✅ Referrer
       };
 
       console.log('💾 [useParticipations] Inserting participation with security data...');

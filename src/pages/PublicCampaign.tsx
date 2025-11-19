@@ -3,12 +3,16 @@ import { useParams } from 'react-router-dom';
 import { LoadingBoundary, MinimalLoader } from '@/components/shared/LoadingBoundary';
 import { supabase } from '@/integrations/supabase/client';
 import PreviewRenderer from '@/components/preview/PreviewRenderer';
+import { useCampaignView } from '@/hooks/useCampaignView';
 
 const PublicCampaign: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [campaign, setCampaign] = useState<any | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // 🎯 Track campaign view with rich data
+  const { trackInteraction } = useCampaignView(id || '');
 
   useEffect(() => {
     let mounted = true;
@@ -46,17 +50,28 @@ const PublicCampaign: React.FC = () => {
             setError('Cette campagne est désormais terminée');
           } else {
             setCampaign(data);
+            // 📊 Track successful campaign load
+            trackInteraction('click', { 
+              action: 'campaign_loaded', 
+              campaign_name: data.name,
+              campaign_type: data.type 
+            });
           }
         }
       } catch (e: any) {
         setError(e?.message || 'Erreur lors du chargement');
+        // 📊 Track error
+        trackInteraction('click', { 
+          action: 'campaign_load_error', 
+          error: e?.message 
+        });
       } finally {
         if (mounted) setLoading(false);
       }
     };
     load();
     return () => { mounted = false; };
-  }, [id]);
+  }, [id, trackInteraction]);
 
   if (loading) {
     return (
