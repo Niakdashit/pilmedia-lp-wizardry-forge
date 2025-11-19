@@ -71,9 +71,9 @@ const ScratchGamePanelRefactored: React.FC<ScratchGamePanelProps> = ({
 
   const shapeOptions = [
     { value: 'vertical-rectangle', label: 'Rectangle' },
-    { value: 'square', label: 'Carré' },
-    { value: 'circle', label: 'Cercle' }
+    { value: 'square', label: 'Carré' }
   ];
+
 
   return (
     <div className="flex h-full min-h-0 flex-col bg-[hsl(var(--sidebar-bg))]">
