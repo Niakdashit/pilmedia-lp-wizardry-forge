@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Handshake, TrendingUp, Users, Award } from 'lucide-react';
 import { useMediaPartners } from '@/hooks/useMediaPartners';
 import Spinner from '@/components/shared/Spinner';
+import PageHeader from '@/components/Layout/PageHeader';
 
 export default function Partnerships() {
   const navigate = useNavigate();
@@ -46,22 +47,18 @@ export default function Partnerships() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Hero Section */}
-      <div className="bg-card border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="flex items-center gap-4 mb-4">
-            <div className="p-3 bg-accent rounded-2xl">
-              <Handshake className="w-8 h-8 text-accent-foreground" />
-            </div>
-            <h1 className="text-4xl font-bold text-foreground">Partenariats</h1>
-          </div>
-          <p className="text-lg text-muted-foreground max-w-3xl mb-8">
-            Mettez en relation votre entreprise avec des médias exclusivement en échange de marchandises. 
-            Dotations concours contre visibilité.
-          </p>
+      <PageHeader 
+        title="Partenariats"
+        size="default"
+      >
+        <p className="text-base text-muted-foreground max-w-3xl">
+          Mettez en relation votre entreprise avec des médias exclusivement en échange de marchandises. Dotations concours contre visibilité.
+        </p>
+      </PageHeader>
 
-          {/* Stats rapides */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        {/* Stats rapides */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <div className="bg-accent/50 border rounded-xl p-6">
               <div className="flex items-center gap-4">
                 <div className="p-3 bg-card rounded-lg shadow-sm border">
@@ -99,10 +96,9 @@ export default function Partnerships() {
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Contenu principal */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Filtres et liste */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Filtres */}
         <div className="mb-6 flex flex-col md:flex-row gap-4">
           <div className="flex-1">
