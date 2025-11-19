@@ -66,7 +66,7 @@ export const AdminOrganizations: React.FC = () => {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="flex-1">
-          <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
+          <h2 className="title-canva-sm text-gray-900 flex items-center gap-3">
             <Building2 className="w-8 h-8 text-primary" />
             Gestion des organisations
           </h2>
