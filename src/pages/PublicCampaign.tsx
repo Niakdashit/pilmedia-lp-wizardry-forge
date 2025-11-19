@@ -86,7 +86,8 @@ const PublicCampaign: React.FC = () => {
     };
     load();
     return () => { mounted = false; };
-  }, [id, shouldTrack, trackInteraction, navigate]);
+  }, [id, shouldTrack, navigate]); // trackInteraction intentionally omitted to avoid infinite re-fetch loop
+
 
   if (loading) {
     return (
