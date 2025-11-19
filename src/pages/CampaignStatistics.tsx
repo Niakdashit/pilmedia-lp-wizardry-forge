@@ -185,16 +185,21 @@ const CampaignStatistics: React.FC = () => {
       : 0;
     const engagementRate = participationRate;
     
-    // Données temporelles (derniers 30 jours)
-    const viewsOverTime = aggregateByDate(views || [], 'created_at');
+    // 📊 Données temporelles (depuis views avec viewed_at)
+    const viewsOverTime = aggregateByDate(views || [], 'viewed_at');
     const participationsOverTime = aggregateByDate(participations || [], 'created_at');
     
-    // Devices
-    const deviceBreakdown = aggregateByField(participations, 'user_agent', (ua) => {
-      if (/mobile/i.test(ua)) return 'Mobile';
-      if (/tablet|ipad/i.test(ua)) return 'Tablet';
-      return 'Desktop';
-    });
+    // 📊 Devices - Utiliser les nouvelles colonnes enrichies
+    const deviceBreakdown = aggregateByField(
+      views.filter(v => v.device_type), 
+      'device_type'
+    );
+    
+    // 📊 Browsers - Nouvelle métrique
+    const browserBreakdown = aggregateByField(
+      views.filter(v => v.browser),
+      'browser'
+    );
     
     // Locations (simulé pour l'instant)
     const locationBreakdown = [
@@ -210,6 +215,24 @@ const CampaignStatistics: React.FC = () => {
     // Prizes
     const prizesAwarded = aggregatePrizes(participations);
     
+    // 📊 Nouvelles métriques enrichies
+    const avgTimeOnPage = views.length > 0
+      ? views.reduce((sum, v) => sum + (v.time_on_page || 0), 0) / views.length
+      : 0;
+    
+    const avgScrollDepth = views.length > 0
+      ? views.reduce((sum, v) => sum + (v.max_scroll_depth || 0), 0) / views.length
+      : 0;
+    
+    console.log('📊 [Stats] Enriched metrics:', {
+      totalViews,
+      totalParticipations,
+      deviceBreakdown,
+      browserBreakdown,
+      avgTimeOnPage: Math.round(avgTimeOnPage) + 's',
+      avgScrollDepth: Math.round(avgScrollDepth) + '%'
+    });
+    
     return {
       totalViews,
       totalParticipations,
@@ -223,8 +246,8 @@ const CampaignStatistics: React.FC = () => {
       participationsOverTime,
       deviceBreakdown,
       locationBreakdown,
-      uniqueIPs: securityStats?.unique_ips || 0,
-      uniqueDevices: securityStats?.unique_devices || 0,
+      uniqueIPs: new Set(views.map(v => v.ip_address).filter(Boolean)).size,
+      uniqueDevices: new Set(views.map(v => v.user_agent).filter(Boolean)).size,
       blockedAttempts: securityStats?.blocked_attempts || 0,
       formFields,
       prizesAwarded,
