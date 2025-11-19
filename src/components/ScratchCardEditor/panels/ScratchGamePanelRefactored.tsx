@@ -60,7 +60,21 @@ const ScratchGamePanelRefactored: React.FC<ScratchGamePanelProps> = ({
   }, [scratchConfig, setCampaign]);
 
   const toggleSection = (section: keyof typeof expandedSections) => {
-    setExpandedSections(prev => ({ ...prev, [section]: !prev[section] }));
+    setExpandedSections(prev => {
+      const isCurrentlyOpen = prev[section];
+      // Fermer toutes les sections
+      const allClosed = {
+        grid: false,
+        scratch: false,
+        cards: false,
+        appearance: false
+      };
+      // Si la section était fermée, l'ouvrir (sinon tout reste fermé)
+      if (!isCurrentlyOpen) {
+        allClosed[section] = true;
+      }
+      return allClosed;
+    });
   };
 
   const gridOptions = [
