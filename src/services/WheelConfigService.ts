@@ -142,6 +142,33 @@ export class WheelConfigService {
   }
 
   /**
+   * Détecte la présence d'un module BlocPiedDePage dans la campagne
+   */
+  private static detectFooterModule(campaign: any): boolean {
+    try {
+      // Vérifier dans le système modularisé (design.modularPage)
+      const modularPage = campaign?.design?.modularPage;
+      if (modularPage) {
+        // Vérifier tous les écrans (screen1, screen2, screen3)
+        const allScreens = ['screen1', 'screen2', 'screen3'];
+        for (const screenId of allScreens) {
+          const modules = modularPage[screenId];
+          if (Array.isArray(modules)) {
+            const hasFooter = modules.some((m: any) => m?.type === 'BlocPiedDePage');
+            if (hasFooter) {
+              return true;
+            }
+          }
+        }
+      }
+      return false;
+    } catch (error) {
+      console.warn('⚠️ [WheelConfigService] Error detecting footer:', error);
+      return false;
+    }
+  }
+
+  /**
    * Récupère la configuration canonique de la roue
    * Applique les priorités : wheelModalConfig > extractedColors > design > defaults
    */
@@ -187,6 +214,14 @@ export class WheelConfigService {
         (campaign as any)?.config?.roulette?.position,
  
     };
+
+    // 🔒 Détection automatique du footer : si un module BlocPiedDePage existe, forcer position centerTop
+    const hasFooter = this.detectFooterModule(campaign);
+    if (hasFooter && !modalConfig.position) {
+      // Seulement forcer si l'utilisateur n'a pas explicitement changé la position dans la modal
+      designConfig.position = 'centerTop';
+      console.log('🔒 [WheelConfigService] Footer détecté → Position forcée à centerTop');
+    }
 
     // Déterminer si une image de fond est utilisée (le type de background peut varier)
     const bg: any = campaign?.design?.background as any;
