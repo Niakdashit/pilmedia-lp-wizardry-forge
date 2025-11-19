@@ -109,7 +109,7 @@ export const DEFAULT_SCRATCH_CONFIG: ScratchCardState = {
     rows: 1,
     cols: 4,
     gap: 20,
-    borderRadius: 24,
+    borderRadius: 10,
     cardShape: 'vertical-rectangle', // Default to rectangle
     borderWidth: 2, // Default border width
     borderColor: '#e5e7eb' // Default border color (gray-200)
@@ -123,7 +123,7 @@ export const DEFAULT_SCRATCH_CONFIG: ScratchCardState = {
   maxCards: 4,
   globalCover: {
     type: 'color',
-    value: '#D9B7A4',
+    value: '#f0ebeb',
     opacity: 1
   },
   globalReveal: {
