@@ -292,9 +292,7 @@ const TermsOfService: React.FC = () => {
               Pour toute question concernant ces conditions générales d'utilisation :
             </p>
             <div className="space-y-2">
-              <p className="text-sm"><strong>Email :</strong> <a href="mailto:legal@example.com" className="text-primary hover:underline">legal@example.com</a></p>
-              <p className="text-sm"><strong>Adresse :</strong> [Adresse complète]</p>
-              <p className="text-sm"><strong>Téléphone :</strong> [Numéro de téléphone]</p>
+              <p className="text-sm"><strong>Email :</strong> <a href="mailto:contact@prosplay.fr" className="text-primary hover:underline">contact@prosplay.fr</a></p>
             </div>
           </section>
         </div>
