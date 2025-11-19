@@ -6,6 +6,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import StandardizedWheel from '../shared/StandardizedWheel';
 import TemplatedSwiper from '../shared/TemplatedSwiper';
 import TemplatedQuiz from '../shared/TemplatedQuiz';
+import SlotMachine from '../SlotJackpot/SlotMachine';
 import DynamicContactForm, { type FieldConfig } from '../forms/DynamicContactForm';
 import Modal from '../common/Modal';
 import { useMessageStore } from '@/stores/messageStore';
@@ -509,11 +510,22 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
   const handleParticipate = () => {
     console.log('🎮 [PreviewRenderer] handleParticipate called!');
     console.log('🎮 [PreviewRenderer] Current screen before:', currentScreen);
+    
     // 📊 Track game start
     trackInteraction('game_start', { 
       campaign_type: campaign?.type,
       screen: 'screen1' 
     });
+    
+    // Pour le mode article, afficher le formulaire au lieu de passer à screen2
+    const isArticleMode = (campaign as any)?.editorMode === 'article' || (campaign as any)?.editor_mode === 'article';
+    if (isArticleMode) {
+      console.log('🎮 [PreviewRenderer] Article mode detected, showing form');
+      setShowContactForm(true);
+      return;
+    }
+    
+    // Pour les autres modes, passer à screen2
     manualNavRef.current = true;
     setCurrentScreen('screen2');
     console.log('🎮 [PreviewRenderer] setCurrentScreen("screen2") called');
@@ -571,9 +583,16 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
     
     setShowContactForm(false);
     setHasSubmittedForm(true);
-    // For quiz, transition to result screen after form submission
-    // For other game types (wheel, scratch, etc.), just close the modal
-    if (campaign?.type === 'quiz') {
+    
+    // En mode article, passer au jeu (screen2) après le formulaire
+    const isArticleMode = (campaign as any)?.editorMode === 'article' || (campaign as any)?.editor_mode === 'article';
+    
+    if (isArticleMode) {
+      console.log('🎮 [PreviewRenderer] Article mode: moving to game (screen2)');
+      manualNavRef.current = true;
+      setCurrentScreen('screen2');
+    } else if (campaign?.type === 'quiz') {
+      // For quiz, transition to result screen after form submission
       console.log('➡️ [PreviewRenderer] Quiz form submitted, moving to screen3');
       setCurrentScreen('screen3');
     } else {
@@ -1014,7 +1033,7 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
                     </>
                   )}
 
-                  {/* Quiz / Swiper game */}
+                  {/* Quiz / Swiper / Jackpot game */}
                   {campaign.type === 'quiz'
                     ? (
                       <TemplatedQuiz
@@ -1026,6 +1045,28 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
                           console.log('🎯 [PreviewRenderer] Quiz completed');
                           setTimeout(() => {
                             handleGameFinish('win');
+                          }, 1000);
+                        }}
+                      />
+                    )
+                    : campaign.type === 'jackpot'
+                    ? (
+                      <SlotMachine
+                        campaign={campaign}
+                        disabled={false}
+                        useDotationSystem={true}
+                        participantEmail={participantEmail}
+                        participantId={participantId}
+                        onWin={(finals) => {
+                          console.log('🎰 [PreviewRenderer] Jackpot WIN:', finals);
+                          setTimeout(() => {
+                            handleGameFinish('win');
+                          }, 1000);
+                        }}
+                        onLose={() => {
+                          console.log('🎰 [PreviewRenderer] Jackpot LOSE');
+                          setTimeout(() => {
+                            handleGameFinish('lose');
                           }, 1000);
                         }}
                       />
