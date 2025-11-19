@@ -598,6 +598,51 @@ export type Database = {
           },
         ]
       }
+      data_processing_log: {
+        Row: {
+          action_description: string | null
+          action_type: string
+          created_at: string
+          data_after: Json | null
+          data_before: Json | null
+          id: string
+          ip_address: unknown
+          performed_by: string | null
+          record_id: string | null
+          table_name: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action_description?: string | null
+          action_type: string
+          created_at?: string
+          data_after?: Json | null
+          data_before?: Json | null
+          id?: string
+          ip_address?: unknown
+          performed_by?: string | null
+          record_id?: string | null
+          table_name: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action_description?: string | null
+          action_type?: string
+          created_at?: string
+          data_after?: Json | null
+          data_before?: Json | null
+          id?: string
+          ip_address?: unknown
+          performed_by?: string | null
+          record_id?: string | null
+          table_name?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       dotation_configs: {
         Row: {
           anti_fraud: Json | null
@@ -735,6 +780,57 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      gdpr_requests: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          error_message: string | null
+          export_expires_at: string | null
+          export_url: string | null
+          id: string
+          ip_address: unknown
+          processed_at: string | null
+          request_type: string
+          requested_at: string
+          status: string
+          updated_at: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          error_message?: string | null
+          export_expires_at?: string | null
+          export_url?: string | null
+          id?: string
+          ip_address?: unknown
+          processed_at?: string | null
+          request_type: string
+          requested_at?: string
+          status?: string
+          updated_at?: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          error_message?: string | null
+          export_expires_at?: string | null
+          export_url?: string | null
+          id?: string
+          ip_address?: unknown
+          processed_at?: string | null
+          request_type?: string
+          requested_at?: string
+          status?: string
+          updated_at?: string
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
       }
       media_ad_placements: {
         Row: {
@@ -1246,6 +1342,57 @@ export type Database = {
           },
         ]
       }
+      user_consents: {
+        Row: {
+          analytics_consent: boolean | null
+          consent_date: string
+          consent_method: string
+          consent_version: string
+          created_at: string
+          functional_consent: boolean | null
+          id: string
+          ip_address: unknown
+          marketing_consent: boolean | null
+          personalization_consent: boolean | null
+          session_id: string | null
+          updated_at: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          analytics_consent?: boolean | null
+          consent_date?: string
+          consent_method: string
+          consent_version?: string
+          created_at?: string
+          functional_consent?: boolean | null
+          id?: string
+          ip_address?: unknown
+          marketing_consent?: boolean | null
+          personalization_consent?: boolean | null
+          session_id?: string | null
+          updated_at?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          analytics_consent?: boolean | null
+          consent_date?: string
+          consent_method?: string
+          consent_version?: string
+          created_at?: string
+          functional_consent?: boolean | null
+          id?: string
+          ip_address?: unknown
+          marketing_consent?: boolean | null
+          personalization_consent?: boolean | null
+          session_id?: string | null
+          updated_at?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string | null
@@ -1280,6 +1427,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      anonymize_user_data: {
+        Args: { target_user_id: string }
+        Returns: boolean
+      }
       cleanup_old_snapshots: {
         Args: { p_keep_count?: number; p_keep_days?: number }
         Returns: number
@@ -1292,6 +1443,7 @@ export type Database = {
         Args: { _campaign_id: string; _integration_type: string }
         Returns: string
       }
+      get_user_data_export: { Args: { target_user_id: string }; Returns: Json }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
