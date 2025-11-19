@@ -1074,6 +1074,65 @@ export type Database = {
           },
         ]
       }
+      organization_members: {
+        Row: {
+          created_at: string | null
+          id: string
+          organization_id: string
+          role: Database["public"]["Enums"]["organization_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          organization_id: string
+          role?: Database["public"]["Enums"]["organization_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          organization_id?: string
+          role?: Database["public"]["Enums"]["organization_role"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_members_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organizations: {
+        Row: {
+          created_at: string | null
+          id: string
+          logo_url: string | null
+          name: string
+          slug: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          logo_url?: string | null
+          name: string
+          slug?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          logo_url?: string | null
+          name?: string
+          slug?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       participations: {
         Row: {
           campaign_id: string
@@ -1192,6 +1251,8 @@ export type Database = {
           email: string
           full_name: string | null
           id: string
+          is_platform_owner: boolean | null
+          organization_id: string | null
           role: string | null
           updated_at: string | null
         }
@@ -1202,6 +1263,8 @@ export type Database = {
           email: string
           full_name?: string | null
           id: string
+          is_platform_owner?: boolean | null
+          organization_id?: string | null
           role?: string | null
           updated_at?: string | null
         }
@@ -1212,10 +1275,20 @@ export type Database = {
           email?: string
           full_name?: string | null
           id?: string
+          is_platform_owner?: boolean | null
+          organization_id?: string | null
           role?: string | null
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       template_collections: {
         Row: {
@@ -1444,6 +1517,10 @@ export type Database = {
         Returns: string
       }
       get_user_data_export: { Args: { target_user_id: string }; Returns: Json }
+      get_user_org_role: {
+        Args: { user_id: string }
+        Returns: Database["public"]["Enums"]["organization_role"]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -1481,6 +1558,7 @@ export type Database = {
         | "dice"
         | "scratch"
         | "form"
+      organization_role: "owner" | "admin" | "member" | "viewer"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1627,6 +1705,7 @@ export const Constants = {
         "scratch",
         "form",
       ],
+      organization_role: ["owner", "admin", "member", "viewer"],
     },
   },
 } as const

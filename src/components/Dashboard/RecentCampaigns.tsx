@@ -7,6 +7,7 @@ import { RecentCampaign } from './types';
 import { supabase } from '../../integrations/supabase/client';
 import { getEditorUrl } from '../../utils/editorRouting';
 import { extractCampaignBackgroundImage, extractCampaignBackgroundColor, debugCampaignImage } from '../../utils/debugCampaignImages';
+import { CampaignCreatorTooltip } from '../Campaign/CampaignCreatorTooltip';
 
 const RecentCampaigns: React.FC = () => {
   const navigate = useNavigate();
@@ -56,6 +57,7 @@ const RecentCampaigns: React.FC = () => {
                 month: 'long',
                 year: 'numeric'
               }),
+              createdBy: campaign.created_by || null,
               image: backgroundImage || undefined,
               backgroundColor: backgroundColor || undefined
             };
@@ -167,8 +169,8 @@ const RecentCampaigns: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {duplicatedCampaigns.map((campaign, index) => {
           const IconComponent = getCampaignTypeIcon(campaign.type);
-          return <div 
-                key={campaign.id} 
+          return <CampaignCreatorTooltip key={campaign.id} createdBy={campaign.createdBy || null}>
+            <div 
                 onClick={() => handleCardClick(campaign)}
                 className="group relative overflow-hidden rounded-[18px] shadow-lg cursor-pointer">
                 {/* Main Campaign Card */}
@@ -254,7 +256,8 @@ const RecentCampaigns: React.FC = () => {
                     </div>
                   </div>
                 </div>
-              </div>;
+              </div>
+            </CampaignCreatorTooltip>;
         })}
           </div>
         )}

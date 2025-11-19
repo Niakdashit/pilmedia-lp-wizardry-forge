@@ -13,6 +13,7 @@ export interface RecentCampaign {
   participants: number;
   status: string;
   createdAt: string;
+  createdBy?: string | null;
   image?: string;
   backgroundColor?: string;
 }
