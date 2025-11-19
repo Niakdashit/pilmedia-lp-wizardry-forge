@@ -538,6 +538,12 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
 
   // Ensure a valid default active tab on mount and when visible tabs change
   React.useEffect(() => {
+    // En format portrait (sidebar mobile), on autorise internalActiveTab à rester null
+    // pour que le panneau puisse rester complètement fermé.
+    if (isPortraitFormat && !internalActiveTab) {
+      return;
+    }
+
     const backgroundVisible = tabs.some(t => t.id === 'background');
     const activeIsVisible = internalActiveTab ? tabs.some(t => t.id === internalActiveTab) : false;
     const isTransientQuiz = internalActiveTab === 'quiz' && showQuizPanel;
@@ -546,7 +552,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
     if (!activeIsVisible && !isTransientQuiz && !isTransientWheel) {
       setInternalActiveTab(backgroundVisible ? 'background' : (tabs[0]?.id ?? null));
     }
-  }, [tabs, internalActiveTab, showQuizPanel, showWheelPanel]);
+  }, [tabs, internalActiveTab, showQuizPanel, showWheelPanel, isPortraitFormat]);
 
   // Prefetch on hover/touch to smooth first paint
   const prefetchTab = (tabId: string) => {
