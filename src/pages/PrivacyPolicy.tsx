@@ -28,16 +28,10 @@ const PrivacyPolicy: React.FC = () => {
             <h2 className="text-2xl font-semibold mb-4">1. Responsable du Traitement</h2>
             <div className="bg-muted/30 p-6 rounded-lg">
               <p className="text-muted-foreground mb-2">
-                <strong>Raison sociale :</strong> [Nom de votre entreprise]
+                <strong>Raison sociale :</strong> Prosplay
               </p>
               <p className="text-muted-foreground mb-2">
-                <strong>Adresse :</strong> [Adresse complète]
-              </p>
-              <p className="text-muted-foreground mb-2">
-                <strong>Email :</strong> <a href="mailto:contact@example.com" className="text-primary hover:underline">contact@example.com</a>
-              </p>
-              <p className="text-muted-foreground">
-                <strong>Téléphone :</strong> [Numéro de téléphone]
+                <strong>Email :</strong> <a href="mailto:contact@prosplay.fr" className="text-primary hover:underline">contact@prosplay.fr</a>
               </p>
             </div>
           </section>
@@ -255,8 +249,7 @@ const PrivacyPolicy: React.FC = () => {
               Pour toute question concernant cette politique de confidentialité ou vos données personnelles :
             </p>
             <div className="space-y-2">
-              <p className="text-sm"><strong>Email :</strong> <a href="mailto:privacy@example.com" className="text-primary hover:underline">privacy@example.com</a></p>
-              <p className="text-sm"><strong>Délégué à la Protection des Données (DPO) :</strong> <a href="mailto:dpo@example.com" className="text-primary hover:underline">dpo@example.com</a></p>
+              <p className="text-sm"><strong>Email :</strong> <a href="mailto:contact@prosplay.fr" className="text-primary hover:underline">contact@prosplay.fr</a></p>
             </div>
           </section>
         </div>

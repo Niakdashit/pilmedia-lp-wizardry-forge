@@ -1,5 +1,5 @@
 import React from 'react';
-import { Building2, Mail, Phone, Globe, Server } from 'lucide-react';
+import { Building2, Mail, Server } from 'lucide-react';
 
 const LegalNotice: React.FC = () => {
   return (
@@ -22,30 +22,11 @@ const LegalNotice: React.FC = () => {
             <div className="bg-muted/30 p-6 rounded-lg space-y-3">
               <div>
                 <h3 className="font-medium mb-1">Raison sociale</h3>
-                <p className="text-muted-foreground">[Nom de votre entreprise]</p>
+                <p className="text-muted-foreground">Prosplay</p>
               </div>
               <div>
-                <h3 className="font-medium mb-1">Forme juridique</h3>
-                <p className="text-muted-foreground">[SAS, SARL, etc.]</p>
-              </div>
-              <div>
-                <h3 className="font-medium mb-1">Capital social</h3>
-                <p className="text-muted-foreground">[Montant] euros</p>
-              </div>
-              <div>
-                <h3 className="font-medium mb-1">Siège social</h3>
-                <p className="text-muted-foreground">[Adresse complète]</p>
-              </div>
-              <div>
-                <h3 className="font-medium mb-1">RCS / SIRET</h3>
-                <p className="text-muted-foreground">
-                  RCS [Ville] [Numéro]<br />
-                  SIRET : [Numéro SIRET]
-                </p>
-              </div>
-              <div>
-                <h3 className="font-medium mb-1">Numéro de TVA intracommunautaire</h3>
-                <p className="text-muted-foreground">[Numéro de TVA]</p>
+                <h3 className="font-medium mb-1">Contact</h3>
+                <p className="text-muted-foreground">contact@prosplay.fr</p>
               </div>
             </div>
           </section>
@@ -72,23 +53,9 @@ const LegalNotice: React.FC = () => {
                 <Mail className="w-5 h-5 text-primary" />
                 <div>
                   <p className="font-medium">Email</p>
-                  <a href="mailto:contact@example.com" className="text-sm text-primary hover:underline">
-                    contact@example.com
+                  <a href="mailto:contact@prosplay.fr" className="text-sm text-primary hover:underline">
+                    contact@prosplay.fr
                   </a>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 p-4 bg-muted/30 rounded-lg">
-                <Phone className="w-5 h-5 text-primary" />
-                <div>
-                  <p className="font-medium">Téléphone</p>
-                  <p className="text-sm text-muted-foreground">[Numéro de téléphone]</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 p-4 bg-muted/30 rounded-lg">
-                <Globe className="w-5 h-5 text-primary" />
-                <div>
-                  <p className="font-medium">Adresse postale</p>
-                  <p className="text-sm text-muted-foreground">[Adresse complète]</p>
                 </div>
               </div>
             </div>
