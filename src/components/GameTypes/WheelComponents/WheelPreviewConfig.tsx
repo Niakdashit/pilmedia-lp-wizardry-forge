@@ -1,5 +1,12 @@
 export const getWheelPreviewConfig = (campaign: any) => {
-  const position = campaign?.config?.roulette?.position || 'centre';
+  // 🔁 Position robuste : on privilégie la config design, puis wheelConfig, puis game_config, puis l'ancien champ config.roulette.position
+  const position =
+    campaign?.design?.wheelConfig?.position ||
+    campaign?.wheelConfig?.position ||
+    campaign?.game_config?.wheel?.position ||
+    campaign?.config?.roulette?.position ||
+    'center';
+
   const centerImage = campaign?.config?.roulette?.centerImage;
   const centerLogo = campaign?.design?.centerLogo || campaign?.config?.roulette?.centerImage;
   const theme = campaign?.config?.roulette?.theme || 'default';
