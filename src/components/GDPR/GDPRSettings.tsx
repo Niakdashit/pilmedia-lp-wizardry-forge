@@ -45,7 +45,11 @@ const consentOptions: ConsentOption[] = [
   },
 ];
 
-export const GDPRSettings: React.FC = () => {
+interface GDPRSettingsProps {
+  onClose?: () => void;
+}
+
+export const GDPRSettings: React.FC<GDPRSettingsProps> = ({ onClose }) => {
   const { consent, saveConsent, isLoading } = useGDPRConsent();
   const [preferences, setPreferences] = useState({
     functional: true,
@@ -78,6 +82,7 @@ export const GDPRSettings: React.FC = () => {
       method: 'settings',
     });
     setIsSaving(false);
+    onClose?.();
   };
 
   const handleAcceptAll = async () => {
