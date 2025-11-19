@@ -266,7 +266,7 @@ const ScratchGamePanelRefactored: React.FC<ScratchGamePanelProps> = ({
                   <label className="block text-sm font-medium text-[hsl(var(--sidebar-text-primary))] mb-2">
                     Forme des cartes
                   </label>
-                  <div className="flex justify-center gap-2">
+                  <div className="flex justify-start gap-2">
                     {shapeOptions.map((option) => (
                       <button
                         key={option.value}
