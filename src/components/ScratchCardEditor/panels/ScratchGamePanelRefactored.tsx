@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import { Grid3x3, Paintbrush, Settings, ChevronDown, ChevronRight } from 'lucide-react';
+import { Grid3x3, Paintbrush, Settings, ChevronDown, ChevronRight, Upload, X } from 'lucide-react';
 import { useScratchCardStore } from '../state/scratchcard.store';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 interface ScratchGamePanelProps {
   campaign?: any;
@@ -30,6 +32,8 @@ const ScratchGamePanelRefactored: React.FC<ScratchGamePanelProps> = ({
     cards: true,
     appearance: false
   });
+  
+  const [isUploading, setIsUploading] = useState(false);
 
   // Initialiser le store depuis campaign au montage
   const isInitialMount = React.useRef(true);
@@ -87,6 +91,58 @@ const ScratchGamePanelRefactored: React.FC<ScratchGamePanelProps> = ({
     { value: 'vertical-rectangle', label: 'Rectangle' },
     { value: 'square', label: 'Carré' }
   ];
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Vérifier le type de fichier
+    if (!file.type.startsWith('image/')) {
+      toast.error('Veuillez sélectionner une image');
+      return;
+    }
+
+    // Vérifier la taille (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('L\'image ne doit pas dépasser 5MB');
+      return;
+    }
+
+    setIsUploading(true);
+    
+    try {
+      // Créer un nom de fichier unique
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
+      const filePath = `scratch-covers/${fileName}`;
+
+      // Upload vers Supabase Storage
+      const { error } = await supabase.storage
+        .from('campaign-assets')
+        .upload(filePath, file);
+
+      if (error) throw error;
+
+      // Récupérer l'URL publique
+      const { data: { publicUrl } } = supabase.storage
+        .from('campaign-assets')
+        .getPublicUrl(filePath);
+
+      // Mettre à jour la configuration
+      updateStoreGlobalCover({ type: 'image', url: publicUrl });
+      toast.success('Image uploadée avec succès');
+    } catch (error) {
+      console.error('Erreur upload:', error);
+      toast.error('Erreur lors de l\'upload de l\'image');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleRemoveImage = () => {
+    updateStoreGlobalCover({ type: 'color', value: '#C0C0C0' });
+    toast.success('Image supprimée');
+  };
 
 
   return (
@@ -299,16 +355,52 @@ const ScratchGamePanelRefactored: React.FC<ScratchGamePanelProps> = ({
                 </div>
 
                 {/* Couverture globale */}
-                <div>
-                  <label className="block text-sm font-medium text-[hsl(var(--sidebar-text-primary))] mb-2">
-                    Couleur de couverture
+                <div className="space-y-3">
+                  <label className="block text-sm font-medium text-[hsl(var(--sidebar-text-primary))]">
+                    Couverture
                   </label>
-                  <input
-                    type="color"
-                    value={scratchConfig.globalCover?.type === 'color' ? scratchConfig.globalCover.value : '#C0C0C0'}
-                    onChange={(e) => updateStoreGlobalCover({ type: 'color', value: e.target.value })}
-                    className="w-full h-10 rounded-md border border-[hsl(var(--sidebar-border))]"
-                  />
+                  
+                  {scratchConfig.globalCover?.type === 'image' ? (
+                    <div className="space-y-2">
+                      <div className="relative w-full h-32 rounded-lg overflow-hidden border border-[hsl(var(--sidebar-border))]">
+                        <img 
+                          src={scratchConfig.globalCover.url} 
+                          alt="Couverture" 
+                          className="w-full h-full object-cover"
+                        />
+                        <button
+                          onClick={handleRemoveImage}
+                          className="absolute top-2 right-2 p-1.5 bg-red-500 hover:bg-red-600 text-white rounded-full transition-colors"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <input
+                        type="color"
+                        value={scratchConfig.globalCover?.type === 'color' ? scratchConfig.globalCover.value : '#C0C0C0'}
+                        onChange={(e) => updateStoreGlobalCover({ type: 'color', value: e.target.value })}
+                        className="w-full h-10 rounded-md border border-[hsl(var(--sidebar-border))]"
+                      />
+                      <div className="text-xs text-[hsl(var(--sidebar-text-secondary))] text-center">ou</div>
+                    </div>
+                  )}
+                  
+                  {scratchConfig.globalCover?.type !== 'image' && (
+                    <label className="flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-[hsl(var(--sidebar-text-primary))] bg-[hsl(var(--sidebar-surface))] hover:bg-[hsl(var(--sidebar-hover))] border border-[hsl(var(--sidebar-border))] rounded-lg cursor-pointer transition-colors">
+                      <Upload className="w-4 h-4" />
+                      {isUploading ? 'Upload en cours...' : 'Uploader une image'}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        disabled={isUploading}
+                        className="hidden"
+                      />
+                    </label>
+                  )}
                 </div>
               </div>
             )}
