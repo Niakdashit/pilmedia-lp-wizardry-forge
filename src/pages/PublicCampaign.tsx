@@ -4,6 +4,7 @@ import PreviewRenderer from '@/components/preview/PreviewRenderer';
 import { useCampaignView } from '@/hooks/useCampaignView';
 import { isTempCampaignId } from '@/utils/tempCampaignId';
 import { useFastCampaignLoader } from '@/hooks/useFastCampaignLoader';
+import { useIsMobile } from '@/hooks/useIsMobile';
 
 class PublicCampaignErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean }> {
   constructor(props: { children: React.ReactNode }) {
@@ -37,6 +38,11 @@ const PublicCampaignPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [error, setError] = useState<string | null>(null);
   const [isReady, setIsReady] = useState(false);
+  
+  // 📱 Détection automatique mobile/tablette/desktop
+  const isMobile = useIsMobile();
+  const isTablet = !isMobile && window.innerWidth >= 768 && window.innerWidth < 1024;
+  const previewMode = isMobile ? 'mobile' : isTablet ? 'tablet' : 'desktop';
   
   // 🎯 Track campaign view with rich data (only for real campaigns)
   const shouldTrack = id && !isTempCampaignId(id);
@@ -126,7 +132,7 @@ const PublicCampaignPage: React.FC = () => {
     <PublicCampaignErrorBoundary>
       <div className="min-h-screen" style={{ backgroundColor: editorMode === 'article' ? '#2c2c35' : undefined }}>
         <div className="w-full min-h-screen">
-          <PreviewRenderer campaign={campaign} previewMode="desktop" />
+          <PreviewRenderer campaign={campaign} previewMode={previewMode} />
         </div>
       </div>
     </PublicCampaignErrorBoundary>
