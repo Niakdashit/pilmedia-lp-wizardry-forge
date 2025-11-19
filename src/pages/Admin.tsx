@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import { useUsers } from '../hooks/useUsers';
 import { useProfile } from '../hooks/useProfile';
-import { User, Mail, Calendar, Shield, ShieldCheck, UserCheck } from 'lucide-react';
+import { User, Mail, Calendar, Shield, ShieldCheck, UserCheck, Building2, Users as UsersIcon } from 'lucide-react';
 import Spinner from '@/components/shared/Spinner';
+import { AdminOrganizations } from '@/components/Admin/Organizations';
 
 const Admin: React.FC = () => {
   const { users, loading, error, updateUserRole } = useUsers();
   const { profile: currentUser } = useProfile();
   const [selectedUser, setSelectedUser] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'users' | 'organizations'>('organizations');
 
   if (!currentUser?.is_admin) {
     return (
@@ -81,18 +83,49 @@ const Admin: React.FC = () => {
   };
 
   return (
-    <div className="max-w-6xl mx-auto p-6">
+    <div className="max-w-7xl mx-auto p-6">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Administration</h1>
-        <p className="text-gray-600">Gestion des utilisateurs et rôles</p>
+        <p className="text-gray-600">Gestion de la plateforme</p>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900">
-            Utilisateurs ({users.length})
-          </h2>
+      {/* Tabs */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 mb-6">
+        <div className="flex border-b border-gray-200">
+          <button
+            onClick={() => setActiveTab('organizations')}
+            className={`flex items-center gap-2 px-6 py-4 font-medium transition-colors ${
+              activeTab === 'organizations'
+                ? 'text-primary border-b-2 border-primary'
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            <Building2 className="w-5 h-5" />
+            Organisations
+          </button>
+          <button
+            onClick={() => setActiveTab('users')}
+            className={`flex items-center gap-2 px-6 py-4 font-medium transition-colors ${
+              activeTab === 'users'
+                ? 'text-primary border-b-2 border-primary'
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            <UsersIcon className="w-5 h-5" />
+            Utilisateurs
+          </button>
         </div>
+      </div>
+
+      {activeTab === 'organizations' ? (
+        <AdminOrganizations />
+      ) : (
+        <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+          <div className="px-6 py-4 border-b border-gray-200">
+            <h2 className="text-xl font-semibold text-gray-900">
+              Utilisateurs ({users.length})
+            </h2>
+          </div>
 
         <div className="overflow-x-auto">
           <table className="w-full">
@@ -195,6 +228,7 @@ const Admin: React.FC = () => {
           </div>
         )}
       </div>
+      )}
     </div>
   );
 };
