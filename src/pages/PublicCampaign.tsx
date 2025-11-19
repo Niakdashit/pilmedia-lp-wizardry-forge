@@ -25,10 +25,11 @@ const PublicCampaign: React.FC = () => {
         setError(null);
         if (!id) throw new Error('Aucune campagne');
         
-        // 🚫 Détecter les IDs temporaires et rediriger vers l'éditeur
+        // 🚫 Détecter les IDs temporaires
         if (isTempCampaignId(id)) {
-          console.log('🔄 Temp campaign detected, redirecting to editor...');
-          navigate(`/design-editor?campaign=${id}`, { replace: true });
+          console.log('⚠️ Temp campaign detected in public URL');
+          setError('Cette campagne est un brouillon temporaire non publié. Veuillez la sauvegarder depuis l\'éditeur pour obtenir une URL publique.');
+          setLoading(false);
           return;
         }
         
