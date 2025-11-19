@@ -82,7 +82,6 @@ const ScratchGameGrid: React.FC<ScratchGameGridProps> = ({
     <div className="w-full h-full flex items-center justify-center p-3">
       <div
         className="w-full max-w-[1200px] flex items-center justify-center"
-        style={getBorderStyles()}
       >
         <div
           style={{
@@ -104,7 +103,11 @@ const ScratchGameGrid: React.FC<ScratchGameGridProps> = ({
             const canScratch = allCardsScratching ? gameStarted : (gameStarted && isThisCardSelected);
 
             return (
-              <div key={card.id || index} className="flex justify-center items-center">
+              <div
+                key={card.id || index}
+                className="flex justify-center items-center"
+                style={getBorderStyles()}
+              >
                 <ScratchCard
                   card={card}
                   index={index}
