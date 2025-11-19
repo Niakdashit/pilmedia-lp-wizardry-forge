@@ -211,6 +211,11 @@ export const saveCampaignToDB = async (
   const mergedDesign = {
     ...(campaign?.design || {}),
     
+    // Wheel configuration (position, bulbs, scale, etc.)
+    // ✅ CRITICAL: persist design.wheelConfig so position (left/center/centerTop/right)
+    // and other wheel layout options are restored when rechargée depuis la BDD
+    wheelConfig: campaign?.design?.wheelConfig || campaign?.wheelConfig || {},
+    
     // Background images (prioritize explicit design values)
     backgroundImage: campaign?.design?.backgroundImage || 
       (campaign?.canvasConfig?.background?.type === 'image' ? campaign.canvasConfig.background.value : undefined),
