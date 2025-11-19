@@ -138,7 +138,16 @@ export const useFastCampaignLoader = ({
             : rawData.backgrounds,
           articleConfig: typeof rawData.article_config === 'string'
             ? JSON.parse(rawData.article_config)
-            : rawData.article_config
+            : rawData.article_config,
+          scratchConfig: typeof rawData.scratch_config === 'string'
+            ? JSON.parse(rawData.scratch_config)
+            : rawData.scratch_config,
+          gameConfig: typeof rawData.game_config === 'string'
+            ? JSON.parse(rawData.game_config)
+            : rawData.game_config,
+          design: typeof rawData.design === 'string'
+            ? JSON.parse(rawData.design)
+            : rawData.design
         };
 
         // Mettre en cache
