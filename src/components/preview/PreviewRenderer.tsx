@@ -7,6 +7,7 @@ import StandardizedWheel from '../shared/StandardizedWheel';
 import TemplatedSwiper from '../shared/TemplatedSwiper';
 import TemplatedQuiz from '../shared/TemplatedQuiz';
 import SlotMachine from '../SlotJackpot/SlotMachine';
+import ScratchPreview from '../GameTypes/ScratchPreview';
 import DynamicContactForm, { type FieldConfig } from '../forms/DynamicContactForm';
 import Modal from '../common/Modal';
 import { useMessageStore } from '@/stores/messageStore';
@@ -1033,7 +1034,7 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
                     </>
                   )}
 
-                  {/* Quiz / Swiper / Jackpot game */}
+                  {/* Quiz / Swiper / Jackpot / Scratch game */}
                   {campaign.type === 'quiz'
                     ? (
                       <TemplatedQuiz
@@ -1067,6 +1068,27 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
                           console.log('🎰 [PreviewRenderer] Jackpot LOSE');
                           setTimeout(() => {
                             handleGameFinish('lose');
+                          }, 1000);
+                        }}
+                      />
+                    )
+                    : campaign.type === 'scratch'
+                    ? (
+                      <ScratchPreview
+                        config={campaign.gameConfig?.scratch || {}}
+                        disabled={false}
+                        autoStart={true}
+                        campaign={campaign}
+                        participantEmail={participantEmail}
+                        participantId={participantId}
+                        useDotationSystem={true}
+                        onStart={() => {
+                          console.log('🎫 [PreviewRenderer] Scratch game started');
+                        }}
+                        onFinish={(result) => {
+                          console.log('🎫 [PreviewRenderer] Scratch game finished with:', result);
+                          setTimeout(() => {
+                            handleGameFinish(result);
                           }, 1000);
                         }}
                       />
