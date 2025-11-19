@@ -19,89 +19,131 @@ const ScratchCardContent: React.FC<ScratchCardContentProps> = ({
   scratchColor
 }) => {
   const getResultContent = () => {
-    // Utiliser globalReveal ou logic.winnerReveal/loserReveal selon le résultat
-    const reveal = result === 'win' 
-      ? config?.logic?.winnerReveal 
-      : config?.logic?.loserReveal;
+    // 1) Priorité aux champs "plats" de la carte (structure legacy)
+    const legacyRevealImage = card.revealImage || config?.revealImage;
+    const legacyRevealMessage = card.revealMessage || config?.revealMessage;
 
-    // Si reveal est une image
-    if (reveal?.type === 'image' && reveal.url) {
-      return <img src={reveal.url} alt="Contenu révélé" className="w-full h-full object-cover" />;
+    if (legacyRevealImage) {
+      return (
+        <img
+          src={legacyRevealImage}
+          alt="Contenu révélé"
+          className="w-full h-full object-cover"
+        />
+      );
     }
 
-    // Si reveal est du texte
-    if (reveal?.type === 'text') {
+    // 2) Sinon, utiliser la nouvelle logique basée sur logic/globalReveal
+    const logicReveal =
+      result === 'win'
+        ? config?.logic?.winnerReveal
+        : config?.logic?.loserReveal ?? config?.globalReveal;
+
+    if (logicReveal?.type === 'image' && logicReveal.url) {
       return (
-        <div className={`w-full h-full flex flex-col items-center justify-center ${
-          result === 'win' 
-            ? 'bg-gradient-to-br from-yellow-300 to-yellow-500' 
-            : 'bg-gradient-to-br from-gray-300 to-gray-500'
-        }`}>
-          <div className="text-2xl mb-1">
-            {result === 'win' ? '🎉' : '😔'}
-          </div>
-          <div 
+        <img
+          src={logicReveal.url}
+          alt="Contenu révélé"
+          className="w-full h-full object-cover"
+        />
+      );
+    }
+
+    if (logicReveal?.type === 'text') {
+      return (
+        <div
+          className={`w-full h-full flex flex-col items-center justify-center ${
+            result === 'win'
+              ? 'bg-gradient-to-br from-yellow-300 to-yellow-500'
+              : 'bg-gradient-to-br from-gray-300 to-gray-500'
+          }`}
+        >
+          <div className="text-2xl mb-1">{result === 'win' ? '🎉' : '😔'}</div>
+          <div
             className="text-sm font-bold text-center px-2"
             style={{
-              fontSize: reveal.style?.fontSize ? `${reveal.style.fontSize}px` : '14px',
-              fontWeight: reveal.style?.fontWeight || 600,
-              color: reveal.style?.color || '#1f2937',
-              textAlign: reveal.style?.align || 'center'
+              fontSize: logicReveal.style?.fontSize
+                ? `${logicReveal.style.fontSize}px`
+                : '14px',
+              fontWeight: logicReveal.style?.fontWeight || 600,
+              color: logicReveal.style?.color || '#1f2937',
+              textAlign: logicReveal.style?.align || 'center'
             }}
           >
-            {reveal.value}
+            {logicReveal.value}
           </div>
         </div>
       );
     }
 
-    // Fallback
+    // 3) Fallback très simple
+    const fallbackMessage =
+      result === 'win'
+        ? legacyRevealMessage || 'Félicitations !'
+        : 'Dommage !';
+
     return (
-      <div className={`w-full h-full flex flex-col items-center justify-center ${
-        result === 'win' 
-          ? 'bg-gradient-to-br from-yellow-300 to-yellow-500' 
-          : 'bg-gradient-to-br from-gray-300 to-gray-500'
-      }`}>
-        <div className="text-2xl mb-1">
-          {result === 'win' ? '🎉' : '😔'}
-        </div>
+      <div
+        className={`w-full h-full flex flex-col items-center justify-center ${
+          result === 'win'
+            ? 'bg-gradient-to-br from-yellow-300 to-yellow-500'
+            : 'bg-gradient-to-br from-gray-300 to-gray-500'
+        }`}
+      >
+        <div className="text-2xl mb-1">{result === 'win' ? '🎉' : '😔'}</div>
         <div className="text-sm font-bold text-gray-800 text-center px-2">
-          {result === 'win' ? 'Gagné !' : 'Perdu'}
+          {fallbackMessage}
         </div>
       </div>
     );
   };
 
   const getScratchSurface = () => {
-    // Utiliser card.cover s'il existe, sinon globalCover
+    // 1) Structure legacy utilisée par le runtime
+    const legacySurface = card.scratchSurface || config?.scratchSurface;
+    const legacyColor =
+      scratchColor || card.scratchColor || config?.scratchColor || '#C0C0C0';
+
+    if (legacySurface) {
+      return (
+        <div
+          className="absolute inset-0"
+          style={{
+            backgroundImage: `url(${legacySurface})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat'
+          }}
+        />
+      );
+    }
+
+    // 2) Support de la nouvelle structure globalCover / card.cover
     const cover = card.cover || config?.globalCover;
 
-    // Si cover est une image
     if (cover?.type === 'image' && cover.url) {
       return (
-        <div 
-          className="absolute inset-0" 
+        <div
+          className="absolute inset-0"
           style={{
             backgroundImage: `url(${cover.url})`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             backgroundRepeat: 'no-repeat'
-          }} 
+          }}
         />
       );
     }
 
-    // Si cover est une couleur
-    const finalColor = cover?.type === 'color' 
-      ? cover.value 
-      : scratchColor || '#C0C0C0';
+    const finalColor =
+      cover?.type === 'color' ? cover.value : legacyColor;
 
     return (
       <div
         className="absolute inset-0"
         style={{
           background: finalColor,
-          opacity: cover?.type === 'color' ? (cover.opacity ?? 1) : 1,
+          opacity: cover?.type === 'color' ? cover.opacity ?? 1 : 1,
           borderRadius: 'inherit'
         }}
       />
