@@ -46,7 +46,7 @@ export default function Partnerships() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="-mx-6 -mt-6">
       <PageHeader 
         title="Partenariats"
       >
@@ -55,7 +55,8 @@ export default function Partnerships() {
         </p>
       </PageHeader>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div className="px-6 space-y-6">
+        <div className="max-w-7xl mx-auto py-6">
         {/* Stats rapides */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <div className="bg-accent/50 border rounded-xl p-6">
@@ -200,6 +201,7 @@ export default function Partnerships() {
             </button>
           </div>
         )}
+      </div>
       </div>
     </div>
   );
