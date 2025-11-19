@@ -48,13 +48,6 @@ const ScratchGameGrid: React.FC<ScratchGameGridProps> = ({
   const resolvedGap = typeof gridConfig?.gap === 'number' ? gridConfig.gap : 16;
   const cardShape = gridConfig?.cardShape;
 
-  const borderConfig = gridConfig?.border || config?.grid?.border || config?.scratchConfig?.grid?.border;
- 
-  console.log('[ScratchGameGrid] === BORDER DEBUG ===');
-  console.log('[ScratchGameGrid] gridConfig:', JSON.stringify(gridConfig, null, 2));
-  console.log('[ScratchGameGrid] config.grid:', JSON.stringify(config?.grid, null, 2));
-  console.log('[ScratchGameGrid] config.scratchConfig:', JSON.stringify(config?.scratchConfig, null, 2));
-  console.log('[ScratchGameGrid] borderConfig FINAL:', JSON.stringify(borderConfig, null, 2));
 
   return (
     <div className="w-full h-full flex items-center justify-center p-3">
@@ -100,7 +93,6 @@ const ScratchGameGrid: React.FC<ScratchGameGridProps> = ({
                   config={config}
                   isModal={isModal}
                   cardShape={cardShape}
-                  borderConfig={borderConfig}
                 />
               </div>
             );
