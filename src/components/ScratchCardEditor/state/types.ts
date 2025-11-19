@@ -36,6 +36,8 @@ export type GridSettings = {
   borderRadius: number; 
   cardSize?: { width?: number; height?: number };
   cardShape?: CardShape; // New: shape of the cards
+  borderWidth?: number; // Border width in pixels
+  borderColor?: string; // Border color
 };
 
 export type BrushSettings = { 
@@ -108,7 +110,9 @@ export const DEFAULT_SCRATCH_CONFIG: ScratchCardState = {
     cols: 4,
     gap: 20,
     borderRadius: 24,
-    cardShape: 'vertical-rectangle' // Default to rectangle
+    cardShape: 'vertical-rectangle', // Default to rectangle
+    borderWidth: 2, // Default border width
+    borderColor: '#e5e7eb' // Default border color (gray-200)
   },
   brush: {
     radius: 25, // Increased from 10 to 25 - larger brush for easier scratching

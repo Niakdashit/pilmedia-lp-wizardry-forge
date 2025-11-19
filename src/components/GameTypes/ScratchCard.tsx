@@ -115,12 +115,15 @@ const ScratchCard: React.FC<ScratchCardProps> = ({
     return (
       <div className="flex flex-col items-center w-full">
         <div
-          className={`relative overflow-hidden border-2 border-gray-200 shadow-sm bg-white ${borderRadiusClass}`}
+          className={`relative overflow-hidden shadow-sm bg-white ${borderRadiusClass}`}
           style={{
             width: `${width}px`,
             height: `${height}px`,
             minWidth: `${width}px`,
-            minHeight: `${height}px`
+            minHeight: `${height}px`,
+            borderWidth: `${config.grid?.borderWidth ?? 2}px`,
+            borderStyle: 'solid',
+            borderColor: config.grid?.borderColor ?? '#e5e7eb'
           }}
         >
           <ScratchCardContent
@@ -151,19 +154,26 @@ const ScratchCard: React.FC<ScratchCardProps> = ({
 
       {/* Carte à gratter */}
       <div 
-        className={`relative overflow-hidden border-2 transition-all duration-200 shadow-lg bg-white ${borderRadiusClass} ${
+        className={`relative overflow-hidden transition-all duration-200 shadow-lg bg-white ${borderRadiusClass} ${
           isSelected 
-            ? 'border-[#44444d] shadow-xl ring-2 ring-[#44444d]/20' 
+            ? 'shadow-xl ring-2 ring-[#44444d]/20' 
             : selectable && !locked
-              ? 'border-gray-200 hover:border-[#44444d] cursor-pointer hover:shadow-xl' 
-              : 'border-gray-200'
+              ? 'cursor-pointer hover:shadow-xl' 
+              : ''
         } ${locked ? 'opacity-50' : ''}`}
         style={{
           width: `${width}px`,
           height: `${height}px`,
           minWidth: `${width}px`,
           minHeight: `${height}px`,
-          pointerEvents: locked ? 'none' : 'auto'
+          pointerEvents: locked ? 'none' : 'auto',
+          borderWidth: `${config.grid?.borderWidth ?? 2}px`,
+          borderStyle: 'solid',
+          borderColor: isSelected 
+            ? '#44444d' 
+            : selectable && !locked 
+              ? config.grid?.borderColor ?? '#e5e7eb'
+              : config.grid?.borderColor ?? '#e5e7eb'
         }}
         onClick={handleCardClick}
       >
