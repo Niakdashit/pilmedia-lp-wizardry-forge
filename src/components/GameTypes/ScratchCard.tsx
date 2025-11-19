@@ -112,8 +112,8 @@ const ScratchCard: React.FC<ScratchCardProps> = ({
   const borderRadiusClass = getBorderRadiusClass();
   
   // Gérer les styles de bordure
-  const borderConfig = config?.grid?.border;
-  console.log('[ScratchCard] Border config:', borderConfig, 'Full grid:', config?.grid);
+  const borderConfig = config?.grid?.border || config?.scratchConfig?.grid?.border;
+  console.log('[ScratchCard] Border config:', borderConfig, 'Grid on config:', config?.grid, 'ScratchConfig:', config?.scratchConfig);
   
   const getBorderStyles = () => {
     if (!borderConfig) {
