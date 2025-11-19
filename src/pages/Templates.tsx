@@ -3,7 +3,6 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Plus } from 'lucide-react';
 import { useTemplates } from '@/hooks/useTemplates';
-import PageContainer from '../components/Layout/PageContainer';
 import Spinner from '@/components/shared/Spinner';
 
 export default function Templates() {
@@ -34,11 +33,10 @@ export default function Templates() {
   }
 
   return (
-    <div className="min-h-screen">
-      <PageContainer className="bg-transparent">
-        <div className="px-6 sm:px-8 lg:px-10 py-8">
-          {/* Barre de recherche et bouton créer */}
-          <div className="mb-6 flex items-center gap-4">
+    <div className="-mx-6 -mt-6">
+      <div className="px-6 sm:px-8 lg:px-10 py-8">
+        {/* Barre de recherche et bouton créer */}
+        <div className="mb-6 flex items-center gap-4">
             <div className="relative flex-1 max-w-xl">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
               <input
@@ -77,8 +75,10 @@ export default function Templates() {
                     {format}
                   </button>
                 ))}
-              </div>
-            </div>
+          </div>
+        </div>
+
+        <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10 space-y-6">
 
             {/* Catégories */}
             <div>
@@ -135,7 +135,7 @@ export default function Templates() {
             </div>
           )}
         </div>
-      </PageContainer>
+      </div>
     </div>
   );
 }

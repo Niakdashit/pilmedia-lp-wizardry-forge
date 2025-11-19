@@ -91,10 +91,10 @@ const Admin: React.FC = () => {
         <p className="text-base text-muted-foreground">Gestion de la plateforme</p>
       </PageHeader>
 
-      <div className="px-6 space-y-6">
-        <div className="max-w-7xl mx-auto py-6">
+      <div className="px-6 sm:px-8 lg:px-10 py-6">
+        <div className="max-w-7xl mx-auto space-y-6">
         {/* Tabs */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 mb-6">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200">
           <div className="flex border-b border-gray-200">
           <button
             onClick={() => setActiveTab('organizations')}

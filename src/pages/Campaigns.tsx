@@ -441,21 +441,22 @@ const Campaigns: React.FC = () => {
         }
       />
 
-      <div className="px-6">
+      <div className="px-6 sm:px-8 lg:px-10 py-6">
+        <div className="max-w-7xl mx-auto space-y-6">
         {loading && (
-          <div className="bg-white rounded-xl shadow-sm mt-6 p-8 text-center">
+          <div className="bg-white rounded-xl shadow-sm p-8 text-center">
             <Spinner size="lg" text="Chargement des campagnes..." />
           </div>
         )}
 
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-xl mt-6 p-4">
+          <div className="bg-red-50 border border-red-200 rounded-xl p-4">
             <p className="text-red-800">Erreur lors du chargement des campagnes: {error}</p>
           </div>
         )}
 
         {!loading && !error && (
-          <div className="bg-white rounded-xl shadow-sm mt-6">
+          <div className="bg-white rounded-xl shadow-sm">
             {selectedCampaigns.length > 0 && (
               <div className="p-4 bg-[#44444d] text-white flex items-center justify-between">
                 <span className="font-medium">
@@ -664,6 +665,7 @@ const Campaigns: React.FC = () => {
         onClose={() => setConfirmOpen(false)}
         onConfirm={confirmAction}
       />
+    </div>
     </div>
   );
 };

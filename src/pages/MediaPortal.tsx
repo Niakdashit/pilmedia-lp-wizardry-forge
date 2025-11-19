@@ -43,9 +43,9 @@ const MediaPortal: React.FC = () => {
         <p className="text-base text-muted-foreground">{partnerLoading ? 'Chargement du profil média…' : partner?.name || 'Profil média non configuré'}</p>
       </PageHeader>
 
-      <div className="px-6 space-y-6">
-        <div className="max-w-7xl mx-auto py-6">
-        <div className="border-b border-gray-200 mb-6">
+      <div className="px-6 sm:px-8 lg:px-10 py-6">
+        <div className="max-w-7xl mx-auto space-y-6">
+        <div className="border-b border-gray-200">
           <nav className="-mb-px flex gap-6">
             <TabButton id="requests" label="Demandes" icon={<Inbox className="w-4 h-4" />} />
             <TabButton id="campaigns" label="Campagnes en ligne" icon={<PlayCircle className="w-4 h-4" />} />
@@ -53,7 +53,7 @@ const MediaPortal: React.FC = () => {
           </nav>
         </div>
 
-        <div className="space-y-8">
+        <div className="space-y-6">
         {activeTab === 'requests' && (
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
             <div className="px-6 py-4 border-b border-gray-200 flex items-center gap-2">

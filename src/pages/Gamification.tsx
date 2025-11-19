@@ -76,8 +76,9 @@ const Gamification: React.FC = () => {
         }
       />
 
-      <div className="px-6 space-y-8">
-        <div className="bg-white rounded-xl shadow-sm p-6 mt-6">
+      <div className="px-6 sm:px-8 lg:px-10 py-6">
+        <div className="max-w-7xl mx-auto space-y-6">
+          <div className="bg-white rounded-xl shadow-sm p-6">
           <div className="mb-6">
             <h2 className="text-xl font-bold text-gray-800 mb-2">Mécaniques de jeu</h2>
             <p className="text-gray-600">
@@ -193,6 +194,7 @@ const Gamification: React.FC = () => {
             </table>
           </div>
         </div>
+      </div>
       </div>
     </div>
   );
