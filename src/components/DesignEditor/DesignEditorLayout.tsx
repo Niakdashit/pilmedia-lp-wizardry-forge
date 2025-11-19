@@ -711,7 +711,7 @@ useEffect(() => {
       setHasRecalculated(true);
       console.log('✅ [Migration Modules] Scaling recalculé avec succès !');
     }
-  }, [canvasElements.length, modularPage.screens, hasRecalculated]);
+  }, [canvasElements.length, modularPage.screens.screen1?.length, modularPage.screens.screen2?.length, modularPage.screens.screen3?.length, hasRecalculated]);
   
   // Référence pour le canvas
   const canvasRef = useRef<HTMLDivElement>(null);
