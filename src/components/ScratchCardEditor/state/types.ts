@@ -35,12 +35,7 @@ export type GridSettings = {
   gap: number; 
   borderRadius: number; 
   cardSize?: { width?: number; height?: number };
-  cardShape?: CardShape;
-  border?: {
-    type: 'internal' | 'external';
-    color: string;
-    width: number;
-  };
+  cardShape?: CardShape; // New: shape of the cards
 };
 
 export type BrushSettings = { 

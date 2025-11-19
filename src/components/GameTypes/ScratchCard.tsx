@@ -110,21 +110,17 @@ const ScratchCard: React.FC<ScratchCardProps> = ({
   };
 
   const borderRadiusClass = getBorderRadiusClass();
-  
-  // Gérer les styles de bordure
-  // Contour désactivé pour le moment
-  const getBorderStyles = () => ({ });
+
   if (!gameStarted) {
     return (
       <div className="flex flex-col items-center w-full">
         <div
-          className={`relative overflow-hidden shadow-sm bg-white ${borderRadiusClass}`}
+          className={`relative overflow-hidden border-2 border-gray-200 shadow-sm bg-white ${borderRadiusClass}`}
           style={{
             width: `${width}px`,
             height: `${height}px`,
             minWidth: `${width}px`,
-            minHeight: `${height}px`,
-            ...getBorderStyles()
+            minHeight: `${height}px`
           }}
         >
           <ScratchCardContent
@@ -155,20 +151,19 @@ const ScratchCard: React.FC<ScratchCardProps> = ({
 
       {/* Carte à gratter */}
       <div 
-        className={`relative overflow-hidden transition-all duration-200 shadow-lg bg-white ${borderRadiusClass} ${
+        className={`relative overflow-hidden border-2 transition-all duration-200 shadow-lg bg-white ${borderRadiusClass} ${
           isSelected 
-            ? 'shadow-xl ring-2 ring-[#44444d]/20' 
+            ? 'border-[#44444d] shadow-xl ring-2 ring-[#44444d]/20' 
             : selectable && !locked
-              ? 'cursor-pointer hover:shadow-xl' 
-              : ''
+              ? 'border-gray-200 hover:border-[#44444d] cursor-pointer hover:shadow-xl' 
+              : 'border-gray-200'
         } ${locked ? 'opacity-50' : ''}`}
         style={{
           width: `${width}px`,
           height: `${height}px`,
           minWidth: `${width}px`,
           minHeight: `${height}px`,
-          pointerEvents: locked ? 'none' : 'auto',
-          ...getBorderStyles()
+          pointerEvents: locked ? 'none' : 'auto'
         }}
         onClick={handleCardClick}
       >
