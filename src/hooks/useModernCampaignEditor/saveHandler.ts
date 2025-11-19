@@ -276,7 +276,17 @@ export const saveCampaignToDB = async (
     ...(campaign?.gameConfig || {}),
     
     // Type-specific game configurations
-    ...(campaign?.type === 'wheel' && campaign?.wheelConfig ? { wheel: campaign.wheelConfig } : {}),
+    ...(campaign?.type === 'wheel' && campaign?.wheelConfig ? { 
+      wheel: {
+        ...(campaign?.game_config?.wheel || {}),
+        ...(campaign?.wheelConfig || {}),
+        // 🔁 S'assurer que la position est bien persistée dans game_config.wheel
+        position:
+          (campaign as any)?.design?.wheelConfig?.position ??
+          (campaign as any)?.wheelConfig?.position ??
+          (campaign as any)?.game_config?.wheel?.position
+      }
+    } : {}),
     ...(campaign?.type === 'quiz' && campaign?.quizConfig ? { quiz: campaign.quizConfig } : {}),
     ...(campaign?.type === 'scratch' && campaign?.scratchConfig ? { scratch: campaign.scratchConfig } : {}),
     ...(campaign?.type === 'jackpot' && campaign?.jackpotConfig ? { jackpot: campaign.jackpotConfig } : {}),
