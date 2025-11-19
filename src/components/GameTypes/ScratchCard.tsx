@@ -48,8 +48,16 @@ const ScratchCard: React.FC<ScratchCardProps> = ({
     }[gameSize] || { width: 250, height: 200 };
 
     const isVertical = cardShape === 'vertical-rectangle';
+    const isCircle = cardShape === 'circle';
     const aspectWidth = baseSize.width;
-    const aspectHeight = isVertical ? aspectWidth * 1.5 : baseSize.height;
+    let aspectHeight = baseSize.height;
+
+    if (isVertical) {
+      aspectHeight = aspectWidth * 1.5;
+    } else if (isCircle) {
+      aspectHeight = aspectWidth;
+    }
+
 
     // Ajustement pour les modals - réduction moins agressive
     if (isModal) {
