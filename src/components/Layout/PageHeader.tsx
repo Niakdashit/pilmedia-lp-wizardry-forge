@@ -6,13 +6,15 @@ interface PageHeaderProps {
   children?: React.ReactNode;
   variant?: 'default' | 'plain';
   size?: 'default' | 'sm';
+  className?: string;
 }
 const PageHeader: React.FC<PageHeaderProps> = ({
   title,
   actions,
   children,
   variant = 'default',
-  size = 'sm'
+  size = 'sm',
+  className = ''
 }) => {
   const titleClass = size === 'sm'
     ? 'text-2xl font-bold mb-4 text-[#44444d] drop-shadow-sm font-canva'
@@ -23,7 +25,7 @@ const PageHeader: React.FC<PageHeaderProps> = ({
 
   if (variant === 'default') {
     return (
-      <div className="relative w-full mt-2 pb-4 px-6 sm:px-8 lg:px-10 select-text z-10 overflow-hidden">
+      <div className={`relative w-full mt-2 pb-4 px-6 sm:px-8 lg:px-10 select-text z-10 overflow-hidden ${className}`}>
         {/* Fond glassmorphique pastel bleu, identique à QuickCreationSection */}
         {/* Suppression de l'ombre ici */}
         <div className="relative max-w-7xl mx-auto rounded-b-3xl overflow-hidden">
@@ -86,7 +88,7 @@ const PageHeader: React.FC<PageHeaderProps> = ({
 
   // "Plain" style: inchangé
   return (
-    <div className="w-full pt-8 px-6 sm:px-8 lg:px-10">
+    <div className={`w-full pt-8 px-6 sm:px-8 lg:px-10 ${className}`}>
       <div className="relative max-w-7xl mx-auto">
         <div className="relative z-10 flex flex-col items-center text-center">
           <h1 className={titleClass}>{title}</h1>
