@@ -62,7 +62,7 @@ const PageHeader: React.FC<PageHeaderProps> = ({
               </svg>
             </div>
             {/* Contenu principal */}
-            <div className="relative z-10 flex flex-col items-center text-center pt-4 pb-4 px-6">
+            <div className="relative z-10 flex flex-col items-center text-center pt-2 pb-3 px-6">
               <h1 className={titleClass}>{title}</h1>
               {children && <div className="mb-3 flex justify-center">{children}</div>}
               {actions && <div className={actionsClass}>{actions}</div>}
