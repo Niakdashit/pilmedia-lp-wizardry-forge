@@ -1,4 +1,4 @@
-import { lazy, useEffect } from 'react';
+import { lazy, useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AppProvider } from './context/AppContext';
 import { BrandThemeProvider } from './contexts/BrandThemeContext';
@@ -9,6 +9,8 @@ import { LoadingBoundary, EditorLoader, MinimalLoader } from './components/share
 import DebugConsoleFloatButton from './components/DebugConsoleFloatButton';
 import { routePrefetcher, ROUTE_LOADERS, ROUTE_NEIGHBORS } from './utils/routePrefetch';
 import CampaignStatisticsFull from './pages/CampaignStatisticsFull';
+import { CookieBanner } from './components/GDPR/CookieBanner';
+import { GDPRSettings } from './components/GDPR/GDPRSettings';
 
 // Lazy-loaded pages to prevent import-time crashes from heavy modules at startup
 const Dashboard = lazy(() => import('./pages/Dashboard'));
@@ -46,8 +48,13 @@ const OEmbed = lazy(() => import('./pages/OEmbed'));
 const IntegrationsTest = lazy(() => import('./pages/IntegrationsTest'));
 const ShortUrlRedirect = lazy(() => import('./pages/ShortUrlRedirect'));
 const DebugConsoleErrorPage = lazy(() => import('./pages/DebugConsoleErrorPage'));
+const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
+const TermsOfService = lazy(() => import('./pages/TermsOfService'));
+const LegalNotice = lazy(() => import('./pages/LegalNotice'));
 
 function App() {
+  const [showGDPRSettings, setShowGDPRSettings] = useState(false);
+
   // Enregistrement des routes pour le prefetching intelligent
   useEffect(() => {
     // Enregistrer toutes les routes dans le prefetcher
@@ -218,8 +225,33 @@ function App() {
                   <DebugConsoleErrorPage />
                 </LoadingBoundary>
               } />
+
+              {/* Legal pages */}
+              <Route path="/privacy" element={
+                <LoadingBoundary>
+                  <PrivacyPolicy />
+                </LoadingBoundary>
+              } />
+              <Route path="/terms" element={
+                <LoadingBoundary>
+                  <TermsOfService />
+                </LoadingBoundary>
+              } />
+              <Route path="/legal" element={
+                <LoadingBoundary>
+                  <LegalNotice />
+                </LoadingBoundary>
+              } />
               </Routes>
             </LoadingBoundary>
+
+            {/* GDPR Cookie Banner */}
+            <CookieBanner onSettingsClick={() => setShowGDPRSettings(true)} />
+            
+            {/* GDPR Settings Modal */}
+            {showGDPRSettings && (
+              <GDPRSettings onClose={() => setShowGDPRSettings(false)} />
+            )}
           </Router>
         </BrandThemeProvider>
       </AuthProvider>
