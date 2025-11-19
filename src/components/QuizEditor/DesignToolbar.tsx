@@ -126,9 +126,21 @@ const QuizToolbar: React.FC<QuizToolbarProps> = React.memo(({
       return;
     }
     
-    // Sauvegarder
+    // Vérifier si c'est une campagne temporaire avant la sauvegarde
+    const currentId = (campaignState as any)?.id || campaignId;
+    const isTempId = currentId && typeof currentId === 'string' && currentId.startsWith('temp-');
+    
+    // Sauvegarder et récupérer l'ID réel si c'était temporaire
     if (onSave) {
       await onSave();
+    }
+    
+    // Si c'était un ID temporaire, récupérer le nouvel ID depuis le state
+    if (isTempId) {
+      const newId = (campaignState as any)?.id;
+      if (newId && !newId.startsWith('temp-')) {
+        console.log('✅ ID temporaire remplacé:', { old: currentId, new: newId });
+      }
     }
     
     // Rediriger vers la liste des campagnes
