@@ -20,6 +20,11 @@ interface ScratchCardProps {
   config: any;
   isModal?: boolean;
   cardShape?: string;
+  borderConfig?: {
+    type?: 'internal' | 'external';
+    color: string;
+    width: number;
+  };
 }
 
 const ScratchCard: React.FC<ScratchCardProps> = ({
@@ -36,7 +41,8 @@ const ScratchCard: React.FC<ScratchCardProps> = ({
   isSelected,
   config,
   isModal = false,
-  cardShape
+  cardShape,
+  borderConfig: borderConfigProp
 }) => {
   // Dimensions selon la taille avec adaptation pour modal
   const getDimensions = () => {
@@ -112,7 +118,7 @@ const ScratchCard: React.FC<ScratchCardProps> = ({
   const borderRadiusClass = getBorderRadiusClass();
   
   // Gérer les styles de bordure
-  const borderConfig = config?.grid?.border || config?.scratchConfig?.grid?.border;
+  const borderConfig = borderConfigProp || config?.grid?.border || config?.scratchConfig?.grid?.border;
   console.log('[ScratchCard] Border config:', borderConfig, 'Grid on config:', config?.grid, 'ScratchConfig:', config?.scratchConfig);
   
   const getBorderStyles = () => {
@@ -120,10 +126,10 @@ const ScratchCard: React.FC<ScratchCardProps> = ({
       console.log('[ScratchCard] No border config, using no extra border');
       return {};
     }
-
+ 
     const { color, width: borderWidth } = borderConfig;
     console.log('[ScratchCard] Applying card border:', { color, borderWidth });
-
+ 
     return {
       border: `${borderWidth}px solid ${color}`,
       boxSizing: 'border-box' as const

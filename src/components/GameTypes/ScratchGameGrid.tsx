@@ -100,6 +100,7 @@ const ScratchGameGrid: React.FC<ScratchGameGridProps> = ({
                   config={config}
                   isModal={isModal}
                   cardShape={cardShape}
+                  borderConfig={borderConfig}
                 />
               </div>
             );
