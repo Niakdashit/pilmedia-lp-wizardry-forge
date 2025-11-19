@@ -73,6 +73,7 @@ const GameRenderer: React.FC<GameRendererProps> = ({
         return (
           <ScratchPreview
             {...commonProps}
+            config={campaign.scratchConfig || gameConfig}
             key={`scratch-${campaign._lastUpdate || Date.now()}`}
           />
         );

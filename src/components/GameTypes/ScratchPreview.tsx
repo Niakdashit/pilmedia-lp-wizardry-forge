@@ -39,6 +39,8 @@ const ScratchPreview: React.FC<ScratchPreviewProps> = ({
   participantId,
   useDotationSystem = true
 }) => {
+  // Utiliser scratchConfig de la campagne en priorité
+  const scratchConfig = campaign?.scratchConfig || config;
   // ✅ LOGIQUE FUNNEL UNLOCKED : le jeu ne démarre que si disabled=false (formulaire validé)
   const [gameStarted, setGameStarted] = useState(false);
   const [finishedCards, setFinishedCards] = useState<Set<number>>(new Set());
@@ -81,7 +83,7 @@ const ScratchPreview: React.FC<ScratchPreviewProps> = ({
       try {
         console.log('🎴 [Scratch] Using dotation system');
         
-        const totalCards = config?.cards?.length || 3;
+        const totalCards = scratchConfig?.cards?.length || 3;
         const result = await scratchDotationIntegration.determineScratchResult(
           {
             campaignId: campaign.id,
@@ -132,7 +134,7 @@ const ScratchPreview: React.FC<ScratchPreviewProps> = ({
       setHasWon(true);
     }
 
-    const totalCards = config?.cards?.length || 1;
+    const totalCards = scratchConfig?.cards?.length || 1;
     if (newFinishedCards.size >= totalCards) {
       setShowResult(true);
       setTimeout(() => {
@@ -147,23 +149,23 @@ const ScratchPreview: React.FC<ScratchPreviewProps> = ({
   };
 
   // Ensure we have at least one card with proper defaults
-  const configuredCards = Array.isArray(config?.cards) ? config.cards : [];
-  const maxCards = typeof config?.maxCards === 'number' ? config.maxCards : configuredCards.length;
+  const configuredCards = Array.isArray(scratchConfig?.cards) ? scratchConfig.cards : [];
+  const maxCards = typeof scratchConfig?.grid?.maxCards === 'number' ? scratchConfig.grid.maxCards : configuredCards.length;
   const cards = configuredCards.length > 0
     ? configuredCards.slice(0, Math.max(1, maxCards || configuredCards.length))
     : [{
         id: 1,
-        revealImage: config?.revealImage || '',
-        revealMessage: config?.revealMessage || 'Félicitations !',
-        scratchColor: config?.scratchColor || '#C0C0C0'
+        revealImage: scratchConfig?.revealImage || '',
+        revealMessage: scratchConfig?.revealMessage || 'Félicitations !',
+        scratchColor: scratchConfig?.scratchColor || '#C0C0C0'
       }];
 
   // ✅ INTERFACE DE DÉMARRAGE : respecte le funnel unlocked
   if (!gameStarted) {
     return (
       <div className="w-full h-full flex flex-col" style={{ 
-        background: config?.globalCover?.type === 'color' 
-          ? config.globalCover.value 
+        background: scratchConfig?.globalCover?.type === 'color' 
+          ? scratchConfig.globalCover.value 
           : 'linear-gradient(to bottom right, rgb(249, 250, 251), rgb(243, 244, 246))'
       }}>
         {/* Zone d'aperçu des cartes - prend tout l'espace disponible */}
@@ -177,9 +179,9 @@ const ScratchPreview: React.FC<ScratchPreviewProps> = ({
           onScratchStart={() => {}}
           selectedCard={null}
           scratchStarted={false}
-          config={config}
+          config={scratchConfig}
           isModal={isModal}
-          gridConfig={config?.grid}
+          gridConfig={scratchConfig?.grid}
           maxCards={maxCards}
           allCardsScratching={true}
         />
@@ -216,8 +218,8 @@ const ScratchPreview: React.FC<ScratchPreviewProps> = ({
 
   return (
     <div className="w-full h-full flex flex-col" style={{ 
-      background: config?.globalCover?.type === 'color' 
-        ? config.globalCover.value 
+      background: scratchConfig?.globalCover?.type === 'color' 
+        ? scratchConfig.globalCover.value 
         : 'linear-gradient(to bottom right, rgb(249, 250, 251), rgb(243, 244, 246))'
     }}>
       {/* Zone de jeu - prend tout l'espace disponible */}
@@ -231,9 +233,9 @@ const ScratchPreview: React.FC<ScratchPreviewProps> = ({
           onScratchStart={handleScratchStart}
           selectedCard={null}
           scratchStarted={true}
-          config={config}
+          config={scratchConfig}
           isModal={isModal}
-          gridConfig={config?.grid}
+          gridConfig={scratchConfig?.grid}
           maxCards={maxCards}
           allCardsScratching={true}
         />
