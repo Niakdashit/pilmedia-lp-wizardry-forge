@@ -58,7 +58,7 @@ const QuickCreationSection: React.FC = () => {
         
         <div className="relative z-10">
           <div className="text-center mb-8">
-            <h2 className="text-2xl font-bold mb-2 text-[#44444d] drop-shadow-sm">Qu'allez-vous créer aujourd'hui ?</h2>
+            <h2 className="title-canva-sm text-[#44444d] mb-2 drop-shadow-sm">Qu'allez-vous créer aujourd'hui ?</h2>
           </div>
 
         {showAdvanced && (
