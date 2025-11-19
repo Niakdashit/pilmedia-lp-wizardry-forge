@@ -55,10 +55,10 @@ export default function Partnerships() {
         </p>
       </PageHeader>
 
-      <div className="px-6 space-y-6">
-        <div className="max-w-7xl mx-auto py-6">
+      <div className="px-6 sm:px-8 lg:px-10 py-6">
+        <div className="max-w-7xl mx-auto space-y-6">
         {/* Stats rapides */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="bg-accent/50 border rounded-xl p-6">
               <div className="flex items-center gap-4">
                 <div className="p-3 bg-card rounded-lg shadow-sm border">
