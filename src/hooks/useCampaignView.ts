@@ -129,7 +129,8 @@ export const useCampaignView = (campaignId: string) => {
 
   // Initialiser le tracking
   useEffect(() => {
-    if (!campaignId || isTracking) return;
+    if (!campaignId) return;
+    if (isTracking) return;
 
     const initTracking = async () => {
       // 🎯 Détecter si on est en mode preview
@@ -167,10 +168,11 @@ export const useCampaignView = (campaignId: string) => {
       };
 
       trackingDataRef.current = trackingData;
-      setIsTracking(true);
-
+      
       // Track initial view
       trackInteraction('click', { action: 'page_load' });
+      
+      setIsTracking(true);
     };
 
     initTracking();
@@ -196,7 +198,7 @@ export const useCampaignView = (campaignId: string) => {
       clearInterval(interval);
       sendTrackingData(true); // Send final data
     };
-  }, [campaignId, isTracking]);
+  }, [campaignId]); // Only re-run if campaignId changes
 
   return {
     trackInteraction,

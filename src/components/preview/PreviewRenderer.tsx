@@ -82,9 +82,9 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
   // Hook de synchronisation pour obtenir les données canoniques
   const { getCanonicalPreviewData } = useEditorPreviewSync();
   
-  // 📊 Track campaign view (même en mode preview)
-  const campaignId = campaign?.id;
-  const { trackInteraction } = useCampaignView(campaignId || '');
+  // 📊 Track campaign view (même en mode preview) - Stabilize campaignId to prevent infinite loops
+  const campaignId = useMemo(() => campaign?.id || '', [campaign?.id]);
+  const { trackInteraction } = useCampaignView(campaignId);
 
   // Mark body as being in preview to hide any editor-only overlays/controls (zoom slider, screen selector)
   useEffect(() => {
