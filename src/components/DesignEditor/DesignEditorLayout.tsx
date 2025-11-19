@@ -2223,33 +2223,23 @@ useEffect(() => {
   const handleSave = async () => {
     setIsLoading(true);
     try {
-      // 🔄 Synchroniser tous les états locaux avec le campaign avant la sauvegarde
-      syncAllStates({
-        canvasElements,
-        modularPage,
-        screenBackgrounds,
-        extractedColors,
-        selectedDevice,
-        canvasZoom
-      });
-      
-      // Récupérer le campaign mis à jour après synchronisation
-      const updatedCampaign = useEditorStore.getState().campaign;
+      // 🔄 CRITICAL: Récupérer le campaign AVANT la construction du payload
+      const currentCampaign = useEditorStore.getState().campaign;
       
       // Build complete payload with modules in all required locations (aligné avec QuizEditor)
       const payload: any = {
-        ...updatedCampaign,
-        editorMode, // Ajouter le mode éditeur (article ou fullscreen)
-        editor_mode: editorMode, // DB field pour cohérence
-        // Inclure explicitement la config Article si présente
-        ...(updatedCampaign as any)?.articleConfig ? { articleConfig: (updatedCampaign as any).articleConfig } : {},
+        ...currentCampaign,
+        editorMode,
+        editor_mode: editorMode,
+        ...(currentCampaign as any)?.articleConfig ? { articleConfig: (currentCampaign as any).articleConfig } : {},
         modularPage,
         design: {
-          ...((updatedCampaign as any)?.design || {}),
+          ...((currentCampaign as any)?.design || {}),
+          quizModules: modularPage,
           designModules: modularPage
         },
         config: {
-          ...((updatedCampaign as any)?.config || {}),
+          ...((currentCampaign as any)?.config || {}),
           modularPage,
           canvasConfig: {
             elements: canvasElements,
