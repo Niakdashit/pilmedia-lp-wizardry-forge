@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, Building2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import ImageUpload from '@/components/common/ImageUpload';
 
 interface CreateOrganizationModalProps {
   isOpen: boolean;
@@ -121,14 +122,12 @@ export const CreateOrganizationModal: React.FC<CreateOrganizationModalProps> = (
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              URL du logo (optionnel)
+              Logo (optionnel)
             </label>
-            <input
-              type="url"
+            <ImageUpload
               value={logoUrl}
-              onChange={(e) => setLogoUrl(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-              placeholder="https://..."
+              onChange={setLogoUrl}
+              label=""
             />
           </div>
 
@@ -136,14 +135,14 @@ export const CreateOrganizationModal: React.FC<CreateOrganizationModalProps> = (
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+              className="flex-1 px-4 py-2 border border-input bg-background text-foreground rounded-lg hover:bg-accent hover:text-accent-foreground transition-colors font-medium"
             >
               Annuler
             </button>
             <button
               type="submit"
               disabled={loading || !name}
-              className="flex-1 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? 'Création...' : 'Créer'}
             </button>
