@@ -2234,7 +2234,9 @@ useEffect(() => {
         ...(currentCampaign as any)?.articleConfig ? { articleConfig: (currentCampaign as any).articleConfig } : {},
         modularPage,
         design: {
+          // On fusionne d'abord la version store, puis la version locale (campaignConfig)
           ...((currentCampaign as any)?.design || {}),
+          ...(campaignConfig as any)?.design || {},
           quizModules: modularPage,
           designModules: modularPage
         },
