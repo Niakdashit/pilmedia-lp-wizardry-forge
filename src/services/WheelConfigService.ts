@@ -144,7 +144,7 @@ export class WheelConfigService {
   /**
    * Détecte la présence d'un module BlocPiedDePage dans la campagne
    */
-  private static detectFooterModule(campaign: any): boolean {
+  static detectFooterModule(campaign: any): boolean {
     try {
       const modularPage = campaign?.design?.modularPage;
       const screens = modularPage?.screens;
