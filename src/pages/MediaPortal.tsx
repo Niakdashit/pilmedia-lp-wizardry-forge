@@ -36,14 +36,15 @@ const MediaPortal: React.FC = () => {
   );
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="-mx-6 -mt-6">
       <PageHeader 
         title="Espace Média"
       >
         <p className="text-base text-muted-foreground">{partnerLoading ? 'Chargement du profil média…' : partner?.name || 'Profil média non configuré'}</p>
       </PageHeader>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div className="px-6 space-y-6">
+        <div className="max-w-7xl mx-auto py-6">
         <div className="border-b border-gray-200 mb-6">
           <nav className="-mb-px flex gap-6">
             <TabButton id="requests" label="Demandes" icon={<Inbox className="w-4 h-4" />} />
@@ -150,6 +151,7 @@ const MediaPortal: React.FC = () => {
           </div>
         )}
         </div>
+      </div>
       </div>
     </div>
   );

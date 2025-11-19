@@ -84,14 +84,15 @@ const Admin: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="-mx-6 -mt-6">
       <PageHeader 
         title="Administration"
       >
         <p className="text-base text-muted-foreground">Gestion de la plateforme</p>
       </PageHeader>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div className="px-6 space-y-6">
+        <div className="max-w-7xl mx-auto py-6">
         {/* Tabs */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 mb-6">
           <div className="flex border-b border-gray-200">
@@ -232,6 +233,7 @@ const Admin: React.FC = () => {
         )}
       </div>
       )}
+      </div>
       </div>
     </div>
   );
