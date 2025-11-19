@@ -43,7 +43,6 @@ const MediaPortal = lazy(() => import('./pages/MediaPortal'));
 const CampaignSettings = lazy(() => import('./pages/CampaignSettings'));
 // Import direct sans lazy loading pour debug
 // const CampaignStatistics = lazy(() => import('./pages/CampaignStatisticsMinimal'));
-const PublicCampaign = lazy(() => import('./pages/PublicCampaign'));
 const OEmbed = lazy(() => import('./pages/OEmbed'));
 const IntegrationsTest = lazy(() => import('./pages/IntegrationsTest'));
 const ShortUrlRedirect = lazy(() => import('./pages/ShortUrlRedirect'));
@@ -51,6 +50,9 @@ const DebugConsoleErrorPage = lazy(() => import('./pages/DebugConsoleErrorPage')
 const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
 const TermsOfService = lazy(() => import('./pages/TermsOfService'));
 const LegalNotice = lazy(() => import('./pages/LegalNotice'));
+
+// Import direct (non lazy) pour la page publique - pas de spinner
+import PublicCampaignPage from './pages/PublicCampaign';
 
 function App() {
   const [showGDPRSettings, setShowGDPRSettings] = useState(false);
@@ -194,12 +196,8 @@ function App() {
                   <CampaignSettings />
                 </LoadingBoundary>
               } />
-              {/* Public campaign view */}
-              <Route path="/campaign/:id" element={
-                <LoadingBoundary>
-                  <PublicCampaign />
-                </LoadingBoundary>
-              } />
+              {/* Public campaign view - No spinner, direct load */}
+              <Route path="/campaign/:id" element={<PublicCampaignPage />} />
               {/* oEmbed endpoint */}
               <Route path="/oembed" element={
                 <LoadingBoundary>
