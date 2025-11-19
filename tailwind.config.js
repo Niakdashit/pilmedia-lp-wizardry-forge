@@ -9,12 +9,17 @@ export default {
     extend: {
       fontFamily: {
         sans: ['Inter', 'sans-serif'],
+        'heading': ['Plus Jakarta Sans', 'Inter', 'sans-serif'],
         'brand': ['Titan One', 'Impact', 'Bebas Neue', 'Oswald', 'Anton', 'sans-serif'],
         'sifonn': ['Titan One', 'Impact', 'Bebas Neue', 'sans-serif'],
         'impact': ['Impact', 'Bebas Neue', 'Oswald', 'sans-serif'],
         'condensed': ['Bebas Neue', 'Oswald', 'Anton', 'Impact', 'sans-serif'],
         'oswald': ['Oswald', 'sans-serif'],
         'lobster': ['Lobster', 'cursive'],
+      },
+      fontSize: {
+        'display': ['3.5rem', { lineHeight: '1.1', fontWeight: '600' }], // 56px - Grand titre type Canva
+        'display-sm': ['3rem', { lineHeight: '1.1', fontWeight: '600' }], // 48px
       },
       colors: {
         primary: {
