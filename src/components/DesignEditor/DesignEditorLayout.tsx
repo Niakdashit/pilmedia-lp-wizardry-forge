@@ -553,47 +553,49 @@ useEffect(() => {
   });
 }, [canvasElements, screenBackgrounds, selectedDevice, canvasZoom, setCampaign, hasInitialLoad]);
 
-// 💾 Autosave léger et non intrusif des éléments du canvas
-useEffect(() => {
-  if (!hasInitialLoad || isRestoringRef.current) return;
-  const id = (campaignState as any)?.id as string | undefined;
-  const isUuid = (v?: string) => !!v && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v);
-  if (!id || !isUuid(id) || isRestoringRef.current) return;
-  const t = window.setTimeout(async () => {
-    try {
-      const payload: any = {
-        ...(campaignState || {}),
-        editorMode,
-        editor_mode: editorMode,
-        // Inclure articleConfig pour le mode article
-        ...(campaignState as any)?.articleConfig ? { articleConfig: (campaignState as any).articleConfig } : {},
-        type: 'wheel',
-        extractedColors, // ✅ Include extracted colors
-        modularPage,
-        canvasElements,
-        screenBackgrounds,
-        selectedDevice,
-        canvasConfig: {
-          ...(campaignState as any)?.canvasConfig,
-          elements: canvasElements,
+  // 💾 Autosave léger et non intrusif des éléments du canvas
+  useEffect(() => {
+    // Ne rien faire tant que le chargement initial n'est pas terminé
+    // ou si aucune modification n'a été faite.
+    if (!hasInitialLoad || isRestoringRef.current || !isModified) return;
+    const id = (campaignState as any)?.id as string | undefined;
+    const isUuid = (v?: string) => !!v && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v);
+    if (!id || !isUuid(id) || isRestoringRef.current) return;
+    const t = window.setTimeout(async () => {
+      try {
+        const payload: any = {
+          ...(campaignState || {}),
+          editorMode,
+          editor_mode: editorMode,
+          // Inclure articleConfig pour le mode article
+          ...(campaignState as any)?.articleConfig ? { articleConfig: (campaignState as any).articleConfig } : {},
+          type: 'wheel',
+          extractedColors, // ✅ Include extracted colors
+          modularPage,
+          canvasElements,
           screenBackgrounds,
-          device: selectedDevice,
-          zoom: canvasZoom,
-          background: canvasBackground
-        }
-      };
-      console.log('💾 [DesignEditor] Autosave complete state → DB', {
-        canvasElements: canvasElements.length,
-        modularScreens: Object.keys(modularPage?.screens || {}).length
-      });
-      await saveCampaignToDB(payload, saveCampaign);
-      setIsModified(false);
-    } catch (e) {
-      console.warn('⚠️ Autosave canvas failed', e);
-    }
-  }, 1000);
-  return () => clearTimeout(t);
-}, [campaignState?.id, canvasElements, screenBackgrounds, selectedDevice, canvasZoom, canvasBackground, hasInitialLoad]);
+          selectedDevice,
+          canvasConfig: {
+            ...(campaignState as any)?.canvasConfig,
+            elements: canvasElements,
+            screenBackgrounds,
+            device: selectedDevice,
+            zoom: canvasZoom,
+            background: canvasBackground
+          }
+        };
+        console.log('💾 [DesignEditor] Autosave complete state → DB', {
+          canvasElements: canvasElements.length,
+          modularScreens: Object.keys(modularPage?.screens || {}).length
+        });
+        await saveCampaignToDB(payload, saveCampaign);
+        setIsModified(false);
+      } catch (e) {
+        console.warn('⚠️ Autosave canvas failed', e);
+      }
+    }, 1000);
+    return () => clearTimeout(t);
+  }, [campaignState?.id, canvasElements, screenBackgrounds, selectedDevice, canvasZoom, canvasBackground, hasInitialLoad, isModified]);
 
 
   // État pour tracker la position de scroll (quel écran est visible)
