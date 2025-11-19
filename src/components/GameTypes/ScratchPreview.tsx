@@ -161,30 +161,55 @@ const ScratchPreview: React.FC<ScratchPreviewProps> = ({
       }];
 
   // ✅ INTERFACE DE DÉMARRAGE : respecte le funnel unlocked
+  const borderConfig = scratchConfig?.grid?.border;
+
+  const getWrapperStyles = (base: React.CSSProperties) => {
+    if (!borderConfig) return base;
+
+    const { type, color, width } = borderConfig;
+
+    if (type === 'external') {
+      return {
+        ...base,
+        border: `${width}px solid ${color}`
+      };
+    }
+
+    // Interne : cadre à l'intérieur
+    return {
+      ...base,
+      boxShadow: `inset 0 0 0 ${width}px ${color}`
+    };
+  };
+
   if (!gameStarted) {
     return (
-      <div className="w-full h-full flex flex-col" style={{ 
-        background: scratchConfig?.globalCover?.type === 'color' 
-          ? scratchConfig.globalCover.value 
-          : 'linear-gradient(to bottom right, rgb(249, 250, 251), rgb(243, 244, 246))'
-      }}>
+      <div
+        className="w-full h-full flex flex-col"
+        style={getWrapperStyles({
+          background:
+            scratchConfig?.globalCover?.type === 'color'
+              ? scratchConfig.globalCover.value
+              : 'linear-gradient(to bottom right, rgb(249, 250, 251), rgb(243, 244, 246))'
+        })}
+      >
         {/* Zone d'aperçu des cartes - prend tout l'espace disponible */}
         <div className="flex-1 w-full h-full">
-        <ScratchGameGrid
-          cards={cards}
-          gameSize={gameSize}
-          gameStarted={false}
-          onCardFinish={() => {}}
-          onCardSelect={() => {}}
-          onScratchStart={() => {}}
-          selectedCard={null}
-          scratchStarted={false}
-          config={scratchConfig}
-          isModal={isModal}
-          gridConfig={scratchConfig?.grid}
-          maxCards={maxCards}
-          allCardsScratching={true}
-        />
+          <ScratchGameGrid
+            cards={cards}
+            gameSize={gameSize}
+            gameStarted={false}
+            onCardFinish={() => {}}
+            onCardSelect={() => {}}
+            onScratchStart={() => {}}
+            selectedCard={null}
+            scratchStarted={false}
+            config={scratchConfig}
+            isModal={isModal}
+            gridConfig={scratchConfig?.grid}
+            maxCards={maxCards}
+            allCardsScratching={true}
+          />
         </div>
 
         {/* ✅ BOUTON DE DÉMARRAGE : respecte disabled pour le funnel */}
@@ -193,13 +218,12 @@ const ScratchPreview: React.FC<ScratchPreviewProps> = ({
             <div className="space-y-2">
               <h3 className="text-xl font-bold text-gray-800">Cartes à gratter</h3>
               <p className="text-gray-600">
-                {disabled 
-                  ? "Remplissez le formulaire pour commencer à jouer" 
-                  : "Cliquez sur le bouton pour commencer à jouer"
-                }
+                {disabled
+                  ? 'Remplissez le formulaire pour commencer à jouer'
+                  : 'Cliquez sur le bouton pour commencer à jouer'}
               </p>
             </div>
-            
+
             <button
               onClick={handleGameStart}
               disabled={disabled}
@@ -217,11 +241,15 @@ const ScratchPreview: React.FC<ScratchPreviewProps> = ({
   }
 
   return (
-    <div className="w-full h-full flex flex-col" style={{ 
-      background: scratchConfig?.globalCover?.type === 'color' 
-        ? scratchConfig.globalCover.value 
-        : 'linear-gradient(to bottom right, rgb(249, 250, 251), rgb(243, 244, 246))'
-    }}>
+    <div
+      className="w-full h-full flex flex-col"
+      style={getWrapperStyles({
+        background:
+          scratchConfig?.globalCover?.type === 'color'
+            ? scratchConfig.globalCover.value
+            : 'linear-gradient(to bottom right, rgb(249, 250, 251), rgb(243, 244, 246))'
+      })}
+    >
       {/* Zone de jeu - prend tout l'espace disponible */}
       <div className="flex-1 w-full h-full">
         <ScratchGameGrid
