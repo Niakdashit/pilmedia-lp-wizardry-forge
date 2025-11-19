@@ -70,7 +70,7 @@ const ScratchGamePanelRefactored: React.FC<ScratchGamePanelProps> = ({
   ];
 
   const shapeOptions = [
-    { value: 'rounded', label: 'Rectangle' },
+    { value: 'vertical-rectangle', label: 'Rectangle' },
     { value: 'square', label: 'Carré' },
     { value: 'circle', label: 'Cercle' }
   ];
