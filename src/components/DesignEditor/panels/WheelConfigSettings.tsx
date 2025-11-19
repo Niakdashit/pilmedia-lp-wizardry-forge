@@ -378,7 +378,7 @@ const WheelConfigSettings: React.FC<WheelConfigSettingsProps> = ({
 
         <div>
           <label className="block text-sm font-semibold mb-3">
-            Position de la roue {selectedDevice !== 'desktop' && '(Desktop uniquement)'}
+            Position de la roue {selectedDevice !== 'desktop' && '(Centre uniquement sur mobile/tablette)'}
           </label>
           <div className="inline-flex rounded-md overflow-hidden border border-[hsl(var(--sidebar-border))]">
             <button
@@ -398,10 +398,9 @@ const WheelConfigSettings: React.FC<WheelConfigSettingsProps> = ({
                 console.log('🖱️ [WheelConfigSettings] Position button clicked: center');
                 handlePositionChange('center');
               }}
-              disabled={selectedDevice !== 'desktop'}
-              className={`px-3 py-2 text-sm transition-colors border-l border-r border-[hsl(var(--sidebar-border))] disabled:opacity-50 disabled:cursor-not-allowed ${wheelPosition === 'center' ? 'bg-[hsl(var(--sidebar-active))] text-white' : 'bg-[hsl(var(--sidebar-surface))] text-[hsl(var(--sidebar-text-primary))] hover:bg-[hsl(var(--sidebar-hover))]'}`}
+              className={`px-3 py-2 text-sm transition-colors border-l border-r border-[hsl(var(--sidebar-border))] ${wheelPosition === 'center' ? 'bg-[hsl(var(--sidebar-active))] text-white' : 'bg-[hsl(var(--sidebar-surface))] text-[hsl(var(--sidebar-text-primary))] hover:bg-[hsl(var(--sidebar-hover))]'}`}
             >
-              Centre
+              Centre bas
             </button>
             <button
               type="button"
@@ -409,10 +408,9 @@ const WheelConfigSettings: React.FC<WheelConfigSettingsProps> = ({
                 console.log('🖱️ [WheelConfigSettings] Position button clicked: centerTop');
                 handlePositionChange('centerTop');
               }}
-              disabled={selectedDevice !== 'desktop'}
-              className={`px-3 py-2 text-sm transition-colors border-r border-[hsl(var(--sidebar-border))] disabled:opacity-50 disabled:cursor-not-allowed ${wheelPosition === 'centerTop' ? 'bg-[hsl(var(--sidebar-active))] text-white' : 'bg-[hsl(var(--sidebar-surface))] text-[hsl(var(--sidebar-text-primary))] hover:bg-[hsl(var(--sidebar-hover))]'}`}
+              className={`px-3 py-2 text-sm transition-colors border-r border-[hsl(var(--sidebar-border))] ${wheelPosition === 'centerTop' ? 'bg-[hsl(var(--sidebar-active))] text-white' : 'bg-[hsl(var(--sidebar-surface))] text-[hsl(var(--sidebar-text-primary))] hover:bg-[hsl(var(--sidebar-hover))]'}`}
             >
-              Centre haut
+              Centre
             </button>
             <button
               type="button"
