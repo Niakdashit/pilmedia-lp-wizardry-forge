@@ -185,8 +185,9 @@ export class WheelConfigService {
       scale: 1,
       size: 200,
       showBulbs: false, // Ampoules décochées par défaut
-      position: 'center' as const,
-
+      // Par défaut, on considère la position "centre" pleine hauteur
+      position: 'centerTop' as const,
+ 
     };
 
     // Priorité 1: Configuration de la modal roue (modifications en cours)
