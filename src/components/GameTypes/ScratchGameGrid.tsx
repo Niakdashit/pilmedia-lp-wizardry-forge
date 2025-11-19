@@ -55,28 +55,6 @@ const ScratchGameGrid: React.FC<ScratchGameGridProps> = ({
   console.log('[ScratchGameGrid] config.grid:', JSON.stringify(config?.grid, null, 2));
   console.log('[ScratchGameGrid] config.scratchConfig:', JSON.stringify(config?.scratchConfig, null, 2));
   console.log('[ScratchGameGrid] borderConfig FINAL:', JSON.stringify(borderConfig, null, 2));
- 
-  const getBorderStyles = () => {
-     if (!borderConfig) {
-       console.log('[ScratchGameGrid] No borderConfig, returning empty styles');
-       return {};
-     }
-     const { type, color, width } = borderConfig;
-  
-     console.log('[ScratchGameGrid] Applying border:', { type, color, width });
-  
-     if (type === 'external') {
-       return {
-         borderRadius: '24px',
-         border: `${width}px solid ${color}`
-       };
-     }
-  
-     return {
-       borderRadius: '24px',
-       boxShadow: `inset 0 0 0 ${width}px ${color}`
-     };
-   };
 
   return (
     <div className="w-full h-full flex items-center justify-center p-3">
@@ -106,7 +84,6 @@ const ScratchGameGrid: React.FC<ScratchGameGridProps> = ({
               <div
                 key={card.id || index}
                 className="flex justify-center items-center"
-                style={getBorderStyles()}
               >
                 <ScratchCard
                   card={card}

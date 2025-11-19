@@ -125,15 +125,19 @@ const ScratchCard: React.FC<ScratchCardProps> = ({
     console.log('[ScratchCard] Border styles:', { type, color, borderWidth });
     
     if (type === 'external') {
+      // Outline externe - toujours visible au-dessus du contenu
       return {
-        border: 'none',
         outline: `${borderWidth}px solid ${color}`,
-        outlineOffset: '0px'
+        outlineOffset: '0px',
+        position: 'relative' as const,
+        zIndex: 10
       };
     } else {
-      // internal - bordure à l'intérieur
+      // Contour interne - utilise box-shadow inset pour être visible au-dessus du canvas
       return {
-        border: `${borderWidth}px solid ${color}`
+        boxShadow: `inset 0 0 0 ${borderWidth}px ${color}`,
+        position: 'relative' as const,
+        zIndex: 10
       };
     }
   };
