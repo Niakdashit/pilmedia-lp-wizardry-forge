@@ -1159,7 +1159,7 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
                 </div>
               )}
               
-              {/* Autres modules (avec padding) - flex-1 pour pousser le footer en bas */}
+                {/* Autres modules (avec padding) - flex-1 pour pousser le footer en bas */}
               <div className="flex-1 relative">
                 {/* Rendu des éléments canvas (images et textes personnalisés) pour écran 3 */}
                 {campaign?.design?.customImages && campaign.design.customImages.length > 0 && (
@@ -1220,6 +1220,21 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
                       </div>
                     ))}
                   </div>
+                )}
+
+                {/* Modules réguliers (BlocTexte, etc.) - NOUVEAUTÉ: Support des modules modernes */}
+                {modules3.length > 0 && (
+                  <section 
+                    className="space-y-6" 
+                    data-screen="screen3"
+                    style={{ padding: safeZonePadding, boxSizing: 'border-box' }}
+                  >
+                    <ModuleRenderer
+                      modules={modules3 as any}
+                      previewMode={true}
+                      device={previewMode}
+                    />
+                  </section>
                 )}
 
                 {/* Messages de résultat dynamiques - Style Scratch Editor - Centré absolument */}
