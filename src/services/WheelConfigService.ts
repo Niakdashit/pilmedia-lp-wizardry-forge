@@ -172,14 +172,19 @@ export class WheelConfigService {
       position: wheelModalConfig?.wheelPosition
     };
 
-    // Priorité 2: Configuration de design existante
+    // Priorité 2: Configuration de design existante + anciens emplacements (robustesse BDD)
     const designConfig: Partial<{ borderStyle: string; borderColor: string; borderWidth: number; scale: number; showBulbs: boolean; position?: 'left' | 'right' | 'center' | 'centerTop' }> = {
       borderStyle: campaign?.design?.wheelBorderStyle || campaign?.design?.wheelConfig?.borderStyle,
       borderColor: campaign?.design?.wheelConfig?.borderColor,
       borderWidth: campaign?.design?.wheelConfig?.borderWidth,
       scale: campaign?.design?.wheelConfig?.scale,
       showBulbs: (campaign?.design?.wheelConfig as any)?.showBulbs,
-      position: (campaign?.design?.wheelConfig as any)?.position,
+      // 🔁 Position: supporter tous les anciens emplacements possibles (design, wheelConfig, game_config.wheel, config.roulette)
+      position:
+        (campaign as any)?.design?.wheelConfig?.position ??
+        (campaign as any)?.wheelConfig?.position ??
+        (campaign as any)?.game_config?.wheel?.position ??
+        (campaign as any)?.config?.roulette?.position,
  
     };
 
