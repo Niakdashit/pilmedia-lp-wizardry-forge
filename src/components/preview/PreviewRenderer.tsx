@@ -1075,7 +1075,7 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
                     : campaign.type === 'scratch'
                     ? (
                       <ScratchPreview
-                        config={campaign.gameConfig?.scratch || {}}
+                        config={campaign.scratchConfig || campaign.gameConfig?.scratch || {}}
                         disabled={false}
                         autoStart={true}
                         campaign={campaign}
