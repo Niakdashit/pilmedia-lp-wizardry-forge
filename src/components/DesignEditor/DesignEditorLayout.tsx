@@ -2012,13 +2012,28 @@ useEffect(() => {
     const currentWheelConfig = {
       borderStyle: wheelModalConfig?.wheelBorderStyle || campaignConfig?.wheelConfig?.borderStyle || campaignConfig?.design?.wheelBorderStyle || 'classic',
       borderColor: wheelModalConfig?.wheelBorderColor || campaignConfig?.wheelConfig?.borderColor || campaignConfig?.design?.wheelConfig?.borderColor || '#44444d',
-      scale: wheelModalConfig?.wheelScale !== undefined ? wheelModalConfig.wheelScale : (campaignConfig?.wheelConfig?.scale !== undefined ? campaignConfig.wheelConfig.scale : (campaignConfig?.design?.wheelConfig?.scale || 2.4))
+      scale: wheelModalConfig?.wheelScale !== undefined ? wheelModalConfig.wheelScale : (campaignConfig?.wheelConfig?.scale !== undefined ? campaignConfig.wheelConfig.scale : (campaignConfig?.design?.wheelConfig?.scale || 2.4)),
+      // 🔁 Inclure la position depuis wheelModalConfig, campaignConfig.design.wheelConfig (priorité absolue pour roue) ou campaignConfig.wheelConfig
+      position: wheelModalConfig?.wheelPosition || (campaignConfig as any)?.design?.wheelConfig?.position || (campaignConfig as any)?.wheelConfig?.position || 'center',
+      // 🔁 Inclure showBulbs depuis wheelModalConfig, campaignConfig.design.wheelConfig ou campaignConfig.wheelConfig
+      showBulbs: wheelModalConfig?.wheelShowBulbs !== undefined 
+        ? wheelModalConfig.wheelShowBulbs 
+        : ((campaignConfig as any)?.design?.wheelConfig?.showBulbs !== undefined 
+            ? (campaignConfig as any).design.wheelConfig.showBulbs 
+            : ((campaignConfig as any)?.wheelConfig?.showBulbs !== undefined 
+                ? (campaignConfig as any).wheelConfig.showBulbs 
+                : false))
     };
 
     console.log('🔄 CampaignData wheel config sync:', {
       wheelModalConfigScale: wheelModalConfig?.wheelScale,
+      wheelModalConfigPosition: wheelModalConfig?.wheelPosition,
+      wheelModalConfigShowBulbs: wheelModalConfig?.wheelShowBulbs,
       campaignConfigScale: campaignConfig?.wheelConfig?.scale,
+      campaignConfigPosition: (campaignConfig as any)?.design?.wheelConfig?.position,
       finalScale: currentWheelConfig.scale,
+      finalPosition: currentWheelConfig.position,
+      finalShowBulbs: currentWheelConfig.showBulbs,
       showFunnel
     });
 
