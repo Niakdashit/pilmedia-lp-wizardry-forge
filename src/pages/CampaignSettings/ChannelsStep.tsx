@@ -52,9 +52,24 @@ const ChannelsStep: React.FC<ControlledProps> = (props) => {
 
   // Auto-generate campaign URL when campaignId is available
   useEffect(() => {
-    if (campaignId && campaignId !== 'new' && campaignId !== 'preview') {
+    // Déterminer le meilleur ID public possible pour générer l'URL
+    let effectiveId = campaignId;
+
+    if (typeof window !== 'undefined') {
+      try {
+        const urlParamId = new URLSearchParams(window.location.search).get('campaign');
+        // Si l'URL contient déjà un vrai UUID, on le privilégie
+        if (urlParamId && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(urlParamId)) {
+          effectiveId = urlParamId;
+        }
+      } catch {
+        // no-op
+      }
+    }
+
+    if (effectiveId && effectiveId !== 'new' && effectiveId !== 'preview') {
       const currentUrl = (form.campaign_url as any)?.url;
-      const generatedUrl = `${window.location.origin}/campaign/${campaignId}`;
+      const generatedUrl = `${window.location.origin}/campaign/${effectiveId}`;
       
       // Only set if URL is empty or not already set
       if (!currentUrl || currentUrl.trim() === '') {
