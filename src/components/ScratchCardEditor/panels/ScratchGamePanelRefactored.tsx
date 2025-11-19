@@ -415,11 +415,10 @@ const ScratchGamePanelRefactored: React.FC<ScratchGamePanelProps> = ({
                       <button
                         onClick={() => updateStoreGrid({ 
                           border: { 
-                            ...scratchConfig.grid?.border, 
                             type: 'internal',
                             color: scratchConfig.grid?.border?.color || '#000000',
                             width: scratchConfig.grid?.border?.width || 2
-                          } as any
+                          }
                         })}
                         className={`px-3 py-2 text-sm rounded-lg border-2 transition-all ${
                           scratchConfig.grid?.border?.type === 'internal'
@@ -432,11 +431,10 @@ const ScratchGamePanelRefactored: React.FC<ScratchGamePanelProps> = ({
                       <button
                         onClick={() => updateStoreGrid({ 
                           border: { 
-                            ...scratchConfig.grid?.border, 
                             type: 'external',
                             color: scratchConfig.grid?.border?.color || '#000000',
                             width: scratchConfig.grid?.border?.width || 2
-                          } as any
+                          }
                         })}
                         className={`px-3 py-2 text-sm rounded-lg border-2 transition-all ${
                           scratchConfig.grid?.border?.type === 'external'
@@ -468,7 +466,11 @@ const ScratchGamePanelRefactored: React.FC<ScratchGamePanelProps> = ({
                           type="color"
                           value={scratchConfig.grid.border.color}
                           onChange={(e) => updateStoreGrid({ 
-                            border: { ...scratchConfig.grid.border!, color: e.target.value } as any
+                            border: { 
+                              type: scratchConfig.grid.border!.type,
+                              width: scratchConfig.grid.border!.width,
+                              color: e.target.value 
+                            }
                           })}
                           className="w-full h-10 rounded-md border border-[hsl(var(--sidebar-border))]"
                         />
@@ -485,7 +487,11 @@ const ScratchGamePanelRefactored: React.FC<ScratchGamePanelProps> = ({
                           max="10"
                           value={scratchConfig.grid.border.width}
                           onChange={(e) => updateStoreGrid({ 
-                            border: { ...scratchConfig.grid.border!, width: parseInt(e.target.value) } as any
+                            border: { 
+                              type: scratchConfig.grid.border!.type,
+                              color: scratchConfig.grid.border!.color,
+                              width: parseInt(e.target.value) 
+                            }
                           })}
                           className="w-full"
                         />
