@@ -1,18 +1,21 @@
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { LoadingBoundary, MinimalLoader } from '@/components/shared/LoadingBoundary';
 import { supabase } from '@/integrations/supabase/client';
 import PreviewRenderer from '@/components/preview/PreviewRenderer';
 import { useCampaignView } from '@/hooks/useCampaignView';
+import { isTempCampaignId } from '@/utils/tempCampaignId';
 
 const PublicCampaign: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const [campaign, setCampaign] = useState<any | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   
-  // 🎯 Track campaign view with rich data
-  const { trackInteraction } = useCampaignView(id || '');
+  // 🎯 Track campaign view with rich data (only for real campaigns)
+  const shouldTrack = id && !isTempCampaignId(id);
+  const { trackInteraction } = useCampaignView(shouldTrack ? id : '');
 
   useEffect(() => {
     let mounted = true;
@@ -21,6 +24,13 @@ const PublicCampaign: React.FC = () => {
         setLoading(true);
         setError(null);
         if (!id) throw new Error('Aucune campagne');
+        
+        // 🚫 Détecter les IDs temporaires et rediriger vers l'éditeur
+        if (isTempCampaignId(id)) {
+          console.log('🔄 Temp campaign detected, redirecting to editor...');
+          navigate(`/design-editor?campaign=${id}`, { replace: true });
+          return;
+        }
         
         // Fetch campaign directly from Supabase to bypass cache and check visibility
         const { data, error: fetchError } = await supabase
@@ -50,28 +60,32 @@ const PublicCampaign: React.FC = () => {
             setError('Cette campagne est désormais terminée');
           } else {
             setCampaign(data);
-            // 📊 Track successful campaign load
-            trackInteraction('click', { 
-              action: 'campaign_loaded', 
-              campaign_name: data.name,
-              campaign_type: data.type 
-            });
+            // 📊 Track successful campaign load (only for real campaigns)
+            if (shouldTrack) {
+              trackInteraction('click', { 
+                action: 'campaign_loaded', 
+                campaign_name: data.name,
+                campaign_type: data.type 
+              });
+            }
           }
         }
       } catch (e: any) {
         setError(e?.message || 'Erreur lors du chargement');
-        // 📊 Track error
-        trackInteraction('click', { 
-          action: 'campaign_load_error', 
-          error: e?.message 
-        });
+        // 📊 Track error (only for real campaigns)
+        if (shouldTrack) {
+          trackInteraction('click', { 
+            action: 'campaign_load_error', 
+            error: e?.message 
+          });
+        }
       } finally {
         if (mounted) setLoading(false);
       }
     };
     load();
     return () => { mounted = false; };
-  }, [id, trackInteraction]);
+  }, [id, shouldTrack, trackInteraction, navigate]);
 
   if (loading) {
     return (
