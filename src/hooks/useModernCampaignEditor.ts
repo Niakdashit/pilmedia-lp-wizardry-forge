@@ -41,8 +41,7 @@ export const useModernCampaignEditor = () => {
     setCampaign,
     isModified,
     isSaving,
-    previewKey,
-    forceSave
+    previewKey
   } = useOptimizedCampaignState(initialCampaign, {
     autosaveDelay: 3000,
     onSave: async (campaignToSave) => {
@@ -50,7 +49,32 @@ export const useModernCampaignEditor = () => {
       
       // Use saveCampaignToDB for exhaustive save
       console.log('💾 [useModernCampaignEditor] Auto-saving campaign...');
-      await saveCampaignToDB(campaignToSave, saveCampaign);
+      const wasTempId = isTempCampaignId(campaignToSave?.id);
+      const savedCampaign = await saveCampaignToDB(campaignToSave, saveCampaign);
+      
+      // Si l'ID était temporaire et a été remplacé par un UUID réel, mettre à jour
+      if (wasTempId && savedCampaign?.id && !isTempCampaignId(savedCampaign.id)) {
+        console.log('✅ [useModernCampaignEditor] Temp ID replaced with real UUID:', {
+          old: campaignToSave?.id,
+          new: savedCampaign.id
+        });
+        
+        // Mettre à jour l'état de la campagne avec le nouvel ID
+        setCampaign((prev: any) => ({
+          ...prev,
+          id: savedCampaign.id
+        }));
+        
+        // Mettre à jour l'URL du navigateur pour refléter le nouvel ID
+        if (typeof window !== 'undefined') {
+          const currentParams = new URLSearchParams(window.location.search);
+          currentParams.set('campaign', savedCampaign.id);
+          const newUrl = `${window.location.pathname}?${currentParams.toString()}`;
+          window.history.replaceState({}, '', newUrl);
+          console.log('🔗 [useModernCampaignEditor] URL updated with real UUID');
+        }
+      }
+      
       console.log('✅ [useModernCampaignEditor] Auto-save complete');
     },
     onError: (error) => {
@@ -112,7 +136,32 @@ export const useModernCampaignEditor = () => {
     handleSave: async (showToast = true) => {
       try {
         console.log('💾 [useModernCampaignEditor] Manual save triggered...');
-        await forceSave();
+        const wasTempId = isTempCampaignId(campaign?.id);
+        const savedCampaign = await saveCampaignToDB(campaign, saveCampaign);
+        
+        // Si l'ID était temporaire et a été remplacé, mettre à jour
+        if (wasTempId && savedCampaign?.id && !isTempCampaignId(savedCampaign.id)) {
+          console.log('✅ [useModernCampaignEditor] Temp ID replaced with real UUID:', {
+            old: campaign?.id,
+            new: savedCampaign.id
+          });
+          
+          // Mettre à jour l'état de la campagne
+          setCampaign((prev: any) => ({
+            ...prev,
+            id: savedCampaign.id
+          }));
+          
+          // Mettre à jour l'URL
+          if (typeof window !== 'undefined') {
+            const currentParams = new URLSearchParams(window.location.search);
+            currentParams.set('campaign', savedCampaign.id);
+            const newUrl = `${window.location.pathname}?${currentParams.toString()}`;
+            window.history.replaceState({}, '', newUrl);
+            console.log('🔗 [useModernCampaignEditor] URL updated with real UUID');
+          }
+        }
+        
         console.log('✅ [useModernCampaignEditor] Manual save complete');
         if (showToast) {
           // Show success feedback
