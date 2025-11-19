@@ -43,20 +43,40 @@ const ScratchGameGrid: React.FC<ScratchGameGridProps> = ({
   const resolvedGap = typeof gridConfig?.gap === 'number' ? gridConfig.gap : 16;
   const cardShape = gridConfig?.cardShape;
 
+  const borderConfig = gridConfig?.border;
+
+  const getBorderStyles = () => {
+    if (!borderConfig) return {};
+    const { type, color, width } = borderConfig;
+
+    if (type === 'external') {
+      return {
+        borderRadius: '24px',
+        border: `${width}px solid ${color}`
+      };
+    }
+
+    return {
+      borderRadius: '24px',
+      boxShadow: `inset 0 0 0 ${width}px ${color}`
+    };
+  };
+
   return (
     <div className="w-full h-full flex items-center justify-center p-3">
       <div
-        className="w-full max-w-[1200px]"
-        style={{
-          display: 'grid',
-          gridTemplateColumns: `repeat(${resolvedCols}, minmax(0, 1fr))`,
-          gridAutoRows: 'auto',
-          gap: `${resolvedGap}px`,
-          justifyItems: 'center',
-          alignItems: 'center'
-        }}
-      >
-        {effectiveCards.map((card: any, index: number) => {
+        >
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: `repeat(${resolvedCols}, minmax(0, 1fr))`,
+              gridAutoRows: 'auto',
+              gap: `${resolvedGap}px`,
+              justifyItems: 'center',
+              alignItems: 'center',
+              padding: '24px'
+            }}
+          >
           const isThisCardSelected = selectedCard === index;
           
           // Mode "toutes les cartes grattables" : pas de verrouillage ni sélection
@@ -85,6 +105,7 @@ const ScratchGameGrid: React.FC<ScratchGameGridProps> = ({
             </div>
           );
         })}
+        </div>
       </div>
     </div>
   );
