@@ -5,6 +5,34 @@ import { useCampaignView } from '@/hooks/useCampaignView';
 import { isTempCampaignId } from '@/utils/tempCampaignId';
 import { useFastCampaignLoader } from '@/hooks/useFastCampaignLoader';
 
+class PublicCampaignErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean }> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: any, info: any) {
+    console.error('❌ PublicCampaign rendering error:', error, info);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-screen flex items-center justify-center p-6">
+          <p className="text-sm text-gray-600">Une erreur est survenue lors du chargement de la campagne.</p>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
+
 const PublicCampaignPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [error, setError] = useState<string | null>(null);
@@ -79,11 +107,13 @@ const PublicCampaignPage: React.FC = () => {
   const editorMode = (campaign as any)?.editorMode || (campaign as any)?.editor_mode || 'fullscreen';
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: editorMode === 'article' ? '#2c2c35' : undefined }}>
-      <div className="w-full min-h-screen">
-        <PreviewRenderer campaign={campaign} previewMode="desktop" />
+    <PublicCampaignErrorBoundary>
+      <div className="min-h-screen" style={{ backgroundColor: editorMode === 'article' ? '#2c2c35' : undefined }}>
+        <div className="w-full min-h-screen">
+          <PreviewRenderer campaign={campaign} previewMode="desktop" />
+        </div>
       </div>
-    </div>
+    </PublicCampaignErrorBoundary>
   );
 };
 
