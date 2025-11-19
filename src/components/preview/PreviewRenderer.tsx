@@ -1041,7 +1041,7 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
                         campaign={previewQuizCampaign}
                         device={previewMode}
                         disabled={false}
-                        templateId={derivedQuizConfig?.templateId || 'image-quiz'}
+                        templateId={previewMode === 'mobile' ? 'mobile-selector' : (derivedQuizConfig?.templateId || 'image-quiz')}
                         onClick={() => {
                           console.log('🎯 [PreviewRenderer] Quiz completed');
                           setTimeout(() => {
