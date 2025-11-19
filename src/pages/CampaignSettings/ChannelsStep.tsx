@@ -68,11 +68,15 @@ const ChannelsStep: React.FC<ControlledProps> = (props) => {
     }
 
     if (effectiveId && effectiveId !== 'new' && effectiveId !== 'preview') {
-      const currentUrl = (form.campaign_url as any)?.url;
+      const currentUrl = (form.campaign_url as any)?.url as string | undefined;
       const generatedUrl = `${window.location.origin}/campaign/${effectiveId}`;
+
+      // Considérer les anciennes URLs basées sur un ID temporaire comme invalides
+      const tempUrlPrefix = `${window.location.origin}/campaign/temp-`;
+      const isTempUrl = typeof currentUrl === 'string' && currentUrl.startsWith(tempUrlPrefix);
       
-      // Only set if URL is empty or not already set
-      if (!currentUrl || currentUrl.trim() === '') {
+      // Only set if URL is empty or currently basée sur un ID temporaire
+      if (!currentUrl || currentUrl.trim() === '' || isTempUrl) {
         setForm(prev => ({
           ...prev,
           campaign_url: {
