@@ -18,6 +18,11 @@ interface ScratchGameGridProps {
     cols?: number;
     gap?: number;
     cardShape?: string;
+    border?: {
+      type: 'internal' | 'external';
+      color: string;
+      width: number;
+    };
   };
   maxCards?: number;
   allCardsScratching?: boolean; // Nouveau: toutes les cartes sont grattables directement
@@ -65,46 +70,49 @@ const ScratchGameGrid: React.FC<ScratchGameGridProps> = ({
   return (
     <div className="w-full h-full flex items-center justify-center p-3">
       <div
+        className="w-full max-w-[1200px] flex items-center justify-center"
+        style={getBorderStyles()}
+      >
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: `repeat(${resolvedCols}, minmax(0, 1fr))`,
+            gridAutoRows: 'auto',
+            gap: `${resolvedGap}px`,
+            justifyItems: 'center',
+            alignItems: 'center',
+            padding: '24px'
+          }}
         >
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: `repeat(${resolvedCols}, minmax(0, 1fr))`,
-              gridAutoRows: 'auto',
-              gap: `${resolvedGap}px`,
-              justifyItems: 'center',
-              alignItems: 'center',
-              padding: '24px'
-            }}
-          >
-          const isThisCardSelected = selectedCard === index;
-          
-          // Mode "toutes les cartes grattables" : pas de verrouillage ni sélection
-          const isLocked = allCardsScratching ? false : (gameStarted && scratchStarted && !isThisCardSelected);
-          const isSelectable = allCardsScratching ? false : (gameStarted && !scratchStarted && selectedCard === null);
-          const canScratch = allCardsScratching ? gameStarted : (gameStarted && isThisCardSelected);
+          {effectiveCards.map((card: any, index: number) => {
+            const isThisCardSelected = selectedCard === index;
+            
+            // Mode "toutes les cartes grattables" : pas de verrouillage ni sélection
+            const isLocked = allCardsScratching ? false : (gameStarted && scratchStarted && !isThisCardSelected);
+            const isSelectable = allCardsScratching ? false : (gameStarted && !scratchStarted && selectedCard === null);
+            const canScratch = allCardsScratching ? gameStarted : (gameStarted && isThisCardSelected);
 
-          return (
-            <div key={card.id || index} className="flex justify-center items-center">
-              <ScratchCard
-                card={card}
-                index={index}
-                gameSize={gameSize}
-                gameStarted={gameStarted}
-                onCardFinish={(result) => onCardFinish(result, index)}
-                onCardSelect={() => onCardSelect(index)}
-                onScratchStart={() => onScratchStart(index)}
-                locked={isLocked}
-                selectable={isSelectable}
-                canScratch={canScratch}
-                isSelected={isThisCardSelected}
-                config={config}
-                isModal={isModal}
-                cardShape={cardShape}
-              />
-            </div>
-          );
-        })}
+            return (
+              <div key={card.id || index} className="flex justify-center items-center">
+                <ScratchCard
+                  card={card}
+                  index={index}
+                  gameSize={gameSize}
+                  gameStarted={gameStarted}
+                  onCardFinish={(result) => onCardFinish(result, index)}
+                  onCardSelect={() => onCardSelect(index)}
+                  onScratchStart={() => onScratchStart(index)}
+                  locked={isLocked}
+                  selectable={isSelectable}
+                  canScratch={canScratch}
+                  isSelected={isThisCardSelected}
+                  config={config}
+                  isModal={isModal}
+                  cardShape={cardShape}
+                />
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>
