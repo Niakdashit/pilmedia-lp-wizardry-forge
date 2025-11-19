@@ -132,7 +132,16 @@ export const useCampaignView = (campaignId: string) => {
     if (!campaignId || isTracking) return;
 
     const initTracking = async () => {
-      console.log('🎯 [useCampaignView] Initializing tracking for campaign:', campaignId);
+      // 🎯 Détecter si on est en mode preview
+      const isPreviewMode = window.location.pathname.includes('/campaign/') && 
+                            (window.location.hostname.includes('lovable.dev') || 
+                             window.location.hostname.includes('localhost'));
+      
+      console.log('🎯 [useCampaignView] Initializing tracking for campaign:', campaignId, {
+        isPreviewMode,
+        hostname: window.location.hostname,
+        pathname: window.location.pathname
+      });
       
       // Collecter les données
       const [ipAddress] = await Promise.all([
@@ -147,9 +156,9 @@ export const useCampaignView = (campaignId: string) => {
         ip_address: ipAddress,
         user_agent: navigator.userAgent,
         referrer: document.referrer || undefined,
-        utm_source: urlParams.get('utm_source') || undefined,
-        utm_medium: urlParams.get('utm_medium') || undefined,
-        utm_campaign: urlParams.get('utm_campaign') || undefined,
+        utm_source: isPreviewMode ? 'preview' : (urlParams.get('utm_source') || undefined),
+        utm_medium: isPreviewMode ? 'editor' : (urlParams.get('utm_medium') || undefined),
+        utm_campaign: isPreviewMode ? 'test' : (urlParams.get('utm_campaign') || undefined),
         device_type: deviceInfo.device_type,
         browser: deviceInfo.browser,
         os: deviceInfo.os,

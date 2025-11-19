@@ -16,6 +16,7 @@ import { DesignModuleRenderer } from '@/components/DesignEditor/DesignRenderer';
 import { QuizModuleRenderer } from '@/components/QuizEditor/QuizRenderer';
 import type { DesignScreenId } from '@/types/designEditorModular';
 import { isTempCampaignId } from '@/utils/tempCampaignId';
+import { useCampaignView } from '@/hooks/useCampaignView';
 
 interface PreviewRendererProps {
   campaign: any;
@@ -80,6 +81,10 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
 
   // Hook de synchronisation pour obtenir les données canoniques
   const { getCanonicalPreviewData } = useEditorPreviewSync();
+  
+  // 📊 Track campaign view (même en mode preview)
+  const campaignId = campaign?.id;
+  const { trackInteraction } = useCampaignView(campaignId || '');
 
   // Mark body as being in preview to hide any editor-only overlays/controls (zoom slider, screen selector)
   useEffect(() => {
@@ -504,6 +509,11 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
   const handleParticipate = () => {
     console.log('🎮 [PreviewRenderer] handleParticipate called!');
     console.log('🎮 [PreviewRenderer] Current screen before:', currentScreen);
+    // 📊 Track game start
+    trackInteraction('game_start', { 
+      campaign_type: campaign?.type,
+      screen: 'screen1' 
+    });
     manualNavRef.current = true;
     setCurrentScreen('screen2');
     console.log('🎮 [PreviewRenderer] setCurrentScreen("screen2") called');
@@ -511,6 +521,11 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
 
   const handleGameFinish = (result: 'win' | 'lose') => {
     console.log('🎯 Game finished with result:', result);
+    // 📊 Track game completion
+    trackInteraction('game_complete', { 
+      result,
+      campaign_type: campaign?.type 
+    });
     manualNavRef.current = true;
     setGameResult(result);
     
