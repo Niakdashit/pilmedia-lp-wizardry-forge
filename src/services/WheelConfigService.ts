@@ -460,10 +460,9 @@ export class WheelConfigService {
           newConfig.wheelShowBulbs = updates.showBulbs;
         }
         if (updates.position !== undefined) {
-          newConfig.wheelPosition = updates.position as 'left' | 'right' | 'center';
+          newConfig.wheelPosition = updates.position as 'left' | 'right' | 'center' | 'centerTop';
         }
 
-        
         return newConfig;
       });
 
@@ -480,8 +479,17 @@ export class WheelConfigService {
             scale: updates.scale !== undefined ? updates.scale : prevCampaign.design?.wheelConfig?.scale,
             showBulbs: updates.showBulbs !== undefined ? updates.showBulbs : (prevCampaign.design?.wheelConfig as any)?.showBulbs,
             position: updates.position !== undefined ? updates.position : (prevCampaign.design?.wheelConfig as any)?.position,
-
           }
+        },
+        // Mirror minimal config vers campaign.wheelConfig pour une meilleure persistance BDD
+        wheelConfig: {
+          ...(prevCampaign as any).wheelConfig,
+          borderStyle: updates.borderStyle !== undefined ? updates.borderStyle : (prevCampaign as any).wheelConfig?.borderStyle,
+          borderColor: updates.borderColor !== undefined ? updates.borderColor : (prevCampaign as any).wheelConfig?.borderColor,
+          borderWidth: updates.borderWidth !== undefined ? updates.borderWidth : (prevCampaign as any).wheelConfig?.borderWidth,
+          scale: updates.scale !== undefined ? updates.scale : (prevCampaign as any).wheelConfig?.scale,
+          showBulbs: updates.showBulbs !== undefined ? updates.showBulbs : (prevCampaign as any).wheelConfig?.showBulbs,
+          position: updates.position !== undefined ? updates.position : (prevCampaign as any).wheelConfig?.position,
         },
         _lastUpdate: Date.now() // Force reactivity in useWheelConfigSync
       }) : null);
