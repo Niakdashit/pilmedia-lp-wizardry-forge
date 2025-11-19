@@ -9,6 +9,7 @@ const Statistics: React.FC = () => {
     <div className="-mx-6 -mt-6">
       <PageHeader
         title="Statistiques"
+        className="mt-4"
         actions={
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-2">
             <select
