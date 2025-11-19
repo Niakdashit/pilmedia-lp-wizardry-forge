@@ -146,16 +146,16 @@ export class WheelConfigService {
    */
   private static detectFooterModule(campaign: any): boolean {
     try {
-      // Vérifier dans le système modularisé (design.modularPage)
       const modularPage = campaign?.design?.modularPage;
-      if (modularPage) {
-        // Vérifier tous les écrans (screen1, screen2, screen3)
-        const allScreens = ['screen1', 'screen2', 'screen3'];
+      const screens = modularPage?.screens;
+      if (screens && typeof screens === 'object') {
+        const allScreens = Object.keys(screens);
         for (const screenId of allScreens) {
-          const modules = modularPage[screenId];
+          const modules = screens[screenId];
           if (Array.isArray(modules)) {
             const hasFooter = modules.some((m: any) => m?.type === 'BlocPiedDePage');
             if (hasFooter) {
+              console.log('🔎 [WheelConfigService] Footer détecté sur', screenId);
               return true;
             }
           }
