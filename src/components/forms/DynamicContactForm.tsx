@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useButtonStyleCSS } from '@/stores/buttonStore';
+import { useFormTracking } from '@/hooks/useFormTracking';
 
 export type FieldConfig = {
   id: string;
@@ -26,6 +27,7 @@ interface DynamicContactFormProps {
   inputBorderRadius?: number | string;
   launchButtonStyles?: React.CSSProperties;
   buttonAlign?: 'left' | 'center';
+  campaignId?: string; // 📊 For tracking
 }
 
 const DynamicContactForm: React.FC<DynamicContactFormProps> = ({
@@ -39,10 +41,19 @@ const DynamicContactForm: React.FC<DynamicContactFormProps> = ({
   inputFocusColor = "#000000",
   inputBorderRadius = "2px",
   launchButtonStyles,
-  buttonAlign = 'left'
+  buttonAlign = 'left',
+  campaignId = ''
 }) => {
   // Utiliser le style global du bouton de lancement
   const globalButtonStyle = useButtonStyleCSS();
+  
+  // 📊 Form tracking
+  const {
+    trackFieldFocus,
+    trackFieldBlur,
+    trackFormCompletion,
+    getFieldStats
+  } = useFormTracking(campaignId, fields);
   
   // Stabilize defaultValues to avoid identity changes causing effects to loop
   const stableDefaultValues = useMemo(() => defaultValues ?? {}, [defaultValues]);
@@ -78,6 +89,15 @@ const DynamicContactForm: React.FC<DynamicContactFormProps> = ({
     }
     setErrors(prev => ({ ...prev, [name]: "" }));
   };
+  
+  // 📊 Track field interactions
+  const handleFieldFocus = (fieldId: string, fieldLabel: string) => {
+    trackFieldFocus(fieldId, fieldLabel);
+  };
+  
+  const handleFieldBlur = (fieldId: string, value: string, fieldErrors?: string[]) => {
+    trackFieldBlur(fieldId, value, fieldErrors);
+  };
 
   const validateField = (field: FieldConfig, value: string): string => {
     if (field.required && !value?.trim()) {
@@ -104,6 +124,11 @@ const DynamicContactForm: React.FC<DynamicContactFormProps> = ({
     });
     setErrors(newErrors);
     if (Object.keys(newErrors).length === 0) {
+      // 📊 Track form completion
+      trackFormCompletion();
+      const stats = getFieldStats();
+      console.log('📊 [DynamicContactForm] Form stats:', stats);
+      
       onSubmit(formData);
     }
   };
@@ -130,7 +155,13 @@ const DynamicContactForm: React.FC<DynamicContactFormProps> = ({
         ['--tw-ring-color' as any]: inputFocusColor || '#44444d',
       },
       className: `w-full px-4 py-2 border rounded-[2px] ${getFocusClass()}`,
-      onChange: handleChange
+      onChange: handleChange,
+      onFocus: () => handleFieldFocus(field.id, field.label),
+      onBlur: (e: React.FocusEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+        const value = e.target.value;
+        const fieldError = validateField(field, value);
+        handleFieldBlur(field.id, value, fieldError ? [fieldError] : undefined);
+      }
     };
 
     switch (field.type) {

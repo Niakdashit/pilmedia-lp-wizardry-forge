@@ -256,6 +256,63 @@ export type Database = {
           },
         ]
       }
+      campaign_interactions: {
+        Row: {
+          campaign_id: string
+          device_type: string | null
+          element_id: string | null
+          element_type: string | null
+          event_data: Json | null
+          event_type: string
+          id: string
+          ip_address: unknown
+          session_id: string | null
+          timestamp: string
+          user_agent: string | null
+        }
+        Insert: {
+          campaign_id: string
+          device_type?: string | null
+          element_id?: string | null
+          element_type?: string | null
+          event_data?: Json | null
+          event_type: string
+          id?: string
+          ip_address?: unknown
+          session_id?: string | null
+          timestamp?: string
+          user_agent?: string | null
+        }
+        Update: {
+          campaign_id?: string
+          device_type?: string | null
+          element_id?: string | null
+          element_type?: string | null
+          event_data?: Json | null
+          event_type?: string
+          id?: string
+          ip_address?: unknown
+          session_id?: string | null
+          timestamp?: string
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_interactions_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_campaign_interactions_campaign"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       campaign_settings: {
         Row: {
           advanced: Json | null
@@ -450,37 +507,58 @@ export type Database = {
       }
       campaign_views: {
         Row: {
+          browser: string | null
           campaign_id: string
+          device_type: string | null
           id: string
           ip_address: unknown
+          max_scroll_depth: number | null
+          os: string | null
           referrer: string | null
+          screen_resolution: string | null
+          time_on_page: number | null
           user_agent: string | null
           utm_campaign: string | null
           utm_medium: string | null
           utm_source: string | null
           viewed_at: string | null
+          viewport_size: string | null
         }
         Insert: {
+          browser?: string | null
           campaign_id: string
+          device_type?: string | null
           id?: string
           ip_address?: unknown
+          max_scroll_depth?: number | null
+          os?: string | null
           referrer?: string | null
+          screen_resolution?: string | null
+          time_on_page?: number | null
           user_agent?: string | null
           utm_campaign?: string | null
           utm_medium?: string | null
           utm_source?: string | null
           viewed_at?: string | null
+          viewport_size?: string | null
         }
         Update: {
+          browser?: string | null
           campaign_id?: string
+          device_type?: string | null
           id?: string
           ip_address?: unknown
+          max_scroll_depth?: number | null
+          os?: string | null
           referrer?: string | null
+          screen_resolution?: string | null
+          time_on_page?: number | null
           user_agent?: string | null
           utm_campaign?: string | null
           utm_medium?: string | null
           utm_source?: string | null
           viewed_at?: string | null
+          viewport_size?: string | null
         }
         Relationships: [
           {
@@ -1135,13 +1213,19 @@ export type Database = {
       }
       participations: {
         Row: {
+          browser: string | null
           campaign_id: string
           created_at: string | null
+          device_type: string | null
           form_data: Json
+          form_interactions: Json | null
           game_result: Json | null
           id: string
           ip_address: unknown
           is_winner: boolean | null
+          os: string | null
+          referrer: string | null
+          time_to_complete: number | null
           user_agent: string | null
           user_email: string
           utm_campaign: string | null
@@ -1149,13 +1233,19 @@ export type Database = {
           utm_source: string | null
         }
         Insert: {
+          browser?: string | null
           campaign_id: string
           created_at?: string | null
+          device_type?: string | null
           form_data?: Json
+          form_interactions?: Json | null
           game_result?: Json | null
           id?: string
           ip_address?: unknown
           is_winner?: boolean | null
+          os?: string | null
+          referrer?: string | null
+          time_to_complete?: number | null
           user_agent?: string | null
           user_email: string
           utm_campaign?: string | null
@@ -1163,13 +1253,19 @@ export type Database = {
           utm_source?: string | null
         }
         Update: {
+          browser?: string | null
           campaign_id?: string
           created_at?: string | null
+          device_type?: string | null
           form_data?: Json
+          form_interactions?: Json | null
           game_result?: Json | null
           id?: string
           ip_address?: unknown
           is_winner?: boolean | null
+          os?: string | null
+          referrer?: string | null
+          time_to_complete?: number | null
           user_agent?: string | null
           user_email?: string
           utm_campaign?: string | null
@@ -1515,6 +1611,25 @@ export type Database = {
       generate_integration_url: {
         Args: { _campaign_id: string; _integration_type: string }
         Returns: string
+      }
+      get_campaign_analytics: {
+        Args: {
+          p_campaign_id: string
+          p_end_date?: string
+          p_start_date?: string
+        }
+        Returns: {
+          avg_scroll_depth: number
+          avg_time_on_page: number
+          browser_breakdown: Json
+          completion_rate: number
+          device_breakdown: Json
+          hourly_distribution: Json
+          total_participations: number
+          total_views: number
+          unique_ips: number
+          utm_source_breakdown: Json
+        }[]
       }
       get_user_data_export: { Args: { target_user_id: string }; Returns: Json }
       get_user_org_role: {
