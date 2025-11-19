@@ -613,6 +613,18 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
     }
   };
 
+  // Fermeture spécifique pour le mode mobile/portrait (overlay ou swipe)
+  const handleCloseActiveTab = () => {
+    setInternalActiveTab(null);
+    onEffectsPanelChange?.(false);
+    onAnimationsPanelChange?.(false);
+    onPositionPanelChange?.(false);
+    onQuizPanelChange?.(false);
+    onWheelPanelChange?.(false);
+    onDesignPanelChange?.(false);
+    onSelectedModuleChange?.(null);
+  };
+
   const renderPanel = (tabId: string) => {
     switch (tabId) {
       case 'effects':
@@ -987,7 +999,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
         prefetchTab={prefetchTab}
         renderPanel={renderPanel}
         currentScreen={currentScreen}
-        onCloseActiveTab={() => setActiveTab(null)}
+        onCloseActiveTab={handleCloseActiveTab}
         debugNamespace="DesignEditor"
       />
     );
