@@ -15,6 +15,7 @@ export default {
         'condensed': ['Bebas Neue', 'Oswald', 'Anton', 'Impact', 'sans-serif'],
         'oswald': ['Oswald', 'sans-serif'],
         'lobster': ['Lobster', 'cursive'],
+        'canva': ['Belleza', 'sans-serif'],
       },
       colors: {
         primary: {

@@ -4,6 +4,7 @@ import { useProfile } from '../hooks/useProfile';
 import { User, Mail, Calendar, Shield, ShieldCheck, UserCheck, Building2, Users as UsersIcon } from 'lucide-react';
 import Spinner from '@/components/shared/Spinner';
 import { AdminOrganizations } from '@/components/Admin/Organizations';
+import PageHeader from '@/components/Layout/PageHeader';
 
 const Admin: React.FC = () => {
   const { users, loading, error, updateUserRole } = useUsers();
@@ -83,15 +84,18 @@ const Admin: React.FC = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto p-6">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Administration</h1>
-        <p className="text-gray-600">Gestion de la plateforme</p>
-      </div>
+    <div className="min-h-screen bg-background">
+      <PageHeader 
+        title="Administration"
+        size="default"
+      >
+        <p className="text-base text-muted-foreground">Gestion de la plateforme</p>
+      </PageHeader>
 
-      {/* Tabs */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 mb-6">
-        <div className="flex border-b border-gray-200">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        {/* Tabs */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 mb-6">
+          <div className="flex border-b border-gray-200">
           <button
             onClick={() => setActiveTab('organizations')}
             className={`flex items-center gap-2 px-6 py-4 font-medium transition-colors ${
@@ -229,6 +233,7 @@ const Admin: React.FC = () => {
         )}
       </div>
       )}
+      </div>
     </div>
   );
 };

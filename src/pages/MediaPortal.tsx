@@ -4,6 +4,7 @@ import { useMediaPartner } from '@/hooks/media/useMediaPartner';
 import { usePartnershipRequests } from '@/hooks/media/usePartnershipRequests';
 import { useMediaCampaigns } from '@/hooks/media/useMediaCampaigns';
 import { Inbox, PlayCircle, History, Mail, CheckCircle2, XCircle, Globe, MessageSquare } from 'lucide-react';
+import PageHeader from '@/components/Layout/PageHeader';
 
 const MediaPortal: React.FC = () => {
   const { profile } = useProfile();
@@ -35,23 +36,24 @@ const MediaPortal: React.FC = () => {
   );
 
   return (
-    <div className="min-h-screen">
-      <div className="px-6 sm:px-8 lg:px-10 pt-6">
-        <div className="mb-4">
-          <h1 className="text-2xl font-bold text-gray-900">Espace Média</h1>
-          <p className="text-gray-600">{partnerLoading ? 'Chargement du profil média…' : partner?.name || 'Profil média non configuré'}</p>
-        </div>
+    <div className="min-h-screen bg-background">
+      <PageHeader 
+        title="Espace Média"
+        size="default"
+      >
+        <p className="text-base text-muted-foreground">{partnerLoading ? 'Chargement du profil média…' : partner?.name || 'Profil média non configuré'}</p>
+      </PageHeader>
 
-        <div className="border-b border-gray-200">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="border-b border-gray-200 mb-6">
           <nav className="-mb-px flex gap-6">
             <TabButton id="requests" label="Demandes" icon={<Inbox className="w-4 h-4" />} />
             <TabButton id="campaigns" label="Campagnes en ligne" icon={<PlayCircle className="w-4 h-4" />} />
             <TabButton id="history" label="Historique" icon={<History className="w-4 h-4" />} />
           </nav>
         </div>
-      </div>
 
-      <div className="px-6 sm:px-8 lg:px-10 py-6 space-y-8">
+        <div className="space-y-8">
         {activeTab === 'requests' && (
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
             <div className="px-6 py-4 border-b border-gray-200 flex items-center gap-2">
@@ -148,6 +150,7 @@ const MediaPortal: React.FC = () => {
             </div>
           </div>
         )}
+        </div>
       </div>
     </div>
   );
