@@ -112,11 +112,17 @@ const ScratchCard: React.FC<ScratchCardProps> = ({
   const borderRadiusClass = getBorderRadiusClass();
   
   // Gérer les styles de bordure
-  const borderConfig = config?.scratchConfig?.grid?.border;
+  const borderConfig = config?.grid?.border;
+  console.log('[ScratchCard] Border config:', borderConfig, 'Full grid:', config?.grid);
+  
   const getBorderStyles = () => {
-    if (!borderConfig) return { border: '2px solid #e5e7eb' };
+    if (!borderConfig) {
+      console.log('[ScratchCard] No border config, using default');
+      return { border: '2px solid #e5e7eb' };
+    }
     
     const { type, color, width: borderWidth } = borderConfig;
+    console.log('[ScratchCard] Border styles:', { type, color, borderWidth });
     
     if (type === 'external') {
       return {
