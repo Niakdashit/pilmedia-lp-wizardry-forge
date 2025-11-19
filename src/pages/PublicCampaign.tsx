@@ -106,9 +106,36 @@ const PublicCampaignPage: React.FC = () => {
   // Render campaign with everything preloaded
   const editorMode = (campaign as any)?.editorMode || (campaign as any)?.editor_mode || 'fullscreen';
 
+  // 🔍 DEBUG: Affichage temporaire des données reçues
+  console.log('🔍 [PublicCampaign] Campaign data received:', {
+    id: campaign.id,
+    name: campaign.name,
+    type: campaign.type,
+    updated_at: campaign.updated_at,
+    'config.roulette.segments': (campaign.config as any)?.roulette?.segments?.length,
+    'game_config.wheelSegments': (campaign.game_config as any)?.wheelSegments?.length,
+    'game_config.wheel.segments': (campaign.game_config as any)?.wheel?.segments?.length,
+    'config.modularPage.screens': (campaign.config as any)?.modularPage?.screens,
+    'design.designModules.screens': campaign.design?.designModules?.screens,
+    firstSegmentLabel: (campaign.game_config as any)?.wheelSegments?.[0]?.label || 
+                       (campaign.game_config as any)?.wheel?.segments?.[0]?.label ||
+                       (campaign.config as any)?.roulette?.segments?.[0]?.label
+  });
+
   return (
     <PublicCampaignErrorBoundary>
-      <div className="min-h-screen" style={{ backgroundColor: editorMode === 'article' ? '#2c2c35' : undefined }}>
+      {/* Bandeau de debug temporaire */}
+      <div className="fixed top-0 left-0 right-0 bg-yellow-100 border-b-2 border-yellow-400 p-2 text-xs z-50">
+        <strong>🔍 DEBUG MODE:</strong> Campaign ID: {campaign.id} | 
+        Updated: {new Date(campaign.updated_at).toLocaleString()} | 
+        Segments: {(campaign.game_config as any)?.wheelSegments?.length || 
+                   (campaign.game_config as any)?.wheel?.segments?.length || 
+                   (campaign.config as any)?.roulette?.segments?.length || 0} | 
+        First segment: {(campaign.game_config as any)?.wheelSegments?.[0]?.label || 
+                       (campaign.game_config as any)?.wheel?.segments?.[0]?.label ||
+                       (campaign.config as any)?.roulette?.segments?.[0]?.label || 'N/A'}
+      </div>
+      <div className="min-h-screen pt-12" style={{ backgroundColor: editorMode === 'article' ? '#2c2c35' : undefined }}>
         <div className="w-full min-h-screen">
           <PreviewRenderer campaign={campaign} previewMode="desktop" />
         </div>
