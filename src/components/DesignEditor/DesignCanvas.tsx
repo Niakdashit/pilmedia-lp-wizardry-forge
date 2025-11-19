@@ -1975,8 +1975,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                 <StandardizedWheel
                   campaign={campaign}
                   device={selectedDevice}
-                  // 🔍 En mode éditeur, on ne crope plus la roue pour éviter qu'elle disparaisse visuellement
-                  shouldCropWheel={false}
+                  shouldCropWheel={true}
                   disabled={readOnly}
                   getCanonicalConfig={getCanonicalConfig}
                   updateWheelConfig={updateWheelConfig}

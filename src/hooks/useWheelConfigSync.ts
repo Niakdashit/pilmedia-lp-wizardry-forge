@@ -41,15 +41,17 @@ export const useWheelConfigSync = ({
     const activeCampaign = storeCampaign || campaign;
     
     if (activeCampaign?.design?.wheelConfig) {
-      const designWheelConfig: any = activeCampaign.design.wheelConfig || {};
       const newConfig = {
-        wheelBorderStyle: activeCampaign.design.wheelBorderStyle || designWheelConfig.borderStyle,
-        wheelBorderColor: designWheelConfig.borderColor,
-        wheelBorderWidth: designWheelConfig.borderWidth,
-        wheelScale: designWheelConfig.scale !== undefined ? designWheelConfig.scale : 2.4,
-        // ✅ On synchronise aussi la position pour que les boutons (Gauche/Centre/Centre haut/Droite)
-        // soient toujours alignés avec la campagne chargée
-        wheelPosition: designWheelConfig.position as 'left' | 'right' | 'center' | 'centerTop' | undefined,
+        wheelBorderStyle: activeCampaign.design.wheelBorderStyle || activeCampaign.design.wheelConfig.borderStyle,
+        wheelBorderColor: activeCampaign.design.wheelConfig.borderColor,
+        wheelBorderWidth: activeCampaign.design.wheelConfig.borderWidth,
+        wheelScale: activeCampaign.design.wheelConfig.scale !== undefined ? activeCampaign.design.wheelConfig.scale : 2.4,
+        // NE PAS synchroniser wheelShowBulbs ici - elle est gérée directement dans StandardizedWheel
+        // wheelShowBulbs: activeCampaign.design.wheelConfig.showBulbs,
+        // NE PAS synchroniser wheelPosition ici - elle est gérée directement dans StandardizedWheel
+        // wheelPosition: (activeCampaign.design.wheelConfig as any)?.position !== undefined 
+        //   ? (activeCampaign.design.wheelConfig as any)?.position 
+        //   : 'center',
       };
       
       console.log('🔄 [useWheelConfigSync] Syncing wheel config:', {
@@ -65,8 +67,8 @@ export const useWheelConfigSync = ({
           prev.wheelBorderStyle !== newConfig.wheelBorderStyle ||
           prev.wheelBorderColor !== newConfig.wheelBorderColor ||
           prev.wheelBorderWidth !== newConfig.wheelBorderWidth ||
-          prev.wheelScale !== newConfig.wheelScale ||
-          prev.wheelPosition !== newConfig.wheelPosition;
+          prev.wheelScale !== newConfig.wheelScale;
+        // wheelShowBulbs et wheelPosition ne sont plus synchronisés ici
         
         if (hasChanges) {
           console.log('🔄 [useWheelConfigSync] Config changed, updating:', { prev, newConfig });
