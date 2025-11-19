@@ -50,22 +50,24 @@ const ScratchGameGrid: React.FC<ScratchGameGridProps> = ({
 
   const borderConfig = gridConfig?.border || config?.grid?.border || config?.scratchConfig?.grid?.border;
  
+  console.log('[ScratchGameGrid] gridConfig:', gridConfig, 'config.grid:', config?.grid, 'borderConfig used:', borderConfig);
+ 
   const getBorderStyles = () => {
-    if (!borderConfig) return {};
-    const { type, color, width } = borderConfig;
- 
-    if (type === 'external') {
-      return {
-        borderRadius: '24px',
-        border: `${width}px solid ${color}`
-      };
-    }
- 
-    return {
-      borderRadius: '24px',
-      boxShadow: `inset 0 0 0 ${width}px ${color}`
-    };
-  };
+     if (!borderConfig) return {};
+     const { type, color, width } = borderConfig;
+  
+     if (type === 'external') {
+       return {
+         borderRadius: '24px',
+         border: `${width}px solid ${color}`
+       };
+     }
+  
+     return {
+       borderRadius: '24px',
+       boxShadow: `inset 0 0 0 ${width}px ${color}`
+     };
+   };
 
   return (
     <div className="w-full h-full flex items-center justify-center p-3">
