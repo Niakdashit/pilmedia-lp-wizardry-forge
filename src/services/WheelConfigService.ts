@@ -386,10 +386,10 @@ export class WheelConfigService {
       return result;
     }
 
-    // 🔒 RÈGLE: Sur mobile et tablet, seules les positions "center" et "centerTop" sont autorisées
-    // Si une position "left" ou "right" est demandée sur mobile/tablet, on force "center"
+    // 🔒 RÈGLE: Sur mobile et tablet, seules les positions "center" (bas) et "centerTop" (plein écran) sont autorisées
+    // Si une position "left" ou "right" est demandée sur mobile/tablet, on force "centerTop" par défaut
     const effectivePosition = (device === 'mobile' || device === 'tablet') && (position === 'left' || position === 'right') 
-      ? 'center' 
+      ? 'centerTop' 
       : position;
     
     console.log('🎯 [WheelConfigService] Effective position:', { 
