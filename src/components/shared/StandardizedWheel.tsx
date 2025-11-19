@@ -196,28 +196,6 @@ const StandardizedWheel: React.FC<StandardizedWheelProps> = ({
     return segColor || wheelConfig.borderColor;
   }, [segments, wheelConfig.borderColor]);
 
-  // Debug position: afficher les différentes sources + valeur finale (uniquement en contexte éditeur)
-  const debugPositionInfo = useMemo(() => {
-    return {
-      fromDesign: (campaign as any)?.design?.wheelConfig?.position,
-      fromWheelConfig: (campaign as any)?.wheelConfig?.position,
-      fromGameConfig: (campaign as any)?.game_config?.wheel?.position,
-      fromConfigRoulette: (campaign as any)?.config?.roulette?.position,
-      final: wheelPosition,
-      device,
-      shouldCropWheel,
-      borderStyle: wheelConfig.borderStyle,
-      scale: wheelConfig.scale
-    };
-  }, [campaign, wheelPosition, device, shouldCropWheel, wheelConfig.borderStyle, wheelConfig.scale]);
-
-  const isEditorContext = typeof window !== 'undefined' && (
-    window.location.pathname.includes('design-editor') ||
-    window.location.pathname.includes('form-editor') ||
-    window.location.pathname.includes('quiz-editor') ||
-    window.location.pathname.includes('jackpot-editor')
-  );
-
   // Décalage géré via WheelConfigService.getWheelCroppingStyles (inset 150px)
 
   return (
@@ -277,31 +255,6 @@ const StandardizedWheel: React.FC<StandardizedWheelProps> = ({
         />
       </div>
 
-      {isEditorContext && (
-        <div
-          className="pointer-events-none absolute bottom-2 left-2 max-w-xs rounded bg-black/70 p-2 text-[10px] leading-tight text-white shadow-md"
-          style={{ zIndex: 9999 }}
-        >
-          <div className="font-semibold mb-1">Wheel debug</div>
-          <div>final: <span className="font-mono">{debugPositionInfo.final}</span></div>
-          <div className="mt-1 grid grid-cols-2 gap-x-2 gap-y-0.5">
-            <span className="opacity-80">design.wheelConfig:</span>
-            <span className="font-mono">{String(debugPositionInfo.fromDesign ?? '—')}</span>
-            <span className="opacity-80">wheelConfig:</span>
-            <span className="font-mono">{String(debugPositionInfo.fromWheelConfig ?? '—')}</span>
-            <span className="opacity-80">game_config.wheel:</span>
-            <span className="font-mono">{String(debugPositionInfo.fromGameConfig ?? '—')}</span>
-            <span className="opacity-80">config.roulette:</span>
-            <span className="font-mono">{String(debugPositionInfo.fromConfigRoulette ?? '—')}</span>
-          </div>
-          <div className="mt-1 flex flex-wrap gap-x-2 gap-y-0.5 opacity-80">
-            <span>device: <span className="font-mono">{debugPositionInfo.device}</span></span>
-            <span>crop: <span className="font-mono">{String(debugPositionInfo.shouldCropWheel)}</span></span>
-            <span>style: <span className="font-mono">{debugPositionInfo.borderStyle}</span></span>
-            <span>scale: <span className="font-mono">{debugPositionInfo.scale}</span></span>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
