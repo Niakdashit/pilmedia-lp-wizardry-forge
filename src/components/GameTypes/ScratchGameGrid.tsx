@@ -48,19 +48,19 @@ const ScratchGameGrid: React.FC<ScratchGameGridProps> = ({
   const resolvedGap = typeof gridConfig?.gap === 'number' ? gridConfig.gap : 16;
   const cardShape = gridConfig?.cardShape;
 
-  const borderConfig = gridConfig?.border;
-
+  const borderConfig = gridConfig?.border || config?.grid?.border || config?.scratchConfig?.grid?.border;
+ 
   const getBorderStyles = () => {
     if (!borderConfig) return {};
     const { type, color, width } = borderConfig;
-
+ 
     if (type === 'external') {
       return {
         borderRadius: '24px',
         border: `${width}px solid ${color}`
       };
     }
-
+ 
     return {
       borderRadius: '24px',
       boxShadow: `inset 0 0 0 ${width}px ${color}`
