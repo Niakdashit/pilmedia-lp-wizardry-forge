@@ -386,8 +386,17 @@ export class WheelConfigService {
       return result;
     }
 
+    // 🔒 RÈGLE: Sur mobile et tablet, la position est toujours forcée à "center"
+    const effectivePosition = (device === 'mobile' || device === 'tablet') ? 'center' : position;
+    
+    console.log('🎯 [WheelConfigService] Effective position:', { 
+      requested: position, 
+      device, 
+      effective: effectivePosition 
+    });
+
     // Cas 1: Position "center" ou non définie => découpage centré (ancienne logique)
-    if (position === 'center' || position === undefined) {
+    if (effectivePosition === 'center' || effectivePosition === undefined) {
       const base = 'absolute bottom-0 transform translate-y-1/3 overflow-hidden pointer-events-none';
       const centerClass = 'left-1/2 -translate-x-1/2';
       const result = {
@@ -403,7 +412,7 @@ export class WheelConfigService {
     }
 
     // Cas 2: Position "centerTop" => roue centrée verticalement et horizontalement (pleine hauteur visible)
-    if (position === 'centerTop') {
+    if (effectivePosition === 'centerTop') {
       const base = 'absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2';
       const result = {
         containerClass: `${base} z-40`,
@@ -417,15 +426,15 @@ export class WheelConfigService {
 
     // Cas 3: Desktop + (left|right) => visible entièrement et centré verticalement
     const base = 'absolute top-1/2 transform -translate-y-1/2';
-    const positionClass = position === 'left' ? 'left-0' : 'right-0';
-    const insetStyles = position === 'left' ? { left: '150px' } : { right: '150px' };
+    const positionClass = effectivePosition === 'left' ? 'left-0' : 'right-0';
+    const insetStyles = effectivePosition === 'left' ? { left: '150px' } : { right: '150px' };
     const result = {
       containerClass: `${base} ${positionClass} z-40`,
       wheelClass: 'cursor-pointer pointer-events-auto transition-all duration-200 hover:brightness-105',
       transform: '-translate-y-1/2',
       styles: insetStyles
     };
-    console.log(`🎯 [WheelConfigService] getWheelCroppingStyles OUTPUT (${position}):`, result);
+    console.log(`🎯 [WheelConfigService] getWheelCroppingStyles OUTPUT (${effectivePosition}):`, result);
     return result;
   }
 
