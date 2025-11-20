@@ -109,7 +109,7 @@ export const quizTemplates: QuizTemplate[] = [
     preview: '/templates/classic-preview.png',
     hasImage: false,
     style: {
-      containerWidth: 420,
+      containerWidth: 630, // Élargi de 50% (420 × 1.5 = 630)
       backgroundColor: '#ffffff',
       borderRadius: 20,
       padding: 16,

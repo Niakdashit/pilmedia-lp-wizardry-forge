@@ -425,9 +425,11 @@ const TemplatedQuiz: React.FC<TemplatedQuizProps> = ({
   };
 
   const containerStyle: React.CSSProperties = {
-    width: `${template.style.containerWidth}px`, // Largeur de base
-    transform: `scale(${scale})`, // Appliquer l'échelle proportionnelle
-    transformOrigin: 'center center', // Centrer la transformation
+    // Sur mobile, utiliser toute la largeur disponible (safe zone) sans scaling.
+    // Sur desktop/tablette, conserver la largeur de base + transform scale.
+    width: device === 'mobile' ? '100%' : `${template.style.containerWidth}px`,
+    transform: device === 'mobile' ? undefined : `scale(${scale})`,
+    transformOrigin: device === 'mobile' ? undefined : 'center center',
     position: 'relative', // Assurer un contexte d'empilement propre
     zIndex: 20, // Au-dessus du CanvasContextMenu (z-index: 1)
     height: currentStyles.height === 'auto' || !currentStyles.height

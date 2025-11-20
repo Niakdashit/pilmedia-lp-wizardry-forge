@@ -42,7 +42,7 @@ const ModernPreviewModal: React.FC<ModernPreviewModalProps> = ({
   const getDeviceStyles = () => {
     switch (device) {
       case 'mobile':
-        return { width: '375px', height: '667px' };
+        return { width: '390px', height: '844px' }; // iPhone 13/14/15
       case 'tablet':
         return { width: '768px', height: '1024px' };
       default:

@@ -283,7 +283,8 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
   const allModules3 = modularPage?.screens?.screen3 || [];
   
   // Safe zone padding - doit être déclaré AVANT l'utilisation dans les filters
-  const safeZonePadding = previewMode === 'mobile' ? 28 : previewMode === 'tablet' ? 40 : 56;
+  // Safe zone: légèrement plus petite sur mobile pour coller au sélecteur mobile de l'éditeur
+  const safeZonePadding = previewMode === 'mobile' ? 18 : previewMode === 'tablet' ? 40 : 56;
 
   // Separate logo, footer, absolute and regular modules
   // Only BlocLogo modules are treated as logos (escape safezone with negative margin)

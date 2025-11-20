@@ -36,7 +36,7 @@ const StudioPreview: React.FC<StudioPreviewProps> = ({
   const getDeviceStyle = () => {
     switch (selectedDevice) {
       case 'mobile':
-        return { width: '375px', height: '667px' };
+        return { width: '390px', height: '844px' }; // iPhone 13/14/15
       case 'tablet':
         return { width: '768px', height: '1024px' };
       default:
