@@ -29,6 +29,7 @@ import { getEditorDeviceOverride } from '@/utils/deviceOverrides';
 import { useEditorPreviewSync } from '@/hooks/useEditorPreviewSync';
 import { useCampaignSettings } from '@/hooks/useCampaignSettings';
 import { useEditorUnmountSave } from '@/hooks/useEditorUnmountSave';
+import { useAutoSaveToSupabase } from '@/hooks/useAutoSaveToSupabase';
 // FormEditor types removed - using inline types for 2-screen layout
 
 
@@ -516,6 +517,21 @@ useEffect(() => {
     canvasZoom,
     gameConfig: (campaignState as any)?.formConfig
   }, saveCampaign);
+
+  // 💾 Auto-save to Supabase every 3 seconds
+  useAutoSaveToSupabase(
+    {
+      campaign: campaignState,
+      canvasElements,
+      modularPage,
+      screenBackgrounds,
+      canvasZoom
+    },
+    {
+      enabled: true,
+      interval: 3000 // 3 seconds
+    }
+  );
 
   useEffect(() => {
     if (!canvasElements.length) return;
