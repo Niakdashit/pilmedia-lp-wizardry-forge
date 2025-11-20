@@ -234,15 +234,17 @@ const QuizToolbar: React.FC<QuizToolbarProps> = React.memo(({
           Modèles
         </button>
         <button 
-          onClick={onPreviewToggle}
-          className={`flex items-center px-2.5 py-1.5 text-xs sm:text-sm border rounded-lg transition-colors shadow-none focus:shadow-none ring-0 focus:ring-0 drop-shadow-none filter-none backdrop-blur-0 ${
-            isPreviewMode 
-              ? 'bg-[#44444d] text-white border-[#44444d]' 
-              : 'border-gray-300 hover:bg-gray-50'
-          }`}
+          onClick={() => {
+            if (campaignId) {
+              navigate(`/preview/${campaignId}`);
+            } else {
+              onPreviewToggle?.();
+            }
+          }}
+          className="flex items-center px-2.5 py-1.5 text-xs sm:text-sm border rounded-lg transition-colors border-gray-300 hover:bg-gray-50"
         >
           <Eye className="w-4 h-4 mr-1" />
-          {isPreviewMode ? 'Mode Édition' : 'Aperçu'}
+          Aperçu
         </button>
         {onPublicView && (
           <button
