@@ -1113,26 +1113,23 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
                           console.log('🎫 [PreviewRenderer] Scratch game started');
                         }}
                         onFinish={(result) => {
-                          console.log('🎫 [PreviewRenderer] Scratch game finished with:', result);
-                          setTimeout(() => {
-                            handleGameFinish(result);
-                          }, 1000);
-                        }}
-                      />
-                    )
-                    : ((campaign.type === 'form' && derivedQuizConfig?.templateId) && (
-                      <TemplatedSwiper
-                        campaign={previewQuizCampaign}
-                        device={previewMode}
-                        disabled={false}
-                        onClick={() => {
-                          console.log('🎯 Swiper completed');
-                          setTimeout(() => {
-                            handleGameFinish('win');
-                          }, 1000);
-                        }}
-                      />
-                    ))}
+                           console.log('🎫 [PreviewRenderer] Scratch game finished with:', result);
+                           setTimeout(() => {
+                             handleGameFinish(result);
+                           }, 1000);
+                         }}
+                       />
+                     )}
+ 
+                   {/* Fallback si aucun jeu configuré */}
+                   {!campaign.type && modules2.length === 0 && (
+                     <div className="mt-6 text-center p-8 bg-white/10 backdrop-blur rounded-xl">
+                       <p className="text-white text-lg font-semibold mb-2">Jeu non configuré</p>
+                       <p className="text-white/70 text-sm">Veuillez configurer un type de jeu dans l'éditeur</p>
+                     </div>
+                   )}
+                 </div>
+               </div>
 
                   {/* Fallback si aucun jeu configuré */}
                   {!campaign.type && modules2.length === 0 && (
