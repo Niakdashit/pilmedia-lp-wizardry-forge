@@ -53,6 +53,7 @@ const LegalNotice = lazy(() => import('./pages/LegalNotice'));
 
 // Import direct (non lazy) pour la page publique - pas de spinner
 import PublicCampaignPage from './pages/PublicCampaign';
+const PreviewPage = lazy(() => import('./pages/PreviewPage'));
 
 function App() {
   const [showGDPRSettings, setShowGDPRSettings] = useState(false);
@@ -194,6 +195,12 @@ function App() {
               <Route path="/campaign/:id/settings" element={
                 <LoadingBoundary>
                   <CampaignSettings />
+                </LoadingBoundary>
+              } />
+              {/* Preview modal page */}
+              <Route path="/preview/:campaignId" element={
+                <LoadingBoundary fallback={<MinimalLoader />}>
+                  <PreviewPage />
                 </LoadingBoundary>
               } />
               {/* Public campaign view - No spinner, direct load */}
