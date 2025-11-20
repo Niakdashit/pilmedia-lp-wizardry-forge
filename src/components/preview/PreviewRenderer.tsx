@@ -26,6 +26,7 @@ interface PreviewRendererProps {
   wheelModalConfig?: any;
   constrainedHeight?: boolean; // Pour mode mobile centré avec hauteur fixe
   onModuleClick?: (moduleId: string) => void; // Callback pour éditer les modules en fullscreen
+  isPublicView?: boolean; // Indique si on est sur la page publique
 }
 
 /**
@@ -46,9 +47,11 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
   previewMode,
   wheelModalConfig,
   constrainedHeight = false,
-  onModuleClick
+  onModuleClick,
+  isPublicView = false
 }) => {
-  const [currentScreen, setCurrentScreen] = useState<DesignScreenId>('screen1');
+  // Sur la page publique, démarrer directement sur screen2 (le formulaire)
+  const [currentScreen, setCurrentScreen] = useState<DesignScreenId>(isPublicView ? 'screen2' : 'screen1');
   const [gameResult, setGameResult] = useState<'win' | 'lose' | null>(null);
   const [forceUpdate, setForceUpdate] = useState(0);
   const [showContactForm, setShowContactForm] = useState(false);
@@ -335,8 +338,8 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
   // Au montage ou lorsque les données changent, sélectionner automatiquement l'écran qui a du contenu
   useEffect(() => {
     try {
-      // Si l'utilisateur a navigué manuellement (ex: clic Participer), ne pas écraser son choix
-      if (manualNavRef.current) {
+      // Ne pas auto-sélectionner sur la page publique ni si l'utilisateur a navigué manuellement
+      if (isPublicView || manualNavRef.current) {
         return;
       }
       // Détecter les backgrounds par écran
