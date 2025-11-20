@@ -9,7 +9,6 @@ import PreviewFeedback from './PreviewFeedback';
 import DeviceTransition from './DeviceTransition';
 import InteractiveDragDropOverlay from './InteractiveDragDropOverlay';
 import CustomElementsRenderer from './CustomElementsRenderer';
-import FormPreview from '../../GameTypes/FormPreview';
 import { useUniversalResponsive } from '../../../hooks/useUniversalResponsive';
 
 interface GameCanvasPreviewProps {
@@ -78,27 +77,6 @@ const GameCanvasPreview: React.FC<GameCanvasPreviewProps> = ({
     });
   }, [responsiveImages, getPropertiesForDevice, previewDevice]);
 
-  // Background style identique à PreviewRenderer
-  const backgroundStyle = useMemo(() => {
-    const style: React.CSSProperties = {
-      backgroundColor: campaign?.design?.background || '#f9fafb',
-      position: 'absolute',
-      inset: 0,
-      zIndex: 0
-    };
-
-    if (campaign?.design?.backgroundImage) {
-      return {
-        ...style,
-        backgroundImage: `url(${campaign.design.backgroundImage})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat'
-      };
-    }
-    return style;
-  }, [campaign?.design?.background, campaign?.design?.backgroundImage]);
-
   // Size map pour le rendu responsive
   const sizeMap = useMemo(() => ({
     xs: '12px',
@@ -137,26 +115,6 @@ const GameCanvasPreview: React.FC<GameCanvasPreviewProps> = ({
 
   // Removed device-dependent vertical offset to unify coordinate systems with editor
 
-  // Rendu spécifique pour les forms (identique à PreviewRenderer)
-  const renderFormPreview = () => {
-    return (
-      <div className="relative w-full h-full">
-        {/* Background plein écran */}
-        <div style={backgroundStyle} />
-
-        {/* Formulaire en overlay aligné à droite comme dans PreviewRenderer */}
-        <div className="absolute inset-0 z-10 flex items-center justify-end pr-6">
-          <div style={{ overflow: 'visible' }}>
-            <FormPreview
-              campaign={campaign}
-              gameSize={previewDevice === 'desktop' ? 'medium' : 'small'}
-              className="pointer-events-auto"
-            />
-          </div>
-        </div>
-      </div>
-    );
-  };
 
   // Apply vertical offset after GamePositioner to ensure it's not overridden by wheel-specific transforms
   const renderPreviewContent = (gameConfig: any) => (
@@ -197,13 +155,9 @@ const GameCanvasPreview: React.FC<GameCanvasPreviewProps> = ({
       <div className="flex-1 flex items-center justify-center relative">
         <PreviewErrorBoundary onError={handleError}>
           <DeviceTransition device={previewDevice} isChanging={isChangingDevice}>
-            {campaign?.type === 'form' ? (
-              renderFormPreview()
-            ) : (
-              <GameConfigProvider campaign={campaign}>
-                {(gameConfig) => renderPreviewContent(gameConfig)}
-              </GameConfigProvider>
-            )}
+            <GameConfigProvider campaign={campaign}>
+              {(gameConfig) => renderPreviewContent(gameConfig)}
+            </GameConfigProvider>
           </DeviceTransition>
           
           {/* Feedback overlay - NE BLOQUE PAS l'affichage du contenu */}

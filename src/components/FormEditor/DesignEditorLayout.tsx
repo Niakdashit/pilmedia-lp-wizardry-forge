@@ -673,69 +673,11 @@ useEffect(() => {
   });
 }, [selectedCampaignId, campaignState?.id, canvasElements, screenBackgrounds, selectedDevice, canvasZoom, setCampaign]);
 
-// 🆔 CRITICAL: Auto-persist temporary campaigns on first edit
-const hasPersistedRef = useRef(false);
+// 💾 Autosave léger des éléments du canvas
+// ✅ FIX: Éviter l'autosave lors des simples changements de background
 useEffect(() => {
   const id = (campaignState as any)?.id as string | undefined;
   const isUuid = (v?: string) => !!v && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v);
-  
-  // If campaign has temp ID and user started editing, persist it immediately
-  if (id && isTempCampaignId(id) && !hasPersistedRef.current && dataHydratedRef.current && (canvasElements.length > 0 || (modularPage && Object.keys(modularPage.screens || {}).length > 0))) {
-    console.log('🆔 [FormEditor] Temp campaign detected with edits - auto-persisting to get UUID');
-    hasPersistedRef.current = true; // Prevent multiple saves
-    
-    const persistTempCampaign = async () => {
-      try {
-        const payload: any = {
-          ...(campaignState || {}),
-          id: undefined, // Remove temp ID to let DB generate UUID
-          name: (campaignState as any)?.name || 'Campagne Form',
-          type: 'form',
-          status: 'draft',
-          config: {
-            ...((campaignState as any)?.config || {}),
-            canvasConfig: {
-              elements: canvasElements,
-              screenBackgrounds,
-              device: selectedDevice,
-              zoom: canvasZoom
-            },
-            modularPage: modularPage || createEmptyModularPage()
-          },
-          design: {
-            ...((campaignState as any)?.design || {}),
-            backgroundImage: screenBackgrounds?.screen1?.value,
-            mobileBackgroundImage: screenBackgrounds?.screen1?.value,
-            modularPage: modularPage || createEmptyModularPage()
-          },
-          editorMode,
-          articleConfig: getArticleConfigWithDefaults((campaignState as any)?.articleConfig)
-        };
-        
-        const result = await saveCampaignToDB(payload, saveCampaign);
-        
-        if (result?.data?.id) {
-          const newUuid = result.data.id;
-          console.log('✅ [FormEditor] Temp campaign persisted with UUID:', newUuid);
-          
-          // Update URL with permanent UUID
-          const params = new URLSearchParams(location.search);
-          params.set('campaign', newUuid);
-          navigate(`${location.pathname}?${params.toString()}`, { replace: true });
-          
-          // Clear temp campaign data
-          clearTempCampaignData(id);
-        }
-      } catch (e) {
-        console.error('❌ [FormEditor] Failed to persist temp campaign:', e);
-        hasPersistedRef.current = false; // Reset on failure
-      }
-    };
-    
-    persistTempCampaign();
-    return; // Don't run autosave logic below
-  }
-  
   // Only autosave once campaign is persisted (UUID)
   if (!isUuid(id)) return;
   // Guard: ensure we only persist for the selected campaign slice

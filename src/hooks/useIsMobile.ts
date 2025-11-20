@@ -15,11 +15,14 @@ export const useIsMobile = () => {
       
       // Détection par taille d'écran (< 768px = mobile)
       const isMobileScreen = window.innerWidth < 768;
-
-      // On est mobile si :
+      
+      // Détection par touch capability
+      const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+      
+      // On est mobile si:
       // - User agent mobile OU
-      // - Écran petit (logique responsive, y compris simulateurs DevTools)
-      setIsMobile(isMobileUA || isMobileScreen);
+      // - Écran petit ET touch device
+      setIsMobile(isMobileUA || (isMobileScreen && isTouchDevice));
     };
 
     checkIsMobile();
@@ -30,4 +33,3 @@ export const useIsMobile = () => {
 
   return isMobile;
 };
-

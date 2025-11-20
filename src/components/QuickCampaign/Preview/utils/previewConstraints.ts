@@ -1,7 +1,7 @@
 export const DEVICE_CONSTRAINTS = {
   desktop: { width: 1024, height: 768, maxWidth: 1024, maxHeight: 768, aspectRatio: 4/3 },
   tablet: { width: 768, height: 1024, maxWidth: 768, maxHeight: 1024, aspectRatio: 3/4 },
-  mobile: { width: 390, height: 844, maxWidth: 390, maxHeight: 844, aspectRatio: 9/19.5 } // iPhone 13/14/15
+  mobile: { width: 375, height: 667, maxWidth: 375, maxHeight: 667, aspectRatio: 9/16 }
 } as const;
 
 export const GAME_CONSTRAINTS = {

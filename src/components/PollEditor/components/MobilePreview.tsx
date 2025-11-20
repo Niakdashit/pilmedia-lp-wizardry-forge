@@ -19,7 +19,7 @@ const MobilePreview: React.FC<MobilePreviewProps> = ({ children, onClose }) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
-      <div className="relative w-full max-w-[390px] h-[calc(100vh-2rem)] max-h-[844px] bg-white rounded-[40px] overflow-hidden shadow-2xl border-[12px] border-gray-800">
+      <div className="relative w-full max-w-[375px] h-[calc(100vh-2rem)] max-h-[812px] bg-white rounded-[40px] overflow-hidden shadow-2xl border-[12px] border-gray-800">
         {/* Encoche du haut */}
         <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-1/3 h-6 bg-gray-800 rounded-b-2xl z-10"></div>
         

@@ -848,11 +848,8 @@ const SlotMachine: React.FC<SlotMachineProps> = ({
       <div 
         className="slot-machine"
         style={{
-          // Responsive frame: full-width friendly with max width for desktop
-          width: '100%',
-          maxWidth: '400px',
-          // Conserver un ratio proche 4:3 sans forcer une hauteur fixe
-          aspectRatio: '4 / 3',
+          width: '400px',
+          height: '300px',
           position: 'relative',
           backgroundImage: isCustomTemplate 
             ? 'none' 

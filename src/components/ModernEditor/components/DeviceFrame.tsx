@@ -1,7 +1,7 @@
 
 import React from 'react';
 const DEVICE_CONSTRAINTS = {
-  mobile: { width: 390, height: 844 }, // iPhone 13/14/15 dimensions for realistic mobile preview
+  mobile: { width: 375, height: 667 },
   tablet: { width: 768, height: 1024 },
   desktop: { width: 1920, height: 1080 }
 };

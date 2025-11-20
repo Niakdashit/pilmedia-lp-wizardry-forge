@@ -67,7 +67,6 @@ const TemplatedSwiper: React.FC<TemplatedSwiperProps> = ({
   
   // Get dimensions for current device
   const dimensions = CARD_DIMENSIONS[device];
-  const isMobile = device === 'mobile';
   
   // Update stack when cards change in campaign - use JSON.stringify to detect deep changes
   const cardsKey = React.useMemo(() => JSON.stringify(cards), [JSON.stringify(cards)]);
@@ -103,28 +102,19 @@ const TemplatedSwiper: React.FC<TemplatedSwiperProps> = ({
       className="flex items-center justify-center" 
       style={{
         overflow: 'visible',
-        // Sur mobile, utiliser un conteneur plein écran relatif.
-        // Sur desktop/tablette, conserver le centrage fixe existant.
-        position: isMobile ? 'relative' : 'fixed',
-        top: isMobile ? undefined : '50%',
-        left: isMobile ? undefined : '50%',
-        transform: isMobile ? undefined : 'translate(-50%, -50%)',
+        position: 'fixed',
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)',
         zIndex: 10,
-        width: isMobile ? '100%' : 'fit-content',
-        height: isMobile ? '100%' : 'fit-content',
+        width: 'fit-content',
+        height: 'fit-content',
         ...(disabled ? { pointerEvents: 'none', opacity: 0.5 } : {})
       }}
     >
       <AnimatePresence>
         {stack.map((card, index) => (
-          <SwipeContainer 
-            key={card.id} 
-            card={card} 
-            index={index} 
-            onSwipe={handleSwipe} 
-            dimensions={dimensions}
-            isMobile={isMobile}
-          />
+          <SwipeContainer key={card.id} card={card} index={index} onSwipe={handleSwipe} dimensions={dimensions} />
         ))}
       </AnimatePresence>
       {stack.length === 0 && (
@@ -140,14 +130,12 @@ function SwipeContainer({
   card, 
   index, 
   onSwipe, 
-  dimensions,
-  isMobile
+  dimensions 
 }: { 
   card: CardItem; 
   index: number; 
   onSwipe: () => void;
   dimensions: typeof CARD_DIMENSIONS.desktop;
-  isMobile: boolean;
 }) {
   const x = useMotionValue(0);
   const rotate = useTransform(x, [-300, 0, 300], [-10, 0, 10]);
@@ -167,13 +155,7 @@ function SwipeContainer({
       dragConstraints={{ left: 0, right: 0 }}
       dragElastic={0.6}
       onDragEnd={handleDragEnd}
-      style={{ 
-        x, 
-        rotate, 
-        opacity, 
-        width: isMobile ? '100%' : `${dimensions.cardWidth}px`, 
-        height: 'auto' 
-      }}
+      style={{ x, rotate, opacity, width: `${dimensions.cardWidth}px`, height: 'auto' }}
       initial={{ opacity: 0, scale: 0.9, y: 40 }}
       animate={{ 
         rotate: randomAngle, 
@@ -189,7 +171,7 @@ function SwipeContainer({
     >
       <div 
         className={`bg-white shadow-xl rounded-2xl flex flex-col items-center justify-center ${dimensions.padding}`} 
-        style={{ width: isMobile ? '100%' : `${dimensions.cardWidth}px` }}
+        style={{ width: `${dimensions.cardWidth}px` }}
       >
         <h1 className={`${dimensions.titleSize} font-extrabold text-neutral-900 mb-4`}>{card.title}</h1>
         <div 

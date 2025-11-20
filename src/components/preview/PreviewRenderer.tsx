@@ -10,7 +10,6 @@ import SlotMachine from '../SlotJackpot/SlotMachine';
 import ScratchPreview from '../GameTypes/ScratchPreview';
 import DynamicContactForm, { type FieldConfig } from '../forms/DynamicContactForm';
 import Modal from '../common/Modal';
-import FormPreview from '../GameTypes/FormPreview';
 import { useMessageStore } from '@/stores/messageStore';
 import { useEditorStore } from '@/stores/editorStore';
 import { useEditorPreviewSync } from '@/hooks/useEditorPreviewSync';
@@ -284,8 +283,7 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
   const allModules3 = modularPage?.screens?.screen3 || [];
   
   // Safe zone padding - doit être déclaré AVANT l'utilisation dans les filters
-  // Safe zone: légèrement plus petite sur mobile pour coller au sélecteur mobile de l'éditeur
-  const safeZonePadding = previewMode === 'mobile' ? 18 : previewMode === 'tablet' ? 40 : 56;
+  const safeZonePadding = previewMode === 'mobile' ? 28 : previewMode === 'tablet' ? 40 : 56;
 
   // Separate logo, footer, absolute and regular modules
   // Only BlocLogo modules are treated as logos (escape safezone with negative margin)
@@ -654,27 +652,6 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
   };
 
   const isPhoneFrame = constrainedHeight && previewMode === 'mobile';
-
-  // 🔁 Pour les campagnes Form, utiliser un layout proche de l'éditeur (overlay à droite)
-  if (campaign?.type === 'form') {
-    return (
-      <div className="relative w-full h-full">
-        {/* Background plein écran */}
-        <div className="absolute inset-0 z-0" style={backgroundStyle} />
-
-        {/* Formulaire en overlay aligné à droite comme dans l'éditeur */}
-        <div className="absolute inset-0 z-10 flex items-center justify-end pr-6">
-          <div style={{ overflow: 'visible' }}>
-            <FormPreview
-              campaign={campaign}
-              gameSize={previewMode === 'desktop' ? 'medium' : 'small'}
-              className="pointer-events-auto"
-            />
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   const InnerContent = (
     <>
@@ -1064,7 +1041,7 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
                         campaign={previewQuizCampaign}
                         device={previewMode}
                         disabled={false}
-                        templateId={derivedQuizConfig?.templateId || 'image-quiz'}
+                        templateId={previewMode === 'mobile' ? 'mobile-selector' : (derivedQuizConfig?.templateId || 'image-quiz')}
                         onClick={() => {
                           console.log('🎯 [PreviewRenderer] Quiz completed');
                           setTimeout(() => {
@@ -1466,8 +1443,8 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
         </div>
       )}
       
-      {/* Contact Form Modal */}
-      {showContactForm && (() => {
+      {/* Contact Form Modal - Skip for form campaigns in mobile (they use inline slide-up) */}
+      {showContactForm && !(campaign?.type === 'form' && previewMode === 'mobile') && (() => {
         const baseHeight = 400;
         const fieldHeight = 80;
         const calculatedHeight = baseHeight + (contactFields.length * fieldHeight);
