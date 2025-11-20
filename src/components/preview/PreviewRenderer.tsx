@@ -26,7 +26,6 @@ interface PreviewRendererProps {
   wheelModalConfig?: any;
   constrainedHeight?: boolean; // Pour mode mobile centré avec hauteur fixe
   onModuleClick?: (moduleId: string) => void; // Callback pour éditer les modules en fullscreen
-  isPublicView?: boolean; // Indique si on est sur la page publique
 }
 
 /**
@@ -47,11 +46,9 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
   previewMode,
   wheelModalConfig,
   constrainedHeight = false,
-  onModuleClick,
-  isPublicView = false
+  onModuleClick
 }) => {
-  // Sur la page publique, démarrer directement sur screen2 (le formulaire)
-  const [currentScreen, setCurrentScreen] = useState<DesignScreenId>(isPublicView ? 'screen2' : 'screen1');
+  const [currentScreen, setCurrentScreen] = useState<DesignScreenId>('screen1');
   const [gameResult, setGameResult] = useState<'win' | 'lose' | null>(null);
   const [forceUpdate, setForceUpdate] = useState(0);
   const [showContactForm, setShowContactForm] = useState(false);
@@ -338,8 +335,8 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
   // Au montage ou lorsque les données changent, sélectionner automatiquement l'écran qui a du contenu
   useEffect(() => {
     try {
-      // Ne pas auto-sélectionner sur la page publique ni si l'utilisateur a navigué manuellement
-      if (isPublicView || manualNavRef.current) {
+      // Si l'utilisateur a navigué manuellement (ex: clic Participer), ne pas écraser son choix
+      if (manualNavRef.current) {
         return;
       }
       // Détecter les backgrounds par écran
@@ -1037,7 +1034,7 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
                     </>
                   )}
 
-                  {/* Quiz / Swiper / Jackpot / Scratch / Form game */}
+                  {/* Quiz / Swiper / Jackpot / Scratch game */}
                   {campaign.type === 'quiz'
                     ? (
                       <TemplatedQuiz
@@ -1052,30 +1049,6 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
                           }, 1000);
                         }}
                       />
-                    )
-                    : campaign.type === 'form'
-                    ? (
-                      <div className="w-full max-w-lg">
-                        <DynamicContactForm
-                          fields={contactFields as any}
-                          submitLabel={campaign?.screens?.[1]?.buttonText || "Participer"}
-                          onSubmit={handleFormSubmit}
-                          textStyles={{
-                            label: { color: '#374151', fontFamily: 'inherit' },
-                            button: {
-                              backgroundColor: globalButtonStyle.backgroundColor || '#44444d',
-                              color: globalButtonStyle.color || '#ffffff',
-                              borderRadius: globalButtonStyle.borderRadius || '8px',
-                              padding: '12px 24px',
-                              fontSize: '16px',
-                              fontWeight: '600',
-                              border: 'none',
-                              cursor: 'pointer',
-                              width: '100%'
-                            }
-                          }}
-                        />
-                      </div>
                     )
                     : campaign.type === 'jackpot'
                     ? (
@@ -1113,23 +1086,26 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
                           console.log('🎫 [PreviewRenderer] Scratch game started');
                         }}
                         onFinish={(result) => {
-                           console.log('🎫 [PreviewRenderer] Scratch game finished with:', result);
-                           setTimeout(() => {
-                             handleGameFinish(result);
-                           }, 1000);
-                         }}
-                       />
-                     )}
- 
-                   {/* Fallback si aucun jeu configuré */}
-                   {!campaign.type && modules2.length === 0 && (
-                     <div className="mt-6 text-center p-8 bg-white/10 backdrop-blur rounded-xl">
-                       <p className="text-white text-lg font-semibold mb-2">Jeu non configuré</p>
-                       <p className="text-white/70 text-sm">Veuillez configurer un type de jeu dans l'éditeur</p>
-                     </div>
-                   )}
-                 </div>
-               </div>
+                          console.log('🎫 [PreviewRenderer] Scratch game finished with:', result);
+                          setTimeout(() => {
+                            handleGameFinish(result);
+                          }, 1000);
+                        }}
+                      />
+                    )
+                    : ((campaign.type === 'form' && derivedQuizConfig?.templateId) && (
+                      <TemplatedSwiper
+                        campaign={previewQuizCampaign}
+                        device={previewMode}
+                        disabled={false}
+                        onClick={() => {
+                          console.log('🎯 Swiper completed');
+                          setTimeout(() => {
+                            handleGameFinish('win');
+                          }, 1000);
+                        }}
+                      />
+                    ))}
 
                   {/* Fallback si aucun jeu configuré */}
                   {!campaign.type && modules2.length === 0 && (
