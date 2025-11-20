@@ -1,11 +1,12 @@
 
 import React, { useState } from 'react';
-import { X, Monitor, Smartphone } from 'lucide-react';
+import { X, Monitor, Smartphone, Copy, Check } from 'lucide-react';
 import GameCanvasPreview from './components/GameCanvasPreview';
 import { createSynchronizedQuizCampaign } from '../../utils/quizConfigSync';
 import PreviewLoadingState from './components/PreviewLoadingState';
 import DeviceTransition from './components/DeviceTransition';
 import PreviewErrorBoundary from './components/ErrorBoundary';
+import { getPreviewUrl, copyPreviewUrl } from '../../utils/previewUrl';
 
 interface ModernPreviewModalProps {
   isOpen: boolean;
@@ -21,6 +22,21 @@ const ModernPreviewModal: React.FC<ModernPreviewModalProps> = ({
   const [device, setDevice] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
   const [isLoading, setIsLoading] = useState(false);
   const [isChangingDevice, setIsChangingDevice] = useState(false);
+  const [isCopied, setIsCopied] = useState(false);
+
+  const previewUrl = campaign?.id ? getPreviewUrl(campaign.id) : null;
+
+  const handleCopyUrl = async () => {
+    if (!campaign?.id) return;
+    
+    try {
+      await copyPreviewUrl(campaign.id);
+      setIsCopied(true);
+      setTimeout(() => setIsCopied(false), 2000);
+    } catch (error) {
+      console.error('Failed to copy URL:', error);
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -83,8 +99,33 @@ const ModernPreviewModal: React.FC<ModernPreviewModalProps> = ({
       <div className="bg-white w-full h-full flex flex-col relative overflow-hidden rounded-[2px] shadow-2xl max-w-7xl max-h-[90vh]">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b bg-white">
-          <div className="flex items-center space-x-4">
-            <h2 className="text-lg font-semibold">Aperçu - {campaign.name}</h2>
+          <div className="flex items-center space-x-4 flex-1">
+            <div className="flex flex-col">
+              <h2 className="text-lg font-semibold">Aperçu - {campaign.name}</h2>
+              {previewUrl && (
+                <div className="flex items-center gap-2 mt-1">
+                  <a 
+                    href={previewUrl} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-xs text-blue-600 hover:text-blue-800 hover:underline"
+                  >
+                    {previewUrl}
+                  </a>
+                  <button
+                    onClick={handleCopyUrl}
+                    className="p-1 hover:bg-gray-100 rounded transition-colors"
+                    title="Copier l'URL"
+                  >
+                    {isCopied ? (
+                      <Check className="w-3 h-3 text-green-600" />
+                    ) : (
+                      <Copy className="w-3 h-3 text-gray-600" />
+                    )}
+                  </button>
+                </div>
+              )}
+            </div>
             <div className="flex items-center bg-gray-100 rounded-lg p-1">
               <button
                 onClick={() => handleDeviceChange('desktop')}

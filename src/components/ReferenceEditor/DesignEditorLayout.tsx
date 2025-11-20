@@ -4471,6 +4471,7 @@ const handleSaveCampaignName = useCallback(async () => {
         onClose={() => setShowFullScreenPreview(false)}
         device={fullScreenPreviewDevice}
         onDeviceChange={setFullScreenPreviewDevice}
+        campaignId={campaignData?.id}
       >
         <div className="w-full h-full overflow-hidden bg-white">
           <EmptyGamePreview />

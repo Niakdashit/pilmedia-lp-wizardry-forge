@@ -1,6 +1,7 @@
-import React, { useEffect } from 'react';
-import { X, Monitor, Smartphone } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { X, Monitor, Smartphone, Copy, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { getPreviewUrl, copyPreviewUrl } from '../../../utils/previewUrl';
 
 interface FullScreenPreviewModalProps {
   isOpen: boolean;
@@ -8,6 +9,7 @@ interface FullScreenPreviewModalProps {
   children: React.ReactNode;
   device?: 'desktop' | 'mobile';
   onDeviceChange?: (device: 'desktop' | 'mobile') => void;
+  campaignId?: string;
 }
 
 const FullScreenPreviewModal: React.FC<FullScreenPreviewModalProps> = ({
@@ -15,8 +17,24 @@ const FullScreenPreviewModal: React.FC<FullScreenPreviewModalProps> = ({
   onClose,
   children,
   device = 'desktop',
-  onDeviceChange
+  onDeviceChange,
+  campaignId
 }) => {
+  const [isCopied, setIsCopied] = useState(false);
+  
+  const previewUrl = campaignId ? getPreviewUrl(campaignId) : null;
+
+  const handleCopyUrl = async () => {
+    if (!campaignId) return;
+    
+    try {
+      await copyPreviewUrl(campaignId);
+      setIsCopied(true);
+      setTimeout(() => setIsCopied(false), 2000);
+    } catch (error) {
+      console.error('Failed to copy URL:', error);
+    }
+  };
   // Empêcher le scroll du body quand la modale est ouverte
   useEffect(() => {
     if (isOpen) {
@@ -54,12 +72,40 @@ const FullScreenPreviewModal: React.FC<FullScreenPreviewModalProps> = ({
           {/* Header avec contrôles */}
           <div className="absolute top-0 left-0 right-0 z-[10000] bg-gradient-to-b from-black/80 to-transparent p-4">
             <div className="max-w-7xl mx-auto flex items-center justify-between">
-              {/* Titre */}
-              <div className="flex items-center space-x-3">
-                <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                <h2 className="text-white font-semibold text-lg">
-                  Prévisualisation en grand écran
-                </h2>
+              {/* Titre et URL */}
+              <div className="flex flex-col space-y-1">
+                <div className="flex items-center space-x-3">
+                  <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                  <h2 className="text-white font-semibold text-lg">
+                    Prévisualisation en grand écran
+                  </h2>
+                </div>
+                {previewUrl && (
+                  <div className="flex items-center gap-2 ml-5">
+                    <a 
+                      href={previewUrl} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-xs text-white/80 hover:text-white hover:underline"
+                    >
+                      {previewUrl}
+                    </a>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleCopyUrl();
+                      }}
+                      className="p-1 hover:bg-white/10 rounded transition-colors"
+                      title="Copier l'URL"
+                    >
+                      {isCopied ? (
+                        <Check className="w-3 h-3 text-green-400" />
+                      ) : (
+                        <Copy className="w-3 h-3 text-white/80" />
+                      )}
+                    </button>
+                  </div>
+                )}
               </div>
 
               {/* Sélecteur d'appareil */}
