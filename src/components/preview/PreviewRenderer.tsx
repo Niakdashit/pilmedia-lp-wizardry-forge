@@ -1037,7 +1037,7 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
                     </>
                   )}
 
-                  {/* Quiz / Swiper / Jackpot / Scratch game */}
+                  {/* Quiz / Swiper / Jackpot / Scratch / Form game */}
                   {campaign.type === 'quiz'
                     ? (
                       <TemplatedQuiz
@@ -1052,6 +1052,30 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
                           }, 1000);
                         }}
                       />
+                    )
+                    : campaign.type === 'form'
+                    ? (
+                      <div className="w-full max-w-lg">
+                        <DynamicContactForm
+                          fields={contactFields as any}
+                          submitLabel={campaign?.screens?.[1]?.buttonText || "Participer"}
+                          onSubmit={handleFormSubmit}
+                          textStyles={{
+                            label: { color: '#374151', fontFamily: 'inherit' },
+                            button: {
+                              backgroundColor: globalButtonStyle.backgroundColor || '#44444d',
+                              color: globalButtonStyle.color || '#ffffff',
+                              borderRadius: globalButtonStyle.borderRadius || '8px',
+                              padding: '12px 24px',
+                              fontSize: '16px',
+                              fontWeight: '600',
+                              border: 'none',
+                              cursor: 'pointer',
+                              width: '100%'
+                            }
+                          }}
+                        />
+                      </div>
                     )
                     : campaign.type === 'jackpot'
                     ? (
