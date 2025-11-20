@@ -655,13 +655,21 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
 
   const isPhoneFrame = constrainedHeight && previewMode === 'mobile';
 
-  // 🔁 Pour les campagnes Form, utiliser le même rendu que dans l'éditeur (FormPreview)
+  // 🔁 Pour les campagnes Form, utiliser un layout proche de l'éditeur (overlay à droite)
   if (campaign?.type === 'form') {
     return (
-      <div className="w-full h-full flex items-center justify-center">
-        <div className="relative w-full h-full flex items-center justify-center" style={backgroundStyle}>
-          <div className="relative z-10 flex items-center justify-center w-full h-full p-4 box-border">
-            <FormPreview campaign={campaign} gameSize={previewMode === 'desktop' ? 'large' : 'medium'} className="max-w-md w-full mx-auto" />
+      <div className="relative w-full h-full">
+        {/* Background plein écran */}
+        <div className="absolute inset-0 z-0" style={backgroundStyle} />
+
+        {/* Formulaire en overlay aligné à droite comme dans l'éditeur */}
+        <div className="absolute inset-0 z-10 flex items-center justify-end pr-6">
+          <div style={{ overflow: 'visible' }}>
+            <FormPreview
+              campaign={campaign}
+              gameSize={previewMode === 'desktop' ? 'medium' : 'small'}
+              className="pointer-events-auto"
+            />
           </div>
         </div>
       </div>
