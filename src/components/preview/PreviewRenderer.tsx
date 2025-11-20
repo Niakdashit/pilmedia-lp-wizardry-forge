@@ -10,7 +10,7 @@ import SlotMachine from '../SlotJackpot/SlotMachine';
 import ScratchPreview from '../GameTypes/ScratchPreview';
 import DynamicContactForm, { type FieldConfig } from '../forms/DynamicContactForm';
 import Modal from '../common/Modal';
-import GameCanvasPreview from '../ModernEditor/components/GameCanvasPreview';
+import FormPreview from '../GameTypes/FormPreview';
 import { useMessageStore } from '@/stores/messageStore';
 import { useEditorStore } from '@/stores/editorStore';
 import { useEditorPreviewSync } from '@/hooks/useEditorPreviewSync';
@@ -655,15 +655,23 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
 
   const isPhoneFrame = constrainedHeight && previewMode === 'mobile';
 
-  // 🔁 Pour les campagnes Form, utiliser exactement le même renderer que l'éditeur (GameCanvasPreview)
+  // 🔁 Pour les campagnes Form, utiliser un layout proche de l'éditeur (overlay à droite)
   if (campaign?.type === 'form') {
     return (
       <div className="relative w-full h-full">
-        <GameCanvasPreview
-          campaign={campaign}
-          previewDevice={previewMode}
-          key={`preview-renderer-form-${campaign.id}-${previewMode}`}
-        />
+        {/* Background plein écran */}
+        <div className="absolute inset-0 z-0" style={backgroundStyle} />
+
+        {/* Formulaire en overlay aligné à droite comme dans l'éditeur */}
+        <div className="absolute inset-0 z-10 flex items-center justify-end pr-6">
+          <div style={{ overflow: 'visible' }}>
+            <FormPreview
+              campaign={campaign}
+              gameSize={previewMode === 'desktop' ? 'medium' : 'small'}
+              className="pointer-events-auto"
+            />
+          </div>
+        </div>
       </div>
     );
   }
