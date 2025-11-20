@@ -125,6 +125,7 @@ const FormEditorLayout: React.FC<FormEditorLayoutProps> = ({ mode = 'campaign', 
   // Détection du mode Article via URL (?mode=article)
   const searchParams = new URLSearchParams(location.search);
   const editorMode: 'article' | 'fullscreen' = searchParams.get('mode') === 'article' ? 'article' : 'fullscreen';
+  const campaignId = searchParams.get('campaign');
   
   console.log('🎨 [FormEditorLayout] Editor Mode:', editorMode);
 

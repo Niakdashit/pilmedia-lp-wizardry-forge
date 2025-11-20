@@ -139,6 +139,7 @@ const JackpotEditorLayout: React.FC<JackpotEditorLayoutProps> = ({ mode = 'campa
   // Détection du mode Article via URL (?mode=article)
   const searchParams = new URLSearchParams(location.search);
   const editorMode: 'article' | 'fullscreen' = searchParams.get('mode') === 'article' ? 'article' : 'fullscreen';
+  const campaignId = searchParams.get('campaign');
   
   console.log('🎨 [JackpotEditorLayout] Editor Mode:', editorMode);
 
