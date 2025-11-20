@@ -5,6 +5,7 @@ import { useCampaignValidation } from '@/hooks/useCampaignValidation';
 // Align routing with QuizEditor via router adapter
 import { useLocation, useNavigate } from '@/lib/router-adapter';
 import { Save, X } from 'lucide-react';
+import FullscreenPreviewButton from '@/components/shared/FullscreenPreviewButton';
 
 const HybridSidebar = lazy(() => import('./HybridSidebar'));
 const DesignToolbar = lazy(() => import('./DesignToolbar'));
@@ -4388,6 +4389,11 @@ const handleSaveCampaignName = useCallback(async () => {
       {/* Floating bottom-right actions (no band) */}
       {!showFunnel && (
         <div className="fixed bottom-6 right-6 flex items-center gap-3 z-30">
+          <FullscreenPreviewButton 
+            campaignId={campaignId} 
+            variant="full"
+            className="shadow-sm"
+          />
           <button
             onClick={() => navigate('/campaigns')}
             className="flex items-center px-3 py-2 text-xs sm:text-sm border border-gray-300 bg-white/90 backdrop-blur rounded-lg hover:bg-white transition-colors shadow-sm"
