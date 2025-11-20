@@ -6,7 +6,6 @@ import CampaignValidationModal from '@/components/shared/CampaignValidationModal
 import { useCampaignValidation } from '@/hooks/useCampaignValidation';
 import { useLocation, useNavigate } from '@/lib/router-adapter';
 import { Save, X } from 'lucide-react';
-import FullscreenPreviewButton from '@/components/shared/FullscreenPreviewButton';
 
 const HybridSidebar = lazy(() => import('./HybridSidebar'));
 const DesignToolbar = lazy(() => import('./DesignToolbar'));
@@ -125,7 +124,6 @@ const FormEditorLayout: React.FC<FormEditorLayoutProps> = ({ mode = 'campaign', 
   // Détection du mode Article via URL (?mode=article)
   const searchParams = new URLSearchParams(location.search);
   const editorMode: 'article' | 'fullscreen' = searchParams.get('mode') === 'article' ? 'article' : 'fullscreen';
-  const campaignId = searchParams.get('campaign');
   
   console.log('🎨 [FormEditorLayout] Editor Mode:', editorMode);
 
@@ -4471,11 +4469,6 @@ useEffect(() => {
       {/* Floating bottom-right actions (no band) */}
       {!showFunnel && (
         <div className="fixed bottom-6 right-6 flex items-center gap-3 z-30">
-          <FullscreenPreviewButton 
-            campaignId={campaignId} 
-            variant="full"
-            className="shadow-sm"
-          />
           <button
             onClick={() => navigate('/campaigns')}
             className="flex items-center px-3 py-2 text-xs sm:text-sm border border-gray-300 bg-white/90 backdrop-blur rounded-lg hover:bg-white transition-colors shadow-sm"
