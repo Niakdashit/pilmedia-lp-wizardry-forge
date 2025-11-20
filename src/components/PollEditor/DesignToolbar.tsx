@@ -233,7 +233,7 @@ const QuizToolbar: React.FC<QuizToolbarProps> = React.memo(({
         <button 
           onClick={() => {
             if (campaignId) {
-              navigate(`/preview/${campaignId}`);
+              window.location.href = `/preview/${campaignId}`;
             } else {
               onPreviewToggle?.();
             }
