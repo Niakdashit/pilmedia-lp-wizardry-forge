@@ -10,6 +10,7 @@ import SlotMachine from '../SlotJackpot/SlotMachine';
 import ScratchPreview from '../GameTypes/ScratchPreview';
 import DynamicContactForm, { type FieldConfig } from '../forms/DynamicContactForm';
 import Modal from '../common/Modal';
+import FormPreview from '../GameTypes/FormPreview';
 import { useMessageStore } from '@/stores/messageStore';
 import { useEditorStore } from '@/stores/editorStore';
 import { useEditorPreviewSync } from '@/hooks/useEditorPreviewSync';
@@ -639,24 +640,81 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
   const ModuleRenderer = isDesignModular ? DesignModuleRenderer : QuizModuleRenderer;
 
   // Read form config to mirror editor exactly
-  const formConfig = (campaign as any)?.design?.formConfig || {
-    title: 'Vos informations',
-    description: 'Remplissez le formulaire pour participer',
-    submitLabel: 'Envoyer',
-    panelBg: '#ffffff',
-    borderColor: '#e5e7eb',
-    textColor: '#000000',
-    buttonColor: '#44444d',
-    buttonTextColor: '#ffffff',
-    borderRadius: 12,
-    fieldBorderRadius: 2,
-  };
-
   const isPhoneFrame = constrainedHeight && previewMode === 'mobile';
+
+  // 🔁 Pour les campagnes Form, utiliser le même rendu que dans l'éditeur (FormPreview)
+  if (campaign?.type === 'form') {
+    return (
+      <div className="w-full h-full flex items-center justify-center">
+        <div className="relative w-full h-full flex items-center justify-center" style={backgroundStyle}>
+          <div className="relative z-10 flex items-center justify-center w-full h-full p-4 box-border">
+            <FormPreview campaign={campaign} gameSize={previewMode === 'desktop' ? 'large' : 'medium'} className="max-w-md w-full mx-auto" />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const InnerContent = (
     <>
       <style>{`
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
+        }
+        /* Hide common editor-only controls in preview */
+        body[data-in-preview="1"] .canvas-zoom,
+        body[data-in-preview="1"] .zoom-control,
+        body[data-in-preview="1"] [data-zoom-control],
+        body[data-in-preview="1"] [aria-label="zoom"],
+        body[data-in-preview="1"] input[type="range"][name*="zoom"],
+        body[data-in-preview="1"] .screen-selector,
+        body[data-in-preview="1"] [data-screen-selector],
+        body[data-in-preview="1"] [data-canvas-controls],
+        body[data-in-preview="1"] .editor-controls,
+        body[data-in-preview="1"] .canvas-toolbar,
+        /* Radix/MUI/rc-slider and generic ARIA slider */
+        body[data-in-preview="1"] [role="slider"],
+        body[data-in-preview="1"] [data-radix-slider-root],
+        body[data-in-preview="1"] .radix-slider-root,
+        body[data-in-preview="1"] .MuiSlider-root,
+        body[data-in-preview="1"] .rc-slider,
+        /* Common container patterns that wrap a slider and a select (screen chooser) */
+        body[data-in-preview="1"] .slider-container,
+        body[data-in-preview="1"] .zoom-slider,
+        body[data-in-preview="1"] .preview-zoom,
+        body[data-in-preview="1"] .preview-controls,
+        body[data-in-preview="1"] .bottom-controls,
+        /* If a select is immediately following a slider (screen selector), hide it */
+        body[data-in-preview="1"] [role="slider"] ~ select {
+          display: none !important;
+        }
+      `}</style>
+      <div className="relative w-full h-full">
+        {/* Background */}
+        <div className="absolute inset-0 z-0" style={backgroundStyle} />
+
+        {/* Content avec safe zone */}
+        <div className={`relative z-30 h-full w-full ${currentScreen === 'screen2' ? 'overflow-visible' : 'overflow-visible'}`}>
+          {/* SCREEN 1: Page d'accueil */}
+          {currentScreen === 'screen1' && (
+            <div className={`flex flex-col ${isPhoneFrame ? 'min-h-full' : 'min-h-screen min-h-[100svh] min-h-[100dvh]'} relative`}>
+              {/* Modules Logo (collés en haut sans padding) */}
+              {logoModules1.length > 0 && (
+                <div className="w-full">
+                  <ModuleRenderer
+                    modules={logoModules1 as any}
+                    previewMode={true}
+                    device={previewMode}
+                    onButtonClick={() => {}}
+                  />
+                </div>
+              )}
+              ...
         @keyframes fadeIn {
           from {
             opacity: 0;
