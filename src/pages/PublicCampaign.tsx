@@ -132,7 +132,7 @@ const PublicCampaignPage: React.FC = () => {
     <PublicCampaignErrorBoundary>
       <div className="min-h-screen" style={{ backgroundColor: editorMode === 'article' ? '#2c2c35' : undefined }}>
         <div className="w-full min-h-screen">
-          <PreviewRenderer campaign={campaign} previewMode={previewMode} />
+          <PreviewRenderer campaign={campaign} previewMode={previewMode} isPublicView={true} />
         </div>
       </div>
     </PublicCampaignErrorBoundary>
