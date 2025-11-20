@@ -78,6 +78,17 @@ const FullscreenPreview: React.FC = () => {
     }
 
     if (!isLoading && campaign) {
+      // Debug: Vérifier le contenu de la campagne
+      console.log('🔍 [FullscreenPreview] Campaign loaded:', {
+        id: campaign.id,
+        type: campaign.type,
+        name: campaign.name,
+        'config.modularPage': campaign.config?.modularPage,
+        'design.designModules': campaign.design?.designModules,
+        'modularPage': campaign.modularPage,
+        'formFields': campaign.formFields,
+        'form_fields': campaign.form_fields
+      });
       setIsReady(true);
     } else if (!isLoading && !campaign) {
       setError('Campagne introuvable');
@@ -203,7 +214,11 @@ const FullscreenPreview: React.FC = () => {
 
       {/* Zone de preview plein écran */}
       <div className="h-full w-full overflow-hidden">
-        <PreviewRenderer campaign={campaign} previewMode={previewMode} />
+        <div className="h-full w-full" style={{
+          backgroundColor: campaign.type === 'form' ? undefined : 'transparent'
+        }}>
+          <PreviewRenderer campaign={campaign} previewMode={previewMode} />
+        </div>
       </div>
 
       {/* Indicateur d'aide en bas */}
