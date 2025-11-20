@@ -130,6 +130,7 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
   // Détection du mode Article via URL (?mode=article)
   const searchParams = new URLSearchParams(location.search);
   const editorMode: 'article' | 'fullscreen' = searchParams.get('mode') === 'article' ? 'article' : 'fullscreen';
+  const campaignId = searchParams.get('campaign');
   
   console.log('🎨 [QuizEditorLayout] Editor Mode:', editorMode);
 
