@@ -53,6 +53,7 @@ const LegalNotice = lazy(() => import('./pages/LegalNotice'));
 
 // Import direct (non lazy) pour la page publique - pas de spinner
 import PublicCampaignPage from './pages/PublicCampaign';
+const FullscreenPreview = lazy(() => import('./pages/FullscreenPreview'));
 
 function App() {
   const [showGDPRSettings, setShowGDPRSettings] = useState(false);
@@ -198,6 +199,16 @@ function App() {
               } />
               {/* Public campaign view - No spinner, direct load */}
               <Route path="/campaign/:id" element={<PublicCampaignPage />} />
+              
+              {/* Fullscreen Preview - Aperçu plein écran avec device switcher */}
+              <Route 
+                path="/fullscreen-preview/:id" 
+                element={
+                  <LoadingBoundary>
+                    <FullscreenPreview />
+                  </LoadingBoundary>
+                } 
+              />
               {/* oEmbed endpoint */}
               <Route path="/oembed" element={
                 <LoadingBoundary>
