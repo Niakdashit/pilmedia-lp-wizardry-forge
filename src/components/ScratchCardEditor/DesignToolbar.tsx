@@ -242,7 +242,7 @@ const ScratchToolbar: React.FC<ScratchToolbarProps> = React.memo(({
         <button 
           onClick={() => {
             if (campaignId) {
-              navigate(`/preview/${campaignId}`);
+              window.location.href = `/preview/${campaignId}`;
             } else {
               onPreviewToggle?.();
             }
