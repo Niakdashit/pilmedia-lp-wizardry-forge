@@ -1444,8 +1444,8 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
         </div>
       )}
       
-      {/* Contact Form Modal - Skip for form campaigns in mobile (they use inline slide-up) */}
-      {showContactForm && !(campaign?.type === 'form' && previewMode === 'mobile') && (() => {
+      {/* Contact Form Modal */}
+      {showContactForm && (() => {
         const baseHeight = 400;
         const fieldHeight = 80;
         const calculatedHeight = baseHeight + (contactFields.length * fieldHeight);
