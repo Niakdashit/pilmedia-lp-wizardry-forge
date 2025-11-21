@@ -26,6 +26,7 @@ export interface TypeformQuestion {
   description?: string;
   required?: boolean;
   options?: string[];
+  optionImages?: string[]; // Images pour chaque option dans les choix multiples
   min?: number;
   max?: number;
   placeholder?: string;
@@ -620,9 +621,9 @@ export const TypeformPreview: React.FC<TypeformPreviewProps> = ({
                     <>
                       {/* Image de la carte */}
                       <div className="w-full aspect-[4/3] bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden relative">
-                        {currentQuestion.imageUrl ? (
+                        {(currentQuestion.optionImages?.[idx] || currentQuestion.imageUrl) ? (
                           <img
-                            src={currentQuestion.imageUrl}
+                            src={currentQuestion.optionImages?.[idx] || currentQuestion.imageUrl}
                             alt={option}
                             className="w-full h-full object-cover"
                           />
