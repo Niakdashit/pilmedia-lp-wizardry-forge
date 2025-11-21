@@ -14,7 +14,7 @@ export interface TypeformTemplate {
   };
 }
 
-export const typeformTemplates: TypeformTemplate[] = [
+const typeformTemplatesRaw: TypeformTemplate[] = [
   // ===== FEEDBACK & SATISFACTION =====
   {
     id: 'customer-feedback',
@@ -56,6 +56,7 @@ export const typeformTemplates: TypeformTemplate[] = [
         panelBackgroundColor: '#8B6F47',
         fontFamily: 'Playfair Display',
         fontSize: 'large',
+        textColor: '#FFF8E7',
       },
       {
         id: 'q2',
@@ -69,6 +70,7 @@ export const typeformTemplates: TypeformTemplate[] = [
         panelBackgroundColor: '#D4A574',
         fontFamily: 'Playfair Display',
         fontSize: 'large',
+        textColor: '#3D2817',
       },
       {
         id: 'q3',
@@ -83,6 +85,7 @@ export const typeformTemplates: TypeformTemplate[] = [
         panelBackgroundColor: '#5C3D2E',
         fontFamily: 'Playfair Display',
         fontSize: 'xlarge',
+        textColor: '#FFFFFF',
       },
       {
         id: 'q4',
@@ -96,6 +99,7 @@ export const typeformTemplates: TypeformTemplate[] = [
         panelBackgroundColor: '#8B6F47',
         fontFamily: 'Playfair Display',
         fontSize: 'large',
+        textColor: '#FFF8E7',
       },
       {
         id: 'q5',
@@ -109,6 +113,7 @@ export const typeformTemplates: TypeformTemplate[] = [
         panelBackgroundColor: '#D4A574',
         fontFamily: 'Playfair Display',
         fontSize: 'large',
+        textColor: '#3D2817',
       },
       {
         id: 'thankyou',
@@ -164,6 +169,7 @@ export const typeformTemplates: TypeformTemplate[] = [
         panelBackgroundColor: '#1D1D1F',
         fontFamily: 'SF Pro Text',
         fontSize: 'large',
+        textColor: '#F5F5F7',
       },
       {
         id: 'q2',
@@ -177,6 +183,7 @@ export const typeformTemplates: TypeformTemplate[] = [
         panelBackgroundColor: '#424245',
         fontFamily: 'SF Pro Text',
         fontSize: 'large',
+        textColor: '#F5F5F7',
       },
       {
         id: 'thankyou',
@@ -2360,6 +2367,11 @@ export const typeformTemplates: TypeformTemplate[] = [
     ],
   },
 ];
+
+import { applyThemeColorsToAllTemplates } from './templateUtils';
+
+// Appliquer automatiquement les couleurs de texte à tous les templates
+export const typeformTemplates = applyThemeColorsToAllTemplates(typeformTemplatesRaw);
 
 export const getTemplateById = (id: string): TypeformTemplate | undefined => {
   return typeformTemplates.find(template => template.id === id);
