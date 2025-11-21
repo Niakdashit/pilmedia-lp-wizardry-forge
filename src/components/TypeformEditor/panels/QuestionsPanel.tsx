@@ -47,16 +47,7 @@ export const QuestionsPanel: React.FC<QuestionsPanelProps> = ({
   const addQuestion = (initialLayout?: TypeformLayout) => {
     const isFirstQuestion = questions.length === 0;
     
-    const newQuestion: TypeformQuestion = {
-      id: `q${Date.now()}`,
-      type: 'text',
-      text: 'Nouvelle question',
-      required: false,
-      placeholder: 'Votre réponse...',
-      layout: initialLayout || 'fullwidth-input' // Layout par défaut pour texte
-    };
-
-    // Si c'est la première question, ajouter automatiquement welcome et thankyou cards
+    // Si c'est la première question, créer une carte d'accueil (welcome)
     if (isFirstQuestion) {
       const welcomeCard: TypeformQuestion = {
         id: 'welcome',
@@ -65,11 +56,20 @@ export const QuestionsPanel: React.FC<QuestionsPanelProps> = ({
         description: 'Cela ne prendra que quelques minutes',
         required: false,
         placeholder: '',
-        layout: 'centered-card',
+        layout: initialLayout || 'centered-card',
         backgroundType: 'gradient',
         backgroundGradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
         fontFamily: 'Inter',
         fontSize: 'xlarge',
+      };
+
+      const firstQuestion: TypeformQuestion = {
+        id: `q${Date.now()}`,
+        type: 'text',
+        text: 'Nouvelle question',
+        required: false,
+        placeholder: 'Votre réponse...',
+        layout: 'fullwidth-input',
       };
 
       const thankyouCard: TypeformQuestion = {
@@ -86,17 +86,29 @@ export const QuestionsPanel: React.FC<QuestionsPanelProps> = ({
         fontSize: 'xlarge',
       };
 
-      onQuestionsChange([welcomeCard, newQuestion, thankyouCard]);
+      onQuestionsChange([welcomeCard, firstQuestion, thankyouCard]);
+      setEditingId(welcomeCard.id);
+      return;
+    }
+
+    // Sinon, créer une question normale
+    const newQuestion: TypeformQuestion = {
+      id: `q${Date.now()}`,
+      type: 'text',
+      text: 'Nouvelle question',
+      required: false,
+      placeholder: 'Votre réponse...',
+      layout: initialLayout || 'fullwidth-input',
+    };
+
+    // Insérer avant la thankyou card s'il y en a une
+    const thankyouIndex = questions.findIndex(q => q.type === 'thankyou');
+    if (thankyouIndex !== -1) {
+      const newQuestions = [...questions];
+      newQuestions.splice(thankyouIndex, 0, newQuestion);
+      onQuestionsChange(newQuestions);
     } else {
-      // Si ce n'est pas la première question, l'insérer avant la thankyou card s'il y en a une
-      const thankyouIndex = questions.findIndex(q => q.type === 'thankyou');
-      if (thankyouIndex !== -1) {
-        const newQuestions = [...questions];
-        newQuestions.splice(thankyouIndex, 0, newQuestion);
-        onQuestionsChange(newQuestions);
-      } else {
-        onQuestionsChange([...questions, newQuestion]);
-      }
+      onQuestionsChange([...questions, newQuestion]);
     }
     
     setEditingId(newQuestion.id);
@@ -236,7 +248,13 @@ export const QuestionsPanel: React.FC<QuestionsPanelProps> = ({
                   </button>
 
                   <div className="flex-1 flex items-center gap-2">
-                    <span className="text-sm text-gray-500">Q{index + 1}</span>
+                    <span className="text-sm text-gray-500">
+                      {question.type === 'welcome' 
+                        ? '🏁 Accueil' 
+                        : question.type === 'thankyou' 
+                        ? '🎉 Sortie' 
+                        : `Q${index + 1}`}
+                    </span>
                     <span className="text-gray-900 font-medium truncate">
                       {question.text}
                     </span>

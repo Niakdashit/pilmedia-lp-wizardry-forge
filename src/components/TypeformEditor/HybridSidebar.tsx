@@ -304,18 +304,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
           ? prev.typeformQuestions
           : [];
 
-        // Question texte par défaut
-        const defaultLayout: TypeformLayout = 'fullwidth-input';
-        const newQuestion: TypeformQuestion = {
-          id: `q${Date.now()}`,
-          type: 'text',
-          text: 'Nouvelle question',
-          required: false,
-          placeholder: 'Votre réponse...',
-          layout: defaultLayout,
-        };
-
-        // Si aucune question : injecter welcome + thankyou autour de la première vraie question
+        // Si aucune question : créer welcome card + première vraie question + thankyou card
         if (prevQuestions.length === 0) {
           const welcomeCard: TypeformQuestion = {
             id: 'welcome',
@@ -329,6 +318,15 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
             backgroundGradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
             fontFamily: 'Inter',
             fontSize: 'xlarge',
+          };
+
+          const firstQuestion: TypeformQuestion = {
+            id: `q${Date.now()}`,
+            type: 'text',
+            text: 'Nouvelle question',
+            required: false,
+            placeholder: 'Votre réponse...',
+            layout: 'fullwidth-input',
           };
 
           const thankyouCard: TypeformQuestion = {
@@ -347,11 +345,20 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
 
           return {
             ...(prev || {}),
-            typeformQuestions: [welcomeCard, newQuestion, thankyouCard],
+            typeformQuestions: [welcomeCard, firstQuestion, thankyouCard],
           };
         }
 
-        // Sinon, insérer avant la carte de sortie si elle existe
+        // Sinon, créer une question normale et l'insérer avant la carte de sortie
+        const newQuestion: TypeformQuestion = {
+          id: `q${Date.now()}`,
+          type: 'text',
+          text: 'Nouvelle question',
+          required: false,
+          placeholder: 'Votre réponse...',
+          layout: 'fullwidth-input',
+        };
+
         const thankyouIndex = prevQuestions.findIndex((q) => q.type === 'thankyou');
         if (thankyouIndex !== -1) {
           const updated = [...prevQuestions];
