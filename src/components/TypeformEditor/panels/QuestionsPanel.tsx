@@ -45,6 +45,8 @@ export const QuestionsPanel: React.FC<QuestionsPanelProps> = ({
   const [showTemplateModal, setShowTemplateModal] = useState(false);
 
   const addQuestion = (initialLayout?: TypeformLayout) => {
+    const isFirstQuestion = questions.length === 0;
+    
     const newQuestion: TypeformQuestion = {
       id: `q${Date.now()}`,
       type: 'text',
@@ -53,7 +55,50 @@ export const QuestionsPanel: React.FC<QuestionsPanelProps> = ({
       placeholder: 'Votre réponse...',
       layout: initialLayout || 'fullwidth-input' // Layout par défaut pour texte
     };
-    onQuestionsChange([...questions, newQuestion]);
+
+    // Si c'est la première question, ajouter automatiquement welcome et thankyou cards
+    if (isFirstQuestion) {
+      const welcomeCard: TypeformQuestion = {
+        id: 'welcome',
+        type: 'welcome',
+        text: 'Bienvenue à notre formulaire',
+        description: 'Cela ne prendra que quelques minutes',
+        required: false,
+        placeholder: '',
+        layout: 'centered-card',
+        backgroundType: 'gradient',
+        backgroundGradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        fontFamily: 'Inter',
+        fontSize: 'xlarge',
+      };
+
+      const thankyouCard: TypeformQuestion = {
+        id: 'thankyou',
+        type: 'thankyou',
+        text: 'Merci pour vos réponses ! 🎉',
+        description: 'Vos réponses ont été enregistrées',
+        required: false,
+        placeholder: '',
+        layout: 'centered-card',
+        backgroundType: 'gradient',
+        backgroundGradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        fontFamily: 'Inter',
+        fontSize: 'xlarge',
+      };
+
+      onQuestionsChange([welcomeCard, newQuestion, thankyouCard]);
+    } else {
+      // Si ce n'est pas la première question, l'insérer avant la thankyou card s'il y en a une
+      const thankyouIndex = questions.findIndex(q => q.type === 'thankyou');
+      if (thankyouIndex !== -1) {
+        const newQuestions = [...questions];
+        newQuestions.splice(thankyouIndex, 0, newQuestion);
+        onQuestionsChange(newQuestions);
+      } else {
+        onQuestionsChange([...questions, newQuestion]);
+      }
+    }
+    
     setEditingId(newQuestion.id);
   };
 
