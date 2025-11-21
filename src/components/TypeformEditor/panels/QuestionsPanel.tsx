@@ -200,6 +200,8 @@ export const QuestionsPanel: React.FC<QuestionsPanelProps> = ({
       layout: 'centered-card',
       backgroundType: 'color',
       panelBackgroundColor: template.colors.primary,
+      textColor: template.colors.secondary,
+      buttonColor: template.colors.accent,
       fontFamily: template.font,
       fontSize: 'xlarge',
     };
@@ -214,6 +216,8 @@ export const QuestionsPanel: React.FC<QuestionsPanelProps> = ({
         placeholder: 'Votre réponse...',
         layout: i === 2 ? 'cards-grid' : i === 3 ? 'scale-horizontal' : 'fullwidth-input',
         panelBackgroundColor: template.colors.primary,
+        textColor: template.colors.secondary,
+        buttonColor: template.colors.accent,
         fontFamily: template.font,
         ...(i === 2 ? { options: ['Réseaux sociaux', 'Recommandation', 'Publicité', 'Autre'], optionImages: ['', '', '', ''] } : {}),
         ...(i === 3 ? { min: 0, max: 10 } : {})
@@ -230,6 +234,8 @@ export const QuestionsPanel: React.FC<QuestionsPanelProps> = ({
       layout: 'centered-card',
       backgroundType: 'color',
       panelBackgroundColor: template.colors.accent,
+      textColor: template.colors.primary,
+      buttonColor: template.colors.secondary,
       fontFamily: template.font,
       fontSize: 'xlarge',
     };
