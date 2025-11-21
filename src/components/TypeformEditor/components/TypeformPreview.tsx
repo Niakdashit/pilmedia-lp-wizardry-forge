@@ -1118,7 +1118,14 @@ export const TypeformPreview: React.FC<TypeformPreviewProps> = ({
                           fontSize: getFontSize(currentQuestion?.fontSize).question
                         }}
                       >
-                        {currentQuestion?.text}
+                        {currentQuestion?.text
+                          ?.split('\n')
+                          .map((line, idx) => (
+                            <React.Fragment key={idx}>
+                              {line}
+                              {idx < (currentQuestion.text?.split('\n').length || 0) - 1 && <br />}
+                            </React.Fragment>
+                          ))}
                         {currentQuestion?.required && (
                           <span style={{ color: primaryColor }}> *</span>
                         )}
@@ -1176,23 +1183,30 @@ export const TypeformPreview: React.FC<TypeformPreviewProps> = ({
 
                       {/* Question */}
                       <div className="mb-10">
-                        <h2
-                          className="font-bold mb-3 leading-tight"
-                          style={{ 
-                            color: textColor,
-                            fontFamily: currentQuestion?.fontFamily && currentQuestion.fontFamily !== 'default' 
-                              ? `'${currentQuestion.fontFamily}', sans-serif` 
-                              : undefined,
-                            fontSize: currentQuestion?.fontSize === 'xlarge' ? '3.5rem' : 
-                                     currentQuestion?.fontSize === 'large' ? '3rem' :
-                                     currentQuestion?.fontSize === 'small' ? '2rem' : '2.5rem'
-                          }}
-                        >
-                          {currentQuestion?.text}
-                          {currentQuestion?.required && (
-                            <span style={{ color: primaryColor }}> *</span>
-                          )}
-                        </h2>
+                      <h2
+                        className="font-bold mb-3 leading-tight"
+                        style={{ 
+                          color: textColor,
+                          fontFamily: currentQuestion?.fontFamily && currentQuestion.fontFamily !== 'default' 
+                            ? `'${currentQuestion.fontFamily}', sans-serif` 
+                            : undefined,
+                          fontSize: currentQuestion?.fontSize === 'xlarge' ? '3.5rem' : 
+                                   currentQuestion?.fontSize === 'large' ? '3rem' :
+                                   currentQuestion?.fontSize === 'small' ? '2rem' : '2.5rem'
+                        }}
+                      >
+                        {currentQuestion?.text
+                          ?.split('\n')
+                          .map((line, idx) => (
+                            <React.Fragment key={idx}>
+                              {line}
+                              {idx < (currentQuestion.text?.split('\n').length || 0) - 1 && <br />}
+                            </React.Fragment>
+                          ))}
+                        {currentQuestion?.required && (
+                          <span style={{ color: primaryColor }}> *</span>
+                        )}
+                      </h2>
                         {currentQuestion?.description && (
                           <p
                             style={{ 
