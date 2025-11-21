@@ -4239,7 +4239,7 @@ const handleSaveCampaignName = useCallback(async () => {
                     style={{
                       background: canvasBackground.type === 'image'
                         ? `url(${canvasBackground.value}) center/cover no-repeat`
-                        : canvasBackground.value || 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)'
+                        : canvasBackground.value || '#ffffff'
                     }}
                   />
                   {/* Background supplémentaire pour l'espace entre les canvas */}
