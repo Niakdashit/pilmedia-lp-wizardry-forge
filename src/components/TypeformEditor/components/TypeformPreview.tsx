@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { ChevronRight, ChevronLeft, Check } from 'lucide-react';
 
 export type TypeformLayout =
@@ -81,7 +81,6 @@ export const TypeformPreview: React.FC<TypeformPreviewProps> = ({
   const currentQuestion = questions[currentIndex];
   const currentLayout: TypeformLayout = currentQuestion?.layout || 'centered-card';
   const isWelcomeCard = currentQuestion?.type === 'welcome';
-  const isThankyouCard = currentQuestion?.type === 'thankyou';
   const isSplitLayout =
     currentLayout === 'split-left-text-right-image' ||
     currentLayout === 'split-left-image-right-text';
@@ -325,8 +324,6 @@ export const TypeformPreview: React.FC<TypeformPreviewProps> = ({
     if (!currentQuestion) return { backgroundColor };
 
     const bgType = currentQuestion.backgroundType || 'color';
-    const overlayOpacity = currentQuestion.backgroundOverlayOpacity ?? 0;
-    const overlayColor = currentQuestion.backgroundOverlayColor || '#000000';
 
     switch (bgType) {
       case 'image':
