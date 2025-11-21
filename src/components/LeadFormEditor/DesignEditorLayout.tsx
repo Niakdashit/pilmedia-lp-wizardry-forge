@@ -2016,7 +2016,7 @@ const handleSaveCampaignName = useCallback(async () => {
           const bg = mergedCanvasConfig.background 
             || (data?.design as any)?.backgroundImage 
             || (data?.design as any)?.background 
-            || { type: 'color', value: '#ffffff' };
+            || { type: 'color', value: 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)' };
           
           // If we have a background image URL in design, use it
           if ((data?.design as any)?.backgroundImage && typeof (data.design as any).backgroundImage === 'string') {

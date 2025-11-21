@@ -2483,7 +2483,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
       // Remettre le background par défaut et notifier le parent (source de vérité)
       const defaultBackground = {
         type: 'color' as const,
-        value: '#ffffff'
+        value: 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)'
       };
       onBackgroundChange?.(defaultBackground);
       // Optionnel: réinitialiser les couleurs extraites car il n'y a plus d'image

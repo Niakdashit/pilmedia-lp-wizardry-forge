@@ -7,18 +7,7 @@ export type TypeformLayout =
   | 'split-left-image-right-text'
   | 'scale-horizontal'
   | 'cards-grid'
-  | 'fullwidth-input'
-  | 'minimal-center'
-  | 'side-panel-left'
-  | 'side-panel-right'
-  | 'floating-card'
-  | 'compact-inline'
-  | 'magazine-style'
-  | 'asymmetric-left'
-  | 'asymmetric-right'
-  | 'cards-minimal'
-  | 'cards-large'
-  | 'fullscreen-split';
+  | 'fullwidth-input';
 
 export interface TypeformQuestion {
   id: string;
@@ -58,7 +47,6 @@ export interface TypeformQuestion {
   // Typographie personnalisée
   fontFamily?: string; // Google Font name
   fontSize?: 'small' | 'medium' | 'large' | 'xlarge';
-  textColor?: string; // Couleur de texte personnalisée pour cette question
 }
 
 interface TypeformPreviewProps {
@@ -430,13 +418,10 @@ export const TypeformPreview: React.FC<TypeformPreviewProps> = ({
       
       case 'color':
       default:
-        // Utiliser panelBackgroundColor si défini, sinon la couleur de fond globale
-        const questionBg = currentQuestion.panelBackgroundColor || backgroundColor;
-        return { backgroundColor: questionBg };
+        return { backgroundColor };
     }
 
-    // Fallback: utiliser panelBackgroundColor si défini, sinon la couleur de fond globale
-    return { backgroundColor: currentQuestion.panelBackgroundColor || backgroundColor };
+    return { backgroundColor };
   };
 
   // Fonction pour rendre l'overlay si nécessaire
@@ -1197,7 +1182,7 @@ export const TypeformPreview: React.FC<TypeformPreviewProps> = ({
                       <h2
                         className="font-bold mb-2 leading-snug"
                         style={{ 
-                          color: currentQuestion?.textColor || textColor,
+                          color: textColor,
                           fontFamily: currentQuestion?.fontFamily && currentQuestion.fontFamily !== 'default' 
                             ? `'${currentQuestion.fontFamily}', sans-serif` 
                             : fontFamily,
@@ -1219,7 +1204,7 @@ export const TypeformPreview: React.FC<TypeformPreviewProps> = ({
                       {currentQuestion?.description && (
                         <p
                           style={{ 
-                            color: currentQuestion?.textColor || textColor,
+                            color: textColor, 
                             opacity: 0.7,
                             fontFamily: currentQuestion?.fontFamily && currentQuestion.fontFamily !== 'default' 
                               ? `'${currentQuestion.fontFamily}', sans-serif` 
@@ -1272,7 +1257,7 @@ export const TypeformPreview: React.FC<TypeformPreviewProps> = ({
                       <h2
                         className="font-bold mb-3 leading-tight"
                         style={{ 
-                          color: currentQuestion?.textColor || textColor,
+                          color: textColor,
                           fontFamily: currentQuestion?.fontFamily && currentQuestion.fontFamily !== 'default' 
                             ? `'${currentQuestion.fontFamily}', sans-serif` 
                             : fontFamily,
@@ -1296,7 +1281,7 @@ export const TypeformPreview: React.FC<TypeformPreviewProps> = ({
                         {currentQuestion?.description && (
                         <p
                           style={{ 
-                            color: currentQuestion?.textColor || textColor,
+                            color: textColor, 
                             opacity: 0.7,
                             fontFamily: currentQuestion?.fontFamily && currentQuestion.fontFamily !== 'default' 
                               ? `'${currentQuestion.fontFamily}', sans-serif` 
@@ -1388,7 +1373,7 @@ export const TypeformPreview: React.FC<TypeformPreviewProps> = ({
                   <h2
                     className="font-bold mb-2"
                     style={{ 
-                      color: currentQuestion?.textColor || textColor,
+                      color: textColor,
                       fontFamily: currentQuestion?.fontFamily && currentQuestion.fontFamily !== 'default' 
                         ? `'${currentQuestion.fontFamily}', sans-serif` 
                         : undefined,
@@ -1403,7 +1388,7 @@ export const TypeformPreview: React.FC<TypeformPreviewProps> = ({
                   {currentQuestion?.description && (
                           <p
                             style={{ 
-                              color: currentQuestion?.textColor || textColor,
+                              color: textColor, 
                               opacity: 0.7,
                               fontFamily: currentQuestion?.fontFamily && currentQuestion.fontFamily !== 'default' 
                                 ? `'${currentQuestion.fontFamily}', sans-serif` 

@@ -144,7 +144,7 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
   const [selectedDevice, setSelectedDevice] = useState<'desktop' | 'tablet' | 'mobile'>(actualDevice);
   const defaultBackground = mode === 'template'
     ? { type: 'color' as const, value: '#4ECDC4' }
-    : { type: 'color' as const, value: '#ffffff' };
+    : { type: 'color' as const, value: 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)' };
   
   type BackgroundValue = { type: 'color' | 'image'; value: string; devices?: Partial<Record<'desktop' | 'tablet' | 'mobile', { type: 'color' | 'image'; value: string }>> };
   const [screenBackgrounds, setScreenBackgrounds] = useState<Record<'screen1' | 'screen2' | 'screen3', BackgroundValue>>({
@@ -325,9 +325,9 @@ useEffect(() => {
           setCanvasBackground({ ...bg });
           
           const defaultScreens = {
-            screen1: { type: 'color' as const, value: '#ffffff' },
-            screen2: { type: 'color' as const, value: '#ffffff' },
-            screen3: { type: 'color' as const, value: '#ffffff' }
+            screen1: { type: 'color' as const, value: 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)' },
+            screen2: { type: 'color' as const, value: 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)' },
+            screen3: { type: 'color' as const, value: 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)' }
           };
 
           const normalizeBg = (bg: any) => {

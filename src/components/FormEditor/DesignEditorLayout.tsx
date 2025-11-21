@@ -490,7 +490,7 @@ useEffect(() => {
   // Background par écran - chaque écran a son propre background
   const defaultBackground = mode === 'template'
     ? { type: 'color' as const, value: '#4ECDC4' }
-    : { type: 'color' as const, value: '#ffffff' };
+    : { type: 'color' as const, value: 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)' };
   
   const [screenBackgrounds, setScreenBackgrounds] = useState<Record<'screen1' | 'screen2', any>>({
     screen1: defaultBackground,
@@ -831,7 +831,7 @@ useEffect(() => {
       setCanvasBackground(
         mode === 'template'
           ? { type: 'color', value: '#4ECDC4' }
-          : { type: 'color', value: '#ffffff' }
+          : { type: 'color', value: 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)' }
       );
     }
     

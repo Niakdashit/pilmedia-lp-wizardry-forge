@@ -771,17 +771,6 @@ useEffect(() => {
   });
 }, [canvasElements, screenBackgrounds, selectedDevice, canvasZoom, setCampaign]);
 
-// Synchronize canvas background with template theme
-useEffect(() => {
-  if (campaignState?.design?.backgroundColor && bgHydratedRef.current) {
-    const bgColor = campaignState.design.backgroundColor;
-    // Only update if it's a different color
-    if (canvasBackground.type === 'color' && canvasBackground.value !== bgColor) {
-      setCanvasBackground({ type: 'color', value: bgColor });
-    }
-  }
-}, [campaignState?.design?.backgroundColor, canvasBackground]);
-
   // Détection de la taille de fenêtre
   useEffect(() => {
     const updateWindowSize = () => {
@@ -2006,17 +1995,10 @@ const handleSaveCampaignName = useCallback(async () => {
           }
           
           // Restore background - check multiple sources
-          let bg = mergedCanvasConfig.background 
+          const bg = mergedCanvasConfig.background 
             || (data?.design as any)?.backgroundImage 
             || (data?.design as any)?.background 
-            || { type: 'color', value: '#ffffff' };
-          
-          // Migrate old cyan/green gradient to white
-          if (typeof bg === 'object' && bg.type === 'color' && 
-              (bg.value?.includes('#87CEEB') || bg.value?.includes('#98FB98') || 
-               bg.value?.includes('87CEEB') || bg.value?.includes('98FB98'))) {
-            bg = { type: 'color', value: '#ffffff' };
-          }
+            || { type: 'color', value: 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)' };
           
           // If we have a background image URL in design, use it
           if ((data?.design as any)?.backgroundImage && typeof (data.design as any).backgroundImage === 'string') {
@@ -4257,7 +4239,7 @@ const handleSaveCampaignName = useCallback(async () => {
                     style={{
                       background: canvasBackground.type === 'image'
                         ? `url(${canvasBackground.value}) center/cover no-repeat`
-                        : canvasBackground.value || '#ffffff'
+                        : canvasBackground.value || 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)'
                     }}
                   />
                   {/* Background supplémentaire pour l'espace entre les canvas */}
@@ -4378,7 +4360,7 @@ const handleSaveCampaignName = useCallback(async () => {
                     style={{
                       background: canvasBackground.type === 'image'
                         ? `url(${canvasBackground.value}) center/cover no-repeat`
-                        : canvasBackground.value || '#ffffff'
+                        : canvasBackground.value || 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)'
                     }}
                   />
                   {/* Background supplémentaire pour l'espace entre les canvas */}
