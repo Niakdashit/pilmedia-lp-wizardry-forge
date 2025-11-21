@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, FileText, Users, ClipboardList, Calendar } from 'lucide-react';
+import { X, FileText, Users, ClipboardList, Calendar, Briefcase, ShoppingCart, Heart, UserCheck, GraduationCap, Plane, DollarSign, UtensilsCrossed, Dumbbell, Sparkles, Laptop, MessageCircle, HandHeart } from 'lucide-react';
 import { TypeformTemplate, typeformTemplates } from '../templates/typeformTemplates';
 
 interface TemplateModalProps {
@@ -13,6 +13,19 @@ const categoryIcons: Record<string, React.ReactNode> = {
   contact: <FileText size={20} />,
   survey: <Users size={20} />,
   registration: <Calendar size={20} />,
+  'lead-generation': <Briefcase size={20} />,
+  'e-commerce': <ShoppingCart size={20} />,
+  healthcare: <Heart size={20} />,
+  hr: <UserCheck size={20} />,
+  education: <GraduationCap size={20} />,
+  travel: <Plane size={20} />,
+  finance: <DollarSign size={20} />,
+  food: <UtensilsCrossed size={20} />,
+  fitness: <Dumbbell size={20} />,
+  beauty: <Sparkles size={20} />,
+  saas: <Laptop size={20} />,
+  community: <MessageCircle size={20} />,
+  nonprofit: <HandHeart size={20} />,
 };
 
 export const TemplateModal: React.FC<TemplateModalProps> = ({
