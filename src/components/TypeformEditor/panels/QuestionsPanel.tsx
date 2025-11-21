@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
-import { Plus, Trash2, GripVertical, Type, Mail, Phone, Hash, List, CheckSquare, BarChart3, AlignLeft, Image as ImageIcon, LayoutTemplate, Sparkles, FileText } from 'lucide-react';
+import { Plus, Trash2, GripVertical, Type, Mail, Phone, Hash, List, CheckSquare, BarChart3, AlignLeft, Image as ImageIcon, LayoutTemplate, Sparkles } from 'lucide-react';
 import { TypeformQuestion, TypeformLayout } from '../components/TypeformPreview';
 import TemplateModal from '../components/TemplateModal';
 import { TypeformTemplate } from '../templates/typeformTemplates';
+import TemplateSelector from '../TemplateSelector';
+import { FormTemplate } from '@/config/formTemplates';
+import { toast } from 'sonner';
 
 interface QuestionsPanelProps {
   questions: TypeformQuestion[];
@@ -43,6 +46,7 @@ export const QuestionsPanel: React.FC<QuestionsPanelProps> = ({
 }) => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showTemplateModal, setShowTemplateModal] = useState(false);
+  const [showTemplateSelector, setShowTemplateSelector] = useState(false);
 
   const addQuestion = (initialLayout?: TypeformLayout) => {
     const isFirstQuestion = questions.length === 0;
@@ -183,6 +187,57 @@ export const QuestionsPanel: React.FC<QuestionsPanelProps> = ({
     setEditingId(null);
   };
 
+  const handleSelectFormTemplate = (template: FormTemplate) => {
+    toast.success(`Template "${template.name}" sélectionné !`);
+    
+    const welcomeCard: TypeformQuestion = {
+      id: 'welcome',
+      type: 'welcome',
+      text: template.title,
+      description: template.subtitle || '',
+      required: false,
+      placeholder: '',
+      layout: 'centered-card',
+      backgroundType: 'color',
+      panelBackgroundColor: template.colors.primary,
+      fontFamily: template.font,
+      fontSize: 'xlarge',
+    };
+    
+    const sampleQuestions: TypeformQuestion[] = [];
+    for (let i = 0; i < Math.min(template.questionCount, 5); i++) {
+      sampleQuestions.push({
+        id: `q${Date.now()}-${i}`,
+        type: i === 0 ? 'text' : i === 1 ? 'email' : i === 2 ? 'choice' : i === 3 ? 'scale' : 'long-text',
+        text: i === 0 ? 'Votre nom complet ?' : i === 1 ? 'Votre email ?' : i === 2 ? 'Comment nous avez-vous connu ?' : i === 3 ? 'Évaluez votre expérience' : 'Commentaires ?',
+        required: i < 2,
+        placeholder: 'Votre réponse...',
+        layout: i === 2 ? 'cards-grid' : i === 3 ? 'scale-horizontal' : 'fullwidth-input',
+        panelBackgroundColor: template.colors.primary,
+        fontFamily: template.font,
+        ...(i === 2 ? { options: ['Réseaux sociaux', 'Recommandation', 'Publicité', 'Autre'], optionImages: ['', '', '', ''] } : {}),
+        ...(i === 3 ? { min: 0, max: 10 } : {})
+      });
+    }
+    
+    const thankyouCard: TypeformQuestion = {
+      id: 'thankyou',
+      type: 'thankyou',
+      text: 'Merci ! 🎉',
+      description: `${template.brand} vous remercie`,
+      required: false,
+      placeholder: '',
+      layout: 'centered-card',
+      backgroundType: 'color',
+      panelBackgroundColor: template.colors.accent,
+      fontFamily: template.font,
+      fontSize: 'xlarge',
+    };
+    
+    onQuestionsChange([welcomeCard, ...sampleQuestions, thankyouCard]);
+    setShowTemplateSelector(false);
+  };
+
   return (
     <div className="h-full flex flex-col bg-gray-50">
       {/* Header */}
@@ -205,10 +260,10 @@ export const QuestionsPanel: React.FC<QuestionsPanelProps> = ({
         </div>
         <div className="flex gap-2">
           <button
-            onClick={() => setShowTemplateModal(true)}
+            onClick={() => setShowTemplateSelector(true)}
             className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-white hover:bg-gray-50 text-[#841b60] border border-[#841b60] rounded-lg transition-colors"
           >
-            <FileText size={18} />
+            <Sparkles size={18} />
             <span>Templates</span>
           </button>
           <button
@@ -221,7 +276,15 @@ export const QuestionsPanel: React.FC<QuestionsPanelProps> = ({
         </div>
       </div>
 
-      {/* Template Modal */}
+      {/* New Template Selector (Infinite Templates) */}
+      {showTemplateSelector && (
+        <TemplateSelector
+          onClose={() => setShowTemplateSelector(false)}
+          onSelectTemplate={handleSelectFormTemplate}
+        />
+      )}
+
+      {/* Legacy Template Modal */}
       <TemplateModal
         isOpen={showTemplateModal}
         onClose={() => setShowTemplateModal(false)}
