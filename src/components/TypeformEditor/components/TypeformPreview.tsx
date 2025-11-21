@@ -7,7 +7,18 @@ export type TypeformLayout =
   | 'split-left-image-right-text'
   | 'scale-horizontal'
   | 'cards-grid'
-  | 'fullwidth-input';
+  | 'fullwidth-input'
+  | 'minimal-center'
+  | 'side-panel-left'
+  | 'side-panel-right'
+  | 'floating-card'
+  | 'compact-inline'
+  | 'magazine-style'
+  | 'asymmetric-left'
+  | 'asymmetric-right'
+  | 'cards-minimal'
+  | 'cards-large'
+  | 'fullscreen-split';
 
 export interface TypeformQuestion {
   id: string;
