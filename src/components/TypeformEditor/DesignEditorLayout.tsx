@@ -528,6 +528,17 @@ const { syncAllStates, syncModularPage } = useCampaignStateSync();
   const [canvasBackground, setCanvasBackground] = useState<{ type: 'color' | 'image'; value: string }>({ type: 'color', value: '' });
   const [canvasZoom, setCanvasZoom] = useState(getDefaultZoom(selectedDevice));
   
+  // Synchronize canvas background with template theme
+  useEffect(() => {
+    if (campaign?.design?.backgroundColor && bgHydratedRef.current) {
+      const bgColor = campaign.design.backgroundColor;
+      // Only update if it's a different color
+      if (canvasBackground.type === 'color' && canvasBackground.value !== bgColor) {
+        setCanvasBackground({ type: 'color', value: bgColor });
+      }
+    }
+  }, [campaign?.design?.backgroundColor]);
+  
   useEffect(() => {
     canvasZoomRef.current = canvasZoom;
   }, [canvasZoom]);
