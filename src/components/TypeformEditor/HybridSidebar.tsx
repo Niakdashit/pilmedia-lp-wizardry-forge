@@ -37,6 +37,7 @@ import CodePanel from '../DesignEditor/panels/CodePanel';
 import { QuestionsPanel } from './panels/QuestionsPanel';
 import ProsplayAIOverlay from './components/ProsplayAIOverlay';
 import LogicPanel from './panels/LogicPanel';
+import DesignCustomizationPanel from './panels/DesignCustomizationPanel';
 import { useEditorStore } from '../../stores/editorStore';
 import { useArticleBannerSync } from '@/hooks/useArticleBannerSync';
 import { getEditorDeviceOverride } from '@/utils/deviceOverrides';
@@ -1115,6 +1116,31 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
             campaign={campaign}
             currentScreen={currentScreen}
             onCampaignChange={setCampaign}
+          />
+        );
+      case 'background':
+        return (
+          <DesignCustomizationPanel
+            primaryColor={campaign?.design?.typeformPrimaryColor || '#841b60'}
+            fontFamily={campaign?.design?.typeformFontFamily || 'Inter, sans-serif'}
+            onPrimaryColorChange={(color) => {
+              setCampaign({
+                ...campaign,
+                design: {
+                  ...(campaign?.design || {}),
+                  typeformPrimaryColor: color,
+                },
+              });
+            }}
+            onFontFamilyChange={(font) => {
+              setCampaign({
+                ...campaign,
+                design: {
+                  ...(campaign?.design || {}),
+                  typeformFontFamily: font,
+                },
+              });
+            }}
           />
         );
       default:
