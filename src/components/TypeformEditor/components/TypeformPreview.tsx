@@ -57,6 +57,12 @@ interface TypeformPreviewProps {
   textColor?: string;
   primaryColor?: string;
   device?: 'desktop' | 'tablet' | 'mobile';
+  fontFamily?: string;
+  colorShades?: {
+    dark: string;
+    medium: string;
+    light: string;
+  };
 }
 
 export const TypeformPreview: React.FC<TypeformPreviewProps> = ({
@@ -66,7 +72,9 @@ export const TypeformPreview: React.FC<TypeformPreviewProps> = ({
   backgroundColor = '#ffffff',
   textColor = '#000000',
   primaryColor = '#841b60',
-  device = 'desktop'
+  device = 'desktop',
+  fontFamily = 'Inter, sans-serif',
+  colorShades
 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, any>>({});
@@ -85,6 +93,64 @@ export const TypeformPreview: React.FC<TypeformPreviewProps> = ({
   const isSplitLayout =
     currentLayout === 'split-left-text-right-image' ||
     currentLayout === 'split-left-image-right-text';
+
+  // Générer les teintes si non fournies
+  const generateColorShades = (baseColor: string) => {
+    const hexToHSL = (hex: string) => {
+      const r = parseInt(hex.slice(1, 3), 16) / 255;
+      const g = parseInt(hex.slice(3, 5), 16) / 255;
+      const b = parseInt(hex.slice(5, 7), 16) / 255;
+      const max = Math.max(r, g, b);
+      const min = Math.min(r, g, b);
+      let h = 0, s = 0, l = (max + min) / 2;
+      if (max !== min) {
+        const d = max - min;
+        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+        switch (max) {
+          case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
+          case g: h = ((b - r) / d + 2) / 6; break;
+          case b: h = ((r - g) / d + 4) / 6; break;
+        }
+      }
+      return { h: h * 360, s: s * 100, l: l * 100 };
+    };
+    const hslToHex = (h: number, s: number, l: number) => {
+      h = h / 360;
+      s = s / 100;
+      l = l / 100;
+      let r, g, b;
+      if (s === 0) {
+        r = g = b = l;
+      } else {
+        const hue2rgb = (p: number, q: number, t: number) => {
+          if (t < 0) t += 1;
+          if (t > 1) t -= 1;
+          if (t < 1/6) return p + (q - p) * 6 * t;
+          if (t < 1/2) return q;
+          if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+          return p;
+        };
+        const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+        const p = 2 * l - q;
+        r = hue2rgb(p, q, h + 1/3);
+        g = hue2rgb(p, q, h);
+        b = hue2rgb(p, q, h - 1/3);
+      }
+      const toHex = (x: number) => {
+        const hex = Math.round(x * 255).toString(16);
+        return hex.length === 1 ? '0' + hex : hex;
+      };
+      return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+    };
+    const hsl = hexToHSL(baseColor);
+    return {
+      dark: hslToHex(hsl.h, hsl.s, Math.max(hsl.l - 25, 10)),
+      medium: baseColor,
+      light: hslToHex(hsl.h, Math.max(hsl.s - 15, 20), Math.min(hsl.l + 30, 90))
+    };
+  };
+
+  const shades = colorShades || generateColorShades(primaryColor);
 
   // Fonction de validation
   const validateAnswer = (value: any, type: string): string => {
@@ -457,7 +523,7 @@ export const TypeformPreview: React.FC<TypeformPreviewProps> = ({
           onClick={handleNext}
           disabled={!isCurrentAnswerValid() || !!validationError}
           className="w-10 h-10 md:w-12 md:h-12 rounded-full transition-all disabled:opacity-40 disabled:cursor-not-allowed hover:shadow-lg hover:scale-105 flex items-center justify-center group"
-          style={{ backgroundColor: primaryColor }}
+          style={{ backgroundColor: shades.dark }}
           aria-label={currentIndex === questions.length - 1 ? 'Terminer' : 'Question suivante'}
         >
           <ChevronRight size={20} color="#ffffff" className="group-hover:translate-x-0.5 transition-transform" />
@@ -522,8 +588,9 @@ export const TypeformPreview: React.FC<TypeformPreviewProps> = ({
               placeholder={currentQuestion.placeholder || 'Votre réponse...'}
               className="w-full px-4 py-3 text-lg border-b-2 bg-transparent outline-none transition-colors"
               style={{ 
-                borderColor: validationError && touched ? '#ef4444' : currentAnswer ? primaryColor : '#e5e7eb',
-                color: textColor
+                borderColor: validationError && touched ? '#ef4444' : currentAnswer ? shades.medium : '#e5e7eb',
+                color: textColor,
+                fontFamily
               }}
               autoFocus
             />
@@ -549,9 +616,10 @@ export const TypeformPreview: React.FC<TypeformPreviewProps> = ({
               placeholder={currentQuestion.placeholder || 'Votre réponse...'}
               className="w-full px-4 py-3 text-lg border-2 rounded-lg bg-transparent outline-none transition-colors resize-none"
               style={{ 
-                borderColor: validationError && touched ? '#ef4444' : currentAnswer ? primaryColor : '#e5e7eb',
+                borderColor: validationError && touched ? '#ef4444' : currentAnswer ? shades.medium : '#e5e7eb',
                 color: textColor,
-                minHeight: '120px'
+                minHeight: '120px',
+                fontFamily
               }}
               autoFocus
             />
@@ -608,13 +676,14 @@ export const TypeformPreview: React.FC<TypeformPreviewProps> = ({
                   onClick={() => handleToggle(option, selected)}
                   className={baseButtonClasses}
                   style={{
-                    borderColor: selected ? primaryColor : '#e5e7eb',
+                    borderColor: selected ? shades.dark : '#e5e7eb',
                     backgroundColor: isCardsGrid
                       ? '#ffffff'
                       : selected
-                        ? `${primaryColor}10`
+                        ? shades.light
                         : 'transparent',
-                    color: textColor
+                    color: textColor,
+                    fontFamily
                   }}
                 >
                   {isCardsGrid && (
@@ -642,9 +711,9 @@ export const TypeformPreview: React.FC<TypeformPreviewProps> = ({
                         <div 
                           className="absolute top-3 left-3 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold shadow-md"
                           style={{
-                            backgroundColor: selected ? primaryColor : '#ffffff',
-                            color: selected ? '#ffffff' : primaryColor,
-                            border: `2px solid ${primaryColor}`
+                            backgroundColor: selected ? shades.dark : '#ffffff',
+                            color: selected ? '#ffffff' : shades.dark,
+                            border: `2px solid ${shades.dark}`
                           }}
                         >
                           {letters[idx]}
@@ -654,7 +723,7 @@ export const TypeformPreview: React.FC<TypeformPreviewProps> = ({
                         {selected && (
                           <div 
                             className="absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center shadow-md"
-                            style={{ backgroundColor: primaryColor }}
+                            style={{ backgroundColor: shades.dark }}
                           >
                             <Check size={16} color="#ffffff" strokeWidth={3} />
                           </div>
@@ -670,9 +739,9 @@ export const TypeformPreview: React.FC<TypeformPreviewProps> = ({
                   
                   {!isCardsGrid && (
                     <div className="flex items-center justify-between">
-                      <span className="text-lg">{option}</span>
+                      <span className="text-lg" style={{ fontFamily }}>{option}</span>
                       {selected && (
-                        <Check size={18} style={{ color: primaryColor }} />
+                        <Check size={18} style={{ color: shades.dark }} />
                       )}
                     </div>
                   )}
@@ -740,18 +809,19 @@ export const TypeformPreview: React.FC<TypeformPreviewProps> = ({
         return (
           <div className="flex justify-center gap-3">
             {values.map((value) => (
-              <button
-                key={value}
-                onClick={() => setCurrentAnswer(value)}
-                className="w-12 h-12 md:w-14 md:h-14 rounded-full border-2 transition-all hover:shadow-md flex items-center justify-center"
-                style={{
-                  borderColor: currentAnswer === value ? primaryColor : '#e5e7eb',
-                  backgroundColor: currentAnswer === value ? primaryColor : 'transparent',
-                  color: currentAnswer === value ? '#ffffff' : textColor
-                }}
-              >
-                <span className="text-base md:text-lg font-medium">{value}</span>
-              </button>
+                <button
+                  key={value}
+                  onClick={() => setCurrentAnswer(value)}
+                  className="w-12 h-12 md:w-14 md:h-14 rounded-full border-2 transition-all hover:shadow-md flex items-center justify-center"
+                  style={{
+                    borderColor: currentAnswer === value ? shades.dark : '#e5e7eb',
+                    backgroundColor: currentAnswer === value ? shades.dark : 'transparent',
+                    color: currentAnswer === value ? '#ffffff' : textColor,
+                    fontFamily
+                  }}
+                >
+                  <span className="text-base md:text-lg font-medium">{value}</span>
+                </button>
             ))}
           </div>
         );
@@ -926,10 +996,10 @@ export const TypeformPreview: React.FC<TypeformPreviewProps> = ({
       >
         <div className="text-center p-8 max-w-md">
           <div className="text-6xl mb-6">✅</div>
-          <h2 className="text-3xl font-bold mb-4" style={{ color: textColor }}>
+          <h2 className="text-3xl font-bold mb-4" style={{ color: textColor, fontFamily }}>
             Merci !
           </h2>
-          <p className="text-xl mb-6" style={{ color: textColor, opacity: 0.7 }}>
+          <p className="text-xl mb-6" style={{ color: textColor, opacity: 0.7, fontFamily }}>
             Vos réponses ont été enregistrées
           </p>
           <button
@@ -940,7 +1010,7 @@ export const TypeformPreview: React.FC<TypeformPreviewProps> = ({
               setIsCompleted(false);
             }}
             className="px-6 py-3 rounded-lg text-white font-medium transition-all hover:shadow-lg"
-            style={{ backgroundColor: primaryColor }}
+            style={{ backgroundColor: shades.dark, fontFamily }}
           >
             Recommencer
           </button>
@@ -1042,7 +1112,7 @@ export const TypeformPreview: React.FC<TypeformPreviewProps> = ({
               className="h-full transition-all duration-500 ease-out"
               style={{
                 width: `${progressPercentage}%`,
-                backgroundColor: primaryColor,
+                backgroundColor: shades.medium,
               }}
             />
           </div>
@@ -1115,7 +1185,7 @@ export const TypeformPreview: React.FC<TypeformPreviewProps> = ({
                           color: textColor,
                           fontFamily: currentQuestion?.fontFamily && currentQuestion.fontFamily !== 'default' 
                             ? `'${currentQuestion.fontFamily}', sans-serif` 
-                            : undefined,
+                            : fontFamily,
                           fontSize: getFontSize(currentQuestion?.fontSize).question
                         }}
                       >
@@ -1128,7 +1198,7 @@ export const TypeformPreview: React.FC<TypeformPreviewProps> = ({
                             </React.Fragment>
                           ))}
                         {currentQuestion?.required && (
-                          <span style={{ color: primaryColor }}> *</span>
+                          <span style={{ color: shades.medium }}> *</span>
                         )}
                       </h2>
                       {currentQuestion?.description && (
@@ -1190,7 +1260,7 @@ export const TypeformPreview: React.FC<TypeformPreviewProps> = ({
                           color: textColor,
                           fontFamily: currentQuestion?.fontFamily && currentQuestion.fontFamily !== 'default' 
                             ? `'${currentQuestion.fontFamily}', sans-serif` 
-                            : undefined,
+                            : fontFamily,
                           fontSize: currentQuestion?.fontSize === 'xlarge' ? '3.5rem' : 
                                    currentQuestion?.fontSize === 'large' ? '3rem' :
                                    currentQuestion?.fontSize === 'small' ? '2rem' : '2.5rem'
@@ -1205,22 +1275,22 @@ export const TypeformPreview: React.FC<TypeformPreviewProps> = ({
                             </React.Fragment>
                           ))}
                         {currentQuestion?.required && (
-                          <span style={{ color: primaryColor }}> *</span>
+                          <span style={{ color: shades.medium }}> *</span>
                         )}
                       </h2>
                         {currentQuestion?.description && (
-                          <p
-                            style={{ 
-                              color: textColor, 
-                              opacity: 0.7,
-                              fontFamily: currentQuestion?.fontFamily && currentQuestion.fontFamily !== 'default' 
-                                ? `'${currentQuestion.fontFamily}', sans-serif` 
-                                : undefined,
-                              fontSize: getFontSize(currentQuestion?.fontSize).description
-                            }}
-                          >
-                            {currentQuestion.description}
-                          </p>
+                        <p
+                          style={{ 
+                            color: textColor, 
+                            opacity: 0.7,
+                            fontFamily: currentQuestion?.fontFamily && currentQuestion.fontFamily !== 'default' 
+                              ? `'${currentQuestion.fontFamily}', sans-serif` 
+                              : fontFamily,
+                            fontSize: getFontSize(currentQuestion?.fontSize).description
+                          }}
+                        >
+                          {currentQuestion.description}
+                        </p>
                         )}
                       </div>
 
@@ -1316,18 +1386,18 @@ export const TypeformPreview: React.FC<TypeformPreviewProps> = ({
                     )}
                   </h2>
                   {currentQuestion?.description && (
-                    <p
-                      style={{ 
-                        color: textColor, 
-                        opacity: 0.7,
-                        fontFamily: currentQuestion?.fontFamily && currentQuestion.fontFamily !== 'default' 
-                          ? `'${currentQuestion.fontFamily}', sans-serif` 
-                          : undefined,
-                        fontSize: getFontSize(currentQuestion?.fontSize).description
-                      }}
-                    >
-                      {currentQuestion.description}
-                    </p>
+                          <p
+                            style={{ 
+                              color: textColor, 
+                              opacity: 0.7,
+                              fontFamily: currentQuestion?.fontFamily && currentQuestion.fontFamily !== 'default' 
+                                ? `'${currentQuestion.fontFamily}', sans-serif` 
+                                : fontFamily,
+                              fontSize: getFontSize(currentQuestion?.fontSize).description
+                            }}
+                          >
+                            {currentQuestion.description}
+                          </p>
                   )}
                 </div>
 
