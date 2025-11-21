@@ -116,26 +116,6 @@ const QuizToolbar: React.FC<QuizToolbarProps> = React.memo(({
     }
   };
 
-  // Handler pour "Sauvegarder et quitter" -> Valide, sauvegarde puis redirige vers dashboard
-  const handleSaveAndQuit = async () => {
-    // Valider les paramètres obligatoires
-    const validation = validateCampaign();
-    
-    if (!validation.isValid) {
-      // Afficher la modale d'erreur
-      setIsValidationModalOpen(true);
-      return;
-    }
-    
-    // Sauvegarder
-    if (onSave) {
-      await onSave();
-    }
-    
-    // Rediriger vers la liste des campagnes
-    navigate('/campaigns');
-  };
-  
   // Récupérer les erreurs de validation pour la modale
   const validation = validateCampaign();
   

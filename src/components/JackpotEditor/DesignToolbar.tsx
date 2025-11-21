@@ -138,22 +138,6 @@ const ScratchToolbar: React.FC<ScratchToolbarProps> = React.memo(({
     }
   }, [campaignId, campaignState, saveCampaign, setCampaign, onBeforeOpenSettings]);
 
-  // Handler pour "Sauvegarder et quitter" -> Valide, sauvegarde puis redirige vers dashboard
-  const handleSaveAndQuit = async () => {
-    const validation = validateCampaign();
-    
-    if (!validation.isValid) {
-      setIsValidationModalOpen(true);
-      return;
-    }
-    
-    if (onSave) {
-      await onSave();
-    }
-    
-    navigate('/campaigns');
-  };
-  
   // Handler pour "Sauvegarder" uniquement -> Sauvegarde sans quitter l'éditeur
   const handleSaveOnly = async () => {
     if (onSave) {

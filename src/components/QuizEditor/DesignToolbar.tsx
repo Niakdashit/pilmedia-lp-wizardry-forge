@@ -112,38 +112,6 @@ const QuizToolbar: React.FC<QuizToolbarProps> = React.memo(({
     }
   }, [campaignId, campaignState, saveCampaign, setCampaign]);
   
-  // Handler pour "Sauvegarder et quitter" -> Valide, sauvegarde puis redirige vers dashboard
-  const handleSaveAndQuit = async () => {
-    // Valider les paramètres obligatoires
-    const validation = validateCampaign();
-    
-    if (!validation.isValid) {
-      // Afficher la modale d'erreur
-      setIsValidationModalOpen(true);
-      return;
-    }
-    
-    // Vérifier si c'est une campagne temporaire avant la sauvegarde
-    const currentId = (campaignState as any)?.id || campaignId;
-    const isTempId = currentId && typeof currentId === 'string' && currentId.startsWith('temp-');
-    
-    // Sauvegarder et récupérer l'ID réel si c'était temporaire
-    if (onSave) {
-      await onSave();
-    }
-    
-    // Si c'était un ID temporaire, récupérer le nouvel ID depuis le state
-    if (isTempId) {
-      const newId = (campaignState as any)?.id;
-      if (newId && !newId.startsWith('temp-')) {
-        console.log('✅ ID temporaire remplacé:', { old: currentId, new: newId });
-      }
-    }
-    
-    // Rediriger vers la liste des campagnes
-    navigate('/campaigns');
-  };
-  
   // Handler pour "Sauvegarder" uniquement -> Sauvegarde sans quitter l'éditeur
   const handleSaveOnly = async () => {
     if (onSave) {
