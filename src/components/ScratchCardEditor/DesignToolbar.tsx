@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Monitor, Smartphone, Save, Eye, X, Undo, Redo, Layers, Settings } from 'lucide-react';
+import { Monitor, Smartphone, Save, Eye, Undo, Redo, Layers, Settings } from 'lucide-react';
 import CampaignSettingsModal from '@/components/DesignEditor/modals/CampaignSettingsModal';
 import CampaignValidationModal from '@/components/shared/CampaignValidationModal';
 import { useCampaignValidation } from '@/hooks/useCampaignValidation';
@@ -57,9 +57,6 @@ const ScratchToolbar: React.FC<ScratchToolbarProps> = React.memo(({
   const { saveCampaign } = useCampaigns();
   const campaignState = useEditorStore((s) => s.campaign);
   const setCampaign = useEditorStore((s) => s.setCampaign);
-  
-  const saveDesktopLabel = mode === 'template' ? 'Enregistrer template' : 'Sauvegarder et quitter';
-  const saveMobileLabel = mode === 'template' ? 'Enregistrer' : 'Sauvegarder';
   
   // Ouvre la modale Paramètres via évènement global
   useEffect(() => {

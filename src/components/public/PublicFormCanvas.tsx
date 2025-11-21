@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import DesignCanvas from '../DesignEditor/DesignCanvas';
 import type { Module } from '@/types/modularEditor';
 import { useParticipations } from '@/hooks/useParticipations';
@@ -14,7 +14,9 @@ interface PublicFormCanvasProps {
  * Reproduit exactement le rendu de l'onglet "Plein écran" du FormEditor
  */
 const PublicFormCanvas: React.FC<PublicFormCanvasProps> = ({ campaign, previewMode = 'desktop' }) => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [currentScreen, setCurrentScreen] = useState<'screen1' | 'screen2'>('screen1');
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { createParticipation } = useParticipations();
 
   // Extraire les données du canvas depuis la campagne
@@ -60,26 +62,26 @@ const PublicFormCanvas: React.FC<PublicFormCanvasProps> = ({ campaign, previewMo
     };
   }, [currentScreen]);
 
-  // Handler pour la soumission du formulaire
-  const handleFormSubmit = async (data: Record<string, string>) => {
-    console.log('📝 [PublicFormCanvas] Form submitted:', data);
-    
-    // Créer la participation
-    try {
-      if (campaign.id) {
-        await createParticipation({
-          campaign_id: campaign.id,
-          form_data: data,
-          user_email: data.email || ''
-        });
-      }
-    } catch (error) {
-      console.error('❌ [PublicFormCanvas] Error creating participation:', error);
-    }
-
-    // Passer à l'écran 2
-    setCurrentScreen('screen2');
-  };
+  // Handler pour la soumission du formulaire (non utilisé actuellement)
+  // const handleFormSubmit = async (data: Record<string, string>) => {
+  //   console.log('📝 [PublicFormCanvas] Form submitted:', data);
+  //   
+  //   // Créer la participation
+  //   try {
+  //     if (campaign.id) {
+  //       await createParticipation({
+  //         campaign_id: campaign.id,
+  //         form_data: data,
+  //         user_email: data.email || ''
+  //       });
+  //     }
+  //   } catch (error) {
+  //     console.error('❌ [PublicFormCanvas] Error creating participation:', error);
+  //   }
+  //
+  //   // Passer à l'écran 2
+  //   setCurrentScreen('screen2');
+  // };
 
   return (
     <div className="fixed inset-0 w-full h-[100dvh] min-h-[100dvh] overflow-visible" style={{ backgroundColor: '#ffffff' }}>
@@ -180,7 +182,6 @@ const PublicFormCanvas: React.FC<PublicFormCanvasProps> = ({ campaign, previewMo
       `}</style>
 
       <DesignCanvas
-        editorMode="fullscreen"
         screenId={currentScreen}
         selectedDevice={previewMode}
         elements={canvasElements}
@@ -197,7 +198,6 @@ const PublicFormCanvas: React.FC<PublicFormCanvasProps> = ({ campaign, previewMo
         onSelectedElementsChange={() => {}}
         onElementUpdate={() => {}}
         extractedColors={[]}
-        quizModalConfig={undefined}
         containerClassName="!p-0 !m-0 bg-white !items-start !justify-start !pt-0 !rounded-none"
         elementFilter={elementFilter}
         onShowAnimationsPanel={() => {}}
@@ -205,13 +205,11 @@ const PublicFormCanvas: React.FC<PublicFormCanvasProps> = ({ campaign, previewMo
         onShowDesignPanel={() => {}}
         onShowEffectsPanel={() => {}}
         readOnly={true}
-        isPreviewMode={true}
         modularModules={activeModules}
         onModuleUpdate={() => {}}
         onModuleDelete={() => {}}
         onModuleMove={() => {}}
         onModuleDuplicate={() => {}}
-        onFormSubmit={handleFormSubmit}
       />
     </div>
   );

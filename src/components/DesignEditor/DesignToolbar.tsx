@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from '@/lib/router-adapter';
-import { Monitor, Smartphone, Save, Eye, X, Undo, Redo, Layers, RefreshCw, Settings } from 'lucide-react';
+import { Monitor, Smartphone, Save, Eye, Undo, Redo, Layers, RefreshCw, Settings } from 'lucide-react';
 import CampaignSettingsModal from './modals/CampaignSettingsModal';
 import CampaignValidationModal from '@/components/shared/CampaignValidationModal';
 import { useCampaignValidation } from '@/hooks/useCampaignValidation';
@@ -61,9 +61,6 @@ const DesignToolbar: React.FC<DesignToolbarProps> = React.memo(({
   const campaignState = useEditorStore((s) => s.campaign);
   const setCampaign = useEditorStore((s) => s.setCampaign);
   const clearNewCampaignFlag = useEditorStore((s) => s.clearNewCampaignFlag);
-  
-  const saveDesktopLabel = mode === 'template' ? 'Enregistrer template' : 'Sauvegarder et quitter';
-  const saveMobileLabel = mode === 'template' ? 'Enregistrer' : 'Sauvegarder';
   
   // Ensure a campaign exists before opening settings
   const handleOpenSettings = useCallback(async () => {

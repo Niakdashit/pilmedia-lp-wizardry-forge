@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Plus, Trash2, GripVertical, Type, Mail, Phone, Hash, List, CheckSquare, BarChart3, AlignLeft, Image as ImageIcon, LayoutTemplate, Sparkles, FileText } from 'lucide-react';
 import { TypeformQuestion, TypeformLayout } from '../components/TypeformPreview';
 import TemplateModal from '../components/TemplateModal';
@@ -38,7 +38,8 @@ export const QuestionsPanel: React.FC<QuestionsPanelProps> = ({
   onQuestionsChange,
   selectedQuestionId,
   onSelectQuestion,
-  onOpenProsplayAI
+  onOpenProsplayAI,
+  onApplyTemplate
 }) => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showTemplateModal, setShowTemplateModal] = useState(false);
@@ -170,7 +171,6 @@ export const QuestionsPanel: React.FC<QuestionsPanelProps> = ({
         ) : (
           questions.map((question, index) => {
             const isEditing = editingId === question.id;
-            const TypeIcon = questionTypes.find(t => t.value === question.type)?.icon || Type;
 
             return (
               <div
