@@ -405,14 +405,30 @@ export const TypeformPreview: React.FC<TypeformPreviewProps> = ({
         <div className="flex items-center gap-3">
           <button
             onClick={handleNext}
-            className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-white text-sm font-medium shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all"
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl transition-all duration-200 group"
+            style={{
+              border: '2px solid rgba(255, 255, 255, 0.2)',
+              backgroundColor: 'rgba(255, 255, 255, 0.1)',
+              color: '#ffffff',
+              backdropFilter: 'blur(10px)'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.25)';
+              e.currentTarget.style.border = '2px solid rgba(255, 255, 255, 0.5)';
+              e.currentTarget.style.transform = 'translateY(-2px)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
+              e.currentTarget.style.border = '2px solid rgba(255, 255, 255, 0.2)';
+              e.currentTarget.style.transform = 'translateY(0)';
+            }}
           >
-            <span>Start</span>
-            <ChevronRight size={16} />
+            <span className="font-medium">Start</span>
+            <ChevronRight size={18} className="group-hover:translate-x-0.5 transition-transform" />
           </button>
           <span
-            className="text-xs"
-            style={{ color: textColor, opacity: 0.6 }}
+            className="text-sm opacity-70 font-light"
+            style={{ color: '#ffffff' }}
           >
             press Enter ↵
           </span>
