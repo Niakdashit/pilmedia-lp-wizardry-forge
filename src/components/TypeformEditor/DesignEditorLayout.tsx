@@ -1995,10 +1995,17 @@ const handleSaveCampaignName = useCallback(async () => {
           }
           
           // Restore background - check multiple sources
-          const bg = mergedCanvasConfig.background 
+          let bg = mergedCanvasConfig.background 
             || (data?.design as any)?.backgroundImage 
             || (data?.design as any)?.background 
-            || { type: 'color', value: 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)' };
+            || { type: 'color', value: '#ffffff' };
+          
+          // Migrate old cyan/green gradient to white
+          if (typeof bg === 'object' && bg.type === 'color' && 
+              (bg.value?.includes('#87CEEB') || bg.value?.includes('#98FB98') || 
+               bg.value?.includes('87CEEB') || bg.value?.includes('98FB98'))) {
+            bg = { type: 'color', value: '#ffffff' };
+          }
           
           // If we have a background image URL in design, use it
           if ((data?.design as any)?.backgroundImage && typeof (data.design as any).backgroundImage === 'string') {
@@ -4360,7 +4367,7 @@ const handleSaveCampaignName = useCallback(async () => {
                     style={{
                       background: canvasBackground.type === 'image'
                         ? `url(${canvasBackground.value}) center/cover no-repeat`
-                        : canvasBackground.value || 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)'
+                        : canvasBackground.value || '#ffffff'
                     }}
                   />
                   {/* Background supplémentaire pour l'espace entre les canvas */}
