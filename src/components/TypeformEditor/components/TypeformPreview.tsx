@@ -37,6 +37,9 @@ export interface TypeformQuestion {
   imageUrl?: string;
   // Couleur de fond du panneau texte pour les layouts split
   panelBackgroundColor?: string;
+  // Couleurs personnalisées pour le texte et les boutons
+  textColor?: string;
+  buttonColor?: string;
   // Background avancé (image, vidéo, gradient)
   backgroundType?: 'color' | 'image' | 'video' | 'gradient';
   backgroundImage?: string;
@@ -523,7 +526,7 @@ export const TypeformPreview: React.FC<TypeformPreviewProps> = ({
           onClick={handleNext}
           disabled={!isCurrentAnswerValid() || !!validationError}
           className="w-10 h-10 md:w-12 md:h-12 rounded-full transition-all disabled:opacity-40 disabled:cursor-not-allowed hover:shadow-lg hover:scale-105 flex items-center justify-center group"
-          style={{ backgroundColor: shades.dark }}
+          style={{ backgroundColor: currentQuestion?.buttonColor || shades.dark }}
           aria-label={currentIndex === questions.length - 1 ? 'Terminer' : 'Question suivante'}
         >
           <ChevronRight size={20} color="#ffffff" className="group-hover:translate-x-0.5 transition-transform" />
@@ -723,7 +726,7 @@ export const TypeformPreview: React.FC<TypeformPreviewProps> = ({
                         {selected && (
                           <div 
                             className="absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center shadow-md"
-                            style={{ backgroundColor: shades.dark }}
+                            style={{ backgroundColor: currentQuestion?.buttonColor || shades.dark }}
                           >
                             <Check size={16} color="#ffffff" strokeWidth={3} />
                           </div>
@@ -1010,7 +1013,7 @@ export const TypeformPreview: React.FC<TypeformPreviewProps> = ({
               setIsCompleted(false);
             }}
             className="px-6 py-3 rounded-lg text-white font-medium transition-all hover:shadow-lg"
-            style={{ backgroundColor: shades.dark, fontFamily }}
+            style={{ backgroundColor: currentQuestion?.buttonColor || shades.dark, fontFamily }}
           >
             Recommencer
           </button>
@@ -1171,7 +1174,7 @@ export const TypeformPreview: React.FC<TypeformPreviewProps> = ({
                     <div className="mb-3">
                       <span
                         className="text-xs font-medium tracking-wide"
-                        style={{ color: textColor, opacity: 0.6 }}
+                        style={{ color: currentQuestion?.textColor || textColor, opacity: 0.6 }}
                       >
                         {currentIndex + 1} / {questions.length}
                       </span>
@@ -1182,7 +1185,7 @@ export const TypeformPreview: React.FC<TypeformPreviewProps> = ({
                       <h2
                         className="font-bold mb-2 leading-snug"
                         style={{ 
-                          color: textColor,
+                          color: currentQuestion?.textColor || textColor,
                           fontFamily: currentQuestion?.fontFamily && currentQuestion.fontFamily !== 'default' 
                             ? `'${currentQuestion.fontFamily}', sans-serif` 
                             : fontFamily,
@@ -1204,7 +1207,7 @@ export const TypeformPreview: React.FC<TypeformPreviewProps> = ({
                       {currentQuestion?.description && (
                         <p
                           style={{ 
-                            color: textColor, 
+                            color: currentQuestion?.textColor || textColor, 
                             opacity: 0.7,
                             fontFamily: currentQuestion?.fontFamily && currentQuestion.fontFamily !== 'default' 
                               ? `'${currentQuestion.fontFamily}', sans-serif` 
@@ -1246,7 +1249,7 @@ export const TypeformPreview: React.FC<TypeformPreviewProps> = ({
                       <div className="mb-6">
                         <span
                           className="text-sm font-medium tracking-wide"
-                          style={{ color: textColor, opacity: 0.6 }}
+                          style={{ color: currentQuestion?.textColor || textColor, opacity: 0.6 }}
                         >
                           {currentIndex + 1} / {questions.length}
                         </span>
@@ -1257,7 +1260,7 @@ export const TypeformPreview: React.FC<TypeformPreviewProps> = ({
                       <h2
                         className="font-bold mb-3 leading-tight"
                         style={{ 
-                          color: textColor,
+                          color: currentQuestion?.textColor || textColor,
                           fontFamily: currentQuestion?.fontFamily && currentQuestion.fontFamily !== 'default' 
                             ? `'${currentQuestion.fontFamily}', sans-serif` 
                             : fontFamily,
@@ -1281,10 +1284,10 @@ export const TypeformPreview: React.FC<TypeformPreviewProps> = ({
                         {currentQuestion?.description && (
                         <p
                           style={{ 
-                            color: textColor, 
+                            color: currentQuestion?.textColor || textColor, 
                             opacity: 0.7,
                             fontFamily: currentQuestion?.fontFamily && currentQuestion.fontFamily !== 'default' 
-                              ? `'${currentQuestion.fontFamily}', sans-serif` 
+                              ? `'${currentQuestion.fontFamily}', sans-serif`
                               : fontFamily,
                             fontSize: getFontSize(currentQuestion?.fontSize).description
                           }}
@@ -1373,7 +1376,7 @@ export const TypeformPreview: React.FC<TypeformPreviewProps> = ({
                   <h2
                     className="font-bold mb-2"
                     style={{ 
-                      color: textColor,
+                      color: currentQuestion?.textColor || textColor,
                       fontFamily: currentQuestion?.fontFamily && currentQuestion.fontFamily !== 'default' 
                         ? `'${currentQuestion.fontFamily}', sans-serif` 
                         : undefined,
@@ -1388,10 +1391,10 @@ export const TypeformPreview: React.FC<TypeformPreviewProps> = ({
                   {currentQuestion?.description && (
                           <p
                             style={{ 
-                              color: textColor, 
+                              color: currentQuestion?.textColor || textColor, 
                               opacity: 0.7,
                               fontFamily: currentQuestion?.fontFamily && currentQuestion.fontFamily !== 'default' 
-                                ? `'${currentQuestion.fontFamily}', sans-serif` 
+                                ? `'${currentQuestion.fontFamily}', sans-serif`
                                 : fontFamily,
                               fontSize: getFontSize(currentQuestion?.fontSize).description
                             }}
