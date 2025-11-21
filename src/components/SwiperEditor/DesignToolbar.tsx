@@ -112,6 +112,13 @@ const QuizToolbar: React.FC<QuizToolbarProps> = React.memo(({
     }
   }, [campaignId, campaignState, saveCampaign, setCampaign]);
   
+  // Handler pour "Sauvegarder" uniquement -> Sauvegarde sans quitter l'éditeur
+  const handleSaveOnly = async () => {
+    if (onSave) {
+      await onSave();
+    }
+  };
+
   // Handler pour "Sauvegarder et quitter" -> Valide, sauvegarde puis redirige vers dashboard
   const handleSaveAndQuit = async () => {
     // Valider les paramètres obligatoires
@@ -220,14 +227,11 @@ const QuizToolbar: React.FC<QuizToolbarProps> = React.memo(({
         </button>
         <button 
           onClick={onPreviewToggle}
-          className={`flex items-center px-2.5 py-1.5 text-xs sm:text-sm border rounded-lg transition-colors shadow-none focus:shadow-none ring-0 focus:ring-0 drop-shadow-none filter-none backdrop-blur-0 ${
-            isPreviewMode 
-              ? 'bg-[#44444d] text-white border-[#44444d]' 
-              : 'border-gray-300 hover:bg-gray-50'
-          }`}
+          className="flex items-center px-2.5 py-1.5 text-xs sm:text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors shadow-none focus:shadow-none ring-0 focus:ring-0 drop-shadow-none filter-none backdrop-blur-0"
+          title="Ouvrir l'aperçu dans un nouvel onglet"
         >
           <Eye className="w-4 h-4 mr-1" />
-          {isPreviewMode ? 'Mode Édition' : 'Aperçu'}
+          Aperçu
         </button>
         <button
           onClick={handleOpenSettings}
@@ -238,29 +242,20 @@ const QuizToolbar: React.FC<QuizToolbarProps> = React.memo(({
           Paramètres
         </button>
         {showSaveCloseButtons && (
-          <>
-            <button 
-              onClick={() => navigate('/dashboard')}
-              className="flex items-center px-2.5 py-1.5 text-xs sm:text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-            >
-              <X className="w-4 h-4 mr-1" />
-              Fermer
-            </button>
-            <button 
-              onClick={handleSaveAndQuit}
-              disabled={!campaignId}
-              className={`flex items-center px-3 py-1.5 text-xs sm:text-sm rounded-lg transition-colors ${
-                campaignId
-                  ? 'bg-[#44444d] text-white hover:opacity-95'
-                  : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-              }`}
-              title={campaignId ? saveDesktopLabel : "Veuillez d'abord créer la campagne"}
-            >
-              <Save className="w-4 h-4 mr-1" />
-              <span className="hidden sm:inline">{saveDesktopLabel}</span>
-              <span className="sm:hidden">{saveMobileLabel}</span>
-            </button>
-          </>
+          <button
+            onClick={handleSaveOnly}
+            disabled={!campaignId}
+            className={`flex items-center px-3 py-1.5 text-xs sm:text-sm rounded-lg border border-gray-300 transition-colors ${
+              campaignId
+                ? 'text-gray-700 hover:bg-gray-50'
+                : 'text-gray-400 bg-gray-100 cursor-not-allowed'
+            }`}
+            title={campaignId ? 'Sauvegarder' : "Veuillez d'abord créer la campagne"}
+          >
+            <Save className="w-4 h-4 mr-1" />
+            <span className="hidden sm:inline">Sauvegarder</span>
+            <span className="sm:hidden">Save</span>
+          </button>
         )}
       </div>
     </div>

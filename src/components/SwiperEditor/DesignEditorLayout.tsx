@@ -3224,30 +3224,20 @@ const handleSaveCampaignName = useCallback(async () => {
   };
 
   const handlePreview = () => {
-    // Forcer la synchronisation du store vers le preview
-    console.log('🔄 [DesignEditorLayout] Preview toggled, syncing store to preview');
+    // Ouvrir l'aperçu dans un nouvel onglet
+    const campaignId = (campaignState as any)?.id;
     
-    // Mettre à jour le store avec les dernières données
-    setCampaign(campaignState);
-    
-    // Dispatcher un événement pour forcer le re-render du preview
-    window.dispatchEvent(new CustomEvent('editor-force-sync', {
-      detail: {
-        timestamp: Date.now(),
-        modularPage: (campaignState as any)?.modularPage
-      }
-    }));
-    
-    const nextShowFunnel = !showFunnel;
-    setShowFunnel(nextShowFunnel);
-
-    if (nextShowFunnel) {
-      // Reset to article step when entering preview
-      setCurrentStep('article');
-    } else if (editorMode === 'article') {
-      setCurrentStep('article');
+    if (campaignId) {
+      // Forcer la synchronisation du store avant d'ouvrir le nouvel onglet
+      console.log('🔄 [DesignEditorLayout] Opening preview in new tab for campaign:', campaignId);
+      setCampaign(campaignState);
+      
+      // Ouvrir l'URL de la campagne dans un nouvel onglet
+      const previewUrl = `/campaign/${campaignId}`;
+      window.open(previewUrl, '_blank', 'noopener,noreferrer');
     } else {
-      setCurrentScreen('screen1');
+      console.warn('⚠️ [DesignEditorLayout] Cannot preview: No campaign ID');
+      alert('Veuillez d\'abord sauvegarder la campagne pour pouvoir la prévisualiser.');
     }
   };
 
@@ -3689,7 +3679,7 @@ const handleSaveCampaignName = useCallback(async () => {
             onPreviewButtonSideChange={setPreviewButtonSide}
             mode={mode}
             onSave={handleSaveAndQuit}
-            showSaveCloseButtons={false}
+            showSaveCloseButtons={true}
             campaignId={(campaignState as any)?.id || new URLSearchParams(location.search).get('campaign') || undefined}
           />
 

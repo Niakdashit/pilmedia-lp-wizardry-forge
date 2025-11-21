@@ -157,6 +157,13 @@ const ScratchToolbar: React.FC<ScratchToolbarProps> = React.memo(({
     navigate('/campaigns');
   };
   
+  // Handler pour "Sauvegarder" uniquement -> Sauvegarde sans quitter l'éditeur
+  const handleSaveOnly = async () => {
+    if (onSave) {
+      await onSave();
+    }
+  };
+  
   const validation = validateCampaign();
   
   return (
@@ -262,24 +269,20 @@ const ScratchToolbar: React.FC<ScratchToolbarProps> = React.memo(({
           Paramètres
         </button>
         {showSaveCloseButtons && (
-          <>
-            <button 
-              onClick={() => navigate('/dashboard')}
-              className="flex items-center px-2.5 py-1.5 text-xs sm:text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-            >
-              <X className="w-4 h-4 mr-1" />
-              Fermer
-            </button>
-            <button 
-              onClick={handleSaveAndQuit}
-              className="flex items-center px-3 py-1.5 text-xs sm:text-sm rounded-lg transition-colors bg-[#44444d] text-white hover:opacity-95"
-              title={saveDesktopLabel}
-            >
-              <Save className="w-4 h-4 mr-1" />
-              <span className="hidden sm:inline">{saveDesktopLabel}</span>
-              <span className="sm:hidden">{saveMobileLabel}</span>
-            </button>
-          </>
+          <button
+            onClick={handleSaveOnly}
+            disabled={!campaignId}
+            className={`flex items-center px-3 py-1.5 text-xs sm:text-sm rounded-lg border border-gray-300 transition-colors ${
+              campaignId
+                ? 'text-gray-700 hover:bg-gray-50'
+                : 'text-gray-400 bg-gray-100 cursor-not-allowed'
+            }`}
+            title={campaignId ? 'Sauvegarder' : "Veuillez d'abord créer la campagne"}
+          >
+            <Save className="w-4 h-4 mr-1" />
+            <span className="hidden sm:inline">Sauvegarder</span>
+            <span className="sm:hidden">Save</span>
+          </button>
         )}
       </div>
     </div>

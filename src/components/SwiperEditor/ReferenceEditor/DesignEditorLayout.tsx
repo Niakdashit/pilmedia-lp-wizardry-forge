@@ -3196,6 +3196,20 @@ const handleSaveCampaignName = useCallback(async () => {
   };
 
   const handlePreview = () => {
+    const campaignId = (campaignState as any)?.id;
+    if (campaignId) {
+      console.log('🔄 [SwiperReferenceEditor] Opening preview in new tab for campaign:', campaignId);
+      setCampaign(campaignState);
+      const previewUrl = `/campaign/${campaignId}`;
+      window.open(previewUrl, '_blank', 'noopener,noreferrer');
+    } else {
+      console.warn('⚠️ [SwiperReferenceEditor] Cannot preview: No campaign ID');
+      alert('Veuillez d\'abord sauvegarder la campagne pour pouvoir la prévisualiser.');
+    }
+  };
+
+  const handlePreviewOLD = () => {
+    // OLD CODE - KEPT FOR REFERENCE
     // Forcer la synchronisation du store vers le preview
     console.log('🔄 [DesignEditorLayout] Preview toggled, syncing store to preview');
     
@@ -3661,7 +3675,7 @@ const handleSaveCampaignName = useCallback(async () => {
             onPreviewButtonSideChange={setPreviewButtonSide}
             mode={mode}
             onSave={handleSaveAndQuit}
-            showSaveCloseButtons={false}
+            showSaveCloseButtons={true}
             campaignId={(campaignState as any)?.id || new URLSearchParams(location.search).get('campaign') || undefined}
           />
 

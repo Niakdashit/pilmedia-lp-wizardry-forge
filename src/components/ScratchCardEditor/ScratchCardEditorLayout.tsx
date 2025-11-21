@@ -2842,10 +2842,16 @@ const handleSaveCampaignName = useCallback(async () => {
   };
 
   const handlePreview = () => {
-    setShowFunnel(!showFunnel);
-    // ALWAYS reset to 'article' when toggling preview to ensure clean state
-    // This prevents the funnel from staying on 'result' after game completion
-    setCurrentStep('article');
+    const campaignId = (campaignState as any)?.id;
+    if (campaignId) {
+      console.log('🔄 [ScratchCardEditor] Opening preview in new tab for campaign:', campaignId);
+      setCampaign(campaignState);
+      const previewUrl = `/campaign/${campaignId}`;
+      window.open(previewUrl, '_blank', 'noopener,noreferrer');
+    } else {
+      console.warn('⚠️ [ScratchCardEditor] Cannot preview: No campaign ID');
+      alert('Veuillez d\'abord sauvegarder la campagne pour pouvoir la prévisualiser.');
+    }
   };
 
   // Funnel progression handlers
@@ -3426,9 +3432,9 @@ const handleSaveCampaignName = useCallback(async () => {
             onPreviewButtonSideChange={setPreviewButtonSide}
             mode={mode}
             onSave={handleSaveAndQuit}
-            showSaveCloseButtons={false}
-            onBeforeOpenSettings={handleBeforeOpenSettings}
+            showSaveCloseButtons={true}
             campaignId={(campaignState as any)?.id || new URLSearchParams(location.search).get('campaign') || undefined}
+            onBeforeOpenSettings={handleBeforeOpenSettings}
           />
 
           {/* Bouton d'aide des raccourcis clavier */}

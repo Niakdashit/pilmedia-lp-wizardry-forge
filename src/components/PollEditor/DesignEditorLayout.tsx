@@ -1208,7 +1208,16 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
   };
 
   const handlePreview = () => {
-    setShowFunnel(!showFunnel);
+    const campaignId = (campaignState as any)?.id;
+    if (campaignId) {
+      console.log('🔄 [PollEditor] Opening preview in new tab for campaign:', campaignId);
+      setCampaign(campaignState);
+      const previewUrl = `/campaign/${campaignId}`;
+      window.open(previewUrl, '_blank', 'noopener,noreferrer');
+    } else {
+      console.warn('⚠️ [PollEditor] Cannot preview: No campaign ID');
+      alert('Veuillez d\'abord sauvegarder la campagne pour pouvoir la prévisualiser.');
+    }
   };
 
   // Validation + Save & Quit

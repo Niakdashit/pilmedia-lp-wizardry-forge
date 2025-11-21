@@ -1244,6 +1244,19 @@ useEffect(() => {
 const [showFunnel, setShowFunnel] = useState(false);
 const isArticlePreview = editorMode === 'article' && showFunnel;
 
+// Activer automatiquement le plein écran si on arrive avec ?fullscreenCanvas=1 (nouvel onglet)
+useEffect(() => {
+  if (typeof window === 'undefined') return;
+  try {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('fullscreenCanvas') === '1') {
+      setShowFunnel(true);
+    }
+  } catch (e) {
+    console.error('[FormEditor] Failed to parse fullscreenCanvas search param', e);
+  }
+}, []);
+
 // Détecter la position de scroll pour changer l'écran courant (désactivé pendant l'aperçu plein écran)
 useEffect(() => {
     if (showFunnel) return;
@@ -2966,32 +2979,20 @@ useEffect(() => {
   };
 
   const handlePreview = () => {
-    // Forcer la synchronisation du store vers le preview
-    console.log('🔄 [FormEditor] Preview toggled, syncing store to preview');
-    console.log('📊 [FormEditor] Current articleConfig:', {
-      hasArticleConfig: !!(campaignState as any)?.articleConfig,
-      hasContent: !!(campaignState as any)?.articleConfig?.content,
-      title: (campaignState as any)?.articleConfig?.content?.title,
-      description: (campaignState as any)?.articleConfig?.content?.description,
-      htmlContent: (campaignState as any)?.articleConfig?.content?.htmlContent?.substring(0, 100)
-    });
-    
-    // Mettre à jour le store avec les dernières données
-    setCampaign(campaignState);
-    
-    // Dispatcher un événement pour forcer le re-render du preview
-    window.dispatchEvent(new CustomEvent('editor-force-sync', {
-      detail: {
-        timestamp: Date.now(),
-        modularPage: (campaignState as any)?.modularPage,
-        articleConfig: (campaignState as any)?.articleConfig
-      }
-    }));
-    
-    setShowFunnel(!showFunnel);
-    // ALWAYS reset to 'form' when toggling preview to ensure clean state
-    // Form campaigns always start directly with the form (no article step)
-    setCurrentStep('form');
+    // Ouvrir le canvas plein écran dans un NOUVEL onglet, sans changer le rendu lui-même
+    if (typeof window === 'undefined') return;
+
+    try {
+      const currentUrl = new URL(window.location.href);
+      currentUrl.searchParams.set('fullscreenCanvas', '1');
+
+      // Synchroniser l'état courant dans le store avant d'ouvrir l'onglet
+      setCampaign(campaignState);
+
+      window.open(currentUrl.toString(), '_blank', 'noopener,noreferrer');
+    } catch (e) {
+      console.error('[FormEditor] Failed to open fullscreen canvas in new tab', e);
+    }
   };
 
   // Funnel progression handlers for Form
@@ -3426,7 +3427,7 @@ useEffect(() => {
             onPreviewButtonSideChange={setPreviewButtonSide}
             mode={mode}
             onSave={handleSaveAndQuit}
-            showSaveCloseButtons={false}
+            showSaveCloseButtons={true}
             campaignId={(campaignState as any)?.id || new URLSearchParams(location.search).get('campaign') || undefined}
           />
 
@@ -3497,15 +3498,6 @@ useEffect(() => {
             className="group fixed inset-0 z-40 w-full h-[100dvh] min-h-[100dvh] overflow-visible"
             style={{ backgroundColor: '#ffffff' }}
           >
-            {/* Floating Edit Mode Button */}
-            <button
-              onClick={() => setShowFunnel(false)}
-              className={`absolute top-4 ${previewButtonSide === 'left' ? 'left-4' : 'right-4'} px-4 py-2 bg-[#44444d] text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-[#44444d] shadow-none focus:shadow-none ring-0 focus:ring-0 drop-shadow-none filter-none backdrop-blur-0`}
-              style={{ zIndex: 9999999 }}
-            >
-              Mode édition
-            </button>
-            
             {/* Clone strict du canvas preview 1 en plein écran - SANS MARGES */}
             <div className="w-full h-full" style={{ borderRadius: 0 }}>
               <style>{`
@@ -3623,20 +3615,30 @@ useEffect(() => {
                 .design-canvas-container [style*="cursor: ns-resize"],
                 .design-canvas-container [style*="cursor: ew-resize"],
                 /* Masquer les icônes de drag (6 points) - ULTRA AGRESSIF */
-                .design-canvas-container button[style*="position: absolute"]:not(form button),
-                .design-canvas-container button[style*="left"],
-                .design-canvas-container button[style*="top"],
-                .design-canvas-container > * > button,
-                .design-canvas-container div > button:first-child,
-                .design-canvas-container [class*="module"] > button,
-                .design-canvas-container [data-module] > button,
-                .design-canvas-container button[style*="width"][style*="height"][style*="position"],
-                .design-canvas-container button:not(form button):not([type="submit"]):not([class*="Envoyer"]) {
+                .design-canvas-container button[style*="position: absolute"]:not(form button):not(form *),
+                .design-canvas-container button[style*="left"]:not(form button):not(form *),
+                .design-canvas-container button[style*="top"]:not(form button):not(form *),
+                .design-canvas-container > * > button:not(form button):not(form *),
+                .design-canvas-container div > button:first-child:not(form button):not(form *),
+                .design-canvas-container [class*="module"] > button:not(form button):not(form *),
+                .design-canvas-container [data-module] > button:not(form button):not(form *),
+                .design-canvas-container button[style*="width"][style*="height"][style*="position"]:not(form button):not(form *) {
                   display: none !important;
                   visibility: hidden !important;
                   opacity: 0 !important;
                   pointer-events: none !important;
                   z-index: -9999 !important;
+                }
+                
+                /* FORCER l'affichage du bouton submit du formulaire */
+                .design-canvas-container form button,
+                .design-canvas-container form button[type="submit"],
+                .design-canvas-container button[type="submit"] {
+                  display: inline-flex !important;
+                  visibility: visible !important;
+                  opacity: 1 !important;
+                  pointer-events: auto !important;
+                  z-index: auto !important;
                 }
                 
                 /* Désactiver uniquement les effets visuels de survol */
@@ -3772,10 +3774,10 @@ useEffect(() => {
                 screenId={currentScreen}
                 selectedDevice={selectedDevice}
                 elements={canvasElements}
-                onElementsChange={() => {}}
+                onElementsChange={setCanvasElements}
                 background={activePreviewBackground}
                 campaign={memoCampaignData}
-                onCampaignChange={() => {}}
+                onCampaignChange={handleCampaignConfigChange}
                 zoom={1}
                 enableInternalAutoFit={false}
                 onZoomChange={() => {}}
@@ -3783,7 +3785,7 @@ useEffect(() => {
                 onSelectedElementChange={() => {}}
                 selectedElements={[]}
                 onSelectedElementsChange={() => {}}
-                onElementUpdate={() => {}}
+                onElementUpdate={handleElementUpdate}
                 extractedColors={extractedColors}
                 quizModalConfig={undefined}
                 containerClassName="!p-0 !m-0 bg-white !items-start !justify-start !pt-0 !rounded-none"
@@ -3795,11 +3797,11 @@ useEffect(() => {
                 readOnly={true}
                 isPreviewMode={true}
                 modularModules={activePreviewModules}
-                onModuleUpdate={() => {}}
-                onModuleDelete={() => {}}
-                onModuleMove={() => {}}
-                onModuleDuplicate={() => {}}
-                onFormSubmit={() => handleFormSubmit({})}
+                onModuleUpdate={handleUpdateModule}
+                onModuleDelete={handleDeleteModule}
+                onModuleMove={handleMoveModule}
+                onModuleDuplicate={handleDuplicateModule}
+                onFormSubmit={handleFormSubmit}
               />
               )}
             </div>

@@ -2304,36 +2304,20 @@ useEffect(() => {
   };
 
   const handlePreview = () => {
-    // Logique intelligente pour l'aperçu :
-    // - Sur desktop physique + mode desktop → Fullscreen preview en mode PC
-    // - Sur desktop physique + mode mobile → Fullscreen avec fond #2c2c35 et canvas mobile centré
-    // - Sur mobile/tablet physique → Toujours fullscreen avec le mode actuel
+    // Ouvrir l'aperçu dans un nouvel onglet
+    const campaignId = (campaignState as any)?.id;
     
-    // Si on est sur desktop physique et en mode desktop, on force le preview en mode desktop
-    if (actualDevice === 'desktop' && selectedDevice === 'desktop' && !showFunnel) {
-      console.log('💻 [Preview] Desktop → Desktop preview: forcing desktop mode');
-      // On s'assure que le preview s'affiche en mode desktop
-      setPreviewDevice('desktop');
-    }
-    
-    // Si on est en mode mobile, on affiche toujours le fullscreen avec canvas mobile centré
-    if (selectedDevice === 'mobile' && !showFunnel) {
-      console.log('📱 [Preview] Mobile view: showing fullscreen with centered mobile canvas');
-    }
-    
-    // Tous les cas : toggle fullscreen preview
-    const nextShowFunnel = !showFunnel;
-    setShowFunnel(nextShowFunnel);
-
-    if (editorMode === 'article') {
-      // ALWAYS reset to 'article' when toggling preview to ensure clean state
-      // This prevents the funnel from staying on 'result' after game completion
-      setCurrentStep((campaignState as any)?.articleConfig?.funnelFlow?.steps?.[0] || 'article');
+    if (campaignId) {
+      // Forcer la synchronisation du store avant d'ouvrir le nouvel onglet
+      console.log('🔄 [DesignEditor] Opening preview in new tab for campaign:', campaignId);
+      setCampaign(campaignState);
+      
+      // Ouvrir l'URL de la campagne dans un nouvel onglet
+      const previewUrl = `/campaign/${campaignId}`;
+      window.open(previewUrl, '_blank', 'noopener,noreferrer');
     } else {
-      // Fullscreen flow: reset to screen1 equivalent when entering preview
-      if (nextShowFunnel) {
-        setCurrentScreen('screen1');
-      }
+      console.warn('⚠️ [DesignEditor] Cannot preview: No campaign ID');
+      alert('Veuillez d\'abord sauvegarder la campagne pour pouvoir la prévisualiser.');
     }
   };
 
@@ -2741,7 +2725,7 @@ useEffect(() => {
               onPreviewButtonSideChange={setPreviewButtonSide}
               mode={mode}
               onSave={handleSaveAndQuit}
-              showSaveCloseButtons={false}
+              showSaveCloseButtons={true}
               campaignId={(campaignState as any)?.id || new URLSearchParams(location.search).get('campaign') || undefined}
             />
 

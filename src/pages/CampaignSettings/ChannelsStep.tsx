@@ -86,7 +86,8 @@ const ChannelsStep: React.FC<ControlledProps> = (props) => {
         }));
       }
     }
-  }, [campaignId, form.campaign_url, setForm]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [campaignId]);
 
   const handleChange = (path: string, value: any) => {
     setForm(prev => {

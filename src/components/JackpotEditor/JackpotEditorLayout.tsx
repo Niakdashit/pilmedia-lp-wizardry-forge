@@ -3588,9 +3588,10 @@ useEffect(() => {
             onPreviewButtonSideChange={setPreviewButtonSide}
             mode={mode}
             onSave={handleSaveAndQuit}
-            showSaveCloseButtons={false}
-            onNavigateToSettings={handleNavigateToSettings}
-            onBeforeOpenSettings={handleBeforeOpenSettings}
+            showSaveCloseButtons={true}
+            onBeforeOpenSettings={async () => {
+              handleBeforeOpenSettings
+            }}
             campaignId={(campaignState as any)?.id || new URLSearchParams(location.search).get('campaign') || undefined}
           />
 
@@ -4327,7 +4328,6 @@ useEffect(() => {
                     // Mobile sidebar integrations
                     onAddElement={handleAddElement}
                     onBackgroundChange={handleBackgroundChange}
-                    onExtractedColorsChange={handleExtractedColorsChange}
                     // Group selection wiring
                     selectedGroupId={selectedGroupId as any}
                     onSelectedGroupChange={setSelectedGroupId as any}

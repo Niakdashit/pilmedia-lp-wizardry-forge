@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import PreviewRenderer from '@/components/preview/PreviewRenderer';
+import PublicFormCanvas from '@/components/public/PublicFormCanvas';
 import { useCampaignView } from '@/hooks/useCampaignView';
 import { isTempCampaignId } from '@/utils/tempCampaignId';
 import { useFastCampaignLoader } from '@/hooks/useFastCampaignLoader';
@@ -128,13 +129,27 @@ const PublicCampaignPage: React.FC = () => {
                        (campaign.config as any)?.roulette?.segments?.[0]?.label
   });
 
+  // Pour les campagnes de type 'form', afficher le canvas fullscreen au lieu du funnel
+  const isFormCampaign = campaign.type === 'form';
+  
+  console.log('🔍 [PublicCampaign] Rendering decision:', {
+    campaignType: campaign.type,
+    isFormCampaign,
+    willUsePublicFormCanvas: isFormCampaign,
+    willUsePreviewRenderer: !isFormCampaign
+  });
+
   return (
     <PublicCampaignErrorBoundary>
-      <div className="min-h-screen" style={{ backgroundColor: editorMode === 'article' ? '#2c2c35' : undefined }}>
-        <div className="w-full min-h-screen">
-          <PreviewRenderer campaign={campaign} previewMode={previewMode} />
+      {isFormCampaign ? (
+        <PublicFormCanvas campaign={campaign} previewMode={previewMode} />
+      ) : (
+        <div className="min-h-screen" style={{ backgroundColor: editorMode === 'article' ? '#2c2c35' : undefined }}>
+          <div className="w-full min-h-screen">
+            <PreviewRenderer campaign={campaign} previewMode={previewMode} />
+          </div>
         </div>
-      </div>
+      )}
     </PublicCampaignErrorBoundary>
   );
 };
