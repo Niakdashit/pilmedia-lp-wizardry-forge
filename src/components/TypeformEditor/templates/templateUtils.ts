@@ -1,6 +1,27 @@
 import { TypeformTemplate } from './typeformTemplates';
 
 /**
+ * Calcule si une couleur de fond est claire ou foncée
+ */
+function isLightColor(hex: string): boolean {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  return luminance > 0.5;
+}
+
+/**
+ * Retourne une couleur de texte appropriée basée sur la couleur de fond
+ */
+function getTextColorForBackground(backgroundColor: string): string {
+  if (!backgroundColor || backgroundColor === 'transparent') {
+    return '#000000';
+  }
+  return isLightColor(backgroundColor) ? '#1a1a1a' : '#ffffff';
+}
+
+/**
  * Applique les couleurs du thème à toutes les questions d'un template
  * Utilise les 3 teintes (dark, medium, light) pour varier les fonds
  */
@@ -19,19 +40,26 @@ export const applyThemeColorsToTemplate = (template: TypeformTemplate): Typeform
       return question;
     }
 
-    // Si la question a déjà une panelBackgroundColor, la garder
-    if (question.panelBackgroundColor) {
+    // Si la question a déjà une panelBackgroundColor et textColor, les garder
+    if (question.panelBackgroundColor && question.textColor) {
       return question;
     }
 
     // Alterner entre les 3 teintes
     const shadeIndex = index % 3;
     const selectedShade = shadeIndex === 0 ? shades.dark : shadeIndex === 1 ? shades.medium : shades.light;
+    
+    // Si la question a déjà une panelBackgroundColor, l'utiliser, sinon utiliser la teinte
+    const bgColor = question.panelBackgroundColor || selectedShade;
+    
+    // Calculer la couleur de texte appropriée
+    const textColor = getTextColorForBackground(bgColor);
 
     return {
       ...question,
-      panelBackgroundColor: selectedShade,
+      panelBackgroundColor: bgColor,
       backgroundType: question.backgroundType || 'color',
+      textColor: question.textColor || textColor,
     };
   });
 
