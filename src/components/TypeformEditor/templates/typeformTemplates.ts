@@ -2368,10 +2368,14 @@ const typeformTemplatesRaw: TypeformTemplate[] = [
   },
 ];
 
+import { brandedTemplates } from './brandedTemplates';
 import { applyThemeColorsToAllTemplates } from './templateUtils';
 
+// Combiner tous les templates
+const allTemplatesRaw = [...typeformTemplatesRaw, ...brandedTemplates];
+
 // Appliquer automatiquement les couleurs de texte à tous les templates
-export const typeformTemplates = applyThemeColorsToAllTemplates(typeformTemplatesRaw);
+export const typeformTemplates = applyThemeColorsToAllTemplates(allTemplatesRaw);
 
 export const getTemplateById = (id: string): TypeformTemplate | undefined => {
   return typeformTemplates.find(template => template.id === id);
