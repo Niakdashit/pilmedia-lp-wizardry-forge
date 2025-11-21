@@ -14,10 +14,8 @@ interface PublicFormCanvasProps {
  * Reproduit exactement le rendu de l'onglet "Plein écran" du FormEditor
  */
 const PublicFormCanvas: React.FC<PublicFormCanvasProps> = ({ campaign, previewMode = 'desktop' }) => {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [currentScreen, setCurrentScreen] = useState<'screen1' | 'screen2'>('screen1');
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { createParticipation } = useParticipations();
+  const [currentScreen] = useState<'screen1' | 'screen2'>('screen1');
+  useParticipations(); // Hook called for side effects
 
   // Extraire les données du canvas depuis la campagne
   const modularPage = useMemo(() => {
