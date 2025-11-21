@@ -418,10 +418,13 @@ export const TypeformPreview: React.FC<TypeformPreviewProps> = ({
       
       case 'color':
       default:
-        return { backgroundColor };
+        // Utiliser panelBackgroundColor si défini, sinon la couleur de fond globale
+        const questionBg = currentQuestion.panelBackgroundColor || backgroundColor;
+        return { backgroundColor: questionBg };
     }
 
-    return { backgroundColor };
+    // Fallback: utiliser panelBackgroundColor si défini, sinon la couleur de fond globale
+    return { backgroundColor: currentQuestion.panelBackgroundColor || backgroundColor };
   };
 
   // Fonction pour rendre l'overlay si nécessaire
