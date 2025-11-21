@@ -234,8 +234,8 @@ export const QuestionsPanel: React.FC<QuestionsPanelProps> = ({
       layout: 'centered-card',
       backgroundType: 'color',
       panelBackgroundColor: template.colors.accent,
-      textColor: template.colors.secondary,
-      buttonColor: template.colors.primary,
+      textColor: template.colors.primary,
+      buttonColor: template.colors.secondary,
       fontFamily: template.font,
       fontSize: 'xlarge',
     };
