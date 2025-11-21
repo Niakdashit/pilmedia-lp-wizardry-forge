@@ -771,6 +771,17 @@ useEffect(() => {
   });
 }, [canvasElements, screenBackgrounds, selectedDevice, canvasZoom, setCampaign]);
 
+// Synchronize canvas background with template theme
+useEffect(() => {
+  if (campaignState?.design?.backgroundColor && bgHydratedRef.current) {
+    const bgColor = campaignState.design.backgroundColor;
+    // Only update if it's a different color
+    if (canvasBackground.type === 'color' && canvasBackground.value !== bgColor) {
+      setCanvasBackground({ type: 'color', value: bgColor });
+    }
+  }
+}, [campaignState?.design?.backgroundColor, canvasBackground]);
+
   // Détection de la taille de fenêtre
   useEffect(() => {
     const updateWindowSize = () => {
