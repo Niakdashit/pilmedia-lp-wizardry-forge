@@ -401,8 +401,41 @@ export const QuestionsPanel: React.FC<QuestionsPanelProps> = ({
                       </select>
                     </div>
 
+                    {/* Image pour cartes welcome/thankyou */}
+                    {(question.type === 'welcome' || question.type === 'thankyou') && (
+                      <div>
+                        <label className="block text-sm text-gray-600 mb-1 flex items-center gap-1">
+                          <ImageIcon size={14} />
+                          Image de la carte
+                        </label>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="text"
+                            value={question.imageUrl || ''}
+                            onChange={(e) => updateQuestion(question.id, { imageUrl: e.target.value })}
+                            className="flex-1 px-3 py-2 bg-white text-gray-900 rounded-lg border border-gray-300 focus:border-[#841b60] outline-none"
+                            placeholder="URL de l'image..."
+                          />
+                          <label className="px-2 py-2 rounded-lg border border-gray-300 bg-gray-50 hover:bg-gray-100 text-gray-700 cursor-pointer inline-flex items-center justify-center">
+                            <ImageIcon size={14} />
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (!file) return;
+                                const objectUrl = URL.createObjectURL(file);
+                                updateQuestion(question.id, { imageUrl: objectUrl });
+                              }}
+                            />
+                          </label>
+                        </div>
+                      </div>
+                    )}
+
                     {/* Image associée (pour layouts split / cartes) */}
-                    {['split-left-text-right-image', 'split-left-image-right-text', 'cards-grid'].includes(
+                    {!['welcome', 'thankyou'].includes(question.type) && ['split-left-text-right-image', 'split-left-image-right-text', 'cards-grid'].includes(
                       (question.layout || 'centered-card') as string
                     ) && (
                       <div>

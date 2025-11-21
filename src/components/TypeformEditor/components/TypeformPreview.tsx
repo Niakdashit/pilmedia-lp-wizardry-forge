@@ -1285,6 +1285,18 @@ export const TypeformPreview: React.FC<TypeformPreviewProps> = ({
                   </span>
                 </div>
 
+                {/* Image pour cartes welcome/thankyou */}
+                {(currentQuestion?.type === 'welcome' || currentQuestion?.type === 'thankyou') && currentQuestion?.imageUrl && (
+                  <div className="mb-8 flex justify-center">
+                    <img
+                      src={currentQuestion.imageUrl}
+                      alt="Card visual"
+                      className="max-w-full h-auto rounded-2xl shadow-lg"
+                      style={{ maxHeight: '300px', objectFit: 'cover' }}
+                    />
+                  </div>
+                )}
+
                 {/* Question */}
                 <div className="mb-8">
                   <h2
