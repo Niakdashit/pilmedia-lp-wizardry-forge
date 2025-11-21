@@ -247,15 +247,15 @@ export const QuestionsPanel: React.FC<QuestionsPanelProps> = ({
                     <GripVertical size={18} />
                   </button>
 
-                  <div className="flex-1 flex items-center gap-2">
-                    <span className="text-sm text-gray-500">
+                  <div className="flex-1 flex items-start gap-2">
+                    <span className="text-sm text-gray-500 flex-shrink-0 pt-0.5">
                       {question.type === 'welcome' 
                         ? '🏁 Accueil' 
                         : question.type === 'thankyou' 
                         ? '🎉 Sortie' 
                         : `Q${index + 1}`}
                     </span>
-                    <span className="text-gray-900 font-medium truncate">
+                    <span className="text-gray-900 font-medium whitespace-pre-wrap break-words">
                       {question.text}
                     </span>
                   </div>
