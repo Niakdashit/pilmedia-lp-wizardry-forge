@@ -584,7 +584,7 @@ export const TypeformPreview: React.FC<TypeformPreviewProps> = ({
         const isCardsGrid = layout === 'cards-grid';
 
         const baseButtonClasses = isCardsGrid
-          ? 'w-full text-left rounded-2xl border-2 transition-all hover:shadow-xl hover:scale-[1.02] bg-white overflow-hidden flex flex-col h-full relative group'
+          ? 'w-full text-left rounded-xl border-2 transition-all hover:shadow-lg bg-white overflow-hidden flex flex-col h-full relative'
           : 'w-full px-6 py-4 text-left rounded-lg border-2 transition-all hover:shadow-md';
 
         const containerClasses = isCardsGrid
@@ -619,7 +619,7 @@ export const TypeformPreview: React.FC<TypeformPreviewProps> = ({
                   {isCardsGrid && (
                     <>
                       {/* Image de la carte */}
-                      <div className="w-full aspect-[4/3] bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden relative">
+                      <div className="w-full aspect-[3/2] bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden relative">
                         {currentQuestion.imageUrl ? (
                           <img
                             src={currentQuestion.imageUrl}
@@ -629,40 +629,38 @@ export const TypeformPreview: React.FC<TypeformPreviewProps> = ({
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-xs text-gray-400 px-3 text-center">
                             <div className="flex flex-col items-center gap-2">
-                              <div className="w-10 h-10 rounded-full bg-white/50 flex items-center justify-center">
-                                <span className="text-lg">🖼️</span>
+                              <div className="w-12 h-12 rounded-lg bg-white/80 flex items-center justify-center shadow-sm">
+                                <span className="text-2xl">🖼️</span>
                               </div>
-                              <span className="text-[10px]">Ajouter une image</span>
+                              <span className="text-[11px] text-gray-500">Image du choix</span>
                             </div>
-                          </div>
-                        )}
-                        
-                        {/* Badge avec lettre A/B/C/D */}
-                        <div 
-                          className="absolute top-3 left-3 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold shadow-md"
-                          style={{
-                            backgroundColor: selected ? primaryColor : '#ffffff',
-                            color: selected ? '#ffffff' : primaryColor,
-                            border: `2px solid ${primaryColor}`
-                          }}
-                        >
-                          {letters[idx]}
-                        </div>
-
-                        {/* Icône de sélection */}
-                        {selected && (
-                          <div 
-                            className="absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center shadow-md"
-                            style={{ backgroundColor: primaryColor }}
-                          >
-                            <Check size={16} color="#ffffff" strokeWidth={3} />
                           </div>
                         )}
                       </div>
 
-                      {/* Texte de la carte */}
-                      <div className="flex-1 px-4 py-4 flex items-center">
-                        <span className="text-sm md:text-base font-medium leading-snug">{option}</span>
+                      {/* Zone de texte avec badge et label */}
+                      <div className="px-4 py-3 flex items-center gap-3 bg-white">
+                        {/* Badge avec lettre A/B/C/D */}
+                        <div 
+                          className="flex-shrink-0 w-7 h-7 rounded-md flex items-center justify-center text-sm font-bold border"
+                          style={{
+                            backgroundColor: selected ? 'transparent' : '#f9fafb',
+                            color: selected ? primaryColor : '#6b7280',
+                            borderColor: selected ? primaryColor : '#e5e7eb'
+                          }}
+                        >
+                          {letters[idx]}
+                        </div>
+                        
+                        {/* Texte du choix */}
+                        <span 
+                          className="text-sm font-medium leading-tight"
+                          style={{ 
+                            color: selected ? primaryColor : textColor 
+                          }}
+                        >
+                          {option}
+                        </span>
                       </div>
                     </>
                   )}
