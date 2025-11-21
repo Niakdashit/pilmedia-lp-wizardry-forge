@@ -300,17 +300,68 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
       const detail = (e as CustomEvent<{ layout?: string }>).detail;
       const layout = (detail?.layout as any) || 'centered-card';
       setCampaign((prev: any) => {
-        const prevQuestions = Array.isArray(prev?.typeformQuestions) ? prev.typeformQuestions : [];
-        // Utiliser le layout approprié selon le type de question par défaut (texte)
-        const defaultLayout = 'fullwidth-input'; // Pour type 'text'
+        const prevQuestions: TypeformQuestion[] = Array.isArray(prev?.typeformQuestions)
+          ? prev.typeformQuestions
+          : [];
+
+        // Question texte par défaut
+        const defaultLayout: TypeformLayout = 'fullwidth-input';
         const newQuestion: TypeformQuestion = {
           id: `q${Date.now()}`,
           type: 'text',
           text: 'Nouvelle question',
           required: false,
           placeholder: 'Votre réponse...',
-          layout: defaultLayout, // Ignorer le layout choisi et utiliser le défaut approprié
+          layout: defaultLayout,
         };
+
+        // Si aucune question : injecter welcome + thankyou autour de la première vraie question
+        if (prevQuestions.length === 0) {
+          const welcomeCard: TypeformQuestion = {
+            id: 'welcome',
+            type: 'welcome',
+            text: 'Bienvenue à notre formulaire',
+            description: 'Cela ne prendra que quelques minutes',
+            required: false,
+            placeholder: '',
+            layout: layout as TypeformLayout,
+            backgroundType: 'gradient',
+            backgroundGradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            fontFamily: 'Inter',
+            fontSize: 'xlarge',
+          };
+
+          const thankyouCard: TypeformQuestion = {
+            id: 'thankyou',
+            type: 'thankyou',
+            text: 'Merci pour vos réponses ! 🎉',
+            description: 'Vos réponses ont été enregistrées',
+            required: false,
+            placeholder: '',
+            layout: 'centered-card',
+            backgroundType: 'gradient',
+            backgroundGradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            fontFamily: 'Inter',
+            fontSize: 'xlarge',
+          };
+
+          return {
+            ...(prev || {}),
+            typeformQuestions: [welcomeCard, newQuestion, thankyouCard],
+          };
+        }
+
+        // Sinon, insérer avant la carte de sortie si elle existe
+        const thankyouIndex = prevQuestions.findIndex((q) => q.type === 'thankyou');
+        if (thankyouIndex !== -1) {
+          const updated = [...prevQuestions];
+          updated.splice(thankyouIndex, 0, newQuestion);
+          return {
+            ...(prev || {}),
+            typeformQuestions: updated,
+          };
+        }
+
         return {
           ...(prev || {}),
           typeformQuestions: [...prevQuestions, newQuestion],
