@@ -528,17 +528,6 @@ const { syncAllStates, syncModularPage } = useCampaignStateSync();
   const [canvasBackground, setCanvasBackground] = useState<{ type: 'color' | 'image'; value: string }>({ type: 'color', value: '' });
   const [canvasZoom, setCanvasZoom] = useState(getDefaultZoom(selectedDevice));
   
-  // Synchronize canvas background with template theme
-  useEffect(() => {
-    if (campaign?.design?.backgroundColor && bgHydratedRef.current) {
-      const bgColor = campaign.design.backgroundColor;
-      // Only update if it's a different color
-      if (canvasBackground.type === 'color' && canvasBackground.value !== bgColor) {
-        setCanvasBackground({ type: 'color', value: bgColor });
-      }
-    }
-  }, [campaign?.design?.backgroundColor]);
-  
   useEffect(() => {
     canvasZoomRef.current = canvasZoom;
   }, [canvasZoom]);
@@ -781,6 +770,17 @@ useEffect(() => {
     return next as any;
   });
 }, [canvasElements, screenBackgrounds, selectedDevice, canvasZoom, setCampaign]);
+
+// Synchronize canvas background with template theme
+useEffect(() => {
+  if (campaignState?.design?.backgroundColor && bgHydratedRef.current) {
+    const bgColor = campaignState.design.backgroundColor;
+    // Only update if it's a different color
+    if (canvasBackground.type === 'color' && canvasBackground.value !== bgColor) {
+      setCanvasBackground({ type: 'color', value: bgColor });
+    }
+  }
+}, [campaignState?.design?.backgroundColor, canvasBackground]);
 
   // Détection de la taille de fenêtre
   useEffect(() => {
