@@ -677,42 +677,43 @@ export const TypeformPreview: React.FC<TypeformPreviewProps> = ({
         // Labels pour les extrémités de l'échelle (personnalisables via description)
         const scaleLabels = currentQuestion.description?.split('|') || [];
         const leftLabel = scaleLabels[0]?.trim() || '';
-        const centerLabel = scaleLabels[1]?.trim() || '';
         const rightLabel = scaleLabels[2]?.trim() || '';
 
         if (currentLayout === 'scale-horizontal') {
           return (
-            <div className="w-full max-w-4xl mx-auto">
-              {/* Échelle horizontale avec boutons carrés */}
-              <div className="flex justify-center gap-1 md:gap-2 mb-4">
+            <div className="w-full max-w-4xl mx-auto space-y-4">
+              {/* Échelle horizontale style Typeform */}
+              <div className="flex justify-center gap-2 md:gap-3 mb-6">
                 {values.map((value) => (
                   <button
                     key={value}
                     onClick={() => setCurrentAnswer(value)}
-                    className="w-12 h-12 md:w-16 md:h-16 rounded-lg border-2 transition-all hover:shadow-md hover:scale-105 flex items-center justify-center"
+                    className="relative w-14 h-14 md:w-16 md:h-16 rounded-xl transition-all duration-200 flex items-center justify-center group"
                     style={{
-                      borderColor: currentAnswer === value ? primaryColor : '#d1d5db',
-                      backgroundColor: currentAnswer === value ? primaryColor : '#ffffff',
-                      color: currentAnswer === value ? '#ffffff' : textColor
+                      border: `2px solid ${currentAnswer === value ? 'rgba(255, 255, 255, 0.5)' : 'rgba(255, 255, 255, 0.2)'}`,
+                      backgroundColor: currentAnswer === value ? 'rgba(255, 255, 255, 0.25)' : 'rgba(255, 255, 255, 0.1)',
+                      color: '#ffffff',
+                      backdropFilter: 'blur(10px)'
                     }}
                   >
-                    <span className="text-lg md:text-xl font-semibold">{value}</span>
+                    <span className="text-lg md:text-xl font-medium">{value}</span>
                   </button>
                 ))}
               </div>
 
               {/* Labels sous l'échelle */}
-              {(leftLabel || centerLabel || rightLabel) && (
-                <div className="flex justify-between items-start text-xs md:text-sm px-2">
-                  <span className="text-left max-w-[30%]" style={{ color: textColor, opacity: 0.7 }}>
+              {(leftLabel || rightLabel) && (
+                <div className="flex justify-between items-start text-sm md:text-base px-1">
+                  <span 
+                    className="text-left opacity-80 font-light" 
+                    style={{ color: '#ffffff' }}
+                  >
                     {leftLabel}
                   </span>
-                  {centerLabel && (
-                    <span className="text-center max-w-[30%]" style={{ color: textColor, opacity: 0.7 }}>
-                      {centerLabel}
-                    </span>
-                  )}
-                  <span className="text-right max-w-[30%]" style={{ color: textColor, opacity: 0.7 }}>
+                  <span 
+                    className="text-right opacity-80 font-light" 
+                    style={{ color: '#ffffff' }}
+                  >
                     {rightLabel}
                   </span>
                 </div>
