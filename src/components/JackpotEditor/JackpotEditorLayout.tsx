@@ -274,7 +274,7 @@ const { syncAllStates } = useCampaignStateSync();
   // Background par écran - chaque écran a son propre background
   const defaultBackground = mode === 'template'
     ? { type: 'color' as const, value: '#4ECDC4' }
-    : { type: 'color' as const, value: 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)' };
+    : { type: 'color' as const, value: '#ffffff' };
   
   const [screenBackgrounds, setScreenBackgrounds] = useState<ScreenBackgrounds>({
     screen1: defaultBackground,
@@ -631,7 +631,7 @@ useEffect(() => {
       setCanvasBackground(
         mode === 'template'
           ? { type: 'color', value: '#4ECDC4' }
-          : { type: 'color', value: 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)' }
+          : { type: 'color', value: '#ffffff' }
       );
     }
     

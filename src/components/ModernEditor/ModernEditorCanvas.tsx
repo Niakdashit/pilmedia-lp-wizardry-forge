@@ -127,7 +127,7 @@ const ModernEditorCanvas: React.FC<ModernEditorCanvasProps> = ({
           style={{
             background: enhancedCampaign.design?.background ? 
               `linear-gradient(135deg, ${enhancedCampaign.design.background} 0%, ${enhancedCampaign.design.background}88 100%)` : 
-              'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)',
+              '#ffffff',
             backgroundImage: showGridLines ? 
               'radial-gradient(circle, rgba(147, 197, 253, 0.2) 1px, transparent 1px)' : 'none',
             backgroundSize: showGridLines ? '20px 20px' : 'auto'

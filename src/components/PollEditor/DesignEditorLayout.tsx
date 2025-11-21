@@ -137,7 +137,7 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
   // États principaux
   const [canvasElements, setCanvasElements] = useState<any[]>([]);
   const [canvasBackground, setCanvasBackground] = useState<{ type: 'color' | 'image'; value: string }>(() => (
-    { type: 'color', value: 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)' }
+    { type: 'color', value: '#ffffff' }
   ));
   const [canvasZoom, setCanvasZoom] = useState(getDefaultZoom(selectedDevice));
 
