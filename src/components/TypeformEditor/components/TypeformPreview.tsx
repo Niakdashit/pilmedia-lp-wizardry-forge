@@ -421,6 +421,10 @@ export const TypeformPreview: React.FC<TypeformPreviewProps> = ({
       
       case 'color':
       default:
+        // Utiliser la couleur de panneau de la question si disponible, sinon la couleur globale
+        if (currentQuestion.panelBackgroundColor) {
+          return { backgroundColor: currentQuestion.panelBackgroundColor };
+        }
         return { backgroundColor };
     }
 
