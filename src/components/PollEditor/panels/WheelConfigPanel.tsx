@@ -1,7 +1,5 @@
-import React, { useState } from 'react';
+import React from 'react';
 import BorderStyleSelector from '../../SmartWheel/components/BorderStyleSelector';
-import WheelTemplateSelector from '../components/WheelTemplateSelector';
-import { WheelTemplate } from '../../../types/wheelTemplates';
 
 interface WheelConfigPanelProps {
   onBack: () => void;
@@ -20,7 +18,6 @@ interface WheelConfigPanelProps {
   onPositionChange?: (position: 'left' | 'right' | 'center') => void;
 
   selectedDevice: 'desktop' | 'tablet' | 'mobile';
-  onTemplateSelect?: (template: WheelTemplate) => void;
 }
 
 const WheelConfigPanel: React.FC<WheelConfigPanelProps> = React.memo(({
@@ -37,10 +34,8 @@ const WheelConfigPanel: React.FC<WheelConfigPanelProps> = React.memo(({
   onScaleChange,
   onShowBulbsChange,
   onPositionChange,
-  selectedDevice,
-  onTemplateSelect
+  selectedDevice
 }) => {
-  const [showTemplates, setShowTemplates] = useState(false);
 
   return (
     <div className="p-4">
@@ -70,38 +65,6 @@ const WheelConfigPanel: React.FC<WheelConfigPanelProps> = React.memo(({
         </div>
 
         <div className="space-y-6">
-          {/* Templates de roue */}
-          {onTemplateSelect && (
-            <div>
-              <button
-                onClick={() => setShowTemplates(!showTemplates)}
-                className="w-full flex items-center justify-between px-4 py-3 bg-gradient-to-r from-[#44444d] to-[#a21d6b] text-white rounded-lg hover:opacity-90 transition-opacity"
-              >
-                <span className="font-medium">✨ Choisir un template</span>
-                <svg
-                  className={`w-5 h-5 transition-transform ${showTemplates ? 'rotate-180' : ''}`}
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-              
-              {showTemplates && (
-                <div className="mt-4">
-                  <WheelTemplateSelector
-                    onTemplateSelect={(template) => {
-                      onTemplateSelect(template);
-                      setShowTemplates(false);
-                    }}
-                  />
-                </div>
-              )}
-            </div>
-          )}
-
-          <div className="space-y-6">
           {/* Taille de la roue */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -223,7 +186,6 @@ const WheelConfigPanel: React.FC<WheelConfigPanelProps> = React.memo(({
                 className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${wheelShowBulbs ? 'translate-x-6' : 'translate-x-1'}`}
               />
             </button>
-          </div>
           </div>
         </div>
       </div>
