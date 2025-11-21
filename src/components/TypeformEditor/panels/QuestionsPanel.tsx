@@ -137,8 +137,10 @@ export const QuestionsPanel: React.FC<QuestionsPanelProps> = ({
     const question = questions.find(q => q.id === questionId);
     if (!question) return;
     const options = question.options || [];
+    const optionImages = question.optionImages || [];
     updateQuestion(questionId, {
-      options: [...options, `Option ${options.length + 1}`]
+      options: [...options, `Option ${options.length + 1}`],
+      optionImages: [...optionImages, '']
     });
   };
 
@@ -150,11 +152,22 @@ export const QuestionsPanel: React.FC<QuestionsPanelProps> = ({
     updateQuestion(questionId, { options: newOptions });
   };
 
+  const updateOptionImage = (questionId: string, optionIndex: number, imageUrl: string) => {
+    const question = questions.find(q => q.id === questionId);
+    if (!question) return;
+    const optionImages = question.optionImages || [];
+    const newImages = [...optionImages];
+    newImages[optionIndex] = imageUrl;
+    updateQuestion(questionId, { optionImages: newImages });
+  };
+
   const deleteOption = (questionId: string, optionIndex: number) => {
     const question = questions.find(q => q.id === questionId);
     if (!question || !question.options) return;
+    const optionImages = question.optionImages || [];
     updateQuestion(questionId, {
-      options: question.options.filter((_, i) => i !== optionIndex)
+      options: question.options.filter((_, i) => i !== optionIndex),
+      optionImages: optionImages.filter((_, i) => i !== optionIndex)
     });
   };
 
@@ -351,7 +364,8 @@ export const QuestionsPanel: React.FC<QuestionsPanelProps> = ({
                             layout: defaultLayout,
                             // Ajouter des options par défaut pour les choix
                             ...(newType === 'choice' || newType === 'multiple' ? {
-                              options: question.options?.length ? question.options : ['Option 1', 'Option 2', 'Option 3', 'Option 4']
+                              options: question.options?.length ? question.options : ['Option 1', 'Option 2', 'Option 3', 'Option 4'],
+                              optionImages: question.optionImages?.length ? question.optionImages : ['', '', '', '']
                             } : {}),
                             // Ajouter min/max par défaut pour les échelles
                             ...(newType === 'scale' ? {
@@ -644,22 +658,50 @@ export const QuestionsPanel: React.FC<QuestionsPanelProps> = ({
                         <label className="block text-sm text-gray-600 mb-2">
                           Options
                         </label>
-                        <div className="space-y-2">
+                        <div className="space-y-3">
                           {(question.options || []).map((option, optIndex) => (
-                            <div key={optIndex} className="flex items-center gap-2">
-                              <input
-                                type="text"
-                                value={option}
-                                onChange={(e) => updateOption(question.id, optIndex, e.target.value)}
-                                className="flex-1 px-3 py-2 bg-white text-gray-900 rounded-lg border border-gray-300 focus:border-[#841b60] outline-none"
-                                placeholder={`Option ${optIndex + 1}`}
-                              />
-                              <button
-                                onClick={() => deleteOption(question.id, optIndex)}
-                                className="p-2 text-red-500 hover:text-red-400"
-                              >
-                                <Trash2 size={16} />
-                              </button>
+                            <div key={optIndex} className="border border-gray-200 rounded-lg p-3 bg-white space-y-2">
+                              {/* Texte de l'option */}
+                              <div className="flex items-center gap-2">
+                                <input
+                                  type="text"
+                                  value={option}
+                                  onChange={(e) => updateOption(question.id, optIndex, e.target.value)}
+                                  className="flex-1 px-3 py-2 bg-white text-gray-900 rounded-lg border border-gray-300 focus:border-[#841b60] outline-none"
+                                  placeholder={`Option ${optIndex + 1}`}
+                                />
+                                <button
+                                  onClick={() => deleteOption(question.id, optIndex)}
+                                  className="p-2 text-red-500 hover:text-red-400"
+                                >
+                                  <Trash2 size={16} />
+                                </button>
+                              </div>
+                              
+                              {/* Image de l'option */}
+                              <div className="flex items-center gap-2">
+                                <input
+                                  type="text"
+                                  value={(question.optionImages || [])[optIndex] || ''}
+                                  onChange={(e) => updateOptionImage(question.id, optIndex, e.target.value)}
+                                  className="flex-1 px-2 py-1.5 bg-gray-50 text-gray-900 text-sm rounded border border-gray-200 focus:border-[#841b60] outline-none"
+                                  placeholder="URL de l'image..."
+                                />
+                                <label className="px-2 py-1.5 rounded border border-gray-200 bg-gray-50 hover:bg-gray-100 text-gray-700 cursor-pointer inline-flex items-center justify-center">
+                                  <ImageIcon size={14} />
+                                  <input
+                                    type="file"
+                                    accept="image/*"
+                                    className="hidden"
+                                    onChange={(e) => {
+                                      const file = e.target.files?.[0];
+                                      if (!file) return;
+                                      const objectUrl = URL.createObjectURL(file);
+                                      updateOptionImage(question.id, optIndex, objectUrl);
+                                    }}
+                                  />
+                                </label>
+                              </div>
                             </div>
                           ))}
                           <button
