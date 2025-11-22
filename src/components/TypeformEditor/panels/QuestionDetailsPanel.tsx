@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { X, Image as ImageIcon, Trash2, ChevronLeft, ChevronRight, Video, GitBranch } from 'lucide-react';
-import { TypeformQuestion, SubField } from '../components/TypeformPreview';
+import { X, Image as ImageIcon, Trash2, ChevronLeft, ChevronRight, Video, GitBranch, Layout, Palette, Type as TypeIcon, Link } from 'lucide-react';
+import { TypeformQuestion, SubField, TypeformLayout } from '../components/TypeformPreview';
 
 interface QuestionDetailsPanelProps {
   question: TypeformQuestion | undefined;
@@ -49,10 +49,10 @@ export const QuestionDetailsPanel: React.FC<QuestionDetailsPanelProps> = ({
 
   return (
     <>
-      {/* Overlay avec blur */}
+      {/* Overlay transparent (juste pour fermer au clic) */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40 transition-all duration-300"
+          className="fixed inset-0 z-40 transition-all duration-300"
           onClick={onClose}
         />
       )}
@@ -365,6 +365,41 @@ export const QuestionDetailsPanel: React.FC<QuestionDetailsPanelProps> = ({
               />
               <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900">Réponse requise</span>
             </label>
+
+            {/* Options avancées pour choice/multiple */}
+            {(question.type === 'choice' || question.type === 'multiple') && (
+              <div className="space-y-3 pt-4">
+                <label className="flex items-center gap-3 cursor-pointer p-3 rounded-xl hover:bg-gray-50 transition-colors duration-200 group">
+                  <input
+                    type="checkbox"
+                    checked={question.type === 'multiple'}
+                    onChange={(e) => onChange({ ...question, type: e.target.checked ? 'multiple' : 'choice' })}
+                    className="w-5 h-5 rounded-lg border-2 border-gray-300 text-[#841b60] focus:ring-4 focus:ring-[#841b60]/20 cursor-pointer transition-all"
+                  />
+                  <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900">Sélection multiple</span>
+                </label>
+
+                <label className="flex items-center gap-3 cursor-pointer p-3 rounded-xl hover:bg-gray-50 transition-colors duration-200 group">
+                  <input
+                    type="checkbox"
+                    checked={(question as any).randomize || false}
+                    onChange={(e) => onChange({ ...question, randomize: e.target.checked } as any)}
+                    className="w-5 h-5 rounded-lg border-2 border-gray-300 text-[#841b60] focus:ring-4 focus:ring-[#841b60]/20 cursor-pointer transition-all"
+                  />
+                  <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900">Mélanger les options</span>
+                </label>
+
+                <label className="flex items-center gap-3 cursor-pointer p-3 rounded-xl hover:bg-gray-50 transition-colors duration-200 group">
+                  <input
+                    type="checkbox"
+                    checked={(question as any).showLabels !== false}
+                    onChange={(e) => onChange({ ...question, showLabels: e.target.checked } as any)}
+                    className="w-5 h-5 rounded-lg border-2 border-gray-300 text-[#841b60] focus:ring-4 focus:ring-[#841b60]/20 cursor-pointer transition-all"
+                  />
+                  <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900">Afficher les lettres (A, B, C...)</span>
+                </label>
+              </div>
+            )}
           </div>
 
           {/* Section: Média */}
@@ -393,29 +428,240 @@ export const QuestionDetailsPanel: React.FC<QuestionDetailsPanelProps> = ({
             </div>
           </div>
 
+          {/* Section: Layout */}
+          <div className="space-y-5 pt-8 border-t-2 border-gray-100">
+            <div className="flex items-center gap-2">
+              <div className="w-1 h-5 bg-[#841b60] rounded-full"></div>
+              <Layout size={16} className="text-[#841b60]" />
+              <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">Layout</h3>
+            </div>
+            
+            <div className="space-y-2">
+              <label className="block text-sm font-semibold text-gray-700">
+                Disposition de la question
+              </label>
+              <select
+                value={question.layout || 'centered-card'}
+                onChange={(e) => onChange({ ...question, layout: e.target.value as TypeformLayout })}
+                className="w-full px-4 py-3 bg-white text-gray-900 rounded-xl border-2 border-gray-200 focus:border-[#841b60] focus:ring-4 focus:ring-[#841b60]/10 outline-none transition-all duration-200 hover:border-gray-300 cursor-pointer"
+              >
+                <option value="centered-card">Carte centrée</option>
+                <option value="split-left-text-right-image">Texte gauche / Image droite</option>
+                <option value="split-left-image-right-text">Image gauche / Texte droite</option>
+                <option value="split-left-text-right-image-card">Texte gauche / Image card</option>
+                <option value="scale-horizontal">Échelle horizontale</option>
+                <option value="cards-grid">Grille de cartes</option>
+                <option value="fullwidth-input">Champ pleine largeur</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Section: Couleurs */}
+          <div className="space-y-5 pt-8 border-t-2 border-gray-100">
+            <div className="flex items-center gap-2">
+              <div className="w-1 h-5 bg-[#841b60] rounded-full"></div>
+              <Palette size={16} className="text-[#841b60]" />
+              <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">Couleurs</h3>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              {/* Couleur de fond */}
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold text-gray-700">
+                  Fond
+                </label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="color"
+                    value={(question as any).backgroundColor || '#ffffff'}
+                    onChange={(e) => onChange({ ...question, backgroundColor: e.target.value } as any)}
+                    className="w-12 h-12 rounded-lg border-2 border-gray-200 cursor-pointer"
+                  />
+                  <input
+                    type="text"
+                    value={(question as any).backgroundColor || '#ffffff'}
+                    onChange={(e) => onChange({ ...question, backgroundColor: e.target.value } as any)}
+                    className="flex-1 px-3 py-2 text-sm bg-white text-gray-900 rounded-lg border-2 border-gray-200 focus:border-[#841b60] focus:ring-2 focus:ring-[#841b60]/10 outline-none"
+                    placeholder="#ffffff"
+                  />
+                </div>
+              </div>
+
+              {/* Couleur de texte */}
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold text-gray-700">
+                  Texte
+                </label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="color"
+                    value={(question as any).textColor || '#000000'}
+                    onChange={(e) => onChange({ ...question, textColor: e.target.value } as any)}
+                    className="w-12 h-12 rounded-lg border-2 border-gray-200 cursor-pointer"
+                  />
+                  <input
+                    type="text"
+                    value={(question as any).textColor || '#000000'}
+                    onChange={(e) => onChange({ ...question, textColor: e.target.value } as any)}
+                    className="flex-1 px-3 py-2 text-sm bg-white text-gray-900 rounded-lg border-2 border-gray-200 focus:border-[#841b60] focus:ring-2 focus:ring-[#841b60]/10 outline-none"
+                    placeholder="#000000"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Section: Typographie */}
+          <div className="space-y-5 pt-8 border-t-2 border-gray-100">
+            <div className="flex items-center gap-2">
+              <div className="w-1 h-5 bg-[#841b60] rounded-full"></div>
+              <TypeIcon size={16} className="text-[#841b60]" />
+              <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">Typographie</h3>
+            </div>
+            
+            <div className="space-y-4">
+              {/* Police */}
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold text-gray-700">
+                  Police de caractères
+                </label>
+                <select
+                  value={(question as any).fontFamily || 'Inter'}
+                  onChange={(e) => onChange({ ...question, fontFamily: e.target.value } as any)}
+                  className="w-full px-4 py-3 bg-white text-gray-900 rounded-xl border-2 border-gray-200 focus:border-[#841b60] focus:ring-4 focus:ring-[#841b60]/10 outline-none transition-all duration-200 hover:border-gray-300 cursor-pointer"
+                >
+                  <option value="Inter">Inter (par défaut)</option>
+                  <option value="Poppins">Poppins</option>
+                  <option value="Roboto">Roboto</option>
+                  <option value="Open Sans">Open Sans</option>
+                  <option value="Montserrat">Montserrat</option>
+                  <option value="Lato">Lato</option>
+                  <option value="Playfair Display">Playfair Display</option>
+                  <option value="Georgia">Georgia</option>
+                </select>
+              </div>
+
+              {/* Taille de texte */}
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold text-gray-700">
+                  Taille du texte
+                </label>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="range"
+                    min="14"
+                    max="32"
+                    value={(question as any).fontSize || 18}
+                    onChange={(e) => onChange({ ...question, fontSize: parseInt(e.target.value) } as any)}
+                    className="flex-1"
+                  />
+                  <span className="text-sm font-semibold text-gray-700 w-12 text-right">
+                    {(question as any).fontSize || 18}px
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Section: Lien hypertexte */}
+          <div className="space-y-5 pt-8 border-t-2 border-gray-100">
+            <div className="flex items-center gap-2">
+              <div className="w-1 h-5 bg-[#841b60] rounded-full"></div>
+              <Link size={16} className="text-[#841b60]" />
+              <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">Lien hypertexte</h3>
+            </div>
+            
+            <div className="space-y-4">
+              {/* Texte du lien */}
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold text-gray-700">
+                  Texte du lien
+                </label>
+                <input
+                  type="text"
+                  value={(question as any).linkText || ''}
+                  onChange={(e) => onChange({ ...question, linkText: e.target.value } as any)}
+                  className="w-full px-4 py-3 bg-white text-gray-900 rounded-xl border-2 border-gray-200 focus:border-[#841b60] focus:ring-4 focus:ring-[#841b60]/10 outline-none transition-all duration-200 hover:border-gray-300"
+                  placeholder="En savoir plus"
+                />
+              </div>
+
+              {/* URL du lien */}
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold text-gray-700">
+                  URL du lien
+                </label>
+                <input
+                  type="url"
+                  value={(question as any).linkUrl || ''}
+                  onChange={(e) => onChange({ ...question, linkUrl: e.target.value } as any)}
+                  className="w-full px-4 py-3 bg-white text-gray-900 rounded-xl border-2 border-gray-200 focus:border-[#841b60] focus:ring-4 focus:ring-[#841b60]/10 outline-none transition-all duration-200 hover:border-gray-300"
+                  placeholder="https://exemple.com"
+                />
+              </div>
+            </div>
+          </div>
+
           {/* Section: Logique */}
           <div className="space-y-5 pt-8 border-t-2 border-gray-100">
             <div className="flex items-center gap-2">
               <div className="w-1 h-5 bg-[#841b60] rounded-full"></div>
               <GitBranch size={16} className="text-[#841b60]" />
-              <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">Logique</h3>
+              <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">Logique conditionnelle</h3>
             </div>
             
-            <div className="p-5 bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl border-2 border-gray-200">
-              <p className="text-sm text-gray-600 mb-4 leading-relaxed">
-                Configurez la logique conditionnelle pour cette question
-              </p>
-              <button
-                className="w-full px-5 py-3 bg-white hover:bg-[#841b60] text-[#841b60] hover:text-white border-2 border-[#841b60] rounded-xl transition-all duration-300 text-sm font-semibold flex items-center justify-center gap-2 shadow-sm hover:shadow-md hover:scale-[1.02] active:scale-[0.98]"
-                onClick={() => {
-                  // TODO: Ouvrir le panneau de logique
-                  alert('Fonctionnalité de logique conditionnelle à venir');
-                }}
-              >
-                <GitBranch size={18} />
-                Configurer la logique
-              </button>
-            </div>
+            {/* Règles de logique existantes */}
+            {question.logic && Object.keys(question.logic).length > 0 ? (
+              <div className="space-y-3">
+                {Object.entries(question.logic).map(([answer, nextQuestionId], index) => (
+                  <div 
+                    key={index}
+                    className="p-4 bg-white border-2 border-purple-200 rounded-xl hover:border-purple-300 transition-all group"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2 flex-1">
+                        <span className="text-xs font-semibold text-purple-600 bg-purple-100 px-2 py-1 rounded">SI</span>
+                        <span className="text-sm text-gray-700 font-medium truncate">"{answer}"</span>
+                      </div>
+                      <div className="text-purple-500">→</div>
+                      <div className="flex items-center gap-2 flex-1">
+                        <span className="text-xs font-semibold text-green-600 bg-green-100 px-2 py-1 rounded">ALLER À</span>
+                        <span className="text-sm text-gray-700 font-medium truncate">Q{nextQuestionId}</span>
+                      </div>
+                      <button
+                        onClick={() => {
+                          const newLogic = { ...question.logic };
+                          delete newLogic[answer];
+                          onChange({ ...question, logic: newLogic });
+                        }}
+                        className="opacity-0 group-hover:opacity-100 p-1 text-red-500 hover:bg-red-50 rounded transition-all"
+                        title="Supprimer"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="p-5 bg-gradient-to-br from-purple-50 to-blue-50 rounded-2xl border-2 border-purple-200">
+                <p className="text-sm text-gray-600 mb-3 leading-relaxed">
+                  Aucune règle de logique définie. Ajoutez des conditions pour diriger les utilisateurs vers différentes questions selon leurs réponses.
+                </p>
+              </div>
+            )}
+            
+            {/* Bouton ajouter une règle */}
+            <button
+              className="w-full px-5 py-3 bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white border-0 rounded-xl transition-all duration-300 text-sm font-semibold flex items-center justify-center gap-2 shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]"
+              onClick={() => {
+                // TODO: Ouvrir le modal d'ajout de règle
+                alert('Fonctionnalité d\'ajout de règle à venir\n\nVous pourrez définir:\n- Si réponse = X → aller à question Y\n- Si réponse contient Z → aller à question W\n- Etc.');
+              }}
+            >
+              <GitBranch size={18} />
+              Ajouter une règle
+            </button>
           </div>
         </div>
       </div>

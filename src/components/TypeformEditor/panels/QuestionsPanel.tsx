@@ -24,6 +24,25 @@ interface QuestionsPanelProps {
   onDesignChange?: (design: any) => void;
 }
 
+// Fonction pour obtenir l'icône par type de question
+const getQuestionIcon = (type: string) => {
+  const iconProps = { size: 16, className: "flex-shrink-0" };
+  switch (type) {
+    case 'text': return <Type {...iconProps} />;
+    case 'long-text': return <AlignLeft {...iconProps} />;
+    case 'email': return <Mail {...iconProps} />;
+    case 'phone': return <Phone {...iconProps} />;
+    case 'number': return <Hash {...iconProps} />;
+    case 'choice': return <List {...iconProps} />;
+    case 'multiple': return <CheckSquare {...iconProps} />;
+    case 'scale': return <BarChart3 {...iconProps} />;
+    case 'welcome': return <Sparkles {...iconProps} />;
+    case 'thankyou': return <CheckCircle2 {...iconProps} />;
+    case 'form': return <FileText {...iconProps} />;
+    default: return <Type {...iconProps} />;
+  }
+};
+
 const layoutOptions: { value: TypeformLayout; label: string }[] = [
   { value: 'centered-card', label: 'Carte centrée (par défaut)' },
   { value: 'split-left-text-right-image', label: 'Texte gauche / Image droite' },
@@ -489,106 +508,6 @@ export const QuestionsPanel: React.FC<QuestionsPanelProps> = ({
         onSelectTemplate={handleSelectTemplate}
       />
 
-      {/* Section Style Global */}
-      {onDesignChange && design && (
-        <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
-          <Accordion
-            title="Style global"
-            icon={<Palette size={16} className="text-[#841b60]" />}
-            defaultOpen={false}
-          >
-            <div className="space-y-3 pt-2">
-            {/* Couleur de fond */}
-            <div>
-              <label className="block text-xs text-gray-600 mb-1">
-                Couleur de fond
-              </label>
-              <div className="flex items-center gap-2">
-                <input
-                  type="color"
-                  value={design.backgroundColor || '#ffffff'}
-                  onChange={(e) => onDesignChange({ ...design, backgroundColor: e.target.value })}
-                  className="w-10 h-10 rounded border border-gray-300 cursor-pointer"
-                />
-                <input
-                  type="text"
-                  value={design.backgroundColor || '#ffffff'}
-                  onChange={(e) => onDesignChange({ ...design, backgroundColor: e.target.value })}
-                  className="flex-1 px-2 py-1.5 bg-white text-gray-900 rounded border border-gray-300 focus:border-[#841b60] outline-none text-xs"
-                />
-              </div>
-            </div>
-
-            {/* Couleur du texte */}
-            <div>
-              <label className="block text-xs text-gray-600 mb-1">
-                Couleur du texte
-              </label>
-              <div className="flex items-center gap-2">
-                <input
-                  type="color"
-                  value={design.textColor || '#000000'}
-                  onChange={(e) => onDesignChange({ ...design, textColor: e.target.value })}
-                  className="w-10 h-10 rounded border border-gray-300 cursor-pointer"
-                />
-                <input
-                  type="text"
-                  value={design.textColor || '#000000'}
-                  onChange={(e) => onDesignChange({ ...design, textColor: e.target.value })}
-                  className="flex-1 px-2 py-1.5 bg-white text-gray-900 rounded border border-gray-300 focus:border-[#841b60] outline-none text-xs"
-                />
-              </div>
-            </div>
-
-            {/* Couleur primaire */}
-            <div>
-              <label className="block text-xs text-gray-600 mb-1">
-                Couleur primaire (boutons)
-              </label>
-              <div className="flex items-center gap-2">
-                <input
-                  type="color"
-                  value={design.primaryColor || '#841b60'}
-                  onChange={(e) => onDesignChange({ ...design, primaryColor: e.target.value })}
-                  className="w-10 h-10 rounded border border-gray-300 cursor-pointer"
-                />
-                <input
-                  type="text"
-                  value={design.primaryColor || '#841b60'}
-                  onChange={(e) => onDesignChange({ ...design, primaryColor: e.target.value })}
-                  className="flex-1 px-2 py-1.5 bg-white text-gray-900 rounded border border-gray-300 focus:border-[#841b60] outline-none text-xs"
-                />
-              </div>
-            </div>
-
-            {/* Police de caractères */}
-            <div>
-              <label className="block text-xs text-gray-600 mb-1">
-                Police de caractères
-              </label>
-              <select
-                value={design.typeformFontFamily || 'Inter'}
-                onChange={(e) => onDesignChange({ ...design, typeformFontFamily: e.target.value })}
-                className="w-full px-2 py-1.5 bg-white text-gray-900 rounded border border-gray-300 focus:border-[#841b60] outline-none text-xs"
-              >
-                <option value="Inter">Inter (par défaut)</option>
-                <option value="Apercu Pro">Apercu Pro</option>
-                <option value="Roboto">Roboto</option>
-                <option value="Open Sans">Open Sans</option>
-                <option value="Lato">Lato</option>
-                <option value="Montserrat">Montserrat</option>
-                <option value="Poppins">Poppins</option>
-                <option value="Raleway">Raleway</option>
-                <option value="Playfair Display">Playfair Display</option>
-                <option value="Merriweather">Merriweather</option>
-                <option value="Cormorant Garamond">Cormorant Garamond</option>
-              </select>
-            </div>
-            </div>
-          </Accordion>
-        </div>
-      )}
-
       {/* Liste des questions */}
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
         {questions.length === 0 ? (
@@ -655,15 +574,30 @@ export const QuestionsPanel: React.FC<QuestionsPanelProps> = ({
                     <GripVertical size={18} />
                   </div>
 
-                  <div className="flex-1 flex items-start gap-2">
-                    <span className={`text-xs font-semibold px-2 py-1 rounded-full border flex-shrink-0 ${getQuestionBadgeColor(question.type)}`}>
-                      {question.type === 'welcome' 
-                        ? '🏁 Accueil' 
-                        : question.type === 'thankyou' 
-                        ? '🎉 Sortie' 
-                        : `Q${questions.indexOf(question)}`}
-                    </span>
-                    <span className="text-gray-900 font-medium whitespace-pre-wrap break-words">
+                  <div className="flex-1 flex items-start gap-3">
+                    {/* Numéro ou badge */}
+                    {question.type === 'welcome' || question.type === 'thankyou' ? (
+                      <span className={`text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 flex-shrink-0 ${
+                        question.type === 'welcome' 
+                          ? 'bg-green-100 text-green-700 border border-green-200' 
+                          : 'bg-blue-100 text-blue-700 border border-blue-200'
+                      }`}>
+                        {getQuestionIcon(question.type)}
+                        {question.type === 'welcome' ? 'Accueil' : 'Merci'}
+                      </span>
+                    ) : (
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <span className="w-7 h-7 rounded-lg bg-gray-100 text-gray-700 font-bold text-sm flex items-center justify-center border border-gray-200">
+                          {questions.filter(q => q.type !== 'welcome' && q.type !== 'thankyou').indexOf(question) + 1}
+                        </span>
+                        <span className="text-gray-500">
+                          {getQuestionIcon(question.type)}
+                        </span>
+                      </div>
+                    )}
+                    
+                    {/* Texte de la question */}
+                    <span className="text-gray-900 font-medium whitespace-pre-wrap break-words leading-relaxed">
                       {question.text}
                     </span>
                   </div>

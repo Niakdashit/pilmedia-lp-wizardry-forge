@@ -3935,6 +3935,72 @@ const handleSaveCampaignName = useCallback(async () => {
                     console.error('❌ Erreur lors de l\'émission de l\'événement quizStyleUpdate (mobileWidth):', error);
                   }
                 }}
+                // Gestion de la couleur de fond du canvas
+                onBackgroundColorChange={(color) => {
+                  console.log('🎨 [DesignEditorLayout] Changement couleur de fond:', color);
+                  
+                  // Mettre à jour screenBackgrounds pour l'écran actuel avec la structure correcte
+                  setScreenBackgrounds((prev) => ({
+                    ...prev,
+                    [currentScreen]: {
+                      type: 'color',
+                      value: color,
+                      devices: {
+                        desktop: { type: 'color', value: color },
+                        tablet: { type: 'color', value: color },
+                        mobile: { type: 'color', value: color }
+                      }
+                    }
+                  }));
+                  
+                  // Mettre à jour la campagne globale (supprimer backgroundImage et gradient)
+                  setCampaign((prev: any) => {
+                    if (!prev) return prev;
+                    const updatedDesign = { ...(prev.design || {}) };
+                    
+                    // Supprimer les images/gradients de fond
+                    delete updatedDesign.backgroundImage;
+                    delete updatedDesign.mobileBackgroundImage;
+                    delete updatedDesign.backgroundGradient;
+                    
+                    // Appliquer la couleur
+                    updatedDesign.backgroundColor = color;
+                    
+                    return {
+                      ...prev,
+                      name: prev.name || 'Campaign',
+                      design: updatedDesign,
+                      _lastUpdate: Date.now()
+                    };
+                  });
+                  
+                  // Mettre à jour campaignConfig (supprimer gradient/image)
+                  setCampaignConfig((prev: any) => {
+                    const updatedDesign = { ...(prev.design || {}) };
+                    
+                    // Supprimer les images/gradients de fond
+                    delete updatedDesign.backgroundImage;
+                    delete updatedDesign.mobileBackgroundImage;
+                    delete updatedDesign.backgroundGradient;
+                    
+                    // Appliquer la couleur
+                    updatedDesign.backgroundColor = color;
+                    
+                    return {
+                      ...prev,
+                      design: updatedDesign
+                    };
+                  });
+                  
+                  // Émettre un événement pour synchroniser avec TemplatedQuiz
+                  const event = new CustomEvent('quizStyleUpdate', {
+                    detail: { backgroundColor: color }
+                  });
+                  window.dispatchEvent(event);
+                  
+                  // Forcer le re-render du preview
+                  setBackgroundUpdateTrigger(prev => prev + 1);
+                }}
                 // Gestion des couleurs des boutons
                 onButtonBackgroundColorChange={(color) => {
                   setQuizConfig(prev => ({

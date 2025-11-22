@@ -17,6 +17,49 @@ export interface TypeformTemplate {
 
 export const typeformTemplates: TypeformTemplate[] = [
   {
+    id: 'picture-choice-demo',
+    name: 'Picture Choice Demo',
+    description: 'Beautiful picture choice questions with Typeform-style layout',
+    category: 'demo',
+    theme: {
+      backgroundColor: '#FFF5E6',
+      textColor: '#1F2937',
+      primaryColor: '#F59E0B',
+      fontFamily: 'Inter, sans-serif',
+    },
+    questions: [
+      {
+        id: 'welcome',
+        type: 'welcome',
+        text: 'Bienvenue à notre formulaire',
+        description: 'Cela ne prendra que quelques minutes',
+        required: false,
+        layout: 'centered-card',
+        fontFamily: 'Inter, sans-serif',
+        fontSize: 'xlarge',
+      },
+      {
+        id: 'q1',
+        type: 'choice',
+        text: 'Your question here. Recall information with @',
+        description: 'Description (optional)',
+        required: true,
+        options: ['A', 'B', 'C'],
+        layout: 'cards-grid',
+        fontFamily: 'Inter, sans-serif',
+        fontSize: 'large',
+      },
+      {
+        id: 'thankyou',
+        type: 'thankyou',
+        text: 'Merci pour votre participation !',
+        description: 'Vos réponses ont été enregistrées',
+        required: false,
+        layout: 'centered-card',
+      },
+    ],
+  },
+  {
     id: 'customer-feedback',
     name: 'Customer Feedback',
     description: 'Collect valuable feedback from your customers',

@@ -20,38 +20,77 @@ export const TemplateModal: React.FC<TemplateModalProps> = ({
   onClose,
   onSelectTemplate,
 }) => {
+  const [activeTab, setActiveTab] = React.useState<'templates' | 'import' | 'ai'>('templates');
+  
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      {/* Overlay */}
+    <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
+      {/* Overlay transparent (juste pour fermer au clic) */}
       <div
-        className="absolute inset-0 bg-black bg-opacity-50"
+        className="absolute inset-0 pointer-events-auto"
         onClick={onClose}
       />
 
       {/* Modal */}
-      <div className="relative bg-white rounded-2xl shadow-2xl max-w-4xl w-full mx-4 max-h-[80vh] overflow-hidden">
+      <div className="relative bg-white rounded-2xl shadow-2xl max-w-5xl w-full mx-4 max-h-[85vh] overflow-hidden pointer-events-auto">
         {/* Header */}
-        <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900">Choose a Template</h2>
-            <p className="text-sm text-gray-500 mt-1">
-              Start with a pre-built form and customize it to your needs
-            </p>
+        <div className="px-6 py-5 border-b border-gray-200">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900">Ajouter des questions</h2>
+              <p className="text-sm text-gray-500 mt-1">
+                Choisissez un template ou créez vos questions
+              </p>
+            </div>
+            <button
+              onClick={onClose}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              <X size={24} className="text-gray-500" />
+            </button>
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-          >
-            <X size={24} className="text-gray-500" />
-          </button>
+          
+          {/* Tabs */}
+          <div className="flex gap-2 border-b border-gray-200 -mb-px">
+            <button
+              onClick={() => setActiveTab('templates')}
+              className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 ${
+                activeTab === 'templates'
+                  ? 'text-[#841b60] border-[#841b60]'
+                  : 'text-gray-500 border-transparent hover:text-gray-700'
+              }`}
+            >
+              Templates
+            </button>
+            <button
+              onClick={() => setActiveTab('import')}
+              className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 ${
+                activeTab === 'import'
+                  ? 'text-[#841b60] border-[#841b60]'
+                  : 'text-gray-500 border-transparent hover:text-gray-700'
+              }`}
+            >
+              Importer des questions
+            </button>
+            <button
+              onClick={() => setActiveTab('ai')}
+              className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 ${
+                activeTab === 'ai'
+                  ? 'text-[#841b60] border-[#841b60]'
+                  : 'text-gray-500 border-transparent hover:text-gray-700'
+              }`}
+            >
+              Créer avec l'IA
+            </button>
+          </div>
         </div>
 
-        {/* Templates Grid */}
-        <div className="p-6 overflow-y-auto max-h-[calc(80vh-120px)]">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {typeformTemplates.map((template) => {
+        {/* Content */}
+        <div className="p-6 overflow-y-auto max-h-[calc(85vh-180px)]">
+          {activeTab === 'templates' && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {typeformTemplates.map((template) => {
               // Choisir l'aperçu : thumbnail explicite > image de la première question welcome > rien
               const welcomeQuestion = template.questions.find((q) => q.type === 'welcome');
               const previewImage = template.thumbnail || welcomeQuestion?.imageUrl;
@@ -103,7 +142,54 @@ export const TemplateModal: React.FC<TemplateModalProps> = ({
                 <div className="absolute inset-0 border-2 border-transparent group-hover:border-[#841b60] rounded-xl pointer-events-none transition-all" />
               </button>
             );})}
-          </div>
+            </div>
+          )}
+          
+          {activeTab === 'import' && (
+            <div className="flex flex-col items-center justify-center py-16 px-4">
+              <div className="text-center max-w-md">
+                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <FileText size={32} className="text-gray-400" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  Importer des questions
+                </h3>
+                <p className="text-sm text-gray-500 mb-6">
+                  Copiez et collez vos questions ou importez depuis Google Forms
+                </p>
+                <textarea
+                  placeholder="Collez vos questions ici, une par ligne..."
+                  className="w-full h-32 px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#841b60] focus:ring-4 focus:ring-[#841b60]/10 outline-none resize-none"
+                />
+                <button className="mt-4 px-6 py-2 bg-[#841b60] text-white rounded-lg hover:bg-[#6d1650] transition-colors">
+                  Importer
+                </button>
+              </div>
+            </div>
+          )}
+          
+          {activeTab === 'ai' && (
+            <div className="flex flex-col items-center justify-center py-16 px-4">
+              <div className="text-center max-w-md">
+                <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span className="text-2xl">✨</span>
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  Créer avec l'IA
+                </h3>
+                <p className="text-sm text-gray-500 mb-6">
+                  Décrivez votre formulaire et l'IA générera les questions pour vous
+                </p>
+                <textarea
+                  placeholder="Ex: Je veux créer un formulaire de satisfaction client avec des questions sur le produit, le service et la livraison..."
+                  className="w-full h-32 px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#841b60] focus:ring-4 focus:ring-[#841b60]/10 outline-none resize-none"
+                />
+                <button className="mt-4 px-6 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:shadow-lg transition-all">
+                  Générer avec l'IA
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Footer */}
