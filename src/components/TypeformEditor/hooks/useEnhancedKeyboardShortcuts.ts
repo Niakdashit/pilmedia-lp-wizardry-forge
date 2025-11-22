@@ -57,7 +57,6 @@ export const useEnhancedKeyboardShortcuts = ({
     const isModifierPressed = isMac() ? metaKey : ctrlKey;
     
     // Debug amélioré
-    console.log('🎹 Enhanced keyboard event:', {
       key: key,
       code,
       ctrlKey,
@@ -74,13 +73,11 @@ export const useEnhancedKeyboardShortcuts = ({
     if ((target as Element)?.tagName === 'INPUT' || 
         (target as Element)?.tagName === 'TEXTAREA' ||
         (target as HTMLElement)?.contentEditable === 'true') {
-      console.log('🎹 Ignoring - typing in input field');
       return;
     }
 
     // Alt+A (Option+A on Mac): select all canvas elements
     if (altKey && (key.toLowerCase() === 'a' || code === 'KeyA')) {
-      console.log('🎹 Alt+A: Selecting all canvas elements');
       event.preventDefault();
       onSelectAll?.();
       return;
@@ -91,7 +88,6 @@ export const useEnhancedKeyboardShortcuts = ({
       // Sauvegarde rapide
       case 's':
         if (isModifierPressed) {
-          console.log('🎹 Save shortcut triggered!');
           event.preventDefault();
           onSave?.();
         }
@@ -100,7 +96,6 @@ export const useEnhancedKeyboardShortcuts = ({
       // Prévisualisation
       case 'p':
         if (isModifierPressed) {
-          console.log('🎹 Preview shortcut triggered!');
           event.preventDefault();
           onPreview?.();
         }
@@ -109,7 +104,6 @@ export const useEnhancedKeyboardShortcuts = ({
       // Annuler/Rétablir
       case 'z':
         if (isModifierPressed) {
-          console.log('🎹 Undo/Redo shortcut triggered!', { shiftKey });
           event.preventDefault();
           if (shiftKey) {
             onRedo?.();
@@ -121,7 +115,6 @@ export const useEnhancedKeyboardShortcuts = ({
 
       case 'y':
         if (isModifierPressed) {
-          console.log('🎹 Redo shortcut triggered!');
           event.preventDefault();
           onRedo?.();
         }
@@ -130,7 +123,6 @@ export const useEnhancedKeyboardShortcuts = ({
       // Ajouter du texte rapidement
       case 't':
         if (isModifierPressed) {
-          console.log('🎹 Add text shortcut triggered!');
           event.preventDefault();
           // Position au centre du canvas visible
           const canvas = canvasRef.current;
@@ -146,7 +138,6 @@ export const useEnhancedKeyboardShortcuts = ({
       // Dupliquer l'élément sélectionné
       case 'd':
         if (isModifierPressed && selectedElementId) {
-          console.log('🎹 Duplicate shortcut triggered!');
           event.preventDefault();
           onDuplicate?.();
         }
@@ -155,7 +146,6 @@ export const useEnhancedKeyboardShortcuts = ({
       // Sélectionner tout (Cmd/Ctrl+A) pour les éléments du canvas
       case 'a':
         if (isModifierPressed) {
-          console.log('🎹 Ctrl/Cmd+A: Selecting all canvas elements');
           event.preventDefault();
           onSelectAll?.();
         }
@@ -163,7 +153,6 @@ export const useEnhancedKeyboardShortcuts = ({
 
       // Désélectionner tout
       case 'escape':
-        console.log('🎹 Escape shortcut triggered!');
         event.preventDefault();
         handleDeselectAll();
         break;
@@ -172,7 +161,6 @@ export const useEnhancedKeyboardShortcuts = ({
       case 'delete':
       case 'backspace':
         if (selectedElementId) {
-          console.log('🎹 Delete shortcut triggered!');
           event.preventDefault();
           setCampaign((prev: any) => {
             const customTexts = { ...prev.design?.customTexts };
@@ -201,7 +189,6 @@ export const useEnhancedKeyboardShortcuts = ({
       // Basculer la grille
       case 'g':
         if (!isModifierPressed) {
-          console.log('🎹 Toggle grid shortcut triggered!');
           event.preventDefault();
           setShowGridLines(!showGridLines);
         }
@@ -211,7 +198,6 @@ export const useEnhancedKeyboardShortcuts = ({
       case '=':
       case '+':
         if (isModifierPressed) {
-          console.log('🎹 Zoom in shortcut triggered!');
           event.preventDefault();
           onZoomIn?.();
         }
@@ -219,7 +205,6 @@ export const useEnhancedKeyboardShortcuts = ({
 
       case '-':
         if (isModifierPressed) {
-          console.log('🎹 Zoom out shortcut triggered!');
           event.preventDefault();
           onZoomOut?.();
         }
@@ -227,7 +212,6 @@ export const useEnhancedKeyboardShortcuts = ({
 
       case '0':
         if (isModifierPressed) {
-          console.log('🎹 Zoom reset shortcut triggered!');
           event.preventDefault();
           onZoomReset?.();
         }
@@ -235,7 +219,6 @@ export const useEnhancedKeyboardShortcuts = ({
 
       case '1':
         if (isModifierPressed) {
-          console.log('🎹 Zoom fit shortcut triggered!');
           event.preventDefault();
           onZoomFit?.();
         }
@@ -243,21 +226,18 @@ export const useEnhancedKeyboardShortcuts = ({
 
       // Mode plein écran
       case 'f11':
-        console.log('🎹 Fullscreen shortcut triggered!');
         event.preventDefault();
         onToggleFullscreen?.();
         break;
 
       // Aide
       case 'f1':
-        console.log('🎹 Help shortcut triggered!');
         event.preventDefault();
         // Déclencher l'aide des raccourcis clavier
         break;
 
       case '/':
         if (isModifierPressed && shiftKey) {
-          console.log('🎹 Help shortcut triggered! (Ctrl+?)');
           event.preventDefault();
           // Déclencher l'aide des raccourcis clavier
         }
@@ -292,7 +272,6 @@ export const useEnhancedKeyboardShortcuts = ({
 
     // Vérifier que le double-clic est sur le canvas lui-même, pas sur un élément
     if (event.target === canvas) {
-      console.log('🎹 Double-click add text triggered!');
       const rect = canvas.getBoundingClientRect();
       const x = event.clientX - rect.left;
       const y = event.clientY - rect.top;
@@ -310,7 +289,6 @@ export const useEnhancedKeyboardShortcuts = ({
     // Maintenir le focus sur le canvas pour les raccourcis clavier
     if (event.target === canvas) {
       canvas.focus();
-      console.log('🎹 Canvas focused for keyboard shortcuts');
     }
   }, [canvasRef]);
 
@@ -319,7 +297,6 @@ export const useEnhancedKeyboardShortcuts = ({
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    console.log('🎹 Setting up enhanced keyboard shortcuts');
 
     // Écouteurs globaux
     document.addEventListener('keydown', handleKeyDown);
@@ -337,14 +314,12 @@ export const useEnhancedKeyboardShortcuts = ({
     // Focus initial
     const focusCanvas = () => {
       canvas.focus();
-      console.log('🎹 Canvas auto-focused for shortcuts');
     };
     
     focusCanvas();
     const timer = setTimeout(focusCanvas, 100);
 
     return () => {
-      console.log('🎹 Cleaning up enhanced keyboard shortcuts');
       document.removeEventListener('keydown', handleKeyDown);
       canvas.removeEventListener('dblclick', handleDoubleClick);
       canvas.removeEventListener('click', handleCanvasClick);

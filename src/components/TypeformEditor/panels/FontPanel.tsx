@@ -20,7 +20,6 @@ const FontPanel: React.FC<FontPanelProps> = ({
     selectedElement.elementType === 'text'
   );
 
-  console.log('🎨 FontPanel render:', {
     isTextSelected,
     selectedElementType: selectedElement?.type,
     hasOnElementUpdate: !!onElementUpdate,
@@ -95,7 +94,6 @@ const FontPanel: React.FC<FontPanelProps> = ({
                   type="button"
                   onClick={() => {
                     if (!disabled) {
-                      console.log('🎨 Applying font:', font, 'to element:', selectedElement?.id);
                       onElementUpdate?.({ fontFamily: font });
                     }
                   }}

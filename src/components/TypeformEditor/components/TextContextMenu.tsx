@@ -71,7 +71,6 @@ const TextContextMenu: React.FC<TextContextMenuProps> = ({
     e.preventDefault();
     e.stopPropagation();
     
-    console.log('🖱️ Right-click detected on element:', element.id, 'at position:', e.clientX, e.clientY);
     
     setContextMenu({
       isOpen: true,

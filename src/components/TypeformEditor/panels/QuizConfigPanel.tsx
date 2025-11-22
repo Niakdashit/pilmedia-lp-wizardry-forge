@@ -615,12 +615,10 @@ const QuizConfigPanel: React.FC<QuizConfigPanelProps> = ({
                       style={{
                         background: 'linear-gradient(135deg, #44444d 0%, #a21d6b 100%)',
                         width: `${(() => {
-                          console.log('🎨 Track fill calculation - quizMobileWidth:', quizMobileWidth);
                           if (quizMobileWidth === '100%' || quizMobileWidth === 'auto') return ((1 - 0.3) / (1.5 - 0.3)) * 100; // 1.0 scale midpoint
                           const numValue = parseInt(quizMobileWidth.replace(/px|%/, ''));
                           const scale = isNaN(numValue) || mobileWidthValue <= 0 ? 1 : numValue / mobileWidthValue;
                           const percentage = ((scale - 0.3) / (1.5 - 0.3)) * 100;
-                          console.log('🎨 Track fill - numValue:', numValue, 'scale:', scale, 'percentage:', percentage);
                           return percentage;
                         })()}%`
                       }}

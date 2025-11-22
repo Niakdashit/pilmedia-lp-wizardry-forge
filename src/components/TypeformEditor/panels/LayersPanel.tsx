@@ -453,7 +453,6 @@ const CustomDragPreview: React.FC = () => {
     const isVisible = layer.visible !== false; // Default to true if undefined
     const isLocked = layer.locked === true; // Default to false if undefined
     
-    console.log('🔍 LayerRow render:', {
       id: layer.id,
       name: layer.name,
       type: layer.type,
@@ -862,7 +861,6 @@ const CustomDragPreview: React.FC = () => {
           <button
             className="w-full text-left px-2.5 py-1 text-[11px] hover:bg-gray-100 whitespace-nowrap"
             onClick={() => {
-              console.log('⬆️ LayersPanel bringForward called for:', contextMenu.target);
               bringForward(contextMenu.target);
               setContextMenu(null);
             }}
@@ -872,7 +870,6 @@ const CustomDragPreview: React.FC = () => {
           <button
             className="w-full text-left px-2.5 py-1 text-[11px] hover:bg-gray-100 whitespace-nowrap"
             onClick={() => {
-              console.log('⬇️ LayersPanel sendBackward called for:', contextMenu.target);
               sendBackward(contextMenu.target);
               setContextMenu(null);
             }}

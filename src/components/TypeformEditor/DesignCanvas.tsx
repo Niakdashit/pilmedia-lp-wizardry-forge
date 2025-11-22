@@ -2261,7 +2261,6 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
       onBackgroundChange?.(defaultBackground);
       // Optionnel: réinitialiser les couleurs extraites car il n'y a plus d'image
       onExtractedColorsChange?.([]);
-      console.log("🧹 Arrière-plan supprimé -> retour au dégradé par défaut");
     }
   }, [background, onBackgroundChange, onExtractedColorsChange]);
   const selectedElementData = selectedElement ? elementById.get(selectedElement) ?? null : null;

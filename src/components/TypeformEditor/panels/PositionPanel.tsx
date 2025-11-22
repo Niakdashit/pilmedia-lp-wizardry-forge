@@ -104,7 +104,6 @@ const PositionPanel: React.FC<PositionPanelProps> = ({
 
   const alignToLeft = () => {
     if (onElementUpdate && selectedElement) {
-      console.log('⬅️ ALIGN TO LEFT - Positioning at x = 0');
       onElementUpdate({ x: 0 });
     }
   };
@@ -115,7 +114,6 @@ const PositionPanel: React.FC<PositionPanelProps> = ({
       const { width: elementWidth } = getElementDimensions();
       const newX = canvasWidth - elementWidth;
       
-      console.log('➡️ ALIGN TO RIGHT - EXACT POSITIONING:', { 
         canvasWidth, 
         elementWidth, 
         calculatedX: newX,
@@ -131,7 +129,6 @@ const PositionPanel: React.FC<PositionPanelProps> = ({
       
       // Vérification immédiate
       setTimeout(() => {
-        console.log('✅ RIGHT ALIGNMENT APPLIED - Element should now be at x =', newX);
       }, 50);
     }
   };

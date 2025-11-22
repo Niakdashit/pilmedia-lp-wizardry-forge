@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, FileText, Users, ClipboardList, Calendar } from 'lucide-react';
+import { X, FileText, Users, ClipboardList, Calendar, Briefcase } from 'lucide-react';
 import { TypeformTemplate, typeformTemplates } from '../templates/typeformTemplates';
 
 interface TemplateModalProps {
@@ -10,7 +10,7 @@ interface TemplateModalProps {
 
 const categoryIcons: Record<string, React.ReactNode> = {
   feedback: <ClipboardList size={20} />,
-  contact: <FileText size={20} />,
+  contact: <Briefcase size={20} />,
   survey: <Users size={20} />,
   registration: <Calendar size={20} />,
 };
@@ -51,7 +51,12 @@ export const TemplateModal: React.FC<TemplateModalProps> = ({
         {/* Templates Grid */}
         <div className="p-6 overflow-y-auto max-h-[calc(80vh-120px)]">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {typeformTemplates.map((template) => (
+            {typeformTemplates.map((template) => {
+              // Choisir l'aperçu : thumbnail explicite > image de la première question welcome > rien
+              const welcomeQuestion = template.questions.find((q) => q.type === 'welcome');
+              const previewImage = template.thumbnail || welcomeQuestion?.imageUrl;
+
+              return (
               <button
                 key={template.id}
                 onClick={() => {
@@ -61,10 +66,10 @@ export const TemplateModal: React.FC<TemplateModalProps> = ({
                 className="group relative bg-white border-2 border-gray-200 rounded-xl p-6 text-left hover:border-[#841b60] hover:shadow-lg transition-all"
               >
                 {/* Thumbnail */}
-                {template.thumbnail && (
+                {previewImage && (
                   <div className="mb-4 rounded-lg overflow-hidden h-32 bg-gray-100">
                     <img
-                      src={template.thumbnail}
+                      src={previewImage}
                       alt={template.name}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
@@ -97,7 +102,7 @@ export const TemplateModal: React.FC<TemplateModalProps> = ({
                 {/* Hover Effect */}
                 <div className="absolute inset-0 border-2 border-transparent group-hover:border-[#841b60] rounded-xl pointer-events-none transition-all" />
               </button>
-            ))}
+            );})}
           </div>
         </div>
 

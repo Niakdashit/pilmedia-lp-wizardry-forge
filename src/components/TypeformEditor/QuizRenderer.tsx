@@ -109,7 +109,6 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
   }, [deviceScale]);
 
   const renderModule = (m: Module) => {
-    console.log('🔍 [QuizRenderer] renderModule called for:', { id: m.id, type: m.type });
     
     const commonStyle: React.CSSProperties = {
       background: m.backgroundColor,
@@ -417,7 +416,6 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
       
       // Si en preview et qu'il y a un callback, c'est un bouton dans une carte, on le rend
       if (previewMode && !onButtonClick) {
-        console.log('⚠️ [QuizRenderer] BlocBouton NOT rendered - no onButtonClick in preview mode');
         return null;
       }
       
@@ -437,10 +435,8 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
               });
               e.preventDefault();
               if (previewMode && onButtonClick) {
-                console.log('✅ [QuizRenderer] Calling onButtonClick callback');
                 onButtonClick();
               } else {
-                console.log('⚠️ [QuizRenderer] onButtonClick not called:', { previewMode, hasCallback: !!onButtonClick });
               }
             }}
             className={`inline-flex items-center justify-center px-6 py-3 text-sm transition-transform hover:-translate-y-[1px] ${((buttonModule as any).uppercase) ? 'uppercase' : ''} ${((buttonModule as any).bold) ? 'font-bold' : 'font-semibold'}`}
@@ -607,7 +603,6 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
           onClick={() => {
             console.log('🎯 [QuizModuleRenderer] Logo onClick triggered!', { previewMode, moduleId: m.id });
             if (!previewMode) {
-              console.log('✅ [QuizModuleRenderer] Calling onModuleClick for logo');
               onModuleClick?.(m.id);
             }
           }}

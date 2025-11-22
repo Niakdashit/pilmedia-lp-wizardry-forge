@@ -384,9 +384,33 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
   }, [setCampaign]);
   
   // Initialiser l'onglet actif en fonction du mode : 'design' pour article, 'background' pour fullscreen
-  const [internalActiveTab, setInternalActiveTab] = useState<string | null>(
-    editorMode === 'article' ? 'design' : 'background'
-  );
+  const [internalActiveTab, setInternalActiveTab] = useState<string | null>(activeTab || 'design');
+
+  // Ouvrir la modale Templates depuis le bouton Templates de la preview vide
+  useEffect(() => {
+    const handleOpenTemplatesFromPreview = () => {
+      // Forcer l'onglet Questions
+      const targetTab = 'questions';
+      setInternalActiveTab(targetTab);
+      onActiveTabChange?.(targetTab);
+
+      // Une fois QuestionsPanel monté, réémettre l'event interne qui ouvre réellement la modale
+      setTimeout(() => {
+        try {
+          const evt = new CustomEvent('typeform-open-templates');
+          window.dispatchEvent(evt);
+        } catch (e) {
+          console.error('Erreur lors de l\'émission de typeform-open-templates', e);
+        }
+      }, 50);
+    };
+
+    window.addEventListener('typeform-open-templates-from-preview', handleOpenTemplatesFromPreview);
+    return () => {
+      window.removeEventListener('typeform-open-templates-from-preview', handleOpenTemplatesFromPreview);
+    };
+  }, [onActiveTabChange]);
+
   // Flag to indicate a deliberate user tab switch to avoid auto-switch overrides
   const isUserTabSwitchingRef = React.useRef(false);
   // Short-lived guard to ignore external setActiveTab calls (e.g. onOpenElementsTab) after manual tab switch
@@ -1070,15 +1094,34 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
             }}
             onOpenProsplayAI={() => setShowProsplayAI(true)}
             onApplyTemplate={(template) => {
-              // Appliquer les questions ET le thème du template
+              // Appliquer les questions ET le thème du template (SAUF backgroundColor qui reste celle du canvas)
+              const isLeadGenTemplate = template.id === 'lead-generation';
+              
               setCampaign({
                 ...campaign,
                 typeformQuestions: template.questions,
                 design: {
                   ...(campaign?.design || {}),
+                  // Initialiser la couleur de fond globale avec celle du template si elle existe,
+                  // sinon garder l'actuelle. L'utilisateur peut toujours la changer ensuite dans "Style global".
                   backgroundColor: template.theme?.backgroundColor || campaign?.design?.backgroundColor || '#ffffff',
                   textColor: template.theme?.textColor || campaign?.design?.textColor || '#000000',
                   primaryColor: template.theme?.primaryColor || campaign?.design?.primaryColor || '#841b60',
+                  typeformFontFamily: template.theme?.fontFamily || campaign?.design?.typeformFontFamily || 'Inter, sans-serif',
+                  // Activer le branding pour le template Lead Generation
+                  showBranding: isLeadGenTemplate || campaign?.design?.showBranding || false,
+                  brandTitle: isLeadGenTemplate ? 'Jones&Partners' : campaign?.design?.brandTitle,
+                  brandLogoUrl: campaign?.design?.brandLogoUrl,
+                },
+              });
+            }}
+            design={campaign?.design}
+            onDesignChange={(newDesign) => {
+              setCampaign({
+                ...campaign,
+                design: {
+                  ...(campaign?.design || {}),
+                  ...newDesign,
                 },
               });
             }}

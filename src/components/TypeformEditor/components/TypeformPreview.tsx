@@ -1,13 +1,35 @@
 import React, { useState } from 'react';
 import { ChevronRight, ChevronLeft, Check } from 'lucide-react';
+import { PhoneInput } from './PhoneInput';
 
 export type TypeformLayout =
   | 'centered-card'
   | 'split-left-text-right-image'
   | 'split-left-image-right-text'
+  | 'split-left-text-right-image-card'
   | 'scale-horizontal'
   | 'cards-grid'
   | 'fullwidth-input';
+
+export type NavVariant = 'icon-circle' | 'pill-label';
+export type ButtonStyle = 'solid' | 'outline' | 'gradient' | 'glass';
+
+export interface SubField {
+  id: string;
+  label: string; // Label du champ (affiché au-dessus de l'input)
+  title?: string; // Titre principal du champ (optionnel, plus grand que le label)
+  placeholder?: string;
+  type?: 'text' | 'email' | 'phone' | 'number';
+  required?: boolean;
+  width?: 'full' | 'half' | 'third';
+}
+
+export interface PhoneCountry {
+  code: string;
+  label: string;
+  flag: string;
+  dialCode: string;
+}
 
 export interface TypeformQuestion {
   id: string;
@@ -21,7 +43,8 @@ export interface TypeformQuestion {
     | 'scale'
     | 'long-text'
     | 'welcome'
-    | 'thankyou';
+    | 'thankyou'
+    | 'form'; // Nouveau type pour formulaire multi-champs sur une seule page
   text: string;
   description?: string;
   required?: boolean;
@@ -47,6 +70,58 @@ export interface TypeformQuestion {
   // Typographie personnalisée
   fontFamily?: string; // Google Font name
   fontSize?: 'small' | 'medium' | 'large' | 'xlarge';
+  // Navigation et boutons personnalisés
+  ctaLabel?: string; // Label du bouton (ex: "Submit inquiry", "OK", "Start")
+  navVariant?: NavVariant; // Style de navigation
+  buttonStyle?: ButtonStyle; // Style du bouton
+  // Multi-champs (ex: first name + last name)
+  subFields?: SubField[];
+  // Téléphone international
+  phoneCountry?: PhoneCountry;
+  // Logique conditionnelle avancée
+  conditionalLogic?: {
+    field: string;
+    operator: 'equals' | 'contains' | 'greater' | 'less';
+    value: any;
+    action: 'show' | 'hide' | 'jump';
+    target?: string;
+  }[];
+  // Styles personnalisés pour cloner des designs exacts
+  customStyles?: {
+    // Styles des boutons/cartes de choix
+    optionCardWidth?: string; // ex: "180px", "auto"
+    optionCardHeight?: string; // ex: "80px", "auto"
+    optionCardBorderRadius?: string; // ex: "12px", "24px"
+    optionCardBorder?: string; // ex: "1px solid #E5E7EB"
+    optionCardPadding?: string; // ex: "16px 24px"
+    optionCardGap?: string; // ex: "12px" (espace entre les cartes)
+    optionCardHoverBg?: string; // Couleur au survol
+    optionCardSelectedBg?: string; // Couleur quand sélectionné
+    optionCardSelectedBorder?: string; // Bordure quand sélectionné
+    // Styles du texte dans les options
+    optionTextSize?: string; // ex: "16px", "14px"
+    optionTextWeight?: string; // ex: "500", "600"
+    optionTextColor?: string; // ex: "#20375D"
+    // Styles des boutons d'action (Suivant, Précédent)
+    buttonBorderRadius?: string; // ex: "24px", "8px"
+    buttonPadding?: string; // ex: "12px 24px"
+    buttonFontSize?: string; // ex: "16px"
+    buttonFontWeight?: string; // ex: "600"
+    // Header personnalisé
+    showCustomHeader?: boolean;
+    headerLogoUrl?: string;
+    headerTitle?: string;
+    headerSubtitle?: string;
+    headerBgColor?: string;
+    // Footer personnalisé
+    showCustomFooter?: boolean;
+    footerItems?: Array<{
+      icon?: string;
+      title: string;
+      description: string;
+    }>;
+    footerBgColor?: string;
+  };
 }
 
 interface TypeformPreviewProps {
@@ -63,6 +138,10 @@ interface TypeformPreviewProps {
     medium: string;
     light: string;
   };
+  // Branding persistant
+  brandTitle?: string;
+  brandLogoUrl?: string;
+  showBranding?: boolean;
 }
 
 export const TypeformPreview: React.FC<TypeformPreviewProps> = ({
@@ -74,7 +153,10 @@ export const TypeformPreview: React.FC<TypeformPreviewProps> = ({
   primaryColor = '#841b60',
   device = 'desktop',
   fontFamily = 'Inter, sans-serif',
-  colorShades
+  colorShades,
+  brandTitle,
+  brandLogoUrl,
+  showBranding = false
 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, any>>({});
@@ -84,15 +166,22 @@ export const TypeformPreview: React.FC<TypeformPreviewProps> = ({
   const [transitionDirection, setTransitionDirection] = useState<'forward' | 'backward'>('forward');
   const [validationError, setValidationError] = useState<string>('');
   const [touched, setTouched] = useState(false);
+  // Erreurs de validation par champ pour les formulaires
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>({});
+  // Historique de navigation pour gérer le bouton Précédent avec la logique conditionnelle
+  const [navigationHistory, setNavigationHistory] = useState<number[]>([0]);
   // Layout de prévisualisation quand il n'y a aucune question
   const [emptyPreviewLayout, setEmptyPreviewLayout] = useState<TypeformLayout>('centered-card');
 
   const currentQuestion = questions[currentIndex];
   const currentLayout: TypeformLayout = currentQuestion?.layout || 'centered-card';
   const isWelcomeCard = currentQuestion?.type === 'welcome';
+  const isThankyouCard = currentQuestion?.type === 'thankyou';
   const isSplitLayout =
     currentLayout === 'split-left-text-right-image' ||
-    currentLayout === 'split-left-image-right-text';
+    currentLayout === 'split-left-image-right-text' ||
+    currentLayout === 'split-left-text-right-image-card';
 
   // Générer les teintes si non fournies
   const generateColorShades = (baseColor: string) => {
@@ -152,10 +241,51 @@ export const TypeformPreview: React.FC<TypeformPreviewProps> = ({
 
   const shades = colorShades || generateColorShades(primaryColor);
 
+  // Fonctions de validation avancée
+  const validateEmail = (email: string): string => {
+    if (!email) return '';
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return 'Adresse email invalide';
+    }
+    return '';
+  };
+
+  const validatePhone = (phone: string): string => {
+    if (!phone) return '';
+    // Enlever tous les caractères non numériques sauf le +
+    const cleanPhone = phone.replace(/[^\d+]/g, '');
+    // Vérifier qu'il y a au moins 10 chiffres
+    const digitsOnly = cleanPhone.replace(/\+/g, '');
+    if (digitsOnly.length < 10) {
+      return 'Numéro de téléphone invalide (minimum 10 chiffres)';
+    }
+    return '';
+  };
+
+  const validateSubField = (value: string, subField: any): string => {
+    // Champ requis
+    if (subField.required && (!value || value.trim() === '')) {
+      return `${subField.label || 'Ce champ'} est requis`;
+    }
+    
+    // Validation spécifique par type
+    if (value && value.trim() !== '') {
+      if (subField.type === 'email') {
+        return validateEmail(value);
+      }
+      if (subField.type === 'phone') {
+        return validatePhone(value);
+      }
+    }
+    
+    return '';
+  };
+
   // Fonction de validation
   const validateAnswer = (value: any, type: string): string => {
     // Les cartes spéciales n'ont pas de validation de saisie
-    if (type === 'welcome' || type === 'thankyou') {
+    if (type === 'welcome' || type === 'thankyou' || type === 'form') {
       return '';
     }
 
@@ -202,9 +332,26 @@ export const TypeformPreview: React.FC<TypeformPreviewProps> = ({
   const isCurrentAnswerValid = () => {
     if (!currentQuestion) return false;
 
-    // Les cartes d'accueil / sortie sont toujours considérées comme valides
+    // Les cartes d'accueil / sortie
     if (currentQuestion.type === 'welcome' || currentQuestion.type === 'thankyou') {
       return true;
+    }
+    
+    // Formulaires : valider tous les champs
+    if (currentQuestion.type === 'form' && currentQuestion.subFields) {
+      const formAnswer = (currentAnswer && typeof currentAnswer === 'object') ? currentAnswer : {};
+      
+      // Vérifier que tous les champs requis sont remplis et valides
+      for (const subField of currentQuestion.subFields) {
+        const value = formAnswer[subField.id] || '';
+        const error = validateSubField(value, subField);
+        
+        if (error !== '') {
+          return false; // Un champ est invalide
+        }
+      }
+      
+      return true; // Tous les champs sont valides
     }
     
     // Si le champ n'est pas requis et vide, c'est valide
@@ -215,6 +362,48 @@ export const TypeformPreview: React.FC<TypeformPreviewProps> = ({
     // Si le champ est requis ou a une valeur, valider
     const error = validateAnswer(currentAnswer, currentQuestion.type);
     return error === '' && currentAnswer !== '';
+  };
+
+  // Réinitialiser les erreurs quand on change de question
+  React.useEffect(() => {
+    setFieldErrors({});
+    setTouchedFields({});
+    setValidationError('');
+    setTouched(false);
+  }, [currentIndex]);
+
+  // Fonction pour évaluer la logique conditionnelle
+  const evaluateConditionalLogic = (
+    condition: { field: string; operator: string; value: any; action: string; target?: string },
+    allAnswers: Record<string, any>
+  ): { shouldApply: boolean; target?: string } => {
+    const fieldValue = allAnswers[condition.field];
+    
+    if (fieldValue === undefined) {
+      return { shouldApply: false };
+    }
+
+    let shouldApply = false;
+
+    switch (condition.operator) {
+      case 'equals':
+        shouldApply = fieldValue === condition.value;
+        break;
+      case 'contains':
+        shouldApply = String(fieldValue).toLowerCase().includes(String(condition.value).toLowerCase());
+        break;
+      case 'greater':
+        shouldApply = Number(fieldValue) > Number(condition.value);
+        break;
+      case 'less':
+        shouldApply = Number(fieldValue) < Number(condition.value);
+        break;
+    }
+
+    return {
+      shouldApply,
+      target: condition.target,
+    };
   };
 
   const handleNext = () => {
@@ -229,47 +418,68 @@ export const TypeformPreview: React.FC<TypeformPreviewProps> = ({
     setTransitionDirection('forward');
 
     setTimeout(() => {
-      // Vérifier la logique conditionnelle
-      if (currentQuestion.logic && currentAnswer) {
+      let nextIndex = currentIndex + 1; // Par défaut, question suivante
+      let shouldComplete = false;
+
+      // 1. Vérifier la logique conditionnelle avancée
+      if (currentQuestion.conditionalLogic && currentQuestion.conditionalLogic.length > 0) {
+        for (const condition of currentQuestion.conditionalLogic) {
+          const { shouldApply, target } = evaluateConditionalLogic(condition, newAnswers);
+          
+          if (shouldApply && condition.action === 'jump' && target) {
+            const targetIndex = questions.findIndex(q => q.id === target);
+            if (targetIndex !== -1) {
+              nextIndex = targetIndex;
+              break;
+            }
+          }
+        }
+      }
+      // 2. Vérifier la logique simple (legacy)
+      else if (currentQuestion.logic && currentAnswer) {
         const nextQuestionId = currentQuestion.logic[currentAnswer];
         if (nextQuestionId === 'end') {
-          setIsCompleted(true);
-          onComplete?.(newAnswers);
-          setIsTransitioning(false);
-          return;
-        }
-        if (nextQuestionId) {
-          const nextIndex = questions.findIndex(q => q.id === nextQuestionId);
-          if (nextIndex !== -1) {
-            setCurrentIndex(nextIndex);
-            setCurrentAnswer('');
-            setIsTransitioning(false);
-            return;
+          shouldComplete = true;
+        } else if (nextQuestionId) {
+          const targetIndex = questions.findIndex(q => q.id === nextQuestionId);
+          if (targetIndex !== -1) {
+            nextIndex = targetIndex;
           }
         }
       }
 
-      // Navigation normale
-      if (currentIndex < questions.length - 1) {
-        setCurrentIndex(currentIndex + 1);
-        setCurrentAnswer('');
-      } else {
+      // 3. Vérifier si on doit terminer
+      if (shouldComplete || nextIndex >= questions.length) {
         setIsCompleted(true);
         onComplete?.(newAnswers);
+        setIsTransitioning(false);
+        return;
       }
-      
+
+      // 4. Naviguer vers la prochaine question et enregistrer dans l'historique
+      setCurrentIndex(nextIndex);
+      setNavigationHistory([...navigationHistory, nextIndex]);
+      setCurrentAnswer('');
       setIsTransitioning(false);
     }, 300); // Durée de l'animation
   };
 
   const handlePrevious = () => {
-    if (currentIndex > 0 && !isTransitioning) {
+    if (navigationHistory.length > 1 && !isTransitioning) {
       setIsTransitioning(true);
       setTransitionDirection('backward');
       
       setTimeout(() => {
-        setCurrentIndex(currentIndex - 1);
-        setCurrentAnswer(answers[questions[currentIndex - 1].id] || '');
+        // Retirer l'index actuel de l'historique
+        const newHistory = [...navigationHistory];
+        newHistory.pop();
+        
+        // Récupérer l'index précédent dans l'historique
+        const previousIndex = newHistory[newHistory.length - 1];
+        
+        setNavigationHistory(newHistory);
+        setCurrentIndex(previousIndex);
+        setCurrentAnswer(answers[questions[previousIndex].id] || '');
         setIsTransitioning(false);
       }, 300);
     }
@@ -350,10 +560,13 @@ export const TypeformPreview: React.FC<TypeformPreviewProps> = ({
 
   // Charger les Google Fonts dynamiquement
   React.useEffect(() => {
+    // Liste des polices personnalisées qui ne sont pas sur Google Fonts
+    const customFonts = ['Apercu Pro'];
+    
     const fontsToLoad = new Set<string>();
     
     questions.forEach(q => {
-      if (q.fontFamily && q.fontFamily !== 'default') {
+      if (q.fontFamily && q.fontFamily !== 'default' && !customFonts.includes(q.fontFamily)) {
         fontsToLoad.add(q.fontFamily);
       }
     });
@@ -387,69 +600,24 @@ export const TypeformPreview: React.FC<TypeformPreviewProps> = ({
   };
 
   // Fonction pour obtenir le style de background
+  // Toujours retourner la couleur de fond globale du canvas
   const getBackgroundStyle = () => {
-    if (!currentQuestion) return { backgroundColor };
-
-    const bgType = currentQuestion.backgroundType || 'color';
-
-    switch (bgType) {
-      case 'image':
-        if (currentQuestion.backgroundImage) {
-          return {
-            backgroundImage: `url(${currentQuestion.backgroundImage})`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            backgroundRepeat: 'no-repeat',
-          };
-        }
-        break;
-      
-      case 'gradient':
-        if (currentQuestion.backgroundGradient) {
-          return {
-            background: currentQuestion.backgroundGradient,
-          };
-        }
-        break;
-      
-      case 'video':
-        // Le style sera géré différemment avec une balise <video>
-        return { backgroundColor: '#000000' };
-      
-      case 'color':
-      default:
-        return { backgroundColor };
-    }
-
     return { backgroundColor };
   };
 
   // Fonction pour rendre l'overlay si nécessaire
+  // Plus utilisé car on n'a plus de backgrounds complexes
   const renderBackgroundOverlay = () => {
-    if (!currentQuestion) return null;
-    
-    const overlayOpacity = currentQuestion.backgroundOverlayOpacity ?? 0;
-    if (overlayOpacity === 0) return null;
-
-    const overlayColor = currentQuestion.backgroundOverlayColor || '#000000';
-    
-    return (
-      <div
-        className="absolute inset-0 pointer-events-none z-0"
-        style={{
-          backgroundColor: overlayColor,
-          opacity: overlayOpacity,
-        }}
-      />
-    );
+    return null;
   };
 
   // Fonction pour rendre la vidéo de fond si nécessaire
+  // Plus utilisé car on n'a plus de backgrounds vidéo
   const renderBackgroundVideo = () => {
-    if (!currentQuestion || currentQuestion.backgroundType !== 'video' || !currentQuestion.backgroundVideo) {
-      return null;
-    }
+    return null;
+  };
 
+  const renderBackgroundVideoOLD = () => {
     return (
       <video
         autoPlay
@@ -466,7 +634,75 @@ export const TypeformPreview: React.FC<TypeformPreviewProps> = ({
   const renderNavigation = () => {
     if (!currentQuestion) return null;
 
-    // Carte d'accueil spéciale avec bouton Start
+    const navVariant = currentQuestion.navVariant || 'icon-circle';
+    const buttonStyle = currentQuestion.buttonStyle || 'solid';
+    const ctaLabel = currentQuestion.ctaLabel || (isWelcomeCard ? 'Start' : 'OK');
+
+    // Style pill-label (nouveau style avec texte)
+    if (navVariant === 'pill-label') {
+      const getButtonStyles = () => {
+        const baseStyles = {
+          fontFamily,
+        };
+
+        switch (buttonStyle) {
+          case 'outline':
+            return {
+              ...baseStyles,
+              border: `2px solid ${shades.dark}`,
+              backgroundColor: 'transparent',
+              color: shades.dark,
+            };
+          case 'gradient':
+            return {
+              ...baseStyles,
+              background: `linear-gradient(135deg, ${shades.medium} 0%, ${shades.dark} 100%)`,
+              border: 'none',
+              color: '#ffffff',
+            };
+          case 'glass':
+            return {
+              ...baseStyles,
+              border: '2px solid rgba(255, 255, 255, 0.2)',
+              backgroundColor: 'rgba(255, 255, 255, 0.1)',
+              color: '#ffffff',
+              backdropFilter: 'blur(10px)',
+            };
+          case 'solid':
+          default:
+            return {
+              ...baseStyles,
+              backgroundColor: shades.dark,
+              border: 'none',
+              color: '#ffffff',
+            };
+        }
+      };
+
+      return (
+        <div className="flex items-center gap-3">
+          <button
+            onClick={handleNext}
+            disabled={!isCurrentAnswerValid() || !!validationError}
+            className="inline-flex items-center gap-2 px-8 py-3 rounded-full transition-all duration-200 group disabled:opacity-40 disabled:cursor-not-allowed hover:shadow-lg hover:scale-105"
+            style={getButtonStyles()}
+          >
+            <span className="font-medium text-base">{ctaLabel}</span>
+          </button>
+          {!isWelcomeCard && (
+            <span
+              className="text-sm opacity-70 font-light"
+              style={{ color: textColor }}
+            >
+              press Enter ↵
+            </span>
+          )}
+        </div>
+      );
+    }
+
+    // Style icon-circle (style par défaut)
+    // Carte d'accueil avec bouton glass
     if (isWelcomeCard) {
       return (
         <div className="flex items-center gap-3">
@@ -477,7 +713,8 @@ export const TypeformPreview: React.FC<TypeformPreviewProps> = ({
               border: '2px solid rgba(255, 255, 255, 0.2)',
               backgroundColor: 'rgba(255, 255, 255, 0.1)',
               color: '#ffffff',
-              backdropFilter: 'blur(10px)'
+              backdropFilter: 'blur(10px)',
+              fontFamily,
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.25)';
@@ -490,7 +727,7 @@ export const TypeformPreview: React.FC<TypeformPreviewProps> = ({
               e.currentTarget.style.transform = 'translateY(0)';
             }}
           >
-            <span className="font-medium">Start</span>
+            <span className="font-medium">{ctaLabel}</span>
             <ChevronRight size={18} className="group-hover:translate-x-0.5 transition-transform" />
           </button>
           <span
@@ -570,10 +807,200 @@ export const TypeformPreview: React.FC<TypeformPreviewProps> = ({
       case 'thankyou':
         return null;
 
+      case 'form': {
+        // Formulaire multi-champs sur une seule page (pour les informations de contact)
+        if (!currentQuestion.subFields || currentQuestion.subFields.length === 0) {
+          return null;
+        }
+
+        const formAnswer = (currentAnswer && typeof currentAnswer === 'object') 
+          ? currentAnswer 
+          : {};
+
+        return (
+          <div className="w-full max-w-2xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {currentQuestion.subFields.map((subField) => (
+                <div 
+                  key={subField.id}
+                  className={subField.width === 'full' ? 'md:col-span-2' : ''}
+                >
+                {/* Titre ou Label du champ */}
+                {(subField.title || subField.label) && (
+                  <div 
+                    className={subField.title ? "text-xl md:text-2xl font-semibold mb-3" : "text-sm font-medium mb-2"}
+                    style={{ color: textColor, fontFamily }}
+                  >
+                    {subField.title || subField.label}
+                    {subField.required && <span className="text-red-500 ml-1">*</span>}
+                  </div>
+                )}
+                
+                <div>
+                  {subField.type === 'phone' ? (
+                    <PhoneInput
+                      value={formAnswer[subField.id] || ''}
+                      onChange={(value) => {
+                        const newAnswer = {
+                          ...formAnswer,
+                          [subField.id]: value
+                        };
+                        setCurrentAnswer(newAnswer);
+                        
+                        // Valider le champ
+                        const error = validateSubField(value, subField);
+                        setFieldErrors(prev => ({ ...prev, [subField.id]: error }));
+                      }}
+                      onBlur={() => {
+                        setTouchedFields(prev => ({ ...prev, [subField.id]: true }));
+                        const error = validateSubField(formAnswer[subField.id] || '', subField);
+                        setFieldErrors(prev => ({ ...prev, [subField.id]: error }));
+                      }}
+                      placeholder={subField.placeholder || 'Phone number'}
+                      defaultCountry={currentQuestion.phoneCountry}
+                      textColor={textColor}
+                      primaryColor={shades.medium}
+                      fontFamily={fontFamily}
+                      autoFocus={false}
+                      validationError=""
+                      touched={false}
+                    />
+                  ) : (
+                    <input
+                      type={subField.type || 'text'}
+                      value={formAnswer[subField.id] || ''}
+                      onChange={(e) => {
+                        const newAnswer = {
+                          ...formAnswer,
+                          [subField.id]: e.target.value
+                        };
+                        setCurrentAnswer(newAnswer);
+                        
+                        // Valider le champ si déjà touché
+                        if (touchedFields[subField.id]) {
+                          const error = validateSubField(e.target.value, subField);
+                          setFieldErrors(prev => ({ ...prev, [subField.id]: error }));
+                        }
+                      }}
+                      onBlur={() => {
+                        setTouchedFields(prev => ({ ...prev, [subField.id]: true }));
+                        const error = validateSubField(formAnswer[subField.id] || '', subField);
+                        setFieldErrors(prev => ({ ...prev, [subField.id]: error }));
+                      }}
+                      placeholder={subField.placeholder || ''}
+                      className="w-full px-4 py-3 text-base border rounded-lg bg-white outline-none transition-colors focus:ring-2"
+                      style={{ 
+                        borderColor: touchedFields[subField.id] && fieldErrors[subField.id] 
+                          ? '#ef4444' 
+                          : formAnswer[subField.id] ? shades.medium : '#e5e7eb',
+                        color: textColor,
+                        fontFamily
+                      }}
+                    />
+                  )}
+                  
+                  {/* Message d'erreur par champ */}
+                  {touchedFields[subField.id] && fieldErrors[subField.id] && (
+                    <div className="mt-1 text-sm text-red-500 flex items-center gap-1 animate-fade-in">
+                      <span>⚠️</span>
+                      <span>{fieldErrors[subField.id]}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+            </div>
+          </div>
+        );
+      }
+
       case 'text':
       case 'email':
       case 'phone':
-      case 'number':
+      case 'number': {
+        // Multi-champs (ex: first name + last name)
+        if (currentQuestion.subFields && currentQuestion.subFields.length > 0) {
+          const subFieldsAnswer = (currentAnswer && typeof currentAnswer === 'object') 
+            ? currentAnswer 
+            : {};
+
+          return (
+            <div className="w-full space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {currentQuestion.subFields.map((subField) => (
+                  <div 
+                    key={subField.id}
+                    className={`${
+                      subField.width === 'full' ? 'md:col-span-2' : 
+                      subField.width === 'third' ? 'md:col-span-1' : 
+                      ''
+                    }`}
+                  >
+                    {subField.label && (
+                      <label 
+                        className="block text-sm font-medium mb-2"
+                        style={{ color: textColor, fontFamily }}
+                      >
+                        {subField.label}
+                        {subField.required && <span className="text-red-500 ml-1">*</span>}
+                      </label>
+                    )}
+                    <input
+                      type={subField.type || 'text'}
+                      value={subFieldsAnswer[subField.id] || ''}
+                      onChange={(e) => {
+                        setCurrentAnswer({
+                          ...subFieldsAnswer,
+                          [subField.id]: e.target.value
+                        });
+                        if (!touched) setTouched(true);
+                      }}
+                      onBlur={() => setTouched(true)}
+                      placeholder={subField.placeholder || ''}
+                      className="w-full px-4 py-3 text-lg border-b-2 bg-transparent outline-none transition-colors"
+                      style={{ 
+                        borderColor: subFieldsAnswer[subField.id] ? shades.medium : '#e5e7eb',
+                        color: textColor,
+                        fontFamily
+                      }}
+                      autoFocus={subField.id === currentQuestion.subFields[0].id}
+                    />
+                  </div>
+                ))}
+              </div>
+              {validationError && touched && (
+                <div className="mt-2 text-sm text-red-500 flex items-center gap-1 animate-fade-in">
+                  <span>⚠️</span>
+                  <span>{validationError}</span>
+                </div>
+              )}
+            </div>
+          );
+        }
+
+        // Téléphone avec sélecteur de pays
+        if (currentQuestion.type === 'phone' && currentQuestion.phoneCountry) {
+          return (
+            <PhoneInput
+              value={currentAnswer}
+              onChange={(value) => {
+                setCurrentAnswer(value);
+                if (!touched) setTouched(true);
+              }}
+              onBlur={() => setTouched(true)}
+              placeholder={currentQuestion.placeholder || 'Phone number'}
+              defaultCountry={currentQuestion.phoneCountry}
+              textColor={textColor}
+              primaryColor={shades.medium}
+              fontFamily={fontFamily}
+              autoFocus={true}
+              validationError={validationError}
+              touched={touched}
+            />
+          );
+        }
+
+        // Input simple standard
         return (
           <div className="w-full">
             <input
@@ -602,6 +1029,7 @@ export const TypeformPreview: React.FC<TypeformPreviewProps> = ({
             )}
           </div>
         );
+      }
 
       case 'long-text':
         return (
@@ -651,20 +1079,41 @@ export const TypeformPreview: React.FC<TypeformPreviewProps> = ({
         };
 
         const isCardsGrid = layout === 'cards-grid';
+        const customStyles = currentQuestion.customStyles;
+
+        // Utiliser les styles personnalisés si disponibles, sinon styles par défaut
+        const cardWidth = customStyles?.optionCardWidth || 'auto';
+        const cardHeight = customStyles?.optionCardHeight || 'auto';
+        const cardBorderRadius = customStyles?.optionCardBorderRadius || (isCardsGrid ? '16px' : '8px');
+        const cardBorder = customStyles?.optionCardBorder || '2px solid rgba(255, 255, 255, 0.3)';
+        const cardPadding = customStyles?.optionCardPadding || (isCardsGrid ? '0' : '24px');
+        const cardGap = customStyles?.optionCardGap || (isCardsGrid ? '20px' : '12px');
+        const cardHoverBg = customStyles?.optionCardHoverBg;
+        const cardSelectedBg = customStyles?.optionCardSelectedBg || primaryColor;
+        const cardSelectedBorder = customStyles?.optionCardSelectedBorder || `2px solid ${primaryColor}`;
+        const textSize = customStyles?.optionTextSize || '16px';
+        const textWeight = customStyles?.optionTextWeight || '500';
+        const textColor = customStyles?.optionTextColor || '#20375D';
 
         const baseButtonClasses = isCardsGrid
-          ? 'w-full text-left rounded-2xl border-2 transition-all hover:shadow-xl hover:scale-[1.02] bg-white overflow-hidden flex flex-col h-full relative group'
-          : 'w-full px-6 py-4 text-left rounded-lg border-2 transition-all hover:shadow-md';
+          ? 'text-left transition-all overflow-hidden flex flex-col relative group'
+          : 'w-full text-left transition-all';
 
         const containerClasses = isCardsGrid
-          ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6'
+          ? 'grid gap-4 max-w-5xl mx-auto'
           : 'space-y-3';
+        
+        // Style de grille adaptatif selon la largeur des cartes
+        const gridStyle = isCardsGrid ? {
+          gridTemplateColumns: cardWidth === 'auto' ? 'repeat(auto-fit, minmax(150px, 1fr))' : `repeat(auto-fit, ${cardWidth})`,
+          gap: cardGap,
+        } : {};
 
         // Lettres pour les labels A, B, C, D...
         const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
         return (
-          <div className={containerClasses}>
+          <div className={containerClasses} style={gridStyle}>
             {options.map((option, idx) => {
               const selected = isMultiple
                 ? Array.isArray(currentAnswer) && currentAnswer.includes(option)
@@ -676,20 +1125,54 @@ export const TypeformPreview: React.FC<TypeformPreviewProps> = ({
                   onClick={() => handleToggle(option, selected)}
                   className={baseButtonClasses}
                   style={{
-                    borderColor: selected ? shades.dark : '#e5e7eb',
-                    backgroundColor: isCardsGrid
-                      ? '#ffffff'
-                      : selected
-                        ? shades.light
-                        : 'transparent',
-                    color: textColor,
-                    fontFamily
+                    width: cardWidth,
+                    height: cardHeight,
+                    borderRadius: cardBorderRadius,
+                    border: selected ? cardSelectedBorder : cardBorder,
+                    padding: cardPadding,
+                    backgroundColor: selected 
+                      ? cardSelectedBg 
+                      : (cardHoverBg ? 'white' : (isCardsGrid ? 'rgba(255, 255, 255, 0.95)' : 'transparent')),
+                    color: selected && cardSelectedBg ? 'white' : textColor,
+                    fontSize: textSize,
+                    fontWeight: textWeight,
+                    fontFamily,
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!selected && cardHoverBg) {
+                      e.currentTarget.style.backgroundColor = cardHoverBg;
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!selected && cardHoverBg) {
+                      e.currentTarget.style.backgroundColor = 'white';
+                    }
                   }}
                 >
-                  {isCardsGrid && (
+                  {isCardsGrid ? (
+                    customStyles ? (
+                      // Design personnalisé (Figaro) - Simple avec icône et texte
+                      <div className="flex flex-col items-center justify-center gap-3 w-full h-full">
+                        {/* Icône placeholder (peut être remplacée par optionImages) */}
+                        {currentQuestion.optionImages?.[idx] ? (
+                          <img 
+                            src={currentQuestion.optionImages[idx]} 
+                            alt={option}
+                            className="w-12 h-12 object-contain"
+                          />
+                        ) : (
+                          <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center">
+                            <span className="text-2xl">👤</span>
+                          </div>
+                        )}
+                        {/* Texte */}
+                        <span className="text-center">{option}</span>
+                      </div>
+                    ) : (
+                    // Design par défaut avec image
                     <>
                       {/* Image de la carte */}
-                      <div className="w-full aspect-[4/3] bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden relative">
+                      <div className="w-full aspect-square bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden relative">
                         {(currentQuestion.optionImages?.[idx] || currentQuestion.imageUrl) ? (
                           <img
                             src={currentQuestion.optionImages?.[idx] || currentQuestion.imageUrl}
@@ -711,9 +1194,9 @@ export const TypeformPreview: React.FC<TypeformPreviewProps> = ({
                         <div 
                           className="absolute top-3 left-3 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold shadow-md"
                           style={{
-                            backgroundColor: selected ? shades.dark : '#ffffff',
-                            color: selected ? '#ffffff' : shades.dark,
-                            border: `2px solid ${shades.dark}`
+                            backgroundColor: selected ? primaryColor : 'rgba(0, 0, 0, 0.7)',
+                            color: '#ffffff',
+                            border: selected ? `2px solid ${primaryColor}` : '2px solid rgba(255, 255, 255, 0.3)'
                           }}
                         >
                           {letters[idx]}
@@ -723,7 +1206,7 @@ export const TypeformPreview: React.FC<TypeformPreviewProps> = ({
                         {selected && (
                           <div 
                             className="absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center shadow-md"
-                            style={{ backgroundColor: shades.dark }}
+                            style={{ backgroundColor: primaryColor }}
                           >
                             <Check size={16} color="#ffffff" strokeWidth={3} />
                           </div>
@@ -731,13 +1214,13 @@ export const TypeformPreview: React.FC<TypeformPreviewProps> = ({
                       </div>
 
                       {/* Texte de la carte */}
-                      <div className="flex-1 px-4 py-4 flex items-center">
-                        <span className="text-sm md:text-base font-medium leading-snug">{option}</span>
+                      <div className="px-4 py-4 flex items-center justify-center min-h-[60px]">
+                        <span className="text-sm md:text-base font-semibold leading-tight text-center">{option}</span>
                       </div>
                     </>
-                  )}
-                  
-                  {!isCardsGrid && (
+                    )
+                  ) : (
+                    // Layout liste (non cards-grid)
                     <div className="flex items-center justify-between">
                       <span className="text-lg" style={{ fontFamily }}>{option}</span>
                       {selected && (
@@ -887,6 +1370,19 @@ export const TypeformPreview: React.FC<TypeformPreviewProps> = ({
         ),
       },
       {
+        id: 'split-left-text-right-image-card',
+        label: 'Texte gauche / Image card arrondie',
+        icon: (
+          <div className="w-full h-full grid grid-cols-[3fr,2fr] gap-1">
+            <div className="flex flex-col justify-center gap-2 px-2">
+              <div className="w-3/4 h-2 bg-gray-300 rounded" />
+              <div className="w-2/3 h-2 bg-gray-200 rounded" />
+            </div>
+            <div className="bg-gray-300 rounded-full" />
+          </div>
+        ),
+      },
+      {
         id: 'scale-horizontal',
         label: 'Échelle horizontale',
         icon: (
@@ -933,8 +1429,8 @@ export const TypeformPreview: React.FC<TypeformPreviewProps> = ({
         className="w-full h-full flex items-center justify-center"
         style={{ backgroundColor }}
       >
-        <div className="max-w-4xl w-full px-8 py-10">
-          <div className="text-center mb-6">
+        <div className="w-full max-w-5xl md:max-w-6xl px-6 md:px-10 py-10">
+          <div className="text-center mb-8">
             <h3
               className="text-2xl font-bold"
               style={{ color: textColor }}
@@ -943,29 +1439,44 @@ export const TypeformPreview: React.FC<TypeformPreviewProps> = ({
             </h3>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-6 md:gap-8">
             {layoutItems.map((item) => (
               <button
                 key={item.id}
                 type="button"
                 onClick={() => setEmptyPreviewLayout(item.id)}
-                className={`relative aspect-[4/3] rounded-xl border transition-all bg-white shadow-sm flex flex-col overflow-hidden ${
+                className={`relative aspect-[5/3] rounded-2xl border transition-all bg-white shadow-sm flex flex-col overflow-hidden ${
                   emptyPreviewLayout === item.id
                     ? 'border-[#841b60] ring-2 ring-[#841b60]/30'
                     : 'border-gray-200 hover:border-gray-300 hover:shadow-md'
                 }`}
               >
-                <div className="flex-1 p-2">
+                <div className="flex-1 p-4">
                   {item.icon}
                 </div>
-                <div className="px-3 py-2 border-t border-gray-100 text-xs text-gray-700 text-left">
+                <div className="px-4 py-3 border-t border-gray-100 text-xs md:text-sm text-gray-700 text-left">
                   {item.label}
                 </div>
               </button>
             ))}
           </div>
 
-          <div className="mt-6 flex justify-center">
+          <div className="mt-6 flex justify-center gap-3">
+            <button
+              type="button"
+              onClick={() => {
+                try {
+                  const event = new CustomEvent('typeform-open-templates-from-preview');
+                  window.dispatchEvent(event);
+                } catch (e) {
+                  console.error('Erreur lors de l\'émission de typeform-open-templates', e);
+                }
+              }}
+              className="px-5 py-2 rounded-full text-sm font-medium border border-[#841b60] text-[#841b60] bg-white hover:bg-[#f9f0f6] transition-colors shadow-sm"
+            >
+              Templates
+            </button>
+
             <button
               type="button"
               onClick={() => {
@@ -1008,6 +1519,7 @@ export const TypeformPreview: React.FC<TypeformPreviewProps> = ({
               setAnswers({});
               setCurrentAnswer('');
               setIsCompleted(false);
+              setNavigationHistory([0]);
             }}
             className="px-6 py-3 rounded-lg text-white font-medium transition-all hover:shadow-lg"
             style={{ backgroundColor: shades.dark, fontFamily }}
@@ -1105,6 +1617,31 @@ export const TypeformPreview: React.FC<TypeformPreviewProps> = ({
         {/* Overlay si nécessaire */}
         {renderBackgroundOverlay()}
         
+        {/* Branding persistant */}
+        {showBranding && (brandTitle || brandLogoUrl) && (
+          <div className="absolute top-6 left-6 z-20 flex items-center gap-3">
+            {brandLogoUrl && (
+              <img 
+                src={brandLogoUrl} 
+                alt={brandTitle || 'Logo'} 
+                className="h-8 w-auto object-contain"
+              />
+            )}
+            {brandTitle && (
+              <h1 
+                className="text-xl md:text-2xl font-bold tracking-tight"
+                style={{ 
+                  color: textColor,
+                  fontFamily: currentQuestion?.fontFamily || fontFamily,
+                  textShadow: '0 1px 2px rgba(0,0,0,0.1)'
+                }}
+              >
+                {brandTitle}
+              </h1>
+            )}
+          </div>
+        )}
+        
         {/* Progress Bar */}
         {questions.length > 0 && !isCompleted && (
           <div className="w-full h-1 bg-gray-200 relative overflow-hidden z-10">
@@ -1165,7 +1702,7 @@ export const TypeformPreview: React.FC<TypeformPreviewProps> = ({
                   {/* Bloc texte en bas */}
                   <div
                     className="flex-1 flex flex-col justify-start px-6 py-6"
-                    style={{ backgroundColor: currentQuestion?.panelBackgroundColor || '#ffffff' }}
+                    style={{ backgroundColor: currentQuestion?.panelBackgroundColor || backgroundColor }}
                   >
                     {/* Numéro de question */}
                     <div className="mb-3">
@@ -1229,8 +1766,94 @@ export const TypeformPreview: React.FC<TypeformPreviewProps> = ({
                     </div>
                   </div>
                 </div>
+              ) : currentLayout === 'split-left-text-right-image-card' ? (
+                // Layout avec image card arrondie compacte à droite
+                <div className="w-full h-full flex items-center justify-center px-8 md:px-16">
+                  <div className="w-full max-w-7xl grid md:grid-cols-2 gap-8 md:gap-12 items-center">
+                    {/* Colonne texte à gauche */}
+                    <div className="flex flex-col justify-center">
+                      {/* Numéro de question */}
+                      <div className="mb-4">
+                        <span
+                          className="text-sm font-medium tracking-wide"
+                          style={{ color: textColor, opacity: 0.6 }}
+                        >
+                          {currentIndex + 1} / {questions.length}
+                        </span>
+                      </div>
+
+                      {/* Question */}
+                      <div className="mb-8">
+                        <h2
+                          className="font-bold mb-3 leading-tight"
+                          style={{ 
+                            color: textColor,
+                            fontFamily: currentQuestion?.fontFamily && currentQuestion.fontFamily !== 'default' 
+                              ? `'${currentQuestion.fontFamily}', sans-serif` 
+                              : fontFamily,
+                            fontSize: currentQuestion?.fontSize === 'xlarge' ? '3.5rem' : 
+                                     currentQuestion?.fontSize === 'large' ? '3rem' :
+                                     currentQuestion?.fontSize === 'small' ? '2rem' : '2.5rem'
+                          }}
+                        >
+                          {currentQuestion?.text
+                            ?.split('\n')
+                            .map((line, idx) => (
+                              <React.Fragment key={idx}>
+                                {line}
+                                {idx < (currentQuestion.text?.split('\n').length || 0) - 1 && <br />}
+                              </React.Fragment>
+                            ))}
+                          {currentQuestion?.required && (
+                            <span style={{ color: shades.medium }}> *</span>
+                          )}
+                        </h2>
+                        {currentQuestion?.description && (
+                          <p
+                            style={{ 
+                              color: textColor, 
+                              opacity: 0.7,
+                              fontFamily: currentQuestion?.fontFamily && currentQuestion.fontFamily !== 'default' 
+                                ? `'${currentQuestion.fontFamily}', sans-serif` 
+                                : fontFamily,
+                              fontSize: getFontSize(currentQuestion?.fontSize).description
+                            }}
+                          >
+                            {currentQuestion.description}
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Navigation + raccourci clavier */}
+                      <div className="flex flex-col items-start gap-3">
+                        {renderNavigation()}
+                        {renderEnterShortcut()}
+                      </div>
+                    </div>
+
+                    {/* Colonne image card arrondie à droite */}
+                    <div className="flex items-center justify-center">
+                      {currentQuestion?.imageUrl ? (
+                        <img
+                          src={currentQuestion.imageUrl}
+                          alt="Question visuelle"
+                          className="w-full max-w-2xl aspect-square object-cover rounded-3xl shadow-2xl"
+                        />
+                      ) : (
+                        <div className="w-full max-w-2xl aspect-square flex flex-col items-center justify-center bg-gray-300 text-center rounded-3xl shadow-2xl">
+                          <div className="w-14 h-14 rounded-full border-2 border-dashed border-gray-400 flex items-center justify-center mb-4">
+                            <span className="text-xs font-medium text-gray-500">Image</span>
+                          </div>
+                          <p className="text-sm text-gray-600 max-w-xs px-8">
+                            Ajoutez une image dans le champ "Image" de la question pour remplir cette zone.
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
               ) : (
-                // Layout split desktop/tablette : grille 2 colonnes
+                // Layout split desktop/tablette : grille 2 colonnes pleine hauteur
                 <div className="w-full h-full grid md:grid-cols-2">
                   {/* Colonne texte pleine hauteur (couleur personnalisable, blanc par défaut) */}
                   <div
@@ -1239,7 +1862,7 @@ export const TypeformPreview: React.FC<TypeformPreviewProps> = ({
                         ? 'md:order-2'
                         : ''
                     }
-                    style={{ backgroundColor: currentQuestion?.panelBackgroundColor || '#ffffff' }}
+                    style={{ backgroundColor: currentQuestion?.panelBackgroundColor || backgroundColor }}
                   >
                     <div className="h-full flex flex-col justify-center px-10 lg:px-16">
                       {/* Numéro de question */}
@@ -1300,7 +1923,7 @@ export const TypeformPreview: React.FC<TypeformPreviewProps> = ({
                       </div>
 
                       {/* Navigation + raccourci clavier pour les layouts split */}
-                      <div className="mt-4">
+                      <div className="mt-6 flex flex-col items-start gap-3">
                         {renderNavigation()}
                         {renderEnterShortcut()}
                       </div>
@@ -1338,12 +1961,16 @@ export const TypeformPreview: React.FC<TypeformPreviewProps> = ({
               )
             ) : (
               // Layouts centrés (par défaut)
-              <div className="w-full h-full flex items-center justify-center">
+              <div className="w-full h-full flex items-center justify-center py-8">
                 <div
-                  className={`w-full px-8 md:px-16 max-h-full overflow-auto ${
+                  className={`w-full px-8 md:px-16 ${
                     currentLayout === 'fullwidth-input'
                       ? 'max-w-3xl'
-                      : 'max-w-2xl'
+                      : currentLayout === 'cards-grid'
+                        ? 'max-w-6xl'
+                        : (isWelcomeCard || isThankyouCard)
+                          ? 'max-w-4xl'
+                          : 'max-w-2xl'
                   }`}
                 >
                 {/* Numéro de question */}
@@ -1410,12 +2037,10 @@ export const TypeformPreview: React.FC<TypeformPreviewProps> = ({
 
           {/* Navigation en bas pour les layouts non-split */}
           {!isSplitLayout && (
-            <>
-              <div className="flex items-center justify-between">
-                {renderNavigation()}
-              </div>
+            <div className="w-full flex flex-col items-center gap-3 pb-8">
+              {renderNavigation()}
               {renderEnterShortcut()}
-            </>
+            </div>
           )}
         </div>
       </div>

@@ -1,5 +1,15 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap');
+
+/* Définition de la police Apercu Pro avec fallbacks */
+@font-face {
+  font-family: 'Apercu Pro';
+  src: local('Inter'), local('system-ui'), local('sans-serif');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -817,6 +827,45 @@ html, body {
     opacity: 1;
     transform: rotateY(0deg) scale(1);
   }
+}
+
+/* Animations pour le panneau Questions */
+@keyframes question-card-enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes pulse-border {
+  0%, 100% {
+    border-color: rgba(132, 27, 96, 0.3);
+  }
+  50% {
+    border-color: rgba(132, 27, 96, 0.8);
+  }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-2px); }
+  20%, 40%, 60%, 80% { transform: translateX(2px); }
+}
+
+.animate-question-enter {
+  animation: question-card-enter 0.3s ease-out;
+}
+
+.animate-pulse-border {
+  animation: pulse-border 1.5s ease-in-out infinite;
+}
+
+.animate-shake {
+  animation: shake 0.5s ease-in-out;
 }
 
 /* Classes d'animation avec durées variables */
