@@ -20,12 +20,6 @@ const FontPanel: React.FC<FontPanelProps> = ({
     selectedElement.elementType === 'text'
   );
 
-    isTextSelected,
-    selectedElementType: selectedElement?.type,
-    hasOnElementUpdate: !!onElementUpdate,
-    timestamp: new Date().toISOString()
-  });
-
   return (
     <div className="p-4 space-y-6">
       {/* DEBUG: Test visibility */}

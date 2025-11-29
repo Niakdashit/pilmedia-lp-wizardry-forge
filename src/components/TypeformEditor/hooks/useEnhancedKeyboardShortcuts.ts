@@ -56,19 +56,6 @@ export const useEnhancedKeyboardShortcuts = ({
     // Détection intelligente du modificateur selon la plateforme
     const isModifierPressed = isMac() ? metaKey : ctrlKey;
     
-    // Debug amélioré
-      key: key,
-      code,
-      ctrlKey,
-      metaKey,
-      shiftKey,
-      altKey,
-      target: (target as Element)?.tagName,
-      contentEditable: (target as HTMLElement)?.contentEditable,
-      isModifierPressed,
-      platform: isMac() ? 'Mac' : 'Windows/Linux'
-    });
-    
     // Ne pas intercepter si on tape dans un champ de saisie
     if ((target as Element)?.tagName === 'INPUT' || 
         (target as Element)?.tagName === 'TEXTAREA' ||
