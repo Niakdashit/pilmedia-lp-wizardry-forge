@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, GripVertical, Type, Mail, Phone, Hash, List, CheckSquare, BarChart3, AlignLeft, Image as ImageIcon, LayoutTemplate, Sparkles, FileText, Copy, Search, Palette, Keyboard, Undo2, Redo2, CheckCircle2 } from 'lucide-react';
+import { Plus, Trash2, GripVertical, Type, Mail, Phone, Hash, List, CheckSquare, BarChart3, AlignLeft, Sparkles, FileText, Copy, Search, CheckCircle2 } from 'lucide-react';
 import { TypeformQuestion, TypeformLayout } from '../components/TypeformPreview';
 import TemplateModal from '../components/TemplateModal';
 import { TypeformTemplate } from '../templates/typeformTemplates';
 import { useToast, ToastContainer } from '../components/Toast';
-import { Accordion } from '../components/Accordion';
 import { useHistory } from '../hooks/useHistory';
 import { QuestionDetailsPanel } from './QuestionDetailsPanel';
 
@@ -43,7 +42,7 @@ const getQuestionIcon = (type: string) => {
   }
 };
 
-const layoutOptions: { value: TypeformLayout; label: string }[] = [
+/* const layoutOptions: { value: TypeformLayout; label: string }[] = [
   { value: 'centered-card', label: 'Carte centrée (par défaut)' },
   { value: 'split-left-text-right-image', label: 'Texte gauche / Image droite' },
   { value: 'split-left-image-right-text', label: 'Image gauche / Texte droite' },
@@ -63,7 +62,7 @@ const questionTypes = [
   { value: 'multiple', label: 'Choix multiples', icon: CheckSquare },
   { value: 'scale', label: 'Échelle', icon: BarChart3 },
   { value: 'form', label: 'Formulaire multi-champs', icon: FileText },
-];
+]; */
 
 export const QuestionsPanel: React.FC<QuestionsPanelProps> = ({
   questions,
@@ -77,12 +76,10 @@ export const QuestionsPanel: React.FC<QuestionsPanelProps> = ({
 }) => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showTemplateModal, setShowTemplateModal] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
-  const [showShortcuts, setShowShortcuts] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [bulkMode, setBulkMode] = useState(false);
+  const bulkMode = false; // Mode sélection multiple désactivé
   const { toasts, success } = useToast();
   
   // Système Undo/Redo
@@ -267,7 +264,7 @@ export const QuestionsPanel: React.FC<QuestionsPanelProps> = ({
     );
   };
 
-  const selectAll = () => {
+  /* const selectAll = () => {
     setSelectedIds(questions.map(q => q.id));
   };
 
@@ -299,7 +296,7 @@ export const QuestionsPanel: React.FC<QuestionsPanelProps> = ({
     success(`${selectedIds.length} question(s) dupliquée(s)`);
     setSelectedIds([]);
     setBulkMode(false);
-  };
+  }; */
 
   const duplicateQuestion = (id: string) => {
     const question = questions.find(q => q.id === id);
@@ -319,13 +316,13 @@ export const QuestionsPanel: React.FC<QuestionsPanelProps> = ({
     setEditingId(newQuestion.id);
   };
 
-  const moveQuestion = (index: number, direction: 'up' | 'down') => {
+  /* const moveQuestion = (index: number, direction: 'up' | 'down') => {
     const newQuestions = [...questions];
     const newIndex = direction === 'up' ? index - 1 : index + 1;
     if (newIndex < 0 || newIndex >= questions.length) return;
     [newQuestions[index], newQuestions[newIndex]] = [newQuestions[newIndex], newQuestions[index]];
     onQuestionsChange(newQuestions);
-  };
+  }; */
 
   // Drag & Drop handlers
   const handleDragStart = (e: React.DragEvent, index: number) => {
@@ -451,18 +448,15 @@ export const QuestionsPanel: React.FC<QuestionsPanelProps> = ({
     success(`Template "${template.name}" appliqué avec succès !`);
   };
 
-  // Filtrer les questions selon la recherche
-  const filteredQuestions = questions.filter(q => 
-    q.text.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    q.description?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Utiliser toutes les questions (pas de filtre de recherche)
+  const filteredQuestions = questions;
 
   // Fonction pour obtenir la couleur selon le type de question
-  const getQuestionBadgeColor = (type: string) => {
+  /* const getQuestionBadgeColor = (type: string) => {
     if (type === 'welcome') return 'bg-green-100 text-green-700 border-green-200';
     if (type === 'thankyou') return 'bg-purple-100 text-purple-700 border-purple-200';
     return 'bg-blue-100 text-blue-700 border-blue-200';
-  };
+  }; */
 
 
   return (

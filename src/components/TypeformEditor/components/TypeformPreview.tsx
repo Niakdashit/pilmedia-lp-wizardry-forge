@@ -628,7 +628,7 @@ export const TypeformPreview: React.FC<TypeformPreviewProps> = ({
     return null;
   };
 
-  const renderBackgroundVideoOLD = () => {
+  /* const renderBackgroundVideoOLD = () => {
     return (
       <video
         autoPlay
@@ -640,7 +640,7 @@ export const TypeformPreview: React.FC<TypeformPreviewProps> = ({
         <source src={currentQuestion.backgroundVideo} type="video/mp4" />
       </video>
     );
-  };
+  }; */
 
   const renderNavigation = () => {
     if (!currentQuestion) return null;
@@ -974,7 +974,7 @@ export const TypeformPreview: React.FC<TypeformPreviewProps> = ({
                         color: textColor,
                         fontFamily
                       }}
-                      autoFocus={subField.id === currentQuestion.subFields[0].id}
+                      autoFocus={subField.id === currentQuestion.subFields?.[0]?.id}
                     />
                   </div>
                 ))}
