@@ -100,14 +100,6 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
   const showMobileUI = mIsMobile || 
                       selectedDevice === 'mobile' || selectedDevice === 'tablet' ||
                       forceDeviceType === 'mobile' || forceDeviceType === 'tablet';
-  
-    mIsMobile,
-    mIsTablet,
-    selectedDevice,
-    forceDeviceType,
-    showMobileUI,
-    effectiveDeviceType
-  });
 
   // Système de verrouillage du canvas pour mobile
   const {

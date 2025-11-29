@@ -114,22 +114,7 @@ const PositionPanel: React.FC<PositionPanelProps> = ({
       const { width: elementWidth } = getElementDimensions();
       const newX = canvasWidth - elementWidth;
       
-        canvasWidth, 
-        elementWidth, 
-        calculatedX: newX,
-        formula: `${canvasWidth} - ${elementWidth} = ${newX}`,
-        elementInfo: {
-          id: selectedElement.id,
-          currentX: selectedElement.x,
-          currentWidth: selectedElement.width
-        }
-      });
-      
       onElementUpdate({ x: newX });
-      
-      // Vérification immédiate
-      setTimeout(() => {
-      }, 50);
     }
   };
 

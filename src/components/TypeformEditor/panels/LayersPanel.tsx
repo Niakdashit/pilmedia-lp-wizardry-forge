@@ -452,14 +452,6 @@ const CustomDragPreview: React.FC = () => {
     const isSelected = selectedLayerId === layer.id || selectedGroupId === layer.id;
     const isVisible = layer.visible !== false; // Default to true if undefined
     const isLocked = layer.locked === true; // Default to false if undefined
-    
-      id: layer.id,
-      name: layer.name,
-      type: layer.type,
-      visible: isVisible,
-      locked: isLocked,
-      element: element ? 'found' : 'missing'
-    });
 
     const dragItem: DragItem = { id: layer.id, kind: isGroup ? 'group' : 'element', parentId: layer.parentId };
 
